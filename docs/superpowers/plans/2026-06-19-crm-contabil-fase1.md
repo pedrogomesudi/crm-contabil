@@ -354,11 +354,12 @@ begin
     json_build_object('sub', uid::text, 'role', 'authenticated')::text, true);
 end $$;
 
--- Semear dois usuários (como owner; reset role antes)
+-- Semear dois usuários (como owner; reset role antes).
+-- created_at/updated_at explícitos para não depender de defaults da versão do GoTrue.
 reset role;
-insert into auth.users (id, instance_id, aud, role, email) values
-  ('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','admin@teste.com'),
-  ('00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','assist@teste.com')
+insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at) values
+  ('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','admin@teste.com', now(), now()),
+  ('00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','assist@teste.com', now(), now())
   on conflict do nothing;
 insert into usuarios (id, nome, email, papel) values
   ('00000000-0000-0000-0000-000000000001','Admin','admin@teste.com','admin'),
@@ -448,9 +449,9 @@ Append em `supabase/tests/rls.test.sql`:
 ```sql
 -- ASSERT 2: inserir em auth.users com papel em app_metadata cria usuarios com o papel certo
 reset role;
-insert into auth.users (id, email, raw_app_meta_data) values
-  ('00000000-0000-0000-0000-000000000003','contador@teste.com',
-   '{"nome":"Contador X","papel":"contador"}'::jsonb)
+insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, created_at, updated_at) values
+  ('00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000000','authenticated','authenticated','contador@teste.com',
+   '{"nome":"Contador X","papel":"contador"}'::jsonb, now(), now())
   on conflict do nothing;
 do $$
 declare v_papel papel;
@@ -1285,6 +1286,16 @@ import { revalidatePath } from 'next/cache';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { clienteSchema } from '@/lib/validation/cliente';
 
+// Campos não-textuais (uuid/date): string vazia precisa virar null, senão o Postgres
+// rejeita com 22P02 (invalid input syntax). Aplicar antes de todo insert/update.
+function limparOpcionais<T extends Record<string, unknown>>(d: T): T {
+  const out: Record<string, unknown> = { ...d };
+  for (const k of ['contador_id', 'data_inicio']) {
+    if (out[k] === '' || out[k] === undefined) out[k] = null;
+  }
+  return out as T;
+}
+
 export async function criarCliente(_prev: unknown, formData: FormData) {
   const dados = Object.fromEntries(formData) as Record<string, string>;
   const parsed = clienteSchema.safeParse(dados);
@@ -1294,17 +1305,22 @@ export async function criarCliente(_prev: unknown, formData: FormData) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   const { error } = await supabase.from('clientes').insert({
-    ...parsed.data, criado_por: user!.id,
+    ...limparOpcionais(parsed.data), criado_por: user!.id,
   });
   if (error) {
     if (error.code === '23505') {
-      // CPF/CNPJ já existe — spec §7: se for inativo, oferecer reativação
+      // CPF/CNPJ já existe — spec §7: se for inativo (e visível ao usuário), oferecer reativação.
+      // A consulta respeita a RLS: um contador pode não enxergar cliente de outro contador.
       const { data: existente } = await supabase.from('clientes')
         .select('id, status').eq('cpf_cnpj', parsed.data.cpf_cnpj).single();
       if (existente?.status === 'inativo') {
         return { erro: 'CPF/CNPJ já cadastrado em um cliente INATIVO.', reativarId: existente.id };
       }
-      return { erro: 'CPF/CNPJ já cadastrado em um cliente ativo.' };
+      if (existente?.status === 'ativo') {
+        return { erro: 'CPF/CNPJ já cadastrado em um cliente ativo.' };
+      }
+      // existente == null: a linha existe (violou unique) mas não é visível por RLS — não afirmar status
+      return { erro: 'CPF/CNPJ já cadastrado. Procure um administrador.' };
     }
     return { erro: 'Não foi possível salvar o cliente.' };
   }
@@ -1337,7 +1353,7 @@ export async function atualizarCliente(clienteId: string, _prev: unknown, formDa
   const parsed = clienteSchema.safeParse(dados);
   if (!parsed.success) return { erro: parsed.error.issues[0].message };
   const supabase = await createServerSupabase();
-  const { error } = await supabase.from('clientes').update(parsed.data).eq('id', clienteId);
+  const { error } = await supabase.from('clientes').update(limparOpcionais(parsed.data)).eq('id', clienteId);
   if (error) {
     if (error.code === '23505') return { erro: 'CPF/CNPJ já cadastrado em outro cliente.' };
     return { erro: 'Não foi possível atualizar o cliente.' };
@@ -1600,9 +1616,12 @@ export async function convidarUsuario(_prev: unknown, formData: FormData) {
   });
   if (errCreate) return { erro: 'Não foi possível criar (e-mail já existe?).' };
 
-  // Envia o e-mail de definição de senha (fluxo de convite/recuperação)
-  const { error: errInvite } = await admin.auth.resetPasswordForEmail(email);
-  if (errInvite) return { erro: 'Usuário criado, mas falha ao enviar o e-mail de acesso.' };
+  // Convite via generateLink type 'invite': confirma o e-mail E leva o usuário a definir
+  // a senha numa tacada. É mais robusto que resetPasswordForEmail para conta recém-criada
+  // não confirmada (recovery pode recusar e-mail não confirmado, dependendo da config).
+  // Depende de SMTP configurado no Supabase (decisão em aberto §11.1 do spec).
+  const { error: errInvite } = await admin.auth.admin.generateLink({ type: 'invite', email });
+  if (errInvite) return { erro: 'Usuário criado, mas falha ao enviar o convite por e-mail.' };
 
   revalidatePath('/usuarios');
   return { ok: true };
