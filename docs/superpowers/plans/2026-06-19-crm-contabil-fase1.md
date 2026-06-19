@@ -1242,6 +1242,12 @@ export function Sidebar({ papel }: { papel: Papel }) {
 
 - [ ] **Step 5: Mover o dashboard para o grupo (app)**
 
+> **Limpeza de boilerplate (revisão da Task 1):** o `src/app/page.tsx` atual é o boilerplate do
+> create-next-app e referencia `/next.svg` etc. Ao mover, **reescreva** o conteúdo (não só mova) e
+> remova os assets boilerplate (`public/*.svg`, `favicon.ico` boilerplate) de forma coordenada — não
+> deixe referência órfã a `/next.svg`. **Mantenha `public/` não-vazio** (ex.: um `.gitkeep`), senão o
+> `COPY /app/public ./public` do Dockerfile falha o build.
+
 Move `src/app/page.tsx` → `src/app/(app)/page.tsx` e substitua o conteúdo por um placeholder temporário:
 ```tsx
 export default function Dashboard() {

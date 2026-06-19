@@ -7,7 +7,7 @@ CRM web para escritório de contabilidade — login com papéis, dashboard e ges
 
 ## Pré-requisitos
 
-- Node.js 20+ (desenvolvido em Node 26)
+- Node.js 22+ (paridade com o deploy em `node:22-alpine`; desenvolvido em Node 26)
 - Conta/projeto no Supabase (nuvem)
 - Supabase CLI (`npx supabase`) para rodar o banco local e as migrations
 
