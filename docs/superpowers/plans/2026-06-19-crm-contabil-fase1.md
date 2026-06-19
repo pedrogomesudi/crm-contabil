@@ -1616,12 +1616,14 @@ export async function convidarUsuario(_prev: unknown, formData: FormData) {
   });
   if (errCreate) return { erro: 'Não foi possível criar (e-mail já existe?).' };
 
-  // Convite via generateLink type 'invite': confirma o e-mail E leva o usuário a definir
-  // a senha numa tacada. É mais robusto que resetPasswordForEmail para conta recém-criada
-  // não confirmada (recovery pode recusar e-mail não confirmado, dependendo da config).
-  // Depende de SMTP configurado no Supabase (decisão em aberto §11.1 do spec).
-  const { error: errInvite } = await admin.auth.admin.generateLink({ type: 'invite', email });
-  if (errInvite) return { erro: 'Usuário criado, mas falha ao enviar o convite por e-mail.' };
+  // ATENÇÃO (resolver junto da decisão de SMTP §11.1): generateLink GERA e RETORNA o link
+  // (data.properties.action_link) — com SMTP configurado no Supabase ele dispara o e-mail de
+  // convite; SEM SMTP, é preciso enviar o action_link você mesmo (ou trocar por
+  // inviteUserByEmail). Não retorne { ok:true } sem confirmar a entrega no Step 6.
+  const { data: link, error: errInvite } =
+    await admin.auth.admin.generateLink({ type: 'invite', email });
+  if (errInvite) return { erro: 'Usuário criado, mas falha ao gerar o convite por e-mail.' };
+  // TODO §11.1: se o SMTP do Supabase não enviar automaticamente, despachar link.properties.action_link.
 
   revalidatePath('/usuarios');
   return { ok: true };
@@ -1812,6 +1814,11 @@ Detalhes de binding (importante — `anexarDocumento(clienteId, formData)` tem 2
 - No componente, bindar o id: `<form action={anexarDocumento.bind(null, cliente.id)}>` com `<input type="file" name="arquivo" />` e `<select name="tipo">`. (Server Actions já recebem `multipart/form-data`; não precisa de `encType` manual.)
 - "Baixar": botão que chama `gerarLinkDownload(doc.id)` e faz `window.open(res.url)` (client component pequeno).
 - "Excluir" (só admin): `excluirDocumento.bind(null, doc.id, cliente.id)`.
+
+**Notas de implementação da Task 10 (registradas na revisão do código):**
+- **Endereço:** o `clienteSchema` não inclui os campos planos de endereço (logradouro/número/bairro/cidade/UF/CEP) — o Zod os descartaria. Na `criarCliente`/`atualizarCliente`, montar `endereco` (jsonb) a partir desses campos do `formData` ANTES do `safeParse` (ou adicioná-los ao schema e compor o objeto na action). Sem isso, o endereço é silenciosamente perdido.
+- **`status` no form:** o `<select name="status">` da ficha deve emitir só `ativo`/`inativo` — nunca `value=""` (string vazia em coluna enum dá Postgres 22P02). Na criação, simplesmente não enviar `status` (a coluna tem `default 'ativo'`). `limparOpcionais` cuida de `contador_id`/`data_inicio`, mas NÃO deve setar `status` para null (a coluna é NOT NULL com default).
+- **Edição:** `atualizarCliente(clienteId, _prev, formData)` tem 3 args — no `FormCliente` em modo edição, usar `atualizarCliente.bind(null, cliente.id)` com `useActionState`.
 
 - [ ] **Step 3: Verificação manual**
 
