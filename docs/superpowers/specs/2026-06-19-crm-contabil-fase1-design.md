@@ -2,7 +2,7 @@
 
 - **Data:** 2026-06-19
 - **Autor:** Pedro Gomes (com Claude Code)
-- **Status:** Em revisão (v2 — incorpora revisão técnica)
+- **Status:** Em revisão (v3 — incorpora 2ª rodada de revisão técnica)
 - **Escopo deste documento:** Fase 1 (Fundação). As Fases 2–4 são citadas apenas como contexto.
 
 ---
@@ -138,13 +138,25 @@ create function auth_papel() returns text
 As policies referenciam `auth_papel()` e `auth.uid()`. (Alternativa equivalente aceitável: papel como
 **custom claim no JWT** via Custom Access Token Hook — decidir na implementação; o default é a função.)
 
+**Blindagens obrigatórias da função (para o bypass de RLS realmente funcionar):**
+- A função é **owned por um role que bypassa a RLS de `usuarios`** (o owner das tabelas); por isso o
+  `SELECT` interno não dispara recursão de policy.
+- `usuarios` **não usa `FORCE ROW LEVEL SECURITY`** (com FORCE, nem o owner bypassa, e a recursão volta).
+- `EXECUTE` concedido a `authenticated`; a função só consulta `where id = auth.uid()` (cada um lê o
+  próprio papel) e fixa `set search_path = public`.
+
 ### 4.5 Bootstrap do primeiro Admin e sincronização de perfil
 
 - **Primeiro Admin (seed):** criado manualmente uma única vez (usuário no Supabase Auth + migration/seed
   inserindo a linha em `usuarios` com `papel='admin'`). Documentado no README de operação.
 - **Sincronização `auth.users` → `usuarios`:** trigger `AFTER INSERT ON auth.users`
-  (`handle_new_user`) cria a linha em `usuarios`, lendo `nome` e `papel` do **metadata do convite**
-  (definido pelo Admin no momento do convite). Garante o vínculo 1:1 sem passo manual.
+  (`handle_new_user`) cria a linha em `usuarios`. Regras obrigatórias:
+  - O `papel` é lido de **`app_metadata`** (definido server-side com `service_role` no convite), **não**
+    de `user_metadata` (que o próprio usuário pode manipular). Isso impede o convidado de escolher o
+    próprio papel.
+  - **Fallback:** se o papel vier ausente, assume `'assistente'` (papel de menor privilégio).
+  - **Idempotência:** `insert ... on conflict (id) do nothing`, para o seed manual do primeiro Admin
+    não colidir com o disparo do trigger.
 
 ---
 
@@ -165,9 +177,17 @@ Perfil da aplicação, 1:1 com `auth.users`.
 | `ativo` | booleano | usuário desativado não loga |
 | `criado_em` | timestamp | |
 
-**Policies de `usuarios` (anti-escalonamento):** usuário comum **lê apenas a própria linha** e
-**não pode** alterar `papel` nem `ativo`. Alteração de `papel`/`ativo` e listagem de todos os
-usuários: **apenas Admin** (via fluxo server-side com `service_role`).
+**Policies de `usuarios` (anti-escalonamento):** usuário comum **lê apenas a própria linha**.
+Alteração de `papel`/`ativo` e listagem de todos os usuários: **apenas Admin** (via fluxo server-side
+com `service_role`).
+
+> **Mecanismo obrigatório (não basta RLS):** uma policy de UPDATE no Postgres valida a *linha final*,
+> não *quais colunas mudaram* — ou seja, um usuário com permissão de editar o próprio `nome` poderia
+> também trocar o próprio `papel` para `admin` e o `WITH CHECK` aprovaria. Para fechar esse furo de
+> escalonamento de privilégio, usar um **trigger `BEFORE UPDATE` em `usuarios`** que, quando
+> `auth_papel() <> 'admin'`, **força `NEW.papel = OLD.papel` e `NEW.ativo = OLD.ativo`** (congela os
+> campos sensíveis). Alternativa equivalente: `REVOKE UPDATE(papel, ativo)` de `authenticated`
+> (column-level grant). O trigger é a opção recomendada.
 
 ### 5.2 Tabela `clientes` (cadastrais — sem dado financeiro)
 
@@ -237,10 +257,13 @@ Registra quem **baixou** cada documento sensível.
 ### 5.6 Storage
 
 - **Bucket privado**; convenção de path `documentos/{cliente_id}/{arquivo}`.
-- **Policies de `storage.objects`** validando acesso por cruzamento com a permissão sobre o
-  `clientes` correspondente (Contador só baixa de seus clientes).
+- **Fonte de verdade do vínculo objeto→cliente:** a tabela `documentos` (`cliente_id` +
+  `caminho_storage`), **não** o parsing do path. Todo upload é feito server-side, que grava a linha em
+  `documentos` e usa exatamente a convenção de path. Policies de `storage.objects` validam via join com
+  `documentos` por `caminho_storage` (evita fragilidade de extrair `cliente_id` do texto do path).
 - **URLs assinadas geradas server-side**, após checar permissão e **registrar** o acesso em
-  `log_acesso_documento`.
+  `log_acesso_documento` (o INSERT do log ocorre no mesmo handler server-side, **antes** de devolver a
+  URL — assim o registro não é burlável pelo client).
 
 ---
 
@@ -275,7 +298,9 @@ Convidar usuário (e-mail + papel + nome), listar usuários, ativar/desativar, a
 
 - **Documento por tipo:** PF → valida **CPF**; PJ e **MEI** → validam **CNPJ**. `cpf_cnpj` único.
 - **Combinação tipo × regime:** `tipo_pessoa=MEI` ⇒ `regime_tributario=MEI`; `PF` ⇒ `Isento/PF`;
-  `PJ` ⇒ `Simples`/`Presumido`/`Real`. Validar a combinação para não gerar dado inconsistente.
+  `PJ` ⇒ `Simples`/`Presumido`/`Real`. Validada no app **e** por **`CHECK` constraint no banco**
+  (coerente com o princípio "regra no banco" da §3.4). A validação de dígito de CPF/CNPJ fica no app
+  (cálculo pesado); a coerência tipo×regime e a unicidade de `cpf_cnpj` vivem no schema.
 - **Campos obrigatórios:** `tipo_pessoa`, `razao_social`, `cpf_cnpj`, `regime_tributario`.
   (Honorário é opcional e fica em `clientes_financeiro`.)
 - **CNPJ já cadastrado, porém inativo:** mensagem específica oferecendo **reativar** o cliente existente.
@@ -319,8 +344,12 @@ O sistema trata dados pessoais e fiscais de clientes do escritório. Medidas na 
 - **Auditoria:** criação/edição de cliente (quem/quando) + **log de download de documentos**
   (`log_acesso_documento`).
 - **Eliminação definitiva:** além do soft-inactivate (operacional), o Admin pode **excluir
-  definitivamente** cliente e documentos (atende ao direito de eliminação do titular). A exclusão
-  remove dados em `clientes`, `clientes_financeiro`, `documentos` e os arquivos no Storage.
+  definitivamente** cliente e documentos (atende ao direito de eliminação do titular). Regras:
+  - `clientes_financeiro` e `documentos` têm FK com **`ON DELETE CASCADE`** a partir de `clientes`
+    (o DELETE no DB é atômico em uma transação).
+  - Como o Storage é externo ao Postgres (não transacional), o handler server-side **remove primeiro
+    os arquivos no Storage e só então o registro no DB**; em caso de falha parcial, registra para
+    limpeza/retentativa, evitando arquivos órfãos sem referência.
 
 ---
 
@@ -341,8 +370,9 @@ Mesmo escopo da Fase 1, ordenado para entregar valor verificável cedo (RLS test
 1. **Infra:** projeto Supabase, Supabase CLI + migrations, `@supabase/ssr`, deploy "hello world" no
    EasyPanel com env de build/runtime corretas.
 2. **Auth + perfil:** tabela `usuarios`, trigger `handle_new_user`, bootstrap do primeiro Admin.
-3. **RLS + testes:** função `auth_papel()`, policies das 4 tabelas + `storage.objects`, suíte de
-   testes de RLS (antes de qualquer UI).
+3. **RLS + testes:** função `auth_papel()` (com blindagens da §4.4), **trigger `BEFORE UPDATE` de
+   proteção de `papel`/`ativo`** (§5.1), policies das 4 tabelas + `storage.objects`, suíte de testes
+   de RLS (antes de qualquer UI), incluindo teste explícito de anti-escalonamento.
 4. **CRUD Clientes:** cadastrais + `clientes_financeiro` com a regra do honorário.
 5. **Documentos:** Storage, policies, URL assinada server-side, log de download.
 6. **Dashboard:** números-resumo, atividade recente, atalhos.
