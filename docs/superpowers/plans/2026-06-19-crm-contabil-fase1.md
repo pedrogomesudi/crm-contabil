@@ -33,8 +33,8 @@ crm-contabil/
 ├── supabase/
 │   ├── config.toml                      # config da Supabase CLI (local dev)
 │   ├── migrations/
-│   │   ├── 0001_enums_e_usuarios.sql     # enums + tabela usuarios + RLS + trigger proteção
-│   │   ├── 0002_auth_papel_e_handle_new_user.sql  # função auth_papel() + trigger sync perfil
+│   │   ├── 0001_enums_e_usuarios.sql     # enums + usuarios + RLS + auth_papel() + trigger proteção
+│   │   ├── 0002_handle_new_user.sql       # trigger sync auth.users -> usuarios
 │   │   ├── 0003_clientes.sql             # tabela clientes + CHECK tipo×regime + RLS
 │   │   ├── 0004_clientes_financeiro.sql  # honorário isolado + RLS (sem assistente)
 │   │   ├── 0005_documentos_e_log.sql     # documentos + log_acesso_documento + RLS
@@ -255,7 +255,7 @@ Entrega: projeto Supabase local inicializado, primeira migration com os enums, a
 - Test: `supabase/tests/rls.test.sql` (iniciado nesta task)
 
 **Interfaces:**
-- Produces: enums `papel`, `tipo_pessoa`, `regime_tributario`, `status_cliente`; tabela `usuarios(id uuid pk, nome text, email text, papel papel, ativo bool, criado_em timestamptz)`; função-trigger `congela_campos_sensiveis()`.
+- Produces: enums `papel`, `tipo_pessoa`, `regime_tributario`, `status_cliente`; tabela `usuarios(id uuid pk, nome text, email text, papel papel, ativo bool, criado_em timestamptz)`; função `auth_papel() returns papel` (STABLE SECURITY DEFINER); função-trigger `congela_campos_sensiveis()`.
 
 - [ ] **Step 1: Inicializar Supabase local**
 
@@ -300,13 +300,21 @@ create policy usuarios_update_propria
   on usuarios for update to authenticated
   using (id = auth.uid()) with check (id = auth.uid());
 
+-- Função de papel BLINDADA, criada AQUI (antes do trigger que a usa).
+-- SECURITY DEFINER + owner que bypassa RLS de usuarios (usuarios não usa FORCE RLS).
+create function auth_papel() returns papel
+  language sql stable security definer set search_path = public as $$
+  select papel from usuarios where id = auth.uid()
+$$;
+revoke all on function auth_papel() from public;
+grant execute on function auth_papel() to authenticated;
+
 -- Trigger anti-escalonamento: congela papel/ativo quando quem edita não é admin.
 -- Guarda auth.uid() is not null => libera service_role (uid nulo) e Admin.
 create function congela_campos_sensiveis() returns trigger
   language plpgsql as $$
 begin
-  if auth.uid() is not null
-     and (select papel from usuarios where id = auth.uid()) <> 'admin' then
+  if auth.uid() is not null and coalesce(auth_papel(), 'assistente') <> 'admin' then
     new.papel := old.papel;
     new.ativo := old.ativo;
   end if;
@@ -319,7 +327,7 @@ create trigger trg_congela_campos_sensiveis
   for each row execute function congela_campos_sensiveis();
 ```
 
-> Nota: dentro do trigger, o `select papel from usuarios` roda no contexto do owner da função (definer padrão é invoker, mas o trigger executa com privilégios do owner da tabela durante o `BEFORE UPDATE` da própria linha já carregada) — para garantir leitura sem recursão, a função `auth_papel()` da Task 3 será usada na prática pelas policies; aqui a subquery direta é segura porque lê a linha por PK no mesmo comando. Se a CLI acusar recursão, trocar a subquery por `auth_papel()` (criada na Task 3) e reordenar as migrations.
+> Nota: `auth_papel()` é criada nesta mesma migration, **antes** do trigger, e o trigger a usa diretamente — sem fragilidade de ordem e sem recursão (a função é `SECURITY DEFINER` e lê a própria linha por PK). `returns papel` (enum) funciona nas comparações com literais string das policies das próximas tasks.
 
 - [ ] **Step 3: Aplicar a migration**
 
@@ -333,26 +341,39 @@ Create `supabase/tests/rls.test.sql` (primeiros casos):
 -- Executar com: psql "$DB_URL" -f supabase/tests/rls.test.sql
 -- Pré-condição: rodar como service_role para semear; depois simular usuários.
 
--- Semear dois usuários (via service_role / owner)
-insert into auth.users (id, email) values
-  ('00000000-0000-0000-0000-000000000001','admin@teste.com'),
-  ('00000000-0000-0000-0000-000000000002','assist@teste.com')
+-- CONVENÇÃO DOS TESTES DE RLS (vale para todos os asserts deste arquivo):
+--  • Rodar com `psql -1` (transação única) para o `set local` valer nos blocos seguintes.
+--  • Simular usuário via `request.jwt.claims` (JSON) — é de lá que auth.uid() lê o `sub`.
+--  • auth.users exige colunas obrigatórias (instance_id, aud, role) além de id/email.
+--  • Helper de simulação: troca o role e os claims numa tacada.
+
+create or replace function _simular(uid uuid) returns void language plpgsql as $$
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', uid::text, 'role', 'authenticated')::text, true);
+end $$;
+
+-- Semear dois usuários (como owner; reset role antes)
+reset role;
+insert into auth.users (id, instance_id, aud, role, email) values
+  ('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','admin@teste.com'),
+  ('00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','assist@teste.com')
   on conflict do nothing;
 insert into usuarios (id, nome, email, papel) values
   ('00000000-0000-0000-0000-000000000001','Admin','admin@teste.com','admin'),
   ('00000000-0000-0000-0000-000000000002','Assist','assist@teste.com','assistente')
   on conflict do nothing;
 
--- Simular o assistente logado
-set local role authenticated;
-set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
-
 -- ASSERT 1: assistente NÃO consegue se promover a admin
 do $$
-declare v_papel papel;
+declare v_papel papel; v_uid uuid;
 begin
-  update usuarios set papel = 'admin' where id = '00000000-0000-0000-0000-000000000002';
-  select papel into v_papel from usuarios where id = '00000000-0000-0000-0000-000000000002';
+  perform _simular('00000000-0000-0000-0000-000000000002');  -- assistente
+  v_uid := auth.uid();
+  if v_uid is null then raise exception 'FALHA: auth.uid() nulo (claims não aplicados)'; end if;
+  update usuarios set papel = 'admin' where id = v_uid;
+  select papel into v_papel from usuarios where id = v_uid;
   if v_papel <> 'assistente' then
     raise exception 'FALHA: assistente conseguiu mudar o próprio papel (=%)', v_papel;
   end if;
@@ -365,7 +386,7 @@ end $$;
 Run:
 ```bash
 npx supabase db reset   # reaplica migrations limpas
-psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/tests/rls.test.sql
+psql -1 "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/tests/rls.test.sql
 ```
 Expected: saída `OK: papel do assistente permaneceu congelado`, sem `FALHA`.
 
@@ -378,31 +399,22 @@ git commit -m "feat: enums + tabela usuarios com RLS e trigger anti-escalonament
 
 ---
 
-## Task 3: Função `auth_papel()` + trigger `handle_new_user` (sync de perfil)
+## Task 3: Trigger `handle_new_user` (sync de perfil)
 
-Entrega: função `auth_papel()` blindada (usada pelas policies das próximas tabelas) e o trigger que cria a linha em `usuarios` quando um usuário nasce em `auth.users`, lendo o papel de `app_metadata`. Marco 2 da §12.
+Entrega: o trigger que cria a linha em `usuarios` quando um usuário nasce em `auth.users`, lendo o papel de `app_metadata`. (A função `auth_papel()` já foi criada na Task 2/migration 0001.) Marco 2 da §12.
 
 **Files:**
-- Create: `supabase/migrations/0002_auth_papel_e_handle_new_user.sql`
+- Create: `supabase/migrations/0002_handle_new_user.sql`
 - Modify: `supabase/tests/rls.test.sql` (adicionar casos)
 
 **Interfaces:**
-- Produces: `auth_papel() returns papel` (STABLE SECURITY DEFINER); trigger `on auth.users` → cria `usuarios`.
-- Consumes: tabela `usuarios` e enums da Task 2.
+- Produces: trigger `on auth.users` → cria `usuarios`.
+- Consumes: tabela `usuarios`, enums e `auth_papel()` da Task 2.
 
-- [ ] **Step 1: Criar a migration da função e do trigger de sync**
+- [ ] **Step 1: Criar a migration do trigger de sync**
 
-Create `supabase/migrations/0002_auth_papel_e_handle_new_user.sql`:
+Create `supabase/migrations/0002_handle_new_user.sql`:
 ```sql
--- Função que lê o papel do usuário corrente sem disparar recursão de RLS.
--- SECURITY DEFINER + owner que bypassa RLS de usuarios (usuarios não usa FORCE RLS).
-create function auth_papel() returns papel
-  language sql stable security definer set search_path = public as $$
-  select papel from usuarios where id = auth.uid()
-$$;
-revoke all on function auth_papel() from public;
-grant execute on function auth_papel() to authenticated;
-
 -- Sincroniza auth.users -> usuarios. Papel vem de app_metadata (definido server-side no convite).
 -- Fallback 'assistente' (menor privilégio). Idempotente (on conflict do nothing).
 create function handle_new_user() returns trigger
@@ -456,15 +468,15 @@ end $$;
 Run:
 ```bash
 npx supabase db reset
-psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/tests/rls.test.sql
+psql -1 "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/tests/rls.test.sql
 ```
 Expected: `OK: handle_new_user criou perfil com papel contador` e os asserts anteriores também OK.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add supabase/migrations/0002_auth_papel_e_handle_new_user.sql supabase/tests/rls.test.sql
-git commit -m "feat: auth_papel() blindada + trigger handle_new_user (sync perfil)"
+git add supabase/migrations/0002_handle_new_user.sql supabase/tests/rls.test.sql
+git commit -m "feat: trigger handle_new_user (sync de perfil via app_metadata)"
 ```
 
 ---
@@ -575,11 +587,10 @@ values
  ('aaaaaaaa-0000-0000-0000-000000000001','PJ','Cliente do Contador','11222333000181','Simples','00000000-0000-0000-0000-000000000003'),
  ('aaaaaaaa-0000-0000-0000-000000000002','PJ','Cliente de Outro','11222333000262','Simples','00000000-0000-0000-0000-000000000001')
  on conflict do nothing;
-set local role authenticated;
-set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000000003'; -- contador
 do $$
 declare n int;
 begin
+  perform _simular('00000000-0000-0000-0000-000000000003');  -- contador
   select count(*) into n from clientes;
   if n <> 1 then raise exception 'FALHA: contador viu % clientes (esperado 1)', n; end if;
   raise notice 'OK: contador enxerga apenas o próprio cliente';
@@ -591,7 +602,7 @@ end $$;
 Run:
 ```bash
 npx supabase db reset
-psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/tests/rls.test.sql
+psql -1 "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/tests/rls.test.sql
 ```
 Expected: `OK: CHECK rejeitou PF+Simples` e `OK: contador enxerga apenas o próprio cliente`.
 
@@ -667,11 +678,10 @@ Append em `supabase/tests/rls.test.sql`:
 reset role;
 insert into clientes_financeiro (cliente_id, honorario_mensal)
 values ('aaaaaaaa-0000-0000-0000-000000000001', 500.00) on conflict do nothing;
-set local role authenticated;
-set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002'; -- assistente
 do $$
 declare n int;
 begin
+  perform _simular('00000000-0000-0000-0000-000000000002');  -- assistente
   select count(*) into n from clientes_financeiro;
   if n <> 0 then raise exception 'FALHA: assistente viu % linhas de honorário', n; end if;
   raise notice 'OK: assistente não acessa clientes_financeiro';
@@ -683,7 +693,7 @@ end $$;
 Run:
 ```bash
 npx supabase db reset
-psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/tests/rls.test.sql
+psql -1 "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/tests/rls.test.sql
 ```
 Expected: `OK: assistente não acessa clientes_financeiro`.
 
@@ -727,7 +737,9 @@ create policy doc_select on documentos for select to authenticated using (
   exists (select 1 from clientes c where c.id = cliente_id)  -- RLS de clientes já filtra
 );
 create policy doc_insert on documentos for insert to authenticated with check (
-  exists (select 1 from clientes c where c.id = cliente_id)
+  -- financeiro só VÊ documentos (spec §4.2); admin/contador/assistente gerenciam
+  auth_papel() in ('admin','contador','assistente')
+  and exists (select 1 from clientes c where c.id = cliente_id)
 );
 create policy doc_delete on documentos for delete to authenticated using (
   auth_papel() = 'admin'
@@ -779,7 +791,7 @@ Append em `supabase/tests/rls.test.sql`:
 -- ASSERT 6: ao deletar documento, o log permanece com documento_id nulo
 reset role;
 insert into documentos (id, cliente_id, nome, caminho_storage)
-values ('dddddddd-0000-0000-0000-000000000001','aaaaaaaa-0000-0000-0000-000000000001','contrato.pdf','documentos/aaaaaaaa-0000-0000-0000-000000000001/contrato.pdf')
+values ('dddddddd-0000-0000-0000-000000000001','aaaaaaaa-0000-0000-0000-000000000001','contrato.pdf','aaaaaaaa-0000-0000-0000-000000000001/contrato.pdf')
 on conflict do nothing;
 insert into log_acesso_documento (documento_id, usuario_id)
 values ('dddddddd-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001')
@@ -799,7 +811,7 @@ end $$;
 Run:
 ```bash
 npx supabase db reset
-psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/tests/rls.test.sql
+psql -1 "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/tests/rls.test.sql
 ```
 Expected: `OK: log preservado com documento_id nulo após exclusão`.
 
@@ -965,6 +977,12 @@ export const clienteSchema = z.object({
   telefone: z.string().optional(),
   responsavel_nome: z.string().optional(),
   observacoes: z.string().optional(),
+  // Campos persistidos que vêm do formulário — sem eles o Zod os descarta no insert.
+  contador_id: z.string().uuid('Selecione um contador').optional().or(z.literal('')),
+  data_inicio: z.string().optional().or(z.literal('')),
+  status: z.enum(['ativo', 'inativo']).optional(),
+  // endereco (jsonb) é montado à parte na action a partir de campos planos do form
+  // (logradouro, numero, bairro, cidade, uf, cep) — não vem como string crua aqui.
 }).refine(
   (d) => validarDocumento(d.tipo_pessoa, d.cpf_cnpj),
   { path: ['cpf_cnpj'], message: 'CPF/CNPJ inválido para o tipo selecionado' }
@@ -1145,11 +1163,12 @@ export async function recuperarSenha(_prev: unknown, formData: FormData) {
 Create `src/app/login/page.tsx`:
 ```tsx
 'use client';
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { entrar } from './actions';
 
 export default function LoginPage() {
-  const [estado, action] = useFormState(entrar, {} as { erro?: string });
+  // Next 15 / React 19: useActionState (de 'react'), não o antigo useFormState (de 'react-dom').
+  const [estado, action] = useActionState(entrar, {} as { erro?: string });
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-50">
       <form action={action} className="w-80 space-y-4 rounded-xl bg-white p-8 shadow">
@@ -1278,9 +1297,26 @@ export async function criarCliente(_prev: unknown, formData: FormData) {
     ...parsed.data, criado_por: user!.id,
   });
   if (error) {
-    if (error.code === '23505') return { erro: 'CPF/CNPJ já cadastrado.' };
+    if (error.code === '23505') {
+      // CPF/CNPJ já existe — spec §7: se for inativo, oferecer reativação
+      const { data: existente } = await supabase.from('clientes')
+        .select('id, status').eq('cpf_cnpj', parsed.data.cpf_cnpj).single();
+      if (existente?.status === 'inativo') {
+        return { erro: 'CPF/CNPJ já cadastrado em um cliente INATIVO.', reativarId: existente.id };
+      }
+      return { erro: 'CPF/CNPJ já cadastrado em um cliente ativo.' };
+    }
     return { erro: 'Não foi possível salvar o cliente.' };
   }
+  revalidatePath('/clientes');
+  return { ok: true };
+}
+
+export async function reativarCliente(clienteId: string) {
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from('clientes')
+    .update({ status: 'ativo' }).eq('id', clienteId);
+  if (error) return { erro: 'Não foi possível reativar.' };
   revalidatePath('/clientes');
   return { ok: true };
 }
@@ -1380,7 +1416,7 @@ export default async function ClientesPage({
 
 - [ ] **Step 3: Formulário de novo cliente**
 
-Create `src/components/FormCliente.tsx` (campos das abas Cadastrais/Contato/Gestão) e `src/app/(app)/clientes/novo/page.tsx` que usa `criarCliente`. O formulário usa `useFormState(criarCliente, {})`, inputs com `name` batendo as chaves do `clienteSchema`, e um `<select name="contador_id">` populado via prop (lista de contadores carregada no server component pai). Exibir `estado.erro` em vermelho. Após `ok`, redirecionar para `/clientes`.
+Create `src/components/FormCliente.tsx` (campos das abas Cadastrais/Contato/Gestão) e `src/app/(app)/clientes/novo/page.tsx` que usa `criarCliente`. O formulário (client component) usa `useActionState(criarCliente, {})` (de `'react'`, não `useFormState`), inputs com `name` batendo as chaves do `clienteSchema` (incluindo `<select name="contador_id">` populado via prop com a lista de contadores carregada no server component pai). Exibir `estado.erro` em vermelho. Após `ok`, redirecionar para `/clientes`.
 
 ```tsx
 // src/app/(app)/clientes/novo/page.tsx
@@ -1554,13 +1590,20 @@ export async function convidarUsuario(_prev: unknown, formData: FormData) {
     return { erro: 'Papel inválido.' };
   }
   const admin = createAdminSupabase();
-  // papel vai em app_metadata (lido pelo trigger handle_new_user)
-  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: {}, // user_metadata vazio de propósito
-    // @ts-expect-error app_metadata aceito pela API admin
-    app_metadata: { papel, nome },
+  // IMPORTANTE: inviteUserByEmail NÃO aceita app_metadata (só `data`/`redirectTo`).
+  // Para o papel cair em raw_app_meta_data (lido pelo trigger handle_new_user),
+  // criamos o usuário com createUser({ app_metadata }) e disparamos o convite à parte.
+  const { error: errCreate } = await admin.auth.admin.createUser({
+    email,
+    email_confirm: false,
+    app_metadata: { papel, nome }, // raw_app_meta_data -> trigger lê o papel daqui
   });
-  if (error) return { erro: 'Não foi possível convidar (e-mail já existe?).' };
+  if (errCreate) return { erro: 'Não foi possível criar (e-mail já existe?).' };
+
+  // Envia o e-mail de definição de senha (fluxo de convite/recuperação)
+  const { error: errInvite } = await admin.auth.resetPasswordForEmail(email);
+  if (errInvite) return { erro: 'Usuário criado, mas falha ao enviar o e-mail de acesso.' };
+
   revalidatePath('/usuarios');
   return { ok: true };
 }
@@ -1691,10 +1734,12 @@ export async function anexarDocumento(clienteId: string, formData: FormData) {
   if (file.size > MAX_BYTES) return { erro: 'Arquivo acima de 10 MB.' };
   if (!TIPOS_OK.includes(file.type)) return { erro: 'Tipo não permitido (PDF/PNG/JPG).' };
 
-  const caminho = `documentos/${clienteId}/${Date.now()}-${file.name}`;
+  // caminho_storage === name do objeto em storage.objects (SEM o prefixo do bucket).
+  // A policy de SELECT do storage compara storage.objects.name = documentos.caminho_storage.
+  const caminho = `${clienteId}/${Date.now()}-${file.name}`;
   const admin = createAdminSupabase();
   const up = await admin.storage.from('documentos')
-    .upload(caminho.replace(/^documentos\//, ''), file, { contentType: file.type });
+    .upload(caminho, file, { contentType: file.type });
   if (up.error) return { erro: 'Falha no upload.' };
 
   await admin.from('documentos').insert({
@@ -1717,7 +1762,7 @@ export async function gerarLinkDownload(documentoId: string) {
   // registra o acesso ANTES de devolver o link (server-side, não burlável)
   await admin.from('log_acesso_documento').insert({ documento_id: documentoId, usuario_id: user!.id });
   const { data: signed } = await admin.storage.from('documentos')
-    .createSignedUrl(doc.caminho_storage.replace(/^documentos\//, ''), 60);
+    .createSignedUrl(doc.caminho_storage, 60);
   return { url: signed?.signedUrl };
 }
 
@@ -1732,8 +1777,7 @@ export async function excluirDocumento(documentoId: string, clienteId: string) {
     .select('caminho_storage').eq('id', documentoId).single();
   if (doc) {
     // ordem: Storage primeiro, depois DB (evita arquivo órfão); log sobrevive (SET NULL)
-    await admin.storage.from('documentos')
-      .remove([doc.caminho_storage.replace(/^documentos\//, '')]);
+    await admin.storage.from('documentos').remove([doc.caminho_storage]);
     await admin.from('documentos').delete().eq('id', documentoId);
   }
   revalidatePath(`/clientes/${clienteId}`);
@@ -1743,7 +1787,12 @@ export async function excluirDocumento(documentoId: string, clienteId: string) {
 
 - [ ] **Step 2: Aba Documentos na ficha do cliente**
 
-Modify `src/app/(app)/clientes/[id]/page.tsx`: adicionar a aba "Documentos" que lista `documentos` do cliente, um `<form>` de upload (`anexarDocumento` com `encType="multipart/form-data"` / Server Action recebendo `File`), um botão "Baixar" que chama `gerarLinkDownload` e abre a URL, e (se admin) "Excluir".
+Modify `src/app/(app)/clientes/[id]/page.tsx`: adicionar a aba "Documentos" que lista `documentos` do cliente, um `<form>` de upload e um botão "Baixar"/"Excluir".
+
+Detalhes de binding (importante — `anexarDocumento(clienteId, formData)` tem 2 args, mas `<form action>` só passa `formData`):
+- No componente, bindar o id: `<form action={anexarDocumento.bind(null, cliente.id)}>` com `<input type="file" name="arquivo" />` e `<select name="tipo">`. (Server Actions já recebem `multipart/form-data`; não precisa de `encType` manual.)
+- "Baixar": botão que chama `gerarLinkDownload(doc.id)` e faz `window.open(res.url)` (client component pequeno).
+- "Excluir" (só admin): `excluirDocumento.bind(null, doc.id, cliente.id)`.
 
 - [ ] **Step 3: Verificação manual**
 
