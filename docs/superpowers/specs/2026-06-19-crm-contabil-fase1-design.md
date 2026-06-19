@@ -2,7 +2,7 @@
 
 - **Data:** 2026-06-19
 - **Autor:** Pedro Gomes (com Claude Code)
-- **Status:** Em revisão (v4 — incorpora 3ª rodada de revisão técnica)
+- **Status:** Aprovado para implementação (v4 — após 4 rodadas de revisão técnica)
 - **Escopo deste documento:** Fase 1 (Fundação). As Fases 2–4 são citadas apenas como contexto.
 
 ---
