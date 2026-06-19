@@ -2,7 +2,7 @@
 
 - **Data:** 2026-06-19
 - **Autor:** Pedro Gomes (com Claude Code)
-- **Status:** Em revisão (v3 — incorpora 2ª rodada de revisão técnica)
+- **Status:** Em revisão (v4 — incorpora 3ª rodada de revisão técnica)
 - **Escopo deste documento:** Fase 1 (Fundação). As Fases 2–4 são citadas apenas como contexto.
 
 ---
@@ -177,17 +177,38 @@ Perfil da aplicação, 1:1 com `auth.users`.
 | `ativo` | booleano | usuário desativado não loga |
 | `criado_em` | timestamp | |
 
-**Policies de `usuarios` (anti-escalonamento):** usuário comum **lê apenas a própria linha**.
-Alteração de `papel`/`ativo` e listagem de todos os usuários: **apenas Admin** (via fluxo server-side
-com `service_role`).
+**Policies de `usuarios` (enunciadas explicitamente):**
+1. **SELECT própria linha** — `authenticated` lê apenas a linha onde `id = auth.uid()`.
+2. **UPDATE própria linha** — `authenticated` pode atualizar a própria linha (`USING`/`WITH CHECK`
+   `id = auth.uid()`), para editar dados pessoais como o `nome`.
+3. **Listagem de todos / alteração de `papel`/`ativo` de qualquer usuário:** ocorre **apenas via fluxo
+   server-side com `service_role`** (que bypassa RLS). Não há policy ampla de UPDATE/SELECT para
+   `authenticated` além das duas acima.
 
-> **Mecanismo obrigatório (não basta RLS):** uma policy de UPDATE no Postgres valida a *linha final*,
-> não *quais colunas mudaram* — ou seja, um usuário com permissão de editar o próprio `nome` poderia
-> também trocar o próprio `papel` para `admin` e o `WITH CHECK` aprovaria. Para fechar esse furo de
-> escalonamento de privilégio, usar um **trigger `BEFORE UPDATE` em `usuarios`** que, quando
-> `auth_papel() <> 'admin'`, **força `NEW.papel = OLD.papel` e `NEW.ativo = OLD.ativo`** (congela os
-> campos sensíveis). Alternativa equivalente: `REVOKE UPDATE(papel, ativo)` de `authenticated`
-> (column-level grant). O trigger é a opção recomendada.
+> **Anti-escalonamento — por que precisa de trigger (não basta a policy de UPDATE):** a policy 2 acima
+> deixa o usuário editar a própria linha; mas uma policy de UPDATE no Postgres valida a *linha final*,
+> não *quais colunas mudaram* — então o usuário poderia trocar o próprio `papel` para `admin` e o
+> `WITH CHECK` aprovaria. Fechamos isso com um **trigger `BEFORE UPDATE` em `usuarios`** que congela os
+> campos sensíveis quando quem edita não é Admin:
+>
+> ```sql
+> -- pseudocódigo da regra do trigger
+> if coalesce(auth_papel(), '') <> 'admin' then
+>   NEW.papel := OLD.papel;   -- congela
+>   NEW.ativo := OLD.ativo;   -- congela
+> end if;
+> ```
+>
+> **Interação com `service_role` (intencional e blindada):** no fluxo Admin server-side, `auth.uid()`
+> é `NULL` → o `coalesce(auth_papel(), '')` resulta em `''` (≠ `'admin'`)… o que **congelaria** —
+> portanto o caminho legítimo de alteração de `papel`/`ativo` é o **`service_role`, que bypassa
+> inclusive triggers de RLS-lógica? Não**: triggers comuns disparam mesmo para `service_role`. Por isso
+> a regra do trigger deve **liberar explicitamente o caminho privilegiado**: a condição efetiva é
+> `congela quando (auth.uid() is not null AND auth_papel() <> 'admin')`. Assim: usuário comun logado →
+> congela; Admin logado → libera; `service_role` (`auth.uid() is null`) → libera. A guarda
+> `auth.uid() is not null` é **obrigatória** e torna a intenção robusta mesmo se no futuro o papel
+> migrar para custom claim no JWT (§11.5). Alternativa equivalente: `REVOKE UPDATE(papel, ativo)` de
+> `authenticated` (column-level grant). O trigger é a opção recomendada.
 
 ### 5.2 Tabela `clientes` (cadastrais — sem dado financeiro)
 
@@ -250,7 +271,7 @@ Registra quem **baixou** cada documento sensível.
 | Campo | Tipo | Observação |
 |-------|------|------------|
 | `id` | uuid (PK) | |
-| `documento_id` | uuid (FK→documentos) | |
+| `documento_id` | uuid (FK→documentos, **nullable**) | `ON DELETE SET NULL` — log sobrevive à eliminação do doc |
 | `usuario_id` | uuid (FK→usuarios) | quem baixou |
 | `acessado_em` | timestamp | |
 
@@ -261,6 +282,10 @@ Registra quem **baixou** cada documento sensível.
   `caminho_storage`), **não** o parsing do path. Todo upload é feito server-side, que grava a linha em
   `documentos` e usa exatamente a convenção de path. Policies de `storage.objects` validam via join com
   `documentos` por `caminho_storage` (evita fragilidade de extrair `cliente_id` do texto do path).
+- **Escrita só via `service_role`:** **não há** policy de INSERT/UPDATE/DELETE em `storage.objects`
+  para `authenticated` — todo upload/remoção passa pelo handler server-side. As policies de
+  `authenticated` no bucket cobrem apenas **leitura defensiva** (SELECT validado por join com
+  `documentos`). Isso impede um token válido de fazer PUT direto no bucket.
 - **URLs assinadas geradas server-side**, após checar permissão e **registrar** o acesso em
   `log_acesso_documento` (o INSERT do log ocorre no mesmo handler server-side, **antes** de devolver a
   URL — assim o registro não é burlável pelo client).
@@ -348,8 +373,13 @@ O sistema trata dados pessoais e fiscais de clientes do escritório. Medidas na 
   - `clientes_financeiro` e `documentos` têm FK com **`ON DELETE CASCADE`** a partir de `clientes`
     (o DELETE no DB é atômico em uma transação).
   - Como o Storage é externo ao Postgres (não transacional), o handler server-side **remove primeiro
-    os arquivos no Storage e só então o registro no DB**; em caso de falha parcial, registra para
-    limpeza/retentativa, evitando arquivos órfãos sem referência.
+    os arquivos no Storage e só então o registro no DB**. A operação é **idempotente e retentável**
+    (marca o cliente "em eliminação" no início); em falha parcial, a retentativa reprocessa, tratando
+    tanto arquivos órfãos (arquivo sem linha) quanto registros órfãos (linha sem arquivo).
+  - **Tensão LGPD — eliminação × auditoria:** o `log_acesso_documento` é prova de quem acessou dados
+    sensíveis e **não deve ser apagado junto** com o documento. Portanto a FK
+    `log_acesso_documento → documentos` usa **`ON DELETE SET NULL`** (não CASCADE): o documento some,
+    mas o registro de auditoria permanece (com `documento_id` nulo). Decisão registrada em §11.
 
 ---
 
@@ -360,6 +390,12 @@ O sistema trata dados pessoais e fiscais de clientes do escritório. Medidas na 
 3. Conjunto exato de **tipos de documento** padrão na lista (pode começar livre).
 4. Política exata de **expiração de sessão** (tempo).
 5. Mecanismo de papel na RLS: função `auth_papel()` (default) vs. custom claim no JWT — a confirmar.
+6. **Reatribuição de `contador_id`:** definir se o Assistente pode trocar o contador responsável de um
+   cliente (o que altera a visibilidade dos Contadores) ou se isso é **exclusivo do Admin**. Default
+   sugerido: apenas Admin reatribui (validado no handler server-side). — *D4*
+7. **Retenção do log de auditoria:** confirmada a preservação do `log_acesso_documento` mesmo após
+   eliminação definitiva do cliente/documento (`ON DELETE SET NULL`). Validar período de retenção do
+   log conforme política do escritório. — *D3*
 
 ---
 
