@@ -52,7 +52,7 @@ crm-contabil/
 │   │   │   ├── documento.ts              # validação CPF/CNPJ (dígitos)
 │   │   │   └── cliente.ts                # schema Zod do cliente + regra tipo×regime
 │   │   └── tipos.ts                      # tipos TS compartilhados (Papel, Cliente, etc.)
-│   ├── middleware.ts                     # refresh de sessão (@supabase/ssr)
+│   ├── proxy.ts                          # refresh de sessão (@supabase/ssr) — Next 16 (ex-middleware.ts)
 │   ├── app/
 │   │   ├── layout.tsx                    # layout raiz
 │   │   ├── login/
@@ -1014,7 +1014,7 @@ git commit -m "feat: validação de CPF/CNPJ e schema do cliente (tipo×regime)"
 Entrega: os três pontos de acesso ao Supabase no Next e o middleware que mantém a sessão viva. Marco 1 da §12 (integração).
 
 **Files:**
-- Create: `src/lib/supabase/client.ts`, `src/lib/supabase/server.ts`, `src/lib/supabase/admin.ts`, `src/middleware.ts`
+- Create: `src/lib/supabase/client.ts`, `src/lib/supabase/server.ts`, `src/lib/supabase/admin.ts`, `src/proxy.ts` (Next 16: era `middleware.ts`)
 
 **Interfaces:**
 - Produces: `createBrowserSupabase()`, `createServerSupabase()` (async, lê cookies), `createAdminSupabase()` (service_role, server-only).
@@ -1076,14 +1076,17 @@ export function createAdminSupabase() {
 ```
 Run: `npm install server-only`
 
-- [ ] **Step 4: Middleware de refresh de sessão**
+- [ ] **Step 4: Proxy de refresh de sessão**
 
-Create `src/middleware.ts`:
+> **Next 16:** a convenção `middleware.ts` foi renomeada para **`proxy.ts`**, e a função
+> exportada é **`proxy`** (não `middleware`). O conteúdo é idêntico ao padrão do @supabase/ssr.
+
+Create `src/proxy.ts`:
 ```ts
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -1116,8 +1119,8 @@ Expected: build conclui sem erro de tipos.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/lib/supabase/ src/middleware.ts package.json
-git commit -m "feat: clients Supabase (browser/server/admin) + middleware de sessão"
+git add src/lib/supabase/ src/proxy.ts package.json
+git commit -m "feat: clients Supabase (browser/server/admin) + proxy de sessão"
 ```
 
 ---
