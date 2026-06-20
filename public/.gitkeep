@@ -1,0 +1,1 @@
+# mantém a pasta public/ versionada e não-vazia (Dockerfile faz COPY de public)

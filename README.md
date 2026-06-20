@@ -1,5 +1,9 @@
 # CRM Contábil
 
+> **Status:** Fase 1 em andamento — apenas o scaffolding (Task 1) está implementado: health check,
+> configuração de build/test/lint e Dockerfile. Login, dashboard, papéis/RLS e módulo de clientes
+> ainda serão construídos (ver `docs/superpowers/plans/`).
+
 CRM web para escritório de contabilidade — login com papéis, dashboard e gestão de clientes.
 
 - **Stack:** Next.js 16 (App Router) + TypeScript + Tailwind CSS · Supabase (Auth/Postgres/RLS/Storage) · deploy no EasyPanel.
@@ -29,9 +33,15 @@ Copie `.env.local.example` para `.env.local` e preencha:
 
 ```bash
 npm install
-npm run dev          # http://localhost:3000
-npm test             # testes (Vitest)
+npm run dev           # http://localhost:3000
+npm run lint          # ESLint (eslint-config-next)
+npm run typecheck     # TypeScript (tsc --noEmit)
+npm run format        # Prettier (escreve)
+npm test              # testes (Vitest)
+npm run test:coverage # testes com cobertura
 ```
+
+> A Supabase CLI é usada sob demanda via `npx supabase ...` (não é dependência do projeto).
 
 Banco local (quando houver migrations):
 

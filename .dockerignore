@@ -6,3 +6,6 @@ docs
 src/tests
 **/*.test.ts
 **/*.test.tsx
+*.md
+coverage
+.github
