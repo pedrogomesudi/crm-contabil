@@ -16,9 +16,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
+      # build antes do typecheck: gera next-env.d.ts e .next/types (necessários ao tsc)
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+      - run: npm run typecheck
+      - run: npm test
