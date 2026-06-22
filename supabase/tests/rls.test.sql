@@ -85,3 +85,20 @@ begin
   if n <> 0 then raise exception 'FALHA: assistente viu % linhas de honorário', n; end if;
   raise notice 'OK: assistente não acessa clientes_financeiro';
 end $$;
+
+-- ASSERT 6: ao deletar documento, o log de auditoria permanece (documento_id -> null)
+reset role;
+insert into documentos (id, cliente_id, nome, caminho_storage) values
+  ('dddddddd-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'contrato.pdf', 'aaaaaaaa-0000-0000-0000-000000000001/contrato.pdf')
+  on conflict do nothing;
+insert into log_acesso_documento (documento_id, usuario_id) values
+  ('dddddddd-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001')
+  on conflict do nothing;
+delete from documentos where id = 'dddddddd-0000-0000-0000-000000000001';
+do $$
+declare n int;
+begin
+  select count(*) into n from log_acesso_documento where documento_id is null;
+  if n < 1 then raise exception 'FALHA: log não sobreviveu à exclusão do documento'; end if;
+  raise notice 'OK: log preservado com documento_id nulo após exclusão';
+end $$;
