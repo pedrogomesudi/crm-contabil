@@ -9,16 +9,26 @@ begin
     json_build_object('sub', uid::text, 'role', 'authenticated')::text, true);
 end $$;
 
--- Semear usuários como owner (created_at/updated_at explícitos p/ não depender do GoTrue).
+-- Semear usuários como owner. Os perfis em `usuarios` são criados automaticamente
+-- pelo trigger handle_new_user, lendo o papel de raw_app_meta_data.
 reset role;
-insert into auth.users (id, instance_id, aud, role, email, created_at, updated_at) values
-  ('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','admin@teste.com', now(), now()),
-  ('00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','assist@teste.com', now(), now())
+insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, created_at, updated_at) values
+  ('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','admin@teste.com',  '{"nome":"Admin","papel":"admin"}'::jsonb,        now(), now()),
+  ('00000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','assist@teste.com', '{"nome":"Assist","papel":"assistente"}'::jsonb,   now(), now()),
+  ('00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000000','authenticated','authenticated','contador@teste.com','{"nome":"Contador X","papel":"contador"}'::jsonb, now(), now())
   on conflict do nothing;
-insert into usuarios (id, nome, email, papel) values
-  ('00000000-0000-0000-0000-000000000001','Admin','admin@teste.com','admin'),
-  ('00000000-0000-0000-0000-000000000002','Assist','assist@teste.com','assistente')
-  on conflict do nothing;
+
+-- ASSERT 2: o trigger handle_new_user criou o perfil com o papel vindo de app_metadata
+do $$
+declare v_papel papel;
+begin
+  reset role;
+  select papel into v_papel from usuarios where id = '00000000-0000-0000-0000-000000000003';
+  if v_papel is distinct from 'contador' then
+    raise exception 'FALHA: sync de perfil não aplicou papel de app_metadata (=%)', v_papel;
+  end if;
+  raise notice 'OK: handle_new_user criou perfil com papel contador';
+end $$;
 
 -- ASSERT 1: assistente NÃO consegue se promover a admin (trigger anti-escalonamento)
 do $$
