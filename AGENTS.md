@@ -12,5 +12,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Imagens:** use `next/image`, nunca `<img>`.
 - **Segredos:** `SUPABASE_SERVICE_ROLE_KEY` é runtime, só no servidor; nunca `NEXT_PUBLIC_`. As `NEXT_PUBLIC_*` são inlined no build.
 - **Comandos:** `npm run lint`, `npm run typecheck`, `npm test`, `npm run format`, `npm run build`. Rode todos antes de commitar.
-- **Banco:** schema/policies só via migrations da Supabase CLI (`supabase/migrations`), nunca pelo painel.
+- **Banco / migrations:** sem Docker local. A fonte de verdade do schema/policies são os
+  arquivos `supabase/migrations/NNNN_*.sql`, aplicados pelo **runner próprio** `npm run db:migrate`
+  (rastreia em `app_migrations`). **NÃO** usar `supabase db push` (usaria outra tabela de controle e
+  conflitaria). Testes de RLS: `npm run db:test` (exige Session pooler em `SUPABASE_DB_URL`).
+  - Migrations já aplicadas são **imutáveis** (não editar — o runner não as reaplica). Mudança =
+    nova migration com `create or replace` / `drop ... if exists`.
+  - Novas migrations devem ser **idempotentes** quando possível (`create table if not exists`,
+    `drop policy if exists ... ; create policy ...`).
 - **Docs do projeto:** `docs/superpowers/specs/` (design) e `docs/superpowers/plans/` (plano).

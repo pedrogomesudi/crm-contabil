@@ -28,5 +28,12 @@ export function validarCNPJ(valor: string): boolean {
 }
 
 export function validarDocumento(tipo: TipoPessoa, valor: string): boolean {
-  return tipo === "PF" ? validarCPF(valor) : validarCNPJ(valor);
+  // switch exaustivo: se um novo TipoPessoa for adicionado, o TS acusa.
+  switch (tipo) {
+    case "PF":
+      return validarCPF(valor);
+    case "PJ":
+    case "MEI":
+      return validarCNPJ(valor);
+  }
 }

@@ -11,6 +11,8 @@ const client = makeClient();
 await client.connect();
 
 try {
+  // Serializa execuções concorrentes do runner (advisory lock global do projeto).
+  await client.query("select pg_advisory_lock(727274)");
   await client.query(`
     create table if not exists app_migrations (
       name text primary key,
@@ -41,7 +43,8 @@ try {
       count++;
     } catch (err) {
       await client.query("rollback");
-      console.error(`\nFALHA em ${file}:\n${err.message}`);
+      const pos = err.position ? ` (posição ${err.position})` : "";
+      console.error(`\nFALHA em ${file}${pos}:\n${err.message}`);
       process.exitCode = 1;
       break;
     }

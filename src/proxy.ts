@@ -1,13 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { required } from "@/lib/env";
 
 // Next 16: a convenção middleware.ts virou proxy.ts (função `proxy`).
-// Mantém a sessão do Supabase viva (refresh do token) a cada request.
+// Responsabilidade ÚNICA: manter a sessão do Supabase viva (refresh do token).
+// A proteção de rota (redirecionar deslogado) é feita no layout do grupo (app)
+// via getUser() em Server Component — não aqui (padrão @supabase/ssr).
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    required(process.env.NEXT_PUBLIC_SUPABASE_URL, "NEXT_PUBLIC_SUPABASE_URL"),
+    required(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, "NEXT_PUBLIC_SUPABASE_ANON_KEY"),
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
@@ -24,5 +27,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/health).*)"],
+  // Exclui assets estáticos, imagens do Next e a rota de health do refresh de sessão.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)",
+  ],
 };

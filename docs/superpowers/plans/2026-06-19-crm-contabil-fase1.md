@@ -1828,6 +1828,9 @@ Detalhes de binding (importante — `anexarDocumento(clienteId, formData)` tem 2
 - **Endereço:** o `clienteSchema` não inclui os campos planos de endereço (logradouro/número/bairro/cidade/UF/CEP) — o Zod os descartaria. Na `criarCliente`/`atualizarCliente`, montar `endereco` (jsonb) a partir desses campos do `formData` ANTES do `safeParse` (ou adicioná-los ao schema e compor o objeto na action). Sem isso, o endereço é silenciosamente perdido.
 - **`status` no form:** o `<select name="status">` da ficha deve emitir só `ativo`/`inativo` — nunca `value=""` (string vazia em coluna enum dá Postgres 22P02). Na criação, simplesmente não enviar `status` (a coluna tem `default 'ativo'`). `limparOpcionais` cuida de `contador_id`/`data_inicio`, mas NÃO deve setar `status` para null (a coluna é NOT NULL com default).
 - **Edição:** `atualizarCliente(clienteId, _prev, formData)` tem 3 args — no `FormCliente` em modo edição, usar `atualizarCliente.bind(null, cliente.id)` com `useActionState`.
+- **Normalizar `cpf_cnpj` (unicidade):** o banco tem `unique` em `cpf_cnpj` como texto. Gravar **só os dígitos** (`valor.replace(/\D/g, "")`) na action, senão "11.222.333/0001-81" e "11222333000181" viram registros distintos e a unicidade é burlável. Aplicar antes do insert/update (a busca por CNPJ inativo na reativação também usa dígitos).
+- **`email` vazio → null:** estender `limparOpcionais` para mapear `email: ""` → `null` (a coluna é nullable; evita gravar string vazia). `contador_id`/`data_inicio` já são tratados.
+- **Auditoria server-side:** `criado_por`/`contador_id` são forçados/congelados por trigger no banco (migration 0007) — a action pode enviar, mas o banco é a autoridade (contador não reatribui; só Admin).
 
 - [ ] **Step 3: Verificação manual**
 
