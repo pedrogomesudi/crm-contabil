@@ -1,37 +1,43 @@
 "use client";
 import { useActionState } from "react";
 import Link from "next/link";
-import { recuperarSenha } from "../actions";
+import { recuperarSenha } from "@/app/login/actions";
+import type { EstadoRecuperar } from "@/app/login/estados";
+import { AuthCard } from "@/components/auth/AuthCard";
+import { CampoTexto } from "@/components/auth/CampoTexto";
 
 export default function RecuperarPage() {
-  const [estado, action, pending] = useActionState<{ mensagem?: string }, FormData>(
-    recuperarSenha,
-    {},
-  );
+  const [estado, action, pending] = useActionState<EstadoRecuperar, FormData>(recuperarSenha, {});
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100">
-      <form action={action} className="w-80 space-y-4 rounded-xl bg-white p-8 shadow">
-        <h1 className="text-center text-xl font-semibold text-slate-900">Recuperar senha</h1>
-        <input
+    <AuthCard titulo="Recuperar senha">
+      <form action={action} className="space-y-4">
+        <CampoTexto
+          id="email"
+          label="E-mail"
           name="email"
           type="email"
           placeholder="E-mail"
           autoComplete="email"
+          autoFocus
           required
-          className="w-full rounded border border-slate-300 px-3 py-2 text-slate-900"
         />
-        {estado.mensagem && <p className="text-sm text-slate-600">{estado.mensagem}</p>}
+        {estado.mensagem && (
+          <p role="status" aria-live="polite" className="text-sm text-slate-600">
+            {estado.mensagem}
+          </p>
+        )}
         <button
           type="submit"
           disabled={pending}
+          aria-busy={pending}
           className="w-full rounded bg-slate-900 py-2 text-white disabled:opacity-60"
         >
           {pending ? "Enviando..." : "Enviar instruções"}
         </button>
-        <Link href="/login" className="block text-center text-sm text-slate-500">
+        <Link href="/login" className="block text-center text-sm text-slate-600">
           Voltar ao login
         </Link>
       </form>
-    </main>
+    </AuthCard>
   );
 }

@@ -9,11 +9,15 @@ export default async function LoginPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (user) redirect("/");
-
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100">
-      <LoginForm />
-    </main>
-  );
+  if (user) {
+    // Só manda ao app se o perfil existir e estiver ativo. Checagem simétrica à
+    // do layout (app) — evita loop de redirect com perfil ausente/inativo.
+    const { data: perfil } = await supabase
+      .from("usuarios")
+      .select("ativo")
+      .eq("id", user.id)
+      .single();
+    if (perfil?.ativo) redirect("/");
+  }
+  return <LoginForm />;
 }
