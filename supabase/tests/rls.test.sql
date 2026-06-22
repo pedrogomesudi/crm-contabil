@@ -44,3 +44,31 @@ begin
   end if;
   raise notice 'OK: papel do assistente permaneceu congelado';
 end $$;
+
+-- ASSERT 3: CHECK tipo×regime rejeita combinação inválida (PF + Simples)
+do $$
+begin
+  reset role;
+  begin
+    insert into clientes (tipo_pessoa, razao_social, cpf_cnpj, regime_tributario)
+    values ('PF', 'Fulano', '11111111111', 'Simples');
+    raise exception 'FALHA: CHECK permitiu PF+Simples';
+  exception when check_violation then
+    raise notice 'OK: CHECK rejeitou PF+Simples';
+  end;
+end $$;
+
+-- ASSERT 4: contador só enxerga os clientes atribuídos a ele
+reset role;
+insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario, contador_id) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'PJ', 'Cliente do Contador', '11222333000181', 'Simples', '00000000-0000-0000-0000-000000000003'),
+  ('aaaaaaaa-0000-0000-0000-000000000002', 'PJ', 'Cliente de Outro',    '11222333000262', 'Simples', '00000000-0000-0000-0000-000000000001')
+  on conflict do nothing;
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  select count(*) into n from clientes;
+  if n <> 1 then raise exception 'FALHA: contador viu % clientes (esperado 1)', n; end if;
+  raise notice 'OK: contador enxerga apenas o próprio cliente';
+end $$;
