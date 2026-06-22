@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "db:migrate": "node --env-file=.env.local scripts/db-migrate.mjs",
-    "db:test": "node --env-file=.env.local scripts/db-test-rls.mjs"
+    "db:test": "node --env-file=.env.local scripts/db-test-rls.mjs",
+    "admin:bootstrap": "node --env-file=.env.local scripts/bootstrap-admin.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
