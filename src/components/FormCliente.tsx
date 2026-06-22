@@ -2,6 +2,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { TIPOS_PESSOA, REGIMES } from "@/lib/tipos";
+import { Campo, inputCls } from "@/components/ui/Campo";
 import type { EstadoCliente } from "@/app/(app)/clientes/estados";
 
 export type ClienteDefaults = {
@@ -32,17 +33,6 @@ type Props = {
   // congela contador_id p/ não-admin no UPDATE. Quando false, mostra read-only.
   contadorEditavel: boolean;
 };
-
-function Campo({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block text-sm">
-      <span className="mb-1 block text-slate-700">{label}</span>
-      {children}
-    </label>
-  );
-}
-
-const inputCls = "w-full rounded border border-slate-300 px-3 py-2 text-slate-900";
 
 export function FormCliente({ action, contadores, cliente, modo, contadorEditavel }: Props) {
   const [estado, formAction, pending] = useActionState<EstadoCliente, FormData>(action, {});

@@ -2,6 +2,7 @@
 import { useActionState } from "react";
 import { salvarHonorario } from "@/app/(app)/clientes/actions";
 import type { EstadoHonorario } from "@/app/(app)/clientes/estados";
+import { Campo, inputCls } from "@/components/ui/Campo";
 
 export function HonorarioForm({
   clienteId,
@@ -20,17 +21,16 @@ export function HonorarioForm({
       className="max-w-2xl space-y-3 rounded-lg border border-slate-200 bg-white p-4"
     >
       <h2 className="text-sm font-semibold text-slate-900">Honorário</h2>
-      <label className="block text-sm">
-        <span className="mb-1 block text-slate-700">Honorário mensal (R$)</span>
+      <Campo label="Honorário mensal (R$)">
         <input
           name="honorario_mensal"
           type="text"
           inputMode="decimal"
           defaultValue={valorBR}
           placeholder="0,00"
-          className="w-48 rounded border border-slate-300 px-3 py-2 text-slate-900"
+          className={`${inputCls} w-48`}
         />
-      </label>
+      </Campo>
       {estado.erro && (
         <p role="alert" className="text-sm text-red-600">
           {estado.erro}

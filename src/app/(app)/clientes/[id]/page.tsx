@@ -1,9 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { listarContadores, contadorPorId } from "@/lib/clientes/contadores";
+import { podeAtribuirContador, podeVerHonorario } from "@/lib/clientes/permissoes";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { atualizarCliente } from "../actions";
+import type { Papel } from "@/lib/tipos";
 
 export const metadata = { title: "Cliente" };
 
@@ -21,7 +23,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
     .select("papel")
     .eq("id", user.id)
     .maybeSingle();
-  const papel = eu?.papel;
+  const papel = eu?.papel as Papel | undefined;
 
   const { data: cliente } = await supabase
     .from("clientes")
@@ -33,7 +35,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   if (!cliente) notFound();
 
   // Só admin reatribui contador no UPDATE (trigger congela p/ os demais).
-  const contadorEditavel = papel === "admin";
+  const contadorEditavel = podeAtribuirContador(papel, "editar");
   let contadores: { id: string; nome: string }[] = [];
   if (contadorEditavel) {
     contadores = await listarContadores();
@@ -42,9 +44,9 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
     if (c) contadores = [c];
   }
 
-  const podeVerHonorario = papel === "admin" || papel === "financeiro" || papel === "contador";
+  const mostrarHonorario = podeVerHonorario(papel);
   let valorHonorario: number | null = null;
-  if (podeVerHonorario) {
+  if (mostrarHonorario) {
     const { data: fin } = await supabase
       .from("clientes_financeiro")
       .select("honorario_mensal")
@@ -63,7 +65,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         modo="editar"
         contadorEditavel={contadorEditavel}
       />
-      {podeVerHonorario && <HonorarioForm clienteId={id} valorAtual={valorHonorario} />}
+      {mostrarHonorario && <HonorarioForm clienteId={id} valorAtual={valorHonorario} />}
     </div>
   );
 }

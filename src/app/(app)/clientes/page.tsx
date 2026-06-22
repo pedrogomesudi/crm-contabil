@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { podeCriarCliente } from "@/lib/clientes/permissoes";
+import type { Papel } from "@/lib/tipos";
 
 export const metadata = { title: "Clientes" };
 
@@ -27,7 +29,7 @@ export default async function ClientesPage({
     .select("papel")
     .eq("id", user?.id ?? "")
     .maybeSingle();
-  const podeCriar = eu?.papel === "admin" || eu?.papel === "assistente" || eu?.papel === "contador";
+  const podeCriar = podeCriarCliente(eu?.papel as Papel | undefined);
 
   let query = supabase
     .from("clientes")
@@ -37,7 +39,9 @@ export default async function ClientesPage({
 
   if (q) {
     const digits = q.replace(/\D/g, "");
-    if (digits && digits.length === q.length) {
+    // só dígitos e pontuação de documento (./-) => busca por CPF/CNPJ
+    const pareceDocumento = /^[\d.\-/\s]+$/.test(q) && digits.length >= 3;
+    if (pareceDocumento) {
       query = query.ilike("cpf_cnpj", `%${escapeLike(digits)}%`);
     } else {
       query = query.ilike("razao_social", `%${escapeLike(q)}%`);

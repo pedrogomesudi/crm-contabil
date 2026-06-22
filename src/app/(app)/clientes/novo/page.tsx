@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { listarContadores } from "@/lib/clientes/contadores";
+import { podeCriarCliente, podeAtribuirContador } from "@/lib/clientes/permissoes";
 import { FormCliente } from "@/components/FormCliente";
 import { criarCliente } from "../actions";
+import type { Papel } from "@/lib/tipos";
 
 export const metadata = { title: "Novo cliente" };
 
@@ -18,11 +20,11 @@ export default async function NovoClientePage() {
     .select("papel")
     .eq("id", user.id)
     .maybeSingle();
-  const podeCriar = eu?.papel === "admin" || eu?.papel === "assistente" || eu?.papel === "contador";
-  if (!podeCriar) redirect("/clientes"); // financeiro não cria
+  const papel = eu?.papel as Papel | undefined;
+  if (!podeCriarCliente(papel)) redirect("/clientes"); // financeiro não cria
 
   // admin/assistente escolhem o contador; contador é forçado a si mesmo (trigger).
-  const contadorEditavel = eu?.papel === "admin" || eu?.papel === "assistente";
+  const contadorEditavel = podeAtribuirContador(papel, "novo");
   const contadores = contadorEditavel ? await listarContadores() : [];
 
   return (

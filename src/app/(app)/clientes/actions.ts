@@ -4,12 +4,14 @@ import { revalidatePath } from "next/cache";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { clienteSchema } from "@/lib/validation/cliente";
 import { parseValorBR } from "@/lib/format";
+import { ehContadorValido } from "@/lib/clientes/contadores";
 import type { EstadoCliente, EstadoHonorario } from "./estados";
 
-// '' (uuid/date opcionais) -> null, senão o Postgres rejeita com 22P02.
-function limparOpcionais(d: Record<string, unknown>): Record<string, unknown> {
+// Normaliza TODA string vazia para null (campos uuid/date/text opcionais). Os
+// obrigatórios (razao_social/cpf_cnpj) nunca são "" (min(1)); enums nunca são "".
+function limparVazios(d: Record<string, unknown>): Record<string, unknown> {
   const out = { ...d };
-  for (const k of ["contador_id", "data_inicio", "email"]) {
+  for (const k of Object.keys(out)) {
     if (out[k] === "" || out[k] === undefined) out[k] = null;
   }
   return out;
@@ -51,11 +53,19 @@ export async function criarCliente(
   const parsed = lerEValidar(formData);
   if (!parsed.success) return { erro: mensagensErro(parsed.error.issues) };
 
+  // contador_id, se informado, deve ser de um contador ativo (ACH-03).
+  if (parsed.data.contador_id && !(await ehContadorValido(parsed.data.contador_id))) {
+    return { erro: "Contador selecionado é inválido." };
+  }
+
   const supabase = await createServerSupabase();
-  // criado_por e contador_id (p/ contador) são forçados pelo trigger no banco.
+  // status não entra no payload de criação (DB default 'ativo'); criado_por e
+  // contador_id (p/ contador) são forçados pelo trigger no banco.
+  const payload = limparVazios(parsed.data);
+  delete payload.status;
   const { data, error } = await supabase
     .from("clientes")
-    .insert({ ...limparOpcionais(parsed.data), endereco: montarEndereco(formData) })
+    .insert({ ...payload, endereco: montarEndereco(formData) })
     .select("id");
   if (error) {
     if (error.code === "23505") {
@@ -79,7 +89,7 @@ export async function criarCliente(
     return { erro: "Não foi possível salvar o cliente (sem permissão)." };
   }
   revalidatePath("/clientes");
-  redirect("/clientes");
+  redirect("/clientes?ok=1");
 }
 
 export async function atualizarCliente(
@@ -90,14 +100,22 @@ export async function atualizarCliente(
   const parsed = lerEValidar(formData);
   if (!parsed.success) return { erro: mensagensErro(parsed.error.issues) };
 
-  const supabase = await createServerSupabase();
+  if (parsed.data.contador_id && !(await ehContadorValido(parsed.data.contador_id))) {
+    return { erro: "Contador selecionado é inválido." };
+  }
+
+  // Token de concorrência obrigatório (vindo do hidden); sem ele, recusa para
+  // não sobrescrever cegamente (ACH-02). O valor é o atualizado_em do render.
   const original = String(formData.get("atualizado_em") ?? "");
-  let upd = supabase
+  if (!original) return { erro: "Recarregue a página e tente novamente." };
+
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
     .from("clientes")
-    .update({ ...limparOpcionais(parsed.data), endereco: montarEndereco(formData) })
-    .eq("id", clienteId);
-  if (original) upd = upd.eq("atualizado_em", original); // concorrência otimista
-  const { data, error } = await upd.select("id");
+    .update({ ...limparVazios(parsed.data), endereco: montarEndereco(formData) })
+    .eq("id", clienteId)
+    .eq("atualizado_em", original) // concorrência otimista (instante; PostgREST compara por valor)
+    .select("id");
   if (error) {
     if (error.code === "23505") return { erro: "CPF/CNPJ já cadastrado em outro cliente." };
     console.error("atualizarCliente:", error.code, error.message);
@@ -127,6 +145,8 @@ export async function salvarHonorario(
   } = await supabase.auth.getUser();
   if (!user) return { erro: "Sessão expirada. Entre novamente." };
 
+  // Sem concorrência otimista aqui: honorário é um único campo de baixa
+  // contenção; o último a salvar vence (decisão de design).
   const { data, error } = await supabase
     .from("clientes_financeiro")
     .upsert(
