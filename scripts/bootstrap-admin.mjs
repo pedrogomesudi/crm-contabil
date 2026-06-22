@@ -25,7 +25,13 @@ if (!email || !password) {
   process.exit(1);
 }
 
-const admin = createClient(url, key, { auth: { persistSession: false } });
+const admin = createClient(url, key, {
+  auth: { persistSession: false },
+  // timeout de rede: não pendura indefinidamente se a API não responder
+  global: {
+    fetch: (input, init) => fetch(input, { ...init, signal: AbortSignal.timeout(20000) }),
+  },
+});
 
 function abort(msg) {
   console.error(msg);
@@ -56,7 +62,10 @@ const { data: criado, error: errCreate } = await admin.auth.admin.createUser({
 if (!errCreate && criado?.user) {
   userId = criado.user.id;
   criadoAgora = true;
-} else if (errCreate && /already|exist|registered/i.test(errCreate.message)) {
+} else if (
+  errCreate &&
+  (errCreate.status === 422 || /already|exist|registered/i.test(errCreate.message))
+) {
   const existente = await acharAuthUserPorEmail(email);
   if (!existente) abort("Usuário já existe no Auth, mas não foi possível localizá-lo.");
   userId = existente.id;

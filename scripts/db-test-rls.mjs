@@ -10,7 +10,12 @@ const client = makeClient();
 const notices = [];
 client.on("notice", (msg) => notices.push(msg.message));
 
-await client.connect();
+try {
+  await client.connect();
+} catch (err) {
+  console.error(`Falha ao conectar ao Postgres: ${err.message}`);
+  process.exit(1);
+}
 try {
   const sql = readFileSync(TEST_FILE, "utf8");
   await client.query("begin");

@@ -129,10 +129,11 @@ consultando `usuarios`, que também tem RLS) e problemas de performance, as poli
 auxiliar:
 
 ```sql
--- função STABLE SECURITY DEFINER que lê o papel do usuário corrente sem disparar RLS
-create function auth_papel() returns text
+-- função STABLE SECURITY DEFINER que lê o papel do usuário corrente sem disparar RLS.
+-- (Implementação: retorna o enum `papel` e ignora usuário inativo — ver migration 0007.)
+create function auth_papel() returns papel
   language sql stable security definer set search_path = public as
-  $$ select papel from usuarios where id = auth.uid() $$;
+  $$ select papel from usuarios where id = auth.uid() and ativo $$;
 ```
 
 As policies referenciam `auth_papel()` e `auth.uid()`. (Alternativa equivalente aceitável: papel como

@@ -8,7 +8,12 @@ import { makeClient } from "./_db.mjs";
 const MIGRATIONS_DIR = "supabase/migrations";
 
 const client = makeClient();
-await client.connect();
+try {
+  await client.connect();
+} catch (err) {
+  console.error(`Falha ao conectar ao Postgres: ${err.message}`);
+  process.exit(1);
+}
 
 try {
   // Serializa execuções concorrentes do runner (advisory lock global do projeto).
@@ -53,5 +58,6 @@ try {
     console.log(`\nOK — ${count} migration(s) nova(s) aplicada(s).`);
   }
 } finally {
+  await client.query("select pg_advisory_unlock(727274)").catch(() => {});
   await client.end().catch(() => {});
 }

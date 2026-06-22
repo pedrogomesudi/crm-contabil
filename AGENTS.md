@@ -17,6 +17,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
   é definido **server-side via service_role** após `createUser` (bootstrap e convites/Task 12). O
   `app_metadata.papel` é decorativo/desatualizado — não confiar nele.
 - **Comandos:** `npm run lint`, `npm run typecheck`, `npm test`, `npm run format`, `npm run build`. Rode todos antes de commitar.
+- **Scripts `scripts/*.mjs`:** ferramental de banco (JS puro, deliberadamente não-tipado). São
+  cobertos por ESLint, mas **fora** do `tsc --noEmit` (não estão no `include` do tsconfig). Não
+  adicionar lógica de app aqui.
 - **Banco / migrations:** sem Docker local. A fonte de verdade do schema/policies são os
   arquivos `supabase/migrations/NNNN_*.sql`, aplicados pelo **runner próprio** `npm run db:migrate`
   (rastreia em `app_migrations`). **NÃO** usar `supabase db push` (usaria outra tabela de controle e

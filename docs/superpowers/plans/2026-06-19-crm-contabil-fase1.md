@@ -1131,6 +1131,16 @@ git commit -m "feat: clients Supabase (browser/server/admin) + proxy de sessão"
 
 Entrega: tela de login funcional, server actions de entrar/recuperar senha, e o layout autenticado que bloqueia acesso sem sessão. Marco 2 da §12 (UI auth).
 
+> **Pendências de UI registradas na revisão integral (tratar ao construir as telas):**
+> - **Dark mode / contraste (B-1):** o `globals.css` ativa dark via `prefers-color-scheme`. Usar
+>   tokens semânticos (`text-foreground`/variáveis), **não** cores fixas `slate-*` que quebram
+>   contraste WCAG no escuro — ou desativar o dark automático até haver design dark intencional.
+> - **Layout flex (B-3):** o `body` é `min-h-full flex flex-col`; usar `flex-1` nos `<main>` em vez
+>   de `min-h-screen` (evita dupla altura/scroll). Reescrever a `page.tsx` boilerplate.
+> - **CSP (B-4):** planejar uma Content-Security-Policy em `next.config.ts` (`default-src 'self'` +
+>   domínio Supabase em `connect-src`; nonce para scripts no App Router). É o item de segurança
+>   remanescente para a fase de UI.
+
 **Files:**
 - Create: `src/app/login/page.tsx`, `src/app/login/actions.ts`, `src/app/(app)/layout.tsx`
 - Modify: `src/app/page.tsx` (redirecionar para `/login` ou `/` conforme sessão)

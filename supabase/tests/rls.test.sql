@@ -1,6 +1,8 @@
 -- Testes de RLS. Rodados por scripts/db-test-rls.mjs dentro de uma transação
 -- (ROLLBACK no fim — não persiste dados). _simular(uid) troca role + claims.
 -- IMPORTANTE: exige Session pooler (set_config local consistente entre statements).
+-- Nota: a numeração dos ASSERTs segue a ordem histórica de criação (por Task),
+-- não a ordem de execução (ex.: ASSERT 2 aparece antes do ASSERT 1).
 
 create or replace function _simular(uid uuid) returns void language plpgsql as $$
 begin

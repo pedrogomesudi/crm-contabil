@@ -22,13 +22,19 @@ export async function proxy(request: NextRequest) {
       },
     },
   );
-  await supabase.auth.getUser(); // renova o token
+  // Falha de rede ao renovar o token não deve derrubar a request: degrada para
+  // "sessão não renovada nesta request" (a próxima tenta de novo).
+  try {
+    await supabase.auth.getUser();
+  } catch {
+    // ignora: o refresh é best-effort
+  }
   return response;
 }
 
 export const config = {
   // Exclui assets estáticos, imagens do Next e a rota de health do refresh de sessão.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml)$).*)",
   ],
 };

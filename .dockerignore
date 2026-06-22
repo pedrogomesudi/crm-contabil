@@ -9,3 +9,6 @@ src/tests
 *.md
 coverage
 .github
+supabase
+scripts
+*.crt

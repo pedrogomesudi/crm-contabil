@@ -12,6 +12,19 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
-    include: ["src/tests/**/*.test.ts", "src/tests/**/*.test.tsx"],
+    // pega testes co-localizados (src/**/*.test.tsx) além de src/tests/
+    include: ["src/**/*.test.{ts,tsx}"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
+      // thresholds nos módulos de lógica pura testados (validações).
+      include: ["src/lib/validation/**"],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
+      },
+    },
   },
 });
