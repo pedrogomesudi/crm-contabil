@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
-import type { Papel } from "@/lib/tipos";
 
 export const metadata = { title: "Clientes" };
 
@@ -20,16 +20,8 @@ export default async function ClientesPage({
   const { q: qRaw, status, ok } = await searchParams;
   const q = (qRaw ?? "").slice(0, 100);
   const supabase = await createServerSupabase();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: eu } = await supabase
-    .from("usuarios")
-    .select("papel")
-    .eq("id", user?.id ?? "")
-    .maybeSingle();
-  const podeCriar = podeCriarCliente(eu?.papel as Papel | undefined);
+  const perfil = await getPerfilAtual();
+  const podeCriar = podeCriarCliente(perfil?.papel);
 
   let query = supabase
     .from("clientes")

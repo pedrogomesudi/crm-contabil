@@ -1,26 +1,16 @@
 import { redirect } from "next/navigation";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { getPerfilAtual } from "@/lib/auth/perfil";
 import { listarContadores } from "@/lib/clientes/contadores";
 import { podeCriarCliente, podeAtribuirContador } from "@/lib/clientes/permissoes";
 import { FormCliente } from "@/components/FormCliente";
 import { criarCliente } from "../actions";
-import type { Papel } from "@/lib/tipos";
 
 export const metadata = { title: "Novo cliente" };
 
 export default async function NovoClientePage() {
-  const supabase = await createServerSupabase();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: eu } = await supabase
-    .from("usuarios")
-    .select("papel")
-    .eq("id", user.id)
-    .maybeSingle();
-  const papel = eu?.papel as Papel | undefined;
+  const perfil = await getPerfilAtual();
+  if (!perfil) redirect("/login");
+  const papel = perfil.papel;
   if (!podeCriarCliente(papel)) redirect("/clientes"); // financeiro não cria
 
   // admin/assistente escolhem o contador; contador é forçado a si mesmo (trigger).

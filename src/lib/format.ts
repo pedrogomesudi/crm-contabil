@@ -1,3 +1,12 @@
+// Formata uma data ISO para dd/mm/aaaa no fuso de São Paulo (consistente
+// independentemente do timezone do servidor). Retorna "—" para data inválida.
+export function formatarData(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}
+
 // Faz parse de valor monetário em formato BR.
 // Aceita "1.500,50", "1500,50", "1500.50", "1500", "1.500" (milhar), "R$ 1.500,50".
 // Retorna null para vazio e NaN para inválido.

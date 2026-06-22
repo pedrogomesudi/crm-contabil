@@ -225,3 +225,15 @@ begin
   end if;
   raise notice 'OK: service_role/owner (uid nulo) promove papel — guard libera o privilegiado';
 end $$;
+
+-- ASSERT 15: dashboard_resumo() respeita a RLS (contador vê só o resumo dos seus)
+do $$
+declare v jsonb;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador (1 cliente)
+  select dashboard_resumo() into v;
+  if (v->>'total')::int <> 1 then
+    raise exception 'FALHA: dashboard_resumo não respeitou RLS (total=%)', v->>'total';
+  end if;
+  raise notice 'OK: dashboard_resumo respeita RLS (contador vê só os seus)';
+end $$;

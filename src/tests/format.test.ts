@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { parseValorBR } from "@/lib/format";
+import { parseValorBR, formatarData } from "@/lib/format";
+
+describe("formatarData", () => {
+  it("formata ISO para dd/mm/aaaa", () =>
+    expect(formatarData("2026-06-22T12:00:00Z")).toBe("22/06/2026"));
+  it("null => —", () => expect(formatarData(null)).toBe("—"));
+  it("inválida => —", () => expect(formatarData("xyz")).toBe("—"));
+});
 
 describe("parseValorBR", () => {
   it("formato BR com milhar", () => expect(parseValorBR("1.500,50")).toBe(1500.5));

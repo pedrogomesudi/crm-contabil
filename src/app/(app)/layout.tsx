@@ -1,37 +1,17 @@
 import { redirect } from "next/navigation";
-import { z } from "zod";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { getPerfilAtual } from "@/lib/auth/perfil";
 import { Sidebar } from "@/components/Sidebar";
-import { PAPEIS } from "@/lib/tipos";
-
-const perfilSchema = z.object({
-  nome: z.string(),
-  papel: z.enum(PAPEIS),
-  ativo: z.boolean(),
-});
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createServerSupabase();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: perfilRaw } = await supabase
-    .from("usuarios")
-    .select("nome, papel, ativo")
-    .eq("id", user.id)
-    .single();
-
-  // Valida em runtime (sem tipos gerados do Supabase): papel deve ser um enum
-  // válido e o usuário deve estar ativo. Caso contrário, encerra a sessão para
-  // NÃO entrar em loop de redirect (perfil ausente/inativo/corrompido).
-  const parsed = perfilSchema.safeParse(perfilRaw);
-  if (!parsed.success || !parsed.data.ativo) {
+  const perfil = await getPerfilAtual();
+  // Sem sessão, sem perfil válido ou desativado => encerra sessão (evita loop) e
+  // manda ao login.
+  if (!perfil || !perfil.ativo) {
+    const supabase = await createServerSupabase();
     await supabase.auth.signOut();
     redirect("/login");
   }
-  const perfil = parsed.data;
 
   return (
     <div className="flex min-h-screen">

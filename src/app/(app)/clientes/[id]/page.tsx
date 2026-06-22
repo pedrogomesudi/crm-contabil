@@ -1,11 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { getPerfilAtual } from "@/lib/auth/perfil";
 import { listarContadores, contadorPorId } from "@/lib/clientes/contadores";
 import { podeAtribuirContador, podeVerHonorario } from "@/lib/clientes/permissoes";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { atualizarCliente } from "../actions";
-import type { Papel } from "@/lib/tipos";
 
 export const metadata = { title: "Cliente" };
 
@@ -13,17 +13,9 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   const { id } = await params;
   const supabase = await createServerSupabase();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: eu } = await supabase
-    .from("usuarios")
-    .select("papel")
-    .eq("id", user.id)
-    .maybeSingle();
-  const papel = eu?.papel as Papel | undefined;
+  const perfil = await getPerfilAtual();
+  if (!perfil) redirect("/login");
+  const papel = perfil.papel;
 
   const { data: cliente } = await supabase
     .from("clientes")
