@@ -11,6 +11,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Imports:** use o alias `@/*` (mapeia `./src/*`).
 - **Imagens:** use `next/image`, nunca `<img>`.
 - **Segredos:** `SUPABASE_SERVICE_ROLE_KEY` é runtime, só no servidor; nunca `NEXT_PUBLIC_`. As `NEXT_PUBLIC_*` são inlined no build.
+- **Papel (RBAC) — fonte única:** o papel vive **só** em `usuarios.papel`, lido via `auth_papel()`.
+  **NUNCA** ler papel de `session.user.app_metadata` nem do JWT — o GoTrue popula `app_metadata`
+  depois do INSERT, então o trigger `handle_new_user` cria o perfil como `assistente` e o papel real
+  é definido **server-side via service_role** após `createUser` (bootstrap e convites/Task 12). O
+  `app_metadata.papel` é decorativo/desatualizado — não confiar nele.
 - **Comandos:** `npm run lint`, `npm run typecheck`, `npm test`, `npm run format`, `npm run build`. Rode todos antes de commitar.
 - **Banco / migrations:** sem Docker local. A fonte de verdade do schema/policies são os
   arquivos `supabase/migrations/NNNN_*.sql`, aplicados pelo **runner próprio** `npm run db:migrate`

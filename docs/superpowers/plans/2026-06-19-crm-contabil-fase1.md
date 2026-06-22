@@ -39,7 +39,9 @@ crm-contabil/
 │   │   ├── 0004_clientes_financeiro.sql  # honorário isolado + RLS (sem assistente)
 │   │   ├── 0005_documentos_e_log.sql     # documentos + log_acesso_documento + RLS
 │   │   ├── 0006_storage.sql              # bucket privado + policies storage.objects
-│   │   └── 0007_seed_admin.sql           # seed do primeiro Admin (idempotente)
+│   │   ├── 0007_hardening_rls.sql        # search_path, auth_papel ativo, integridade clientes
+│   │   └── 0008_usuarios_email_unique.sql # índice único lower(email)
+│   │   # (bootstrap do admin é via scripts/bootstrap-admin.mjs, não migration)
 │   └── tests/
 │       └── rls.test.sql                  # testes de RLS via pgTAP (ou script SQL de asserts)
 ├── src/
@@ -1580,8 +1582,8 @@ Entrega: tela só-admin para convidar usuários, ativar/desativar e alterar pape
 
 **Files:**
 - Create: `src/app/(app)/usuarios/page.tsx`, `src/app/(app)/usuarios/actions.ts`
-- Create: `supabase/migrations/0007_seed_admin.sql`
-- Modify: `README.md` (passo de bootstrap)
+- Modify: `README.md` (passo de bootstrap via `npm run admin:bootstrap`)
+- (bootstrap do admin: `scripts/bootstrap-admin.mjs` — já implementado, não é migration)
 
 **Interfaces:**
 - Consumes: `createAdminSupabase()`, `createServerSupabase()`.
@@ -1618,7 +1620,8 @@ export async function convidarUsuario(_prev: unknown, formData: FormData) {
   const { data: criado, error: errCreate } = await admin.auth.admin.createUser({
     email,
     email_confirm: false,
-    app_metadata: { papel, nome }, // mantido como registro do papel pretendido
+    // NÃO passar papel em app_metadata: é decorativo e dessincroniza (ver AGENTS.md).
+    // Fonte única do papel = usuarios.papel, definido no update abaixo.
   });
   if (errCreate || !criado?.user) return { erro: 'Não foi possível criar (e-mail já existe?).' };
 
@@ -1689,37 +1692,24 @@ export default async function UsuariosPage() {
 }
 ```
 
-- [ ] **Step 3: Seed do primeiro Admin (idempotente)**
+- [ ] **Step 3: Bootstrap do primeiro Admin (JÁ FEITO via script)**
 
-Create `supabase/migrations/0007_seed_admin.sql`:
-```sql
--- O primeiro Admin é criado manualmente no Auth (ver README). Esta migration apenas
--- GARANTE que, se existir um auth.users com o e-mail do fundador, o papel seja admin.
--- Idempotente: roda sem efeito se o usuário ainda não existir.
-do $$
-declare v_id uuid;
-begin
-  select id into v_id from auth.users where email = 'pedro@gomesadvocacia.com.br';
-  if v_id is not null then
-    insert into usuarios (id, nome, email, papel)
-    values (v_id, 'Pedro Gomes', 'pedro@gomesadvocacia.com.br', 'admin')
-    on conflict (id) do update set papel = 'admin';
-  end if;
-end $$;
-```
+> **Implementado.** O primeiro admin já foi criado por `scripts/bootstrap-admin.mjs`
+> (`npm run admin:bootstrap`), que cria/promove via `service_role` e define `usuarios.papel='admin'`
+> explicitamente. **Não** criar `0007_seed_admin.sql` (o 0007/0008 já existem; e migration de seed
+> hardcodaria o e-mail do fundador em SQL versionado). A fonte do bootstrap é o script, não migration.
 
 - [ ] **Step 4: Documentar o bootstrap no README**
 
 Append no `README.md` seção "Bootstrap do primeiro Admin":
-1. Criar o usuário fundador no Supabase (Studio → Auth → Add user, com e-mail/senha).
-2. Rodar `npx supabase migration up` (a 0007 promove esse e-mail a `admin`).
-3. Logar e usar a tela `/usuarios` para convidar o resto da equipe.
+1. Definir `ADMIN_EMAIL`/`ADMIN_PASSWORD` (≠ senha do banco) no `.env.local`.
+2. Rodar `npm run admin:bootstrap`.
+3. Logar e usar a tela `/usuarios` para convidar o resto da equipe; depois remover as vars `ADMIN_*`.
 
-- [ ] **Step 5: Aplicar a migration e verificar**
+- [ ] **Step 5: (validação já coberta pelo próprio script)**
 
-Run: `npx supabase migration up`
-Manual: criar o usuário fundador no Studio, reaplicar, e confirmar `select papel from usuarios where email='pedro@gomesadvocacia.com.br'` → `admin`.
-Expected: papel `admin`.
+O `admin:bootstrap` já confirma `papel=admin` no fim. Para reconferir: `npm run db:test` (asserts de RLS)
+ou consulta direta via `scripts/_db.mjs`.
 
 - [ ] **Step 6: Verificação manual da gestão de usuários**
 
@@ -1729,8 +1719,8 @@ Expected: conforme descrito.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/app/\(app\)/usuarios supabase/migrations/0007_seed_admin.sql README.md
-git commit -m "feat: gestão de usuários (convite/papel via service_role) + seed do Admin"
+git add src/app/\(app\)/usuarios README.md
+git commit -m "feat: gestão de usuários (convite/papel via service_role)"
 ```
 
 ---

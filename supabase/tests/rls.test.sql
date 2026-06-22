@@ -205,3 +205,21 @@ begin
   if n <> 0 then raise exception 'FALHA: contador viu documento de cliente alheio (%)', n; end if;
   raise notice 'OK: contador não vê documento de cliente de outro contador';
 end $$;
+
+-- ASSERT 14: caminho privilegiado (service_role/owner, auth.uid() nulo) CONSEGUE
+-- mudar papel — é o que o bootstrap/Task 12 usam (o guard auth.uid() is not null libera).
+do $$
+declare v papel;
+begin
+  -- simula service_role: limpa role E claims (auth.uid() nulo). Só resetar o role
+  -- não basta — o request.jwt.claims do _simular anterior persiste na transação.
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if auth.uid() is not null then raise exception 'FALHA: auth.uid() não-nulo após limpar claims'; end if;
+  update usuarios set papel = 'admin' where id = '00000000-0000-0000-0000-000000000002';
+  select papel into v from usuarios where id = '00000000-0000-0000-0000-000000000002';
+  if v <> 'admin' then
+    raise exception 'FALHA: caminho privilegiado não promoveu papel (=%)', v;
+  end if;
+  raise notice 'OK: service_role/owner (uid nulo) promove papel — guard libera o privilegiado';
+end $$;
