@@ -1615,15 +1615,22 @@ export async function convidarUsuario(_prev: unknown, formData: FormData) {
     return { erro: 'Papel inválido.' };
   }
   const admin = createAdminSupabase();
-  // IMPORTANTE: inviteUserByEmail NÃO aceita app_metadata (só `data`/`redirectTo`).
-  // Para o papel cair em raw_app_meta_data (lido pelo trigger handle_new_user),
-  // criamos o usuário com createUser({ app_metadata }) e disparamos o convite à parte.
-  const { error: errCreate } = await admin.auth.admin.createUser({
+  const { data: criado, error: errCreate } = await admin.auth.admin.createUser({
     email,
     email_confirm: false,
-    app_metadata: { papel, nome }, // raw_app_meta_data -> trigger lê o papel daqui
+    app_metadata: { papel, nome }, // mantido como registro do papel pretendido
   });
-  if (errCreate) return { erro: 'Não foi possível criar (e-mail já existe?).' };
+  if (errCreate || !criado?.user) return { erro: 'Não foi possível criar (e-mail já existe?).' };
+
+  // CRÍTICO (validado no bootstrap do admin): o GoTrue popula app_metadata DEPOIS
+  // do INSERT em auth.users, então o trigger handle_new_user (AFTER INSERT) cria o
+  // perfil com o papel padrão 'assistente'. NÃO confiar no trigger para o papel:
+  // defini-lo EXPLICITAMENTE aqui via service_role após a criação.
+  const { error: errPapel } = await admin
+    .from('usuarios')
+    .update({ papel, nome, ativo: true })
+    .eq('id', criado.user.id);
+  if (errPapel) return { erro: 'Usuário criado, mas falha ao definir o papel.' };
 
   // ATENÇÃO (resolver junto da decisão de SMTP §11.1): generateLink GERA e RETORNA o link
   // (data.properties.action_link) — com SMTP configurado no Supabase ele dispara o e-mail de
