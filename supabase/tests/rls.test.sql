@@ -72,3 +72,16 @@ begin
   if n <> 1 then raise exception 'FALHA: contador viu % clientes (esperado 1)', n; end if;
   raise notice 'OK: contador enxerga apenas o próprio cliente';
 end $$;
+
+-- ASSERT 5: assistente NÃO acessa clientes_financeiro (honorário), mesmo havendo dados
+reset role;
+insert into clientes_financeiro (cliente_id, honorario_mensal)
+values ('aaaaaaaa-0000-0000-0000-000000000001', 500.00) on conflict do nothing;
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  select count(*) into n from clientes_financeiro;
+  if n <> 0 then raise exception 'FALHA: assistente viu % linhas de honorário', n; end if;
+  raise notice 'OK: assistente não acessa clientes_financeiro';
+end $$;
