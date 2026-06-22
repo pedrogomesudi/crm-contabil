@@ -12,6 +12,8 @@ export function HonorarioForm({
 }) {
   const action = salvarHonorario.bind(null, clienteId);
   const [estado, formAction, pending] = useActionState<EstadoHonorario, FormData>(action, {});
+  const valorBR =
+    valorAtual != null ? valorAtual.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "";
   return (
     <form
       action={formAction}
@@ -24,7 +26,7 @@ export function HonorarioForm({
           name="honorario_mensal"
           type="text"
           inputMode="decimal"
-          defaultValue={valorAtual ?? ""}
+          defaultValue={valorBR}
           placeholder="0,00"
           className="w-48 rounded border border-slate-300 px-3 py-2 text-slate-900"
         />

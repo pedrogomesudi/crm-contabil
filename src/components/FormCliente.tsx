@@ -20,6 +20,7 @@ export type ClienteDefaults = {
   status?: string;
   data_inicio?: string | null;
   observacoes?: string;
+  atualizado_em?: string | null;
 };
 
 type Props = {
@@ -27,6 +28,9 @@ type Props = {
   contadores: { id: string; nome: string }[];
   cliente?: ClienteDefaults;
   modo: "novo" | "editar";
+  // Só admin (e assistente/contador na criação) pode atribuir contador; o trigger
+  // congela contador_id p/ não-admin no UPDATE. Quando false, mostra read-only.
+  contadorEditavel: boolean;
 };
 
 function Campo({ label, children }: { label: string; children: React.ReactNode }) {
@@ -40,13 +44,19 @@ function Campo({ label, children }: { label: string; children: React.ReactNode }
 
 const inputCls = "w-full rounded border border-slate-300 px-3 py-2 text-slate-900";
 
-export function FormCliente({ action, contadores, cliente, modo }: Props) {
+export function FormCliente({ action, contadores, cliente, modo, contadorEditavel }: Props) {
   const [estado, formAction, pending] = useActionState<EstadoCliente, FormData>(action, {});
   const c = cliente ?? {};
   const end = c.endereco ?? {};
+  const nomeContadorAtual =
+    contadores.find((ct) => ct.id === c.contador_id)?.nome ?? "— sem atribuição —";
 
   return (
     <form action={formAction} className="max-w-2xl space-y-6">
+      {/* concorrência otimista: o servidor confere contra o valor atual */}
+      {modo === "editar" && c.atualizado_em && (
+        <input type="hidden" name="atualizado_em" defaultValue={c.atualizado_em} />
+      )}
       <fieldset className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
         <legend className="px-1 text-sm font-semibold text-slate-900">Cadastrais e fiscais</legend>
         <Campo label="Tipo de pessoa *">
@@ -146,7 +156,13 @@ export function FormCliente({ action, contadores, cliente, modo }: Props) {
             <input name="cidade" defaultValue={end.cidade ?? ""} className={inputCls} />
           </Campo>
           <Campo label="UF">
-            <input name="uf" maxLength={2} defaultValue={end.uf ?? ""} className={inputCls} />
+            <input
+              name="uf"
+              maxLength={2}
+              defaultValue={end.uf ?? ""}
+              style={{ textTransform: "uppercase" }}
+              className={inputCls}
+            />
           </Campo>
           <Campo label="CEP">
             <input name="cep" defaultValue={end.cep ?? ""} className={inputCls} />
@@ -157,14 +173,21 @@ export function FormCliente({ action, contadores, cliente, modo }: Props) {
       <fieldset className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
         <legend className="px-1 text-sm font-semibold text-slate-900">Gestão interna</legend>
         <Campo label="Contador responsável">
-          <select name="contador_id" defaultValue={c.contador_id ?? ""} className={inputCls}>
-            <option value="">— sem atribuição —</option>
-            {contadores.map((ct) => (
-              <option key={ct.id} value={ct.id}>
-                {ct.nome}
-              </option>
-            ))}
-          </select>
+          {contadorEditavel ? (
+            <select name="contador_id" defaultValue={c.contador_id ?? ""} className={inputCls}>
+              <option value="">— sem atribuição —</option>
+              {contadores.map((ct) => (
+                <option key={ct.id} value={ct.id}>
+                  {ct.nome}
+                </option>
+              ))}
+            </select>
+          ) : (
+            // Não editável: o trigger congela contador_id p/ não-admin. Mostra read-only.
+            <p className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">
+              {nomeContadorAtual}
+            </p>
+          )}
         </Campo>
         <div className="grid grid-cols-2 gap-3">
           <Campo label="Início do contrato">
@@ -188,6 +211,7 @@ export function FormCliente({ action, contadores, cliente, modo }: Props) {
           <textarea
             name="observacoes"
             rows={3}
+            maxLength={2000}
             defaultValue={c.observacoes ?? ""}
             className={inputCls}
           />

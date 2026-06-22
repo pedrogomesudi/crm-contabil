@@ -3,49 +3,76 @@ import { createServerSupabase } from "@/lib/supabase/server";
 
 export const metadata = { title: "Clientes" };
 
+const LIMITE = 100;
+
+// Escapa os curingas de LIKE para que % e _ digitados sejam literais.
+function escapeLike(s: string): string {
+  return s.replace(/[\\%_]/g, (m) => "\\" + m);
+}
+
 export default async function ClientesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; ok?: string }>;
 }) {
-  const { q, status } = await searchParams;
+  const { q: qRaw, status, ok } = await searchParams;
+  const q = (qRaw ?? "").slice(0, 100);
   const supabase = await createServerSupabase();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: eu } = await supabase
+    .from("usuarios")
+    .select("papel")
+    .eq("id", user?.id ?? "")
+    .maybeSingle();
+  const podeCriar = eu?.papel === "admin" || eu?.papel === "assistente" || eu?.papel === "contador";
 
   let query = supabase
     .from("clientes")
     .select("id, razao_social, cpf_cnpj, tipo_pessoa, regime_tributario, status")
     .order("atualizado_em", { ascending: false })
-    .limit(100);
+    .limit(LIMITE);
 
   if (q) {
     const digits = q.replace(/\D/g, "");
     if (digits && digits.length === q.length) {
-      query = query.ilike("cpf_cnpj", `%${digits}%`);
+      query = query.ilike("cpf_cnpj", `%${escapeLike(digits)}%`);
     } else {
-      query = query.ilike("razao_social", `%${q}%`);
+      query = query.ilike("razao_social", `%${escapeLike(q)}%`);
     }
   }
   if (status === "ativo" || status === "inativo") {
     query = query.eq("status", status);
   }
 
-  const { data: clientes } = await query;
+  const { data: clientes, error } = await query;
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-slate-900">Clientes</h1>
-        <Link href="/clientes/novo" className="rounded bg-slate-900 px-3 py-2 text-sm text-white">
-          + Novo cliente
-        </Link>
+        {podeCriar && (
+          <Link href="/clientes/novo" className="rounded bg-slate-900 px-3 py-2 text-sm text-white">
+            + Novo cliente
+          </Link>
+        )}
       </div>
+
+      {ok && (
+        <p role="status" className="mb-3 rounded bg-green-50 px-3 py-2 text-sm text-green-700">
+          Cliente salvo com sucesso.
+        </p>
+      )}
 
       <form className="mb-4 flex flex-wrap gap-2">
         <input
           name="q"
-          defaultValue={q ?? ""}
+          defaultValue={q}
           placeholder="Buscar por nome ou CPF/CNPJ"
           aria-label="Buscar"
+          maxLength={100}
           className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-900"
         />
         <select
@@ -63,45 +90,58 @@ export default async function ClientesPage({
         </button>
       </form>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-100 text-left text-slate-700">
-            <tr>
-              <th className="p-2 font-medium">Nome</th>
-              <th className="p-2 font-medium">CPF/CNPJ</th>
-              <th className="p-2 font-medium">Tipo</th>
-              <th className="p-2 font-medium">Regime</th>
-              <th className="p-2 font-medium">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {clientes?.map((cl) => (
-              <tr key={cl.id} className="border-t border-slate-100">
-                <td className="p-2">
-                  <Link href={`/clientes/${cl.id}`} className="text-slate-900 underline">
-                    {cl.razao_social}
-                  </Link>
-                </td>
-                <td className="p-2 text-slate-700">{cl.cpf_cnpj}</td>
-                <td className="p-2 text-slate-700">{cl.tipo_pessoa}</td>
-                <td className="p-2 text-slate-700">{cl.regime_tributario}</td>
-                <td className="p-2">
-                  <span className={cl.status === "ativo" ? "text-green-700" : "text-slate-400"}>
-                    {cl.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-            {!clientes?.length && (
-              <tr>
-                <td colSpan={5} className="p-4 text-center text-slate-400">
-                  Nenhum cliente encontrado.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {error ? (
+        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+          Não foi possível carregar os clientes. Tente novamente.
+        </p>
+      ) : (
+        <>
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-100 text-left text-slate-700">
+                <tr>
+                  <th className="p-2 font-medium">Nome</th>
+                  <th className="p-2 font-medium">CPF/CNPJ</th>
+                  <th className="p-2 font-medium">Tipo</th>
+                  <th className="p-2 font-medium">Regime</th>
+                  <th className="p-2 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clientes?.map((cl) => (
+                  <tr key={cl.id} className="border-t border-slate-100">
+                    <td className="p-2">
+                      <Link href={`/clientes/${cl.id}`} className="text-slate-900 underline">
+                        {cl.razao_social}
+                      </Link>
+                    </td>
+                    <td className="p-2 text-slate-700">{cl.cpf_cnpj}</td>
+                    <td className="p-2 text-slate-700">{cl.tipo_pessoa}</td>
+                    <td className="p-2 text-slate-700">{cl.regime_tributario}</td>
+                    <td className="p-2">
+                      <span className={cl.status === "ativo" ? "text-green-700" : "text-slate-400"}>
+                        {cl.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {!clientes?.length && (
+                  <tr>
+                    <td colSpan={5} className="p-4 text-center text-slate-400">
+                      Nenhum cliente encontrado.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {clientes?.length === LIMITE && (
+            <p className="mt-2 text-xs text-slate-500">
+              Mostrando os primeiros {LIMITE}. Refine a busca para ver mais.
+            </p>
+          )}
+        </>
+      )}
     </div>
   );
 }

@@ -17,8 +17,8 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
-      // thresholds nos módulos de lógica pura testados (validações).
-      include: ["src/lib/validation/**"],
+      // thresholds nos módulos de lógica pura testados (validações + format).
+      include: ["src/lib/validation/**", "src/lib/format.ts"],
       thresholds: {
         lines: 80,
         functions: 80,

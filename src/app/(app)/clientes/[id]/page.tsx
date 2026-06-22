@@ -1,22 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { createAdminSupabase } from "@/lib/supabase/admin";
+import { listarContadores, contadorPorId } from "@/lib/clientes/contadores";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { atualizarCliente } from "../actions";
 
 export const metadata = { title: "Cliente" };
-
-async function listarContadores() {
-  const admin = createAdminSupabase();
-  const { data } = await admin
-    .from("usuarios")
-    .select("id, nome")
-    .eq("papel", "contador")
-    .eq("ativo", true)
-    .order("nome");
-  return data ?? [];
-}
 
 export default async function FichaClientePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -27,21 +16,33 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: eu } = await supabase.from("usuarios").select("papel").eq("id", user.id).single();
+  const { data: eu } = await supabase
+    .from("usuarios")
+    .select("papel")
+    .eq("id", user.id)
+    .maybeSingle();
+  const papel = eu?.papel;
 
   const { data: cliente } = await supabase
     .from("clientes")
     .select(
-      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, endereco, responsavel_nome, contador_id, status, data_inicio, observacoes",
+      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, endereco, responsavel_nome, contador_id, status, data_inicio, observacoes, atualizado_em",
     )
     .eq("id", id)
     .maybeSingle();
   if (!cliente) notFound();
 
-  const contadores = await listarContadores();
+  // Só admin reatribui contador no UPDATE (trigger congela p/ os demais).
+  const contadorEditavel = papel === "admin";
+  let contadores: { id: string; nome: string }[] = [];
+  if (contadorEditavel) {
+    contadores = await listarContadores();
+  } else if (cliente.contador_id) {
+    const c = await contadorPorId(cliente.contador_id);
+    if (c) contadores = [c];
+  }
 
-  const podeVerHonorario =
-    eu?.papel === "admin" || eu?.papel === "financeiro" || eu?.papel === "contador";
+  const podeVerHonorario = papel === "admin" || papel === "financeiro" || papel === "contador";
   let valorHonorario: number | null = null;
   if (podeVerHonorario) {
     const { data: fin } = await supabase
@@ -60,6 +61,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         contadores={contadores}
         cliente={cliente as ClienteDefaults}
         modo="editar"
+        contadorEditavel={contadorEditavel}
       />
       {podeVerHonorario && <HonorarioForm clienteId={id} valorAtual={valorHonorario} />}
     </div>
