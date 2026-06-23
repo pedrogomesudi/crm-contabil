@@ -9,6 +9,15 @@ const supabaseOrigin = (() => {
     return "";
   }
 })();
+// Host do domínio de produção: usado para travar a checagem CSRF de Server Actions
+// atrás do proxy do EasyPanel (allowedOrigins). Derivado de NEXT_PUBLIC_SITE_URL.
+const siteHost = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "").host;
+  } catch {
+    return "";
+  }
+})();
 
 // CSP: self por padrão. script/style com 'unsafe-inline' (Next injeta scripts inline
 // de hidratação sem nonce; Tailwind usa estilos inline). 'unsafe-eval' só em dev (HMR).
@@ -31,7 +40,14 @@ const nextConfig: NextConfig = {
   output: "standalone",
   // Upload de documentos vai até 10 MB (validado na action). O default de body de
   // Server Action é 1 MB; subimos com folga para o overhead do multipart.
-  experimental: { serverActions: { bodySizeLimit: "12mb" } },
+  // allowedOrigins: defesa CSRF determinística atrás do reverse proxy (só quando
+  // o domínio de produção está definido; em dev fica o default same-origin do Next).
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "12mb",
+      ...(siteHost ? { allowedOrigins: [siteHost] } : {}),
+    },
+  },
   async headers() {
     return [
       {
