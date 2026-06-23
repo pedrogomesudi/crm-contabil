@@ -1,0 +1,77 @@
+import { createServerSupabase } from "@/lib/supabase/server";
+import { formatarData } from "@/lib/format";
+import { podeGerenciarDocumentos } from "@/lib/clientes/permissoes";
+import type { Papel } from "@/lib/tipos";
+import { UploadDocumento } from "./UploadDocumento";
+import { BotaoBaixar } from "./BotaoBaixar";
+import { BotaoExcluirDocumento } from "./BotaoExcluirDocumento";
+
+// Seção de documentos da ficha do cliente. A lista usa o client com RLS (o
+// usuário só vê documentos de clientes visíveis a ele). Anexar exige papel de
+// gestão; excluir é exclusivo do admin.
+export async function DocumentosSection({ clienteId, papel }: { clienteId: string; papel: Papel }) {
+  const supabase = await createServerSupabase();
+  const { data: documentos, error } = await supabase
+    .from("documentos")
+    .select("id, nome, tipo, enviado_em")
+    .eq("cliente_id", clienteId)
+    .order("enviado_em", { ascending: false })
+    .order("id")
+    .limit(100);
+
+  const podeGerenciar = podeGerenciarDocumentos(papel);
+  const ehAdmin = papel === "admin";
+
+  return (
+    <section className="max-w-2xl space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+      <h2 className="text-sm font-semibold text-slate-900">Documentos</h2>
+
+      {podeGerenciar && <UploadDocumento clienteId={clienteId} />}
+
+      {error ? (
+        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+          Não foi possível carregar os documentos.
+        </p>
+      ) : documentos && documentos.length > 0 ? (
+        <div className="overflow-hidden rounded border border-slate-200">
+          <table className="w-full text-sm">
+            <caption className="sr-only">Documentos do cliente</caption>
+            <thead className="bg-slate-100 text-left text-slate-700">
+              <tr>
+                <th className="p-2 font-medium">Nome</th>
+                <th className="p-2 font-medium">Tipo</th>
+                <th className="p-2 font-medium">Enviado em</th>
+                <th className="p-2 font-medium">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {documentos.map((d) => (
+                <tr key={d.id} className="border-t border-slate-100 align-top">
+                  <td className="p-2 text-slate-900">{d.nome}</td>
+                  <td className="p-2 text-slate-700">{d.tipo ?? "—"}</td>
+                  <td className="p-2 text-slate-700">
+                    <time dateTime={d.enviado_em}>{formatarData(d.enviado_em)}</time>
+                  </td>
+                  <td className="p-2">
+                    <div className="flex flex-wrap gap-2">
+                      <BotaoBaixar documentoId={d.id} nome={d.nome} />
+                      {ehAdmin && (
+                        <BotaoExcluirDocumento
+                          documentoId={d.id}
+                          clienteId={clienteId}
+                          nome={d.nome}
+                        />
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="text-sm text-slate-500">Nenhum documento anexado.</p>
+      )}
+    </section>
+  );
+}

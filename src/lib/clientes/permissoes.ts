@@ -19,3 +19,10 @@ export function podeAtribuirContador(papel: Papel | undefined, modo: "novo" | "e
 export function podeVerHonorario(papel: Papel | undefined): boolean {
   return papel === "admin" || papel === "financeiro" || papel === "contador";
 }
+
+// Quem gerencia documentos — anexar/excluir (RLS doc_insert: admin/contador/assistente).
+// O financeiro só VÊ/baixa (spec §4.2). Como o upload roda via service_role (bypassa
+// RLS), esta checagem é o que efetivamente barra o financeiro de anexar.
+export function podeGerenciarDocumentos(papel: Papel | undefined): boolean {
+  return papel === "admin" || papel === "contador" || papel === "assistente";
+}

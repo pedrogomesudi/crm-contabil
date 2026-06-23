@@ -5,6 +5,7 @@ import { listarContadores, contadorPorId } from "@/lib/clientes/contadores";
 import { podeAtribuirContador, podeVerHonorario } from "@/lib/clientes/permissoes";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
+import { DocumentosSection } from "@/components/documentos/DocumentosSection";
 import { atualizarCliente } from "../actions";
 
 export const metadata = { title: "Cliente" };
@@ -58,6 +59,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         contadorEditavel={contadorEditavel}
       />
       {mostrarHonorario && <HonorarioForm clienteId={id} valorAtual={valorHonorario} />}
+      <DocumentosSection clienteId={id} papel={papel} />
     </div>
   );
 }

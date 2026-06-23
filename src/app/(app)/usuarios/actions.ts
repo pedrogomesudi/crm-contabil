@@ -12,7 +12,9 @@ import type { EstadoConvite } from "./estados";
 // service_role (server-side). getPerfilAtual valida o papel a cada chamada.
 async function exigirAdmin() {
   const perfil = await getPerfilAtual();
-  if (!perfil || perfil.papel !== "admin") redirect("/");
+  // Actions rodam fora do layout: re-checa sessão, papel E ativo (admin desativado
+  // com cookie ainda válido não pode operar via service_role).
+  if (!perfil || !perfil.ativo || perfil.papel !== "admin") redirect("/");
   return perfil;
 }
 

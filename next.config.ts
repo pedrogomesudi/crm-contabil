@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Upload de documentos vai até 10 MB (validado na action). O default de body de
+  // Server Action é 1 MB; subimos com folga para o overhead do multipart.
+  experimental: { serverActions: { bodySizeLimit: "12mb" } },
   async headers() {
     return [
       {
