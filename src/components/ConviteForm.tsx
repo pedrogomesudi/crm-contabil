@@ -34,22 +34,9 @@ export function ConviteForm() {
         </p>
       )}
       {estado.ok && (
-        <div role="status" className="space-y-1 rounded bg-green-50 p-3 text-sm text-green-800">
-          <p>Usuário criado.</p>
-          {estado.link ? (
-            <>
-              <p>
-                Enquanto o envio por e-mail não está ativo, copie o link de convite e envie ao
-                usuário (ele define a senha por lá):
-              </p>
-              <code className="block break-all rounded bg-white p-2 text-xs text-slate-700">
-                {estado.link}
-              </code>
-            </>
-          ) : (
-            <p>O e-mail de convite será enviado quando o SMTP estiver configurado.</p>
-          )}
-        </div>
+        <p role="status" className="rounded bg-green-50 p-3 text-sm text-green-800">
+          Convite enviado por e-mail. O usuário define a senha pelo link recebido.
+        </p>
       )}
 
       <button

@@ -32,34 +32,23 @@ export async function convidarUsuario(
   if (!papelValido(papel)) return { erro: "Papel inválido." };
 
   const admin = createAdminSupabase();
-  // Cria sem confirmar e-mail; a senha é definida pelo convidado via link.
-  const { data: criado, error: errCreate } = await admin.auth.admin.createUser({
-    email,
-    email_confirm: false,
-  });
-  if (errCreate || !criado?.user) {
-    const jaExiste = /exist|registered|already/i.test(errCreate?.message ?? "");
-    return { erro: jaExiste ? "E-mail já cadastrado." : "Não foi possível criar o usuário." };
+  // inviteUserByEmail cria o usuário E envia o e-mail de convite (via SMTP/Brevo)
+  // usando o template "Invite user" (que aponta para /auth/confirmar?token_hash=).
+  const { data: convidado, error: errConvite } = await admin.auth.admin.inviteUserByEmail(email);
+  if (errConvite || !convidado?.user) {
+    const jaExiste = /exist|registered|already/i.test(errConvite?.message ?? "");
+    return { erro: jaExiste ? "E-mail já cadastrado." : "Não foi possível enviar o convite." };
   }
 
   // Papel/nome definidos EXPLICITAMENTE (o trigger cria como assistente por causa
   // do timing do app_metadata). Upsert por id é robusto a corrida com o trigger.
   const { error: errPerfil } = await admin
     .from("usuarios")
-    .upsert({ id: criado.user.id, email, nome, papel, ativo: true }, { onConflict: "id" });
-  if (errPerfil) return { erro: "Usuário criado, mas falha ao definir o papel." };
-
-  // Gera o token de convite. Montamos o link para o NOSSO /auth/confirmar usando
-  // token_hash (fluxo server-side do @supabase/ssr via verifyOtp), em vez do
-  // action_link (fluxo implícito por hash, que o SSR não processa).
-  const site = process.env.NEXT_PUBLIC_SITE_URL;
-  const { data: gen } = await admin.auth.admin.generateLink({ type: "invite", email });
-  const tokenHash = gen?.properties?.hashed_token;
-  const link =
-    site && tokenHash ? `${site}/auth/confirmar?token_hash=${tokenHash}&type=invite` : undefined;
+    .upsert({ id: convidado.user.id, email, nome, papel, ativo: true }, { onConflict: "id" });
+  if (errPerfil) return { erro: "Convite enviado, mas falha ao definir o papel." };
 
   revalidatePath("/usuarios");
-  return { ok: true, link };
+  return { ok: true };
 }
 
 export async function alterarPapel(usuarioId: string, formData: FormData) {
