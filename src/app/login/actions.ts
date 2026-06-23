@@ -43,9 +43,11 @@ export async function recuperarSenha(
   // Site URL obrigatório: sem ele o Supabase usaria o Site URL do painel como
   // redirectTo, que pode estar errado. Esta URL precisa estar nas "Redirect URLs".
   const site = required(process.env.NEXT_PUBLIC_SITE_URL, "NEXT_PUBLIC_SITE_URL");
-  await supabase.auth.resetPasswordForEmail(email, {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${site}/auth/confirmar`,
   });
+  // Loga só falhas de infra (SMTP/rede) — sem alterar a resposta neutra ao cliente.
+  if (error) console.error("recuperarSenha (infra):", error.status, error.message);
   // Resposta neutra (não revela se o e-mail existe).
   return { mensagem: "Se o e-mail existir, enviaremos instruções de recuperação." };
 }

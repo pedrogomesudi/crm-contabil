@@ -146,18 +146,11 @@ export async function salvarHonorario(
   if (!user) return { erro: "Sessão expirada. Entre novamente." };
 
   // Sem concorrência otimista aqui: honorário é um único campo de baixa
-  // contenção; o último a salvar vence (decisão de design).
+  // contenção; o último a salvar vence (decisão de design). atualizado_por e
+  // atualizado_em são preenchidos pelo trigger no banco (autoria não-forjável).
   const { data, error } = await supabase
     .from("clientes_financeiro")
-    .upsert(
-      {
-        cliente_id: clienteId,
-        honorario_mensal: valor,
-        atualizado_por: user.id,
-        atualizado_em: new Date().toISOString(),
-      },
-      { onConflict: "cliente_id" },
-    )
+    .upsert({ cliente_id: clienteId, honorario_mensal: valor }, { onConflict: "cliente_id" })
     .select("cliente_id");
   if (error || !data || data.length === 0) {
     return { erro: "Sem permissão para alterar honorário." };

@@ -20,6 +20,10 @@ export function parseValorBR(s: string): number | null {
     // só pontos em grupos de 3 (ex.: "1.500", "1.234.567") => milhar
     t = t.replace(/\./g, "");
   }
+  // Aceita SÓ número decimal simples. Barra notação científica ("1e3"),
+  // hexadecimal ("0x10"), sinal "+" e qualquer lixo que o Number() toleraria.
+  if (!/^-?\d+(\.\d+)?$/.test(t)) return NaN;
   const n = Number(t);
-  return Number.isFinite(n) ? n : NaN;
+  if (!Number.isFinite(n)) return NaN;
+  return n === 0 ? 0 : n; // normaliza -0
 }

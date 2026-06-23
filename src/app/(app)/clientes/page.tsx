@@ -94,6 +94,7 @@ export default async function ClientesPage({
         <>
           <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
             <table className="w-full text-sm">
+              <caption className="sr-only">Lista de clientes</caption>
               <thead className="bg-slate-100 text-left text-slate-700">
                 <tr>
                   <th className="p-2 font-medium">Nome</th>
@@ -115,7 +116,7 @@ export default async function ClientesPage({
                     <td className="p-2 text-slate-700">{cl.tipo_pessoa}</td>
                     <td className="p-2 text-slate-700">{cl.regime_tributario}</td>
                     <td className="p-2">
-                      <span className={cl.status === "ativo" ? "text-green-700" : "text-slate-400"}>
+                      <span className={cl.status === "ativo" ? "text-green-700" : "text-slate-600"}>
                         {cl.status}
                       </span>
                     </td>
@@ -123,7 +124,7 @@ export default async function ClientesPage({
                 ))}
                 {!clientes?.length && (
                   <tr>
-                    <td colSpan={5} className="p-4 text-center text-slate-400">
+                    <td colSpan={5} className="p-4 text-center text-slate-500">
                       Nenhum cliente encontrado.
                     </td>
                   </tr>

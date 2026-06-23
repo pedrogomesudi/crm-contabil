@@ -38,4 +38,37 @@ describe("clienteSchema", () => {
     });
     expect(r.success).toBe(true);
   });
+
+  // Matriz completa tipo×regime: só 4 combinações são válidas (espelha o CHECK do banco).
+  const VALIDAS = new Set(["PJ|Simples", "PJ|Presumido", "PJ|Real", "PF|Isento/PF", "MEI|MEI"]);
+  const TIPOS = ["PJ", "PF", "MEI"] as const;
+  const REGS = ["Simples", "Presumido", "Real", "MEI", "Isento/PF"] as const;
+  const docPara = (t: string) => (t === "PF" ? "52998224725" : "11222333000181");
+  for (const t of TIPOS) {
+    for (const reg of REGS) {
+      const esperado = VALIDAS.has(`${t}|${reg}`);
+      it(`tipo×regime: ${t}+${reg} => ${esperado ? "válido" : "inválido"}`, () => {
+        const r = clienteSchema.safeParse({
+          tipo_pessoa: t,
+          razao_social: "Teste",
+          cpf_cnpj: docPara(t),
+          regime_tributario: reg,
+        });
+        expect(r.success).toBe(esperado);
+      });
+    }
+  }
+
+  it("rejeita data_inicio com data de calendário inexistente", () => {
+    const r = clienteSchema.safeParse({ ...base, data_inicio: "2026-13-45" });
+    expect(r.success).toBe(false);
+  });
+  it("aceita data_inicio válida", () => {
+    const r = clienteSchema.safeParse({ ...base, data_inicio: "2026-02-28" });
+    expect(r.success).toBe(true);
+  });
+  it("aceita data_inicio vazia (opcional)", () => {
+    const r = clienteSchema.safeParse({ ...base, data_inicio: "" });
+    expect(r.success).toBe(true);
+  });
 });

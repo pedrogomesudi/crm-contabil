@@ -18,7 +18,6 @@ export default function RecuperarPage() {
           type="email"
           placeholder="E-mail"
           autoComplete="email"
-          autoFocus
           required
         />
         {estado.mensagem && (

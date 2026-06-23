@@ -17,7 +17,6 @@ export function NovaSenhaForm() {
           type="password"
           placeholder="Nova senha (mín. 8)"
           autoComplete="new-password"
-          autoFocus
           required
           aria-describedby={estado.erro ? "senha-erro" : undefined}
           aria-invalid={estado.erro ? true : undefined}

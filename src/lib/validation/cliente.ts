@@ -14,6 +14,13 @@ const combinacoes: Record<TipoPessoa, RegimeTributario[]> = {
   MEI: ["MEI"],
 };
 
+// Valida data de calendário real (não só o formato): "2026-13-45" é rejeitada.
+function ehDataValida(s: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+}
+
 export const clienteSchema = z
   .object({
     tipo_pessoa: z.enum(TIPOS_PESSOA, { message: "Tipo de pessoa inválido" }),
@@ -30,7 +37,7 @@ export const clienteSchema = z
     // Campos persistidos que vêm do formulário — sem eles o Zod os descartaria.
     contador_id: z.union([z.uuid("Selecione um contador"), z.literal("")]).optional(),
     data_inicio: z
-      .union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"), z.literal("")])
+      .union([z.string().refine(ehDataValida, "Data inválida"), z.literal("")])
       .optional(),
     status: z.enum(STATUS_CLIENTE).optional(),
     // endereco (jsonb) é montado à parte na action a partir de campos planos do form.

@@ -19,4 +19,9 @@ describe("parseValorBR", () => {
   it("negativo", () => expect(parseValorBR("-50,00")).toBe(-50));
   it("vazio => null", () => expect(parseValorBR("  ")).toBeNull());
   it("inválido => NaN", () => expect(Number.isNaN(parseValorBR("abc"))).toBe(true));
+  it("notação científica => NaN", () => expect(Number.isNaN(parseValorBR("1e3"))).toBe(true));
+  it("hexadecimal => NaN", () => expect(Number.isNaN(parseValorBR("0x10"))).toBe(true));
+  it("sinal + => NaN", () => expect(Number.isNaN(parseValorBR("+50"))).toBe(true));
+  it("milhar quebrado => NaN", () => expect(Number.isNaN(parseValorBR("1.234.56"))).toBe(true));
+  it("-0 normaliza para 0", () => expect(Object.is(parseValorBR("-0,00"), 0)).toBe(true));
 });

@@ -1,10 +1,11 @@
 # CRM Contábil
 
-> **Status:** Fase 1 em andamento. Implementado: fundação (Next.js + qualidade/CI), banco completo
+> **Status:** Fase 1 quase concluída. Implementado: fundação (Next.js + qualidade/CI), banco completo
 > (enums, `usuarios`, papéis/RLS, anti-escalonamento, `clientes`, honorário isolado, documentos,
-> Storage — com 15 asserts de RLS), validações (CPF/CNPJ + schema), integração Supabase (clients +
-> proxy de sessão) e bootstrap do admin. Pendente: telas (login, dashboard, clientes), gestão de
-> usuários e deploy (ver `docs/superpowers/plans/`).
+> Storage — com 18 asserts de RLS), validações (CPF/CNPJ + schema), integração Supabase (clients +
+> proxy de sessão), bootstrap do admin, telas (login/recuperação, dashboard, clientes), gestão de
+> usuários (convite por e-mail via SMTP) e documentos (upload/download assinado + log). Pendente:
+> deploy no EasyPanel (ver `docs/superpowers/plans/`).
 
 CRM web para escritório de contabilidade — login com papéis, dashboard e gestão de clientes.
 

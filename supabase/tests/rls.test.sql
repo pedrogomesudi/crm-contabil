@@ -237,6 +237,34 @@ begin
   end if;
   raise notice 'OK: dashboard_resumo respeita RLS (contador vê só os seus)';
 end $$;
+
+-- ASSERT 16: contador NÃO insere documento em cliente de outro contador (doc_insert)
+do $$
+begin
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador (dono do ...0001)
+  begin
+    insert into documentos (cliente_id, nome, caminho_storage)
+    values ('aaaaaaaa-0000-0000-0000-000000000002', 'intruso.pdf',
+            'aaaaaaaa-0000-0000-0000-000000000002/intruso.pdf'); -- cliente do admin
+    raise exception 'FALHA: contador inseriu documento em cliente alheio';
+  exception when insufficient_privilege then
+    raise notice 'OK: contador não insere documento em cliente alheio';
+  end;
+end $$;
+
+-- ASSERT 17: authenticated não forja registro em log_acesso_documento (sem policy de INSERT)
+do $$
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  begin
+    insert into log_acesso_documento (documento_id, usuario_id)
+    values ('dddddddd-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
+    raise exception 'FALHA: authenticated inseriu log de acesso';
+  exception when insufficient_privilege then
+    raise notice 'OK: log_acesso_documento não aceita insert de authenticated';
+  end;
+end $$;
+
 -- Nota: a invariante "≥1 admin ativo" (trigger garantir_admin_ativo, migration 0010)
 -- não é testada aqui porque o banco compartilha admins reais (ex.: o fundador), o que
 -- impede isolar o cenário "último admin". A garantia vem do trigger + checagem na action.

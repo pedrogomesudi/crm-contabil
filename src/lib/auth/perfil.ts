@@ -21,11 +21,14 @@ export const getPerfilAtual = cache(async (): Promise<PerfilAtual | null> => {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("usuarios")
     .select("nome, papel, ativo")
     .eq("id", user.id)
     .maybeSingle();
+  // Erro de infra (rede/RLS) ≠ "perfil ausente". Propaga para não deslogar um
+  // usuário legítimo por um soluço transitório (quem chama trata como falha).
+  if (error) throw new Error(`Falha ao carregar perfil: ${error.message}`);
   const parsed = perfilSchema.safeParse(data);
   if (!parsed.success) return null;
   return { id: user.id, ...parsed.data };

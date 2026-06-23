@@ -23,7 +23,6 @@ export function LoginForm({ aviso }: { aviso?: string }) {
           type="email"
           placeholder="E-mail"
           autoComplete="email"
-          autoFocus
           required
           aria-describedby={estado.erro ? "login-erro" : undefined}
           aria-invalid={estado.erro ? true : undefined}

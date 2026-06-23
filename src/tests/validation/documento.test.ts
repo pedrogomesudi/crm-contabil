@@ -10,6 +10,10 @@ describe("validarCPF", () => {
 describe("validarCNPJ", () => {
   it("aceita CNPJ válido", () => expect(validarCNPJ("11222333000181")).toBe(true));
   it("rejeita CNPJ inválido", () => expect(validarCNPJ("11222333000100")).toBe(false));
+  it("rejeita todos os dígitos iguais", () => expect(validarCNPJ("11111111111111")).toBe(false));
+  it("rejeita comprimento errado (13)", () => expect(validarCNPJ("1122233300018")).toBe(false));
+  it("rejeita vazio", () => expect(validarCNPJ("")).toBe(false));
+  it("aceita CNPJ com pontuação", () => expect(validarCNPJ("11.222.333/0001-81")).toBe(true));
 });
 
 describe("validarDocumento", () => {
