@@ -1,5 +1,5 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { convidarUsuario } from "@/app/(app)/usuarios/actions";
 import type { EstadoConvite } from "@/app/(app)/usuarios/estados";
 import { PAPEIS } from "@/lib/tipos";
@@ -7,8 +7,17 @@ import { Campo, inputCls } from "@/components/ui/Campo";
 
 export function ConviteForm() {
   const [estado, action, pending] = useActionState<EstadoConvite, FormData>(convidarUsuario, {});
+  const formRef = useRef<HTMLFormElement>(null);
+  // Limpa os campos após um convite bem-sucedido (evita reenviar o mesmo e-mail).
+  useEffect(() => {
+    if (estado.ok) formRef.current?.reset();
+  }, [estado.ok]);
   return (
-    <form action={action} className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+    <form
+      ref={formRef}
+      action={action}
+      className="space-y-3 rounded-lg border border-slate-200 bg-white p-4"
+    >
       <h2 className="text-sm font-semibold text-slate-900">Convidar usuário</h2>
       <div className="grid gap-3 sm:grid-cols-3">
         <Campo label="Nome">

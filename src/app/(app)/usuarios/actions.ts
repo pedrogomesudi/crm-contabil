@@ -1,8 +1,10 @@
 "use server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { required } from "@/lib/env";
 import { PAPEIS, type Papel } from "@/lib/tipos";
 import type { EstadoConvite } from "./estados";
 
@@ -18,36 +20,68 @@ function papelValido(p: string): p is Papel {
   return (PAPEIS as readonly string[]).includes(p);
 }
 
+const emailSchema = z.string().email();
+
+// Conta admins ATIVOS além de `exceto`. Sustenta a invariante "≥1 admin ativo":
+// o trigger garantir_admin_ativo (migration 0010) é a barreira final no banco;
+// aqui só antecipamos a mensagem amigável.
+async function outrosAdminsAtivos(
+  admin: ReturnType<typeof createAdminSupabase>,
+  exceto: string,
+): Promise<number> {
+  const { count } = await admin
+    .from("usuarios")
+    .select("id", { count: "exact", head: true })
+    .eq("papel", "admin")
+    .eq("ativo", true)
+    .neq("id", exceto);
+  return count ?? 0;
+}
+
 export async function convidarUsuario(
   _prev: EstadoConvite,
   formData: FormData,
 ): Promise<EstadoConvite> {
   await exigirAdmin();
-  const email = String(formData.get("email") ?? "")
+  const emailBruto = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();
   const nome = String(formData.get("nome") ?? "").trim();
   const papel = String(formData.get("papel") ?? "");
-  if (!email || !nome) return { erro: "Informe e-mail e nome." };
+  if (!emailBruto || !nome) return { erro: "Informe e-mail e nome." };
+  const email = emailSchema.safeParse(emailBruto);
+  if (!email.success) return { erro: "E-mail inválido." };
   if (!papelValido(papel)) return { erro: "Papel inválido." };
 
   const admin = createAdminSupabase();
+  const site = required(process.env.NEXT_PUBLIC_SITE_URL, "NEXT_PUBLIC_SITE_URL");
   // inviteUserByEmail cria o usuário E envia o e-mail de convite (via SMTP/Brevo)
-  // usando o template "Invite user" (que aponta para /auth/confirmar?token_hash=).
-  const { data: convidado, error: errConvite } = await admin.auth.admin.inviteUserByEmail(email);
+  // usando o template "Invite user". redirectTo explícito torna o link robusto a
+  // divergência entre o Site URL do painel e o ambiente real.
+  const { data: convidado, error: errConvite } = await admin.auth.admin.inviteUserByEmail(
+    email.data,
+    { redirectTo: `${site}/auth/confirmar` },
+  );
   if (errConvite || !convidado?.user) {
     const jaExiste = /exist|registered|already/i.test(errConvite?.message ?? "");
+    if (!jaExiste) console.error("convidarUsuario (invite):", errConvite?.message);
     return { erro: jaExiste ? "E-mail já cadastrado." : "Não foi possível enviar o convite." };
   }
 
   // Papel/nome definidos EXPLICITAMENTE (o trigger cria como assistente por causa
-  // do timing do app_metadata). Upsert por id é robusto a corrida com o trigger.
+  // do timing do app_metadata). Se o upsert falhar, o usuário já existe e já recebeu
+  // o e-mail: revalida para que ele apareça na lista e o admin corrija o papel ali.
   const { error: errPerfil } = await admin
     .from("usuarios")
-    .upsert({ id: convidado.user.id, email, nome, papel, ativo: true }, { onConflict: "id" });
-  if (errPerfil) return { erro: "Convite enviado, mas falha ao definir o papel." };
-
+    .upsert(
+      { id: convidado.user.id, email: email.data, nome, papel, ativo: true },
+      { onConflict: "id" },
+    );
   revalidatePath("/usuarios");
+  if (errPerfil) {
+    console.error("convidarUsuario (upsert papel):", errPerfil.message);
+    return { erro: "Convite enviado, mas o papel não foi definido. Ajuste-o na lista abaixo." };
+  }
   return { ok: true };
 }
 
@@ -58,19 +92,85 @@ export async function alterarPapel(usuarioId: string, formData: FormData) {
   if (!papelValido(papel)) redirect("/usuarios?erro=papel");
 
   const admin = createAdminSupabase();
+  // Não rebaixar o último admin ativo (mensagem amigável; o trigger é a barreira final).
+  if (papel !== "admin") {
+    const { data: atual } = await admin
+      .from("usuarios")
+      .select("papel, ativo")
+      .eq("id", usuarioId)
+      .maybeSingle();
+    if (
+      atual?.papel === "admin" &&
+      atual.ativo &&
+      (await outrosAdminsAtivos(admin, usuarioId)) === 0
+    ) {
+      redirect("/usuarios?erro=ultimo_admin");
+    }
+  }
+
   const { error } = await admin.from("usuarios").update({ papel }).eq("id", usuarioId);
-  if (error) redirect("/usuarios?erro=1");
+  if (error) {
+    console.error("alterarPapel:", error.message);
+    redirect("/usuarios?erro=1");
+  }
   revalidatePath("/usuarios");
   redirect("/usuarios?ok=papel");
 }
 
-export async function definirAtivo(usuarioId: string, ativo: boolean) {
+// Alterna o status do usuário lendo o valor ATUAL no servidor (evita aplicar um
+// valor obsoleto fixado no render). Não desativa o último admin ativo.
+export async function definirAtivo(usuarioId: string) {
   const eu = await exigirAdmin();
   if (usuarioId === eu.id) redirect("/usuarios?erro=self"); // não desativa a si mesmo
 
   const admin = createAdminSupabase();
-  const { error } = await admin.from("usuarios").update({ ativo }).eq("id", usuarioId);
-  if (error) redirect("/usuarios?erro=1");
+  const { data: atual, error: errLer } = await admin
+    .from("usuarios")
+    .select("papel, ativo")
+    .eq("id", usuarioId)
+    .maybeSingle();
+  if (errLer || !atual) {
+    if (errLer) console.error("definirAtivo (ler):", errLer.message);
+    redirect("/usuarios?erro=1");
+  }
+
+  const novoAtivo = !atual.ativo;
+  if (!novoAtivo && atual.papel === "admin" && (await outrosAdminsAtivos(admin, usuarioId)) === 0) {
+    redirect("/usuarios?erro=ultimo_admin");
+  }
+
+  const { error } = await admin.from("usuarios").update({ ativo: novoAtivo }).eq("id", usuarioId);
+  if (error) {
+    console.error("definirAtivo:", error.message);
+    redirect("/usuarios?erro=1");
+  }
   revalidatePath("/usuarios");
   redirect("/usuarios?ok=status");
+}
+
+// Reenvia o link de acesso por e-mail (convite expirado ou usuário que ainda não
+// definiu a senha). Usa resetPasswordForEmail: cai no mesmo /auth/confirmar e
+// permite definir a senha. Resposta neutra mesmo se o e-mail não existir mais.
+export async function reenviarAcesso(usuarioId: string) {
+  await exigirAdmin();
+  const admin = createAdminSupabase();
+  const { data: alvo, error: errLer } = await admin
+    .from("usuarios")
+    .select("email")
+    .eq("id", usuarioId)
+    .maybeSingle();
+  if (errLer || !alvo?.email) {
+    if (errLer) console.error("reenviarAcesso (ler):", errLer.message);
+    redirect("/usuarios?erro=1");
+  }
+
+  const site = required(process.env.NEXT_PUBLIC_SITE_URL, "NEXT_PUBLIC_SITE_URL");
+  const { error } = await admin.auth.resetPasswordForEmail(alvo.email, {
+    redirectTo: `${site}/auth/confirmar`,
+  });
+  if (error) {
+    console.error("reenviarAcesso (envio):", error.message);
+    redirect("/usuarios?erro=1");
+  }
+  redirect("/usuarios?ok=reenviado");
 }

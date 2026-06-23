@@ -237,3 +237,6 @@ begin
   end if;
   raise notice 'OK: dashboard_resumo respeita RLS (contador vê só os seus)';
 end $$;
+-- Nota: a invariante "≥1 admin ativo" (trigger garantir_admin_ativo, migration 0010)
+-- não é testada aqui porque o banco compartilha admins reais (ex.: o fundador), o que
+-- impede isolar o cenário "último admin". A garantia vem do trigger + checagem na action.

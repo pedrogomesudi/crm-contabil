@@ -4,7 +4,16 @@ import { LoginForm } from "@/components/LoginForm";
 
 export const metadata = { title: "Entrar" };
 
-export default async function LoginPage() {
+const AVISOS: Record<string, string> = {
+  link_invalido: "O link expirou ou é inválido. Solicite um novo convite ou recuperação de senha.",
+  conta_inativa: "Sua conta está inativa. Procure um administrador do escritório.",
+};
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erro?: string }>;
+}) {
   const supabase = await createServerSupabase();
   const {
     data: { user },
@@ -19,5 +28,7 @@ export default async function LoginPage() {
       .single();
     if (perfil?.ativo) redirect("/");
   }
-  return <LoginForm />;
+  const { erro } = await searchParams;
+  const aviso = erro ? AVISOS[erro] : undefined;
+  return <LoginForm aviso={aviso} />;
 }

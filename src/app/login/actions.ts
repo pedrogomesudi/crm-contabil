@@ -6,7 +6,9 @@ import { required } from "@/lib/env";
 import type { EstadoLogin, EstadoRecuperar, EstadoNovaSenha } from "./estados";
 
 export async function entrar(_prev: EstadoLogin, formData: FormData): Promise<EstadoLogin> {
-  const email = String(formData.get("email") ?? "").trim();
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
   const senha = String(formData.get("senha") ?? "");
   if (!email || !senha) return { erro: "Informe e-mail e senha." };
 
@@ -32,7 +34,9 @@ export async function recuperarSenha(
   _prev: EstadoRecuperar,
   formData: FormData,
 ): Promise<EstadoRecuperar> {
-  const email = String(formData.get("email") ?? "").trim();
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
   if (!email) return { mensagem: "Informe o e-mail." };
 
   const supabase = await createServerSupabase();
@@ -58,7 +62,9 @@ export async function definirNovaSenha(
   const supabase = await createServerSupabase();
   const { error } = await supabase.auth.updateUser({ password: senha });
   if (error) {
-    return { erro: "Não foi possível redefinir a senha. O link pode ter expirado." };
+    return {
+      erro: "Não foi possível redefinir a senha. O link pode ter expirado — solicite um novo em “Esqueci minha senha”.",
+    };
   }
   revalidatePath("/", "layout");
   redirect("/");

@@ -6,10 +6,15 @@ import type { EstadoLogin } from "@/app/login/estados";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { CampoTexto } from "@/components/auth/CampoTexto";
 
-export function LoginForm() {
+export function LoginForm({ aviso }: { aviso?: string }) {
   const [estado, action, pending] = useActionState<EstadoLogin, FormData>(entrar, {});
   return (
     <AuthCard titulo="CRM Contábil">
+      {aviso && (
+        <p role="status" className="mb-4 rounded bg-amber-50 p-3 text-sm text-amber-800">
+          {aviso}
+        </p>
+      )}
       <form action={action} className="space-y-4">
         <CampoTexto
           id="email"
