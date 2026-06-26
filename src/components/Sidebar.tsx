@@ -9,6 +9,9 @@ export function Sidebar({ papel, nome }: { papel: Papel; nome: string }) {
   const itens = [
     { href: "/", label: "Início" },
     { href: "/clientes", label: "Clientes" },
+    ...(["admin", "assistente", "financeiro"].includes(papel)
+      ? [{ href: "/integracoes/dominio", label: "Integração Domínio" }]
+      : []),
     ...(papel === "admin" ? [{ href: "/usuarios", label: "Usuários" }] : []),
   ];
   // "/" casa exato; os demais casam por prefixo (ex.: /clientes/123).
