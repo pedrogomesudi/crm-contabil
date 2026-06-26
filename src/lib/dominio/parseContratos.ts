@@ -1,6 +1,6 @@
 import type { FolhaXls } from "./biff";
 import type { ContratoDominio } from "./tipos";
-import { serialParaISO } from "./tipos";
+import { serialParaISO, comoNumero } from "./tipos";
 
 const txt = (v: unknown): string | null => {
   const s = String(v ?? "").trim();
@@ -12,8 +12,8 @@ const num = (v: unknown): number | null => (typeof v === "number" ? v : null);
 export function parseContratos(folha: FolhaXls): ContratoDominio[] {
   const out: ContratoDominio[] = [];
   for (const linha of folha.celulas) {
-    const cod = linha[0];
-    if (typeof cod !== "number") continue;
+    const cod = comoNumero(linha[0]);
+    if (cod === null) continue;
     out.push({
       codigoCliente: cod,
       clienteNome: txt(linha[1]) ?? "",

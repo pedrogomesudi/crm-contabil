@@ -80,4 +80,62 @@ describe("combinarFontes", () => {
     expect(beta.regime_tributario).toBeNull();
     expect(beta.pendencias.length).toBeGreaterThan(0);
   });
+
+  it("documento PF (CPF válido) vira PF + Isento/PF, nunca PF + Simples (respeita o CHECK)", () => {
+    const r = combinarFontes(
+      [
+        {
+          codigo: 9,
+          razaoSocial: "FULANO DE TAL",
+          cnpj: "52998224725", // CPF válido
+          status: "Ativa",
+          cnae: null,
+          regimeDominio: "Microempresa",
+          inscricaoEstadual: null,
+        },
+      ],
+      [],
+    );
+    expect(r[0]).toMatchObject({ tipo_pessoa: "PF", regime_tributario: "Isento/PF" });
+    expect(r[0]?.pendencias).toHaveLength(0);
+  });
+
+  it("documento inválido (DV errado) não vira cadastro silencioso — gera pendência", () => {
+    const r = combinarFontes(
+      [
+        {
+          codigo: 5,
+          razaoSocial: "CNPJ RUIM",
+          cnpj: "11222333000100", // CNPJ com DV inválido
+          status: "Ativa",
+          cnae: null,
+          regimeDominio: "Microempresa",
+          inscricaoEstadual: null,
+        },
+      ],
+      [],
+    );
+    expect(r[0]?.regime_tributario).toBeNull();
+    expect(r[0]?.pendencias.length).toBeGreaterThan(0);
+  });
+
+  it("cliente só no Honorários (sem empresa) não some — vira pendência", () => {
+    const r = combinarFontes(
+      [],
+      [
+        {
+          codigo: 3,
+          nome: "ORFAO LTDA",
+          apelido: "ORFAO",
+          cnpj: "11444777000161", // CNPJ válido, mas sem empresa correspondente
+          endereco: { cidade: "UBERLANDIA" },
+          email: "o@ex.com",
+          telefone: null,
+        },
+      ],
+    );
+    expect(r).toHaveLength(1);
+    expect(r[0]).toMatchObject({ cpf_cnpj: "11444777000161", dominio_codigo: "3" });
+    expect(r[0]?.pendencias.length).toBeGreaterThan(0);
+  });
 });

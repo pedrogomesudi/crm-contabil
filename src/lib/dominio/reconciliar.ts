@@ -15,7 +15,13 @@ export type ItemReconc = {
   diff: Record<string, [unknown, unknown]>;
 };
 
-const CAMPOS: (keyof ClienteExistente)[] = ["razao_social", "regime_tributario", "status", "email", "telefone"];
+const CAMPOS: (keyof ClienteExistente & keyof ClienteNormalizado)[] = [
+  "razao_social",
+  "regime_tributario",
+  "status",
+  "email",
+  "telefone",
+];
 
 export function reconciliarClientes(
   novos: ClienteNormalizado[],
@@ -31,7 +37,7 @@ export function reconciliarClientes(
     const diff: Record<string, [unknown, unknown]> = {};
     for (const campo of CAMPOS) {
       const antigo = atual[campo] ?? null;
-      const novo = (cliente as unknown as Record<string, unknown>)[campo] ?? null;
+      const novo = cliente[campo] ?? null;
       if (String(antigo) !== String(novo)) diff[campo] = [antigo, novo];
     }
     return {

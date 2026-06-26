@@ -13,6 +13,7 @@ function lerRegistros(buf: Buffer): Registro[] {
     const tipo = buf.readUInt16LE(i);
     const len = buf.readUInt16LE(i + 2);
     i += 4;
+    if (i + len > buf.length) break; // registro truncado: para em vez de ler lixo
     out.push({ tipo, dados: buf.subarray(i, i + len) });
     i += len;
   }
@@ -44,7 +45,7 @@ function parseSST(payload: Buffer, continues: Buffer[]): string[] {
     return Buffer.concat(parts);
   };
   const cab = rd(8); // cstTotal / cstUnique
-  const unique = cab.length >= 8 ? cab.readInt32LE(4) : 0;
+  const unique = cab.length >= 8 ? Math.max(0, cab.readInt32LE(4)) : 0;
   const strings: string[] = [];
   for (let n = 0; n < unique; n++) {
     if (!garante()) break;
@@ -135,22 +136,21 @@ export function parseBiff(workbook: Buffer): FolhaXls[] {
       const c = d.readUInt16LE(2);
       const cch = d.readUInt16LE(6);
       const g = d[8] ?? 0;
-      set(
-        r,
-        c,
-        g & 1 ? d.subarray(9, 9 + 2 * cch).toString("utf16le") : d.subarray(9, 9 + cch).toString("latin1"),
-      );
+      const fim = g & 1 ? 9 + 2 * cch : 9 + cch;
+      if (fim <= d.length) {
+        set(r, c, g & 1 ? d.subarray(9, fim).toString("utf16le") : d.subarray(9, fim).toString("latin1"));
+      }
     } else if (tipo === 0x027e && d.length >= 10) {
       set(d.readUInt16LE(0), d.readUInt16LE(2), rkParaNumero(d.readUInt32LE(6)));
     } else if (tipo === 0x0203 && d.length >= 14) {
       set(d.readUInt16LE(0), d.readUInt16LE(2), d.readDoubleLE(6));
-    } else if (tipo === 0x00bd) {
-      // MULRK
+    } else if (tipo === 0x00bd && d.length >= 6) {
+      // MULRK: [row][colFirst]{[ixfe][rk]}*[colLast]
       const r = d.readUInt16LE(0);
       const cf = d.readUInt16LE(2);
       const cl = d.readUInt16LE(d.length - 2);
       let p = 4;
-      for (let c = cf; c <= cl; c++) {
+      for (let c = cf; c <= cl && p + 6 <= d.length - 2; c++) {
         set(r, c, rkParaNumero(d.readUInt32LE(p + 2)));
         p += 6;
       }

@@ -47,6 +47,10 @@ export function serialParaISO(n: number): string | null {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
-export function soDigitos(v: unknown): string {
-  return String(v ?? "").replace(/\D/g, "");
+// Lê um valor como número, aceitando number ou string numérica (ex.: código de
+// linha que o export pode formatar como texto). Retorna null se não for número.
+export function comoNumero(v: unknown): number | null {
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  if (typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v))) return Number(v);
+  return null;
 }

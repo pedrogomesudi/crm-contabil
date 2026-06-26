@@ -1,3 +1,8 @@
+// Mantém só os dígitos de um valor (normalização de CPF/CNPJ, telefone, etc.).
+export function soDigitos(v: unknown): string {
+  return String(v ?? "").replace(/\D/g, "");
+}
+
 // Formata uma data ISO para dd/mm/aaaa no fuso de São Paulo (consistente
 // independentemente do timezone do servidor). Retorna "—" para data inválida.
 export function formatarData(iso: string | null | undefined): string {

@@ -1,6 +1,6 @@
 import type { CelulaXls, FolhaXls } from "./biff";
 import type { ContatoDominio, EnderecoDominio } from "./tipos";
-import { soDigitos } from "./tipos";
+import { soDigitos } from "@/lib/format";
 
 type Linha = CelulaXls[];
 

@@ -1,6 +1,7 @@
 import type { FolhaXls } from "./biff";
 import type { EmpresaDominio } from "./tipos";
-import { soDigitos } from "./tipos";
+import { comoNumero } from "./tipos";
+import { soDigitos } from "@/lib/format";
 
 const txt = (v: unknown): string => String(v ?? "").trim();
 const ou = (s: string): string | null => (s ? s : null);
@@ -8,8 +9,8 @@ const ou = (s: string): string | null => (s ? s : null);
 export function parseEmpresas(folha: FolhaXls): EmpresaDominio[] {
   const out: EmpresaDominio[] = [];
   for (const linha of folha.celulas) {
-    const cod = linha[0];
-    if (typeof cod !== "number") continue; // pula cabeçalho/rodapé
+    const cod = comoNumero(linha[0]);
+    if (cod === null) continue; // pula cabeçalho/rodapé
     const cnpj = soDigitos(linha[2]);
     if (cnpj.length !== 14) continue;
     out.push({
