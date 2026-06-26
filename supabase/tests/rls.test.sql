@@ -311,3 +311,31 @@ begin
     raise notice 'OK: assistente não insere contratos_dominio';
   end;
 end $$;
+
+-- ===== V2 hardening: staging financeiro (importacao_contratos) = RLS do financeiro =====
+reset role;
+insert into importacoes (id, status) values
+  ('eeeeeeee-0000-0000-0000-000000000001', 'previa') on conflict do nothing;
+insert into importacao_contratos (id, importacao_id, cpf_cnpj, payload) values
+  ('ffffffff-0000-0000-0000-000000000001', 'eeeeeeee-0000-0000-0000-000000000001', '11222333000181', '[]'::jsonb)
+  on conflict do nothing;
+
+-- ASSERT 21: assistente NÃO enxerga importacao_contratos (valores de honorário)
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  select count(*) into n from importacao_contratos;
+  if n <> 0 then raise exception 'FALHA: assistente viu % importacao_contratos (devia ser 0)', n; end if;
+  raise notice 'OK: assistente não acessa importacao_contratos (staging financeiro)';
+end $$;
+
+-- ASSERT 22: financeiro enxerga importacao_contratos
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  select count(*) into n from importacao_contratos;
+  if n < 1 then raise exception 'FALHA: financeiro não viu importacao_contratos'; end if;
+  raise notice 'OK: financeiro acessa importacao_contratos';
+end $$;

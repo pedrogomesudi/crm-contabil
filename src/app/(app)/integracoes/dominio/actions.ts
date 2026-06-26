@@ -71,18 +71,27 @@ export async function gerarPrevia(_prev: EstadoPrevia, formData: FormData): Prom
     .single();
   if (impErr || !imp) return { erro: "Sem permissão para importar (admin/assistente)." };
 
+  // importacao_itens guarda só o cadastral (sem valores) — legível por assistente.
   const itensRows = itens.map((it) => ({
     importacao_id: imp.id,
     classe: it.classe,
     cpf_cnpj: it.cliente.cpf_cnpj,
-    payload: {
-      cliente: it.cliente,
-      diff: it.diff,
-      contratos: it.cliente.dominio_codigo ? (contratosPorCodigo.get(it.cliente.dominio_codigo) ?? []) : [],
-    },
+    payload: { cliente: it.cliente, diff: it.diff },
   }));
   const { error: itErr } = await supabase.from("importacao_itens").insert(itensRows);
   if (itErr) return { erro: "Falha ao montar a prévia." };
+
+  // Os valores de contrato/honorário vão para staging SEPARADO, com RLS do
+  // financeiro (assistente não vê). Falha de permissão aqui não bloqueia o
+  // cadastral — apenas significa que este papel não importa financeiro.
+  const contratosRows = itens
+    .filter((it) => it.cliente.dominio_codigo && contratosPorCodigo.has(it.cliente.dominio_codigo))
+    .map((it) => ({
+      importacao_id: imp.id,
+      cpf_cnpj: it.cliente.cpf_cnpj,
+      payload: contratosPorCodigo.get(it.cliente.dominio_codigo as string) ?? [],
+    }));
+  if (contratosRows.length) await supabase.from("importacao_contratos").insert(contratosRows);
 
   return { resumo: { importacaoId: imp.id, ...resumo } };
 }
@@ -95,15 +104,23 @@ export async function aplicarImportacao(importacaoId: string): Promise<EstadoApl
     .eq("importacao_id", importacaoId);
   if (error || !itens) return { erro: "Prévia expirada ou inacessível. Gere novamente." };
 
+  // Contratos vêm do staging financeiro (admin/financeiro). Para assistente a
+  // RLS devolve vazio: o cadastral é aplicado, o financeiro não — por design.
+  const { data: contrRows } = await supabase
+    .from("importacao_contratos")
+    .select("cpf_cnpj, payload")
+    .eq("importacao_id", importacaoId);
+  const contratosPorCnpj = new Map<string, ContratoDominio[]>();
+  for (const row of contrRows ?? []) {
+    if (row.cpf_cnpj) contratosPorCnpj.set(row.cpf_cnpj, (row.payload as ContratoDominio[]) ?? []);
+  }
+
   let gravados = 0;
   for (const it of itens) {
     if (it.classe !== "novo" && it.classe !== "atualizado") continue;
-    const payload = it.payload as {
-      cliente: Record<string, unknown>;
-      contratos?: ContratoDominio[];
-    };
+    const payload = it.payload as { cliente: Record<string, unknown> };
     const cliente = payload.cliente;
-    const contratos = payload.contratos ?? [];
+    const contratos = contratosPorCnpj.get(String(cliente.cpf_cnpj)) ?? [];
     const upsertCliente = {
       cpf_cnpj: cliente.cpf_cnpj,
       tipo_pessoa: cliente.tipo_pessoa,
