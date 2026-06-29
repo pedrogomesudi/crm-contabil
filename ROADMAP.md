@@ -10,7 +10,7 @@ Legenda: ✅ concluída · 🚧 em andamento · ⬜ planejada
 | Versão | Marco | Status |
 |:------:|-------|:------:|
 | **V1** | Fundação da plataforma | ✅ |
-| **V2** | Integração com o Domínio Sistemas | ⬜ |
+| **V2** | Integração com o Domínio Sistemas | ✅ |
 | **V3** | Geração automática do contrato (Word/PDF) | ⬜ |
 | **V4** | Assinaturas digitais integradas | ⬜ |
 | **V5** | Emissão de NFS-e pelo CRM | ⬜ |
@@ -33,12 +33,20 @@ Estrutura da aplicação web, cadastro de clientes e usuários, hospedagem e e-m
 
 Detalhes em [`CHANGELOG.md`](CHANGELOG.md).
 
-## V2 — Integração com o Domínio Sistemas ⬜
+## V2 — Integração com o Domínio Sistemas ✅
 
-Integrar o CRM ao **Domínio Sistemas** (software contábil), permitindo o fluxo de dados entre as
-duas plataformas.
+Importação **Domínio → CRM**: cadastro, regime tributário e honorários dos clientes a partir dos
+relatórios exportados do Domínio (Empresas, Clientes, Contratos), com prévia/confirmação,
+reconciliação idempotente por CNPJ e auditoria.
 
-> A definir: escopo da integração (quais dados, direção do fluxo, API/arquivo disponível).
+- Leitor `.xls` próprio (parser BIFF tolerante) para os relatórios do Domínio.
+- Tela de importação com prévia (novos/atualizados/pendências) e aplicação transacional.
+- RLS do financeiro nos dados de honorário; arquivos processados em memória (LGPD).
+
+Descoberta registrada: a API oficial (Onvio) não extrai esses dados (fluxo invertido) e o acesso
+direto ao banco é inviável — por isso o caminho é exportar do Domínio e importar no CRM, que também
+escala para a comercialização (V7). Detalhes em
+[`docs/superpowers/specs/2026-06-26-v2-dominio-integracao-design.md`](docs/superpowers/specs/2026-06-26-v2-dominio-integracao-design.md).
 
 ## V3 — Geração automática do contrato ⬜
 

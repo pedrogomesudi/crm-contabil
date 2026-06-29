@@ -268,3 +268,74 @@ end $$;
 -- Nota: a invariante "≥1 admin ativo" (trigger garantir_admin_ativo, migration 0010)
 -- não é testada aqui porque o banco compartilha admins reais (ex.: o fundador), o que
 -- impede isolar o cenário "último admin". A garantia vem do trigger + checagem na action.
+
+-- ===== V2: contratos_dominio seguem a RLS do financeiro =====
+-- seed: um contrato para o cliente do contador (003). Como asserts anteriores
+-- (na mesma transação) podem ter promovido o user 0002, garantimos aqui, como
+-- owner, que ele volta a ser 'assistente' antes destes asserts.
+reset role;
+update usuarios set papel = 'assistente' where id = '00000000-0000-0000-0000-000000000002';
+insert into contratos_dominio (id, cliente_id, tipo_contrato, valor_atual) values
+  ('cccccccc-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'HONORARIOS CONTABEIS', 250.00)
+  on conflict do nothing;
+
+-- ASSERT 18: assistente NÃO enxerga contratos_dominio (sem policy)
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  select count(*) into n from contratos_dominio;
+  if n <> 0 then raise exception 'FALHA: assistente viu % contratos_dominio (devia ser 0)', n; end if;
+  raise notice 'OK: assistente não acessa contratos_dominio';
+end $$;
+
+-- ASSERT 19: financeiro enxerga contratos_dominio
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  select count(*) into n from contratos_dominio;
+  if n < 1 then raise exception 'FALHA: financeiro não viu contratos_dominio'; end if;
+  raise notice 'OK: financeiro acessa contratos_dominio';
+end $$;
+
+-- ASSERT 20: assistente NÃO insere em contratos_dominio (sem policy de insert)
+do $$
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  begin
+    insert into contratos_dominio (cliente_id, tipo_contrato, valor_atual)
+    values ('aaaaaaaa-0000-0000-0000-000000000001', 'X', 1.00);
+    raise exception 'FALHA: assistente inseriu contrato_dominio';
+  exception when insufficient_privilege then
+    raise notice 'OK: assistente não insere contratos_dominio';
+  end;
+end $$;
+
+-- ===== V2 hardening: staging financeiro (importacao_contratos) = RLS do financeiro =====
+reset role;
+insert into importacoes (id, status) values
+  ('eeeeeeee-0000-0000-0000-000000000001', 'previa') on conflict do nothing;
+insert into importacao_contratos (id, importacao_id, cpf_cnpj, payload) values
+  ('ffffffff-0000-0000-0000-000000000001', 'eeeeeeee-0000-0000-0000-000000000001', '11222333000181', '[]'::jsonb)
+  on conflict do nothing;
+
+-- ASSERT 21: assistente NÃO enxerga importacao_contratos (valores de honorário)
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  select count(*) into n from importacao_contratos;
+  if n <> 0 then raise exception 'FALHA: assistente viu % importacao_contratos (devia ser 0)', n; end if;
+  raise notice 'OK: assistente não acessa importacao_contratos (staging financeiro)';
+end $$;
+
+-- ASSERT 22: financeiro enxerga importacao_contratos
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  select count(*) into n from importacao_contratos;
+  if n < 1 then raise exception 'FALHA: financeiro não viu importacao_contratos'; end if;
+  raise notice 'OK: financeiro acessa importacao_contratos';
+end $$;

@@ -8,7 +8,35 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-- Em planejamento: **V2 — Integração com o Domínio Sistemas** (ver `ROADMAP.md`).
+- Em planejamento: **V3 — Geração automática do contrato (Word/PDF)** (ver `ROADMAP.md`).
+
+## [2.0.0] — 2026-06-29
+
+Integração **Domínio → CRM** (V2 do roadmap): importa cadastro, regime tributário e honorários
+dos clientes a partir dos relatórios exportados do Domínio.
+
+### Adicionado
+
+- **Leitor de `.xls` do Domínio:** parser BIFF tolerante (via `cfb`) que lê os relatórios cujo
+  formato bibliotecas padrão (xlrd/SheetJS) recusam.
+- **Importação de 3 fontes** com CNPJ como chave de junção: *Relação de Regime de Empresas*
+  (cadastro-mestre: razão social, regime, status, CNAE, inscrição estadual), *Clientes*
+  (endereço e contato) e *Relação de Contratos* (honorários).
+- **Tela `/integracoes/dominio`** (admin/assistente/financeiro) com upload, **prévia (dry-run)** —
+  novos/atualizados/inalterados/pendências/erros — e confirmação.
+- **Reconciliação idempotente por CNPJ:** reimportar não duplica; mapeamento de regime
+  (Microempresa→Simples, Lucro Presumido→Presumido, Lucro Real→Real, MEI→MEI) com validação de
+  CPF/CNPJ e consistência tipo × regime; casos especiais (imune/isenta, cliente sem empresa) viram
+  pendência sem bloquear a importação.
+- **Honorário** espelhado em `clientes_financeiro` a partir dos contratos ativos.
+- **Banco:** colunas de origem/sync em `clientes` (migration 0012); `contratos_dominio` com RLS do
+  financeiro (0013); `importacoes` + staging da prévia (0014); hardening de segurança — staging
+  financeiro isolado, autoria não-forjável e função de limpeza com gate de papel (0015).
+
+### Segurança
+
+- Arquivos enviados são processados em memória e descartados (não vão ao Storage).
+- Valores de honorário no staging ficam isolados do papel `assistente` (RLS do financeiro).
 
 ## [1.0.0] — 2026-06-24
 
@@ -34,5 +62,6 @@ hospedagem e e-mails (V1 do roadmap).
 - **Bootstrap do primeiro admin** via `service_role` (`npm run admin:bootstrap`).
 - **Deploy:** publicação no EasyPanel e guia em `docs/DEPLOY.md`.
 
-[Não lançado]: https://github.com/pedrogomesudi/crm-contabil/compare/v1.0.0...HEAD
+[Não lançado]: https://github.com/pedrogomesudi/crm-contabil/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/pedrogomesudi/crm-contabil/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/pedrogomesudi/crm-contabil/releases/tag/v1.0.0
