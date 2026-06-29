@@ -1,5 +1,7 @@
 "use server";
+import { revalidatePath } from "next/cache";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { getPerfilAtual } from "@/lib/auth/perfil";
 import { lerXls } from "@/lib/dominio/biff";
 import { detectarTipo } from "@/lib/dominio/detectar";
 import { parseEmpresas } from "@/lib/dominio/parseEmpresas";
@@ -11,8 +13,17 @@ import type { EmpresaDominio, ContatoDominio, ContratoDominio } from "@/lib/domi
 import type { EstadoPrevia, EstadoAplicar } from "./estados";
 
 const MEIA_HORA = 30 * 60 * 1000;
+const PAPEIS_IMPORTACAO = ["admin", "assistente"] as const;
+
+// Defesa em profundidade: server actions são endpoints públicos; o gate de papel
+// da página não as protege. A barreira final é a RLS, mas re-checamos aqui.
+async function papelAutorizado(): Promise<boolean> {
+  const perfil = await getPerfilAtual();
+  return !!perfil && (PAPEIS_IMPORTACAO as readonly string[]).includes(perfil.papel);
+}
 
 export async function gerarPrevia(_prev: EstadoPrevia, formData: FormData): Promise<EstadoPrevia> {
+  if (!(await papelAutorizado())) return { erro: "Sem permissão para importar (apenas admin/assistente)." };
   const arquivos = formData.getAll("arquivos").filter((f): f is File => f instanceof File && f.size > 0);
   if (arquivos.length === 0) return { erro: "Selecione ao menos um arquivo .xls exportado do Domínio." };
 
@@ -69,7 +80,7 @@ export async function gerarPrevia(_prev: EstadoPrevia, formData: FormData): Prom
     .insert({ status: "previa", arquivos: nomes, expira_em: new Date(Date.now() + MEIA_HORA).toISOString(), ...resumo })
     .select("id")
     .single();
-  if (impErr || !imp) return { erro: "Sem permissão para importar (admin/assistente)." };
+  if (impErr || !imp) return { erro: "Não foi possível registrar a importação. Tente novamente." };
 
   // importacao_itens guarda só o cadastral (sem valores) — legível por assistente.
   const itensRows = itens.map((it) => ({
@@ -97,83 +108,17 @@ export async function gerarPrevia(_prev: EstadoPrevia, formData: FormData): Prom
 }
 
 export async function aplicarImportacao(importacaoId: string): Promise<EstadoAplicar> {
+  if (!(await papelAutorizado())) return { erro: "Sem permissão para importar (apenas admin/assistente)." };
   const supabase = await createServerSupabase();
-  const { data: itens, error } = await supabase
-    .from("importacao_itens")
-    .select("classe, payload")
-    .eq("importacao_id", importacaoId);
-  if (error || !itens) return { erro: "Prévia expirada ou inacessível. Gere novamente." };
-
-  // Contratos vêm do staging financeiro (admin/financeiro). Para assistente a
-  // RLS devolve vazio: o cadastral é aplicado, o financeiro não — por design.
-  const { data: contrRows } = await supabase
-    .from("importacao_contratos")
-    .select("cpf_cnpj, payload")
-    .eq("importacao_id", importacaoId);
-  const contratosPorCnpj = new Map<string, ContratoDominio[]>();
-  for (const row of contrRows ?? []) {
-    if (row.cpf_cnpj) contratosPorCnpj.set(row.cpf_cnpj, (row.payload as ContratoDominio[]) ?? []);
+  // Aplicação ATÔMICA via RPC: tudo-ou-nada numa única transação no Postgres,
+  // com guarda contra reaplicação/expiração e o financeiro gateado por papel
+  // (ver migration 0016). Erro => rollback completo (status volta a 'previa').
+  const { data, error } = await supabase.rpc("aplicar_importacao", { p_id: importacaoId });
+  if (error) {
+    const indisponivel = /indispon|expirada|aplicada/i.test(error.message);
+    return { erro: indisponivel ? "Prévia já aplicada ou expirada. Gere novamente." : "Falha ao aplicar a importação." };
   }
-
-  let gravados = 0;
-  for (const it of itens) {
-    if (it.classe !== "novo" && it.classe !== "atualizado") continue;
-    const payload = it.payload as { cliente: Record<string, unknown> };
-    const cliente = payload.cliente;
-    const contratos = contratosPorCnpj.get(String(cliente.cpf_cnpj)) ?? [];
-    const upsertCliente = {
-      cpf_cnpj: cliente.cpf_cnpj,
-      tipo_pessoa: cliente.tipo_pessoa,
-      razao_social: cliente.razao_social,
-      nome_fantasia: cliente.nome_fantasia,
-      regime_tributario: cliente.regime_tributario,
-      status: cliente.status,
-      cnae: cliente.cnae,
-      inscricao_estadual: cliente.inscricao_estadual,
-      endereco: cliente.endereco,
-      email: cliente.email,
-      telefone: cliente.telefone,
-      dominio_codigo: cliente.dominio_codigo,
-      origem: "dominio",
-      sincronizado_em: new Date().toISOString(),
-      dominio_snapshot: cliente,
-    };
-    const { data: cli, error: cliErr } = await supabase
-      .from("clientes")
-      .upsert(upsertCliente, { onConflict: "cpf_cnpj" })
-      .select("id")
-      .single();
-    if (cliErr || !cli) return { erro: `Falha ao gravar cliente ${String(cliente.cpf_cnpj)} (sem permissão?).` };
-    gravados++;
-
-    // honorário = soma dos contratos ativos "HONORARIOS CONTABEIS"
-    const honorario = contratos
-      .filter((c) => !c.encerradoEm && /honor/i.test(c.tipoContrato))
-      .reduce((s, c) => s + (c.valorAtual ?? 0), 0);
-    if (honorario > 0) {
-      await supabase
-        .from("clientes_financeiro")
-        .upsert({ cliente_id: cli.id, honorario_mensal: honorario }, { onConflict: "cliente_id" });
-      await supabase.from("contratos_dominio").delete().eq("cliente_id", cli.id);
-      if (contratos.length) {
-        await supabase.from("contratos_dominio").insert(
-          contratos.map((c) => ({
-            cliente_id: cli.id,
-            dominio_codigo: String(c.codigoCliente),
-            tipo_contrato: c.tipoContrato,
-            emissao: c.emissao,
-            inicio_contrato: c.inicioContrato,
-            inicio_faturamento: c.inicioFaturamento,
-            dia_vencimento: c.diaVencimento,
-            encerrado_em: c.encerradoEm,
-            valor_original: c.valorOriginal,
-            valor_atual: c.valorAtual,
-          })),
-        );
-      }
-    }
-  }
-
-  await supabase.from("importacoes").update({ status: "aplicada", expira_em: null }).eq("id", importacaoId);
+  revalidatePath("/clientes");
+  const gravados = (data as { gravados?: number } | null)?.gravados ?? 0;
   return { ok: true, gravados };
 }

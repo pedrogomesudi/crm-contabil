@@ -73,6 +73,9 @@ export function parseClientes(folha: FolhaXls): ContatoDominio[] {
     const primeira = bloco[0];
     if (!primeira) continue;
     const codStr = valorDoRotulo(primeira, "Código:");
+    // "Código:" presente mas sem valor (ex.: cabeçalho de página) => Number(null)
+    // seria 0 e criaria uma ficha fantasma. Exige um número de verdade.
+    if (codStr === null) continue;
     const codigo = Number(codStr);
     if (!Number.isFinite(codigo)) continue;
     const docDigitos = soDigitos(buscar(bloco, "Inscrição:") ?? "");

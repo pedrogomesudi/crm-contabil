@@ -339,3 +339,20 @@ begin
   if n < 1 then raise exception 'FALHA: financeiro não viu importacao_contratos'; end if;
   raise notice 'OK: financeiro acessa importacao_contratos';
 end $$;
+
+-- ===== V2 review: importação escopada por dono (M3) =====
+-- importação pertencente ao contador (003), não ao assistente (002)
+reset role;
+insert into importacoes (id, status, executado_por) values
+  ('eeeeeeee-0000-0000-0000-000000000002', 'previa', '00000000-0000-0000-0000-000000000003')
+  on conflict do nothing;
+
+-- ASSERT 23: assistente NÃO enxerga importação de outro usuário (escopo por dono)
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente (não é dono nem admin)
+  select count(*) into n from importacoes where id = 'eeeeeeee-0000-0000-0000-000000000002';
+  if n <> 0 then raise exception 'FALHA: assistente viu importação alheia (devia ser 0)'; end if;
+  raise notice 'OK: importação é escopada por dono (assistente não vê alheia)';
+end $$;

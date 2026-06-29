@@ -10,6 +10,27 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V3 — Geração automática do contrato (Word/PDF)** (ver `ROADMAP.md`).
 
+## [2.0.1] — 2026-06-29
+
+Correções da revisão de código da V2.
+
+### Corrigido
+
+- **Aplicação atômica:** a importação passa a ser aplicada por uma RPC transacional no Postgres
+  (`aplicar_importacao`, migration 0016) — tudo-ou-nada, com guarda contra **reaplicação** e
+  **prévia expirada**, e erros do bloco financeiro deixam de ser silenciados.
+- **Honorário zera** quando o cliente perde todos os contratos ativos (antes ficava o valor antigo).
+- **Papel financeiro** removido do fluxo de importação (não escreve cadastro; ficava travado).
+- `parseClientes`: deixa de criar ficha-fantasma `código 0` quando há "Código:" sem valor.
+- Lista de clientes é revalidada após importar (`revalidatePath`); re-checagem de papel nas actions
+  (defesa em profundidade); card "Erros" (sempre 0) substituído por aviso de pendências.
+
+### Segurança
+
+- Importação **escopada por dono** (assistente não acessa/edita importação de outro usuário; M3).
+- `dominio_codigo` deixa de ser único (evita falha dura com matriz/filial); auditoria
+  (`criado_por`) em `contratos_dominio`.
+
 ## [2.0.0] — 2026-06-29
 
 Integração **Domínio → CRM** (V2 do roadmap): importa cadastro, regime tributário e honorários
@@ -62,6 +83,7 @@ hospedagem e e-mails (V1 do roadmap).
 - **Bootstrap do primeiro admin** via `service_role` (`npm run admin:bootstrap`).
 - **Deploy:** publicação no EasyPanel e guia em `docs/DEPLOY.md`.
 
-[Não lançado]: https://github.com/pedrogomesudi/crm-contabil/compare/v2.0.0...HEAD
+[Não lançado]: https://github.com/pedrogomesudi/crm-contabil/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/pedrogomesudi/crm-contabil/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/pedrogomesudi/crm-contabil/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/pedrogomesudi/crm-contabil/releases/tag/v1.0.0

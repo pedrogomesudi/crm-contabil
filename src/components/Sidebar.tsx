@@ -9,7 +9,7 @@ export function Sidebar({ papel, nome }: { papel: Papel; nome: string }) {
   const itens = [
     { href: "/", label: "Início" },
     { href: "/clientes", label: "Clientes" },
-    ...(["admin", "assistente", "financeiro"].includes(papel)
+    ...(["admin", "assistente"].includes(papel)
       ? [{ href: "/integracoes/dominio", label: "Integração Domínio" }]
       : []),
     ...(papel === "admin" ? [{ href: "/usuarios", label: "Usuários" }] : []),

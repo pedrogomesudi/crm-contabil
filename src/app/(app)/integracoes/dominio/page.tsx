@@ -4,7 +4,9 @@ import { UploadDominio } from "@/components/dominio/UploadDominio";
 
 export default async function IntegracaoDominioPage() {
   const perfil = await getPerfilAtual();
-  if (!perfil || !["admin", "assistente", "financeiro"].includes(perfil.papel)) redirect("/");
+  // Importação grava em `clientes` (RLS: admin/assistente). Financeiro não
+  // escreve cadastro, então não conduz a importação — fica fora do gate.
+  if (!perfil || !["admin", "assistente"].includes(perfil.papel)) redirect("/");
   return (
     <main className="mx-auto max-w-3xl space-y-6 p-6">
       <header>
