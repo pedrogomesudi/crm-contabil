@@ -34,7 +34,9 @@ export function UploadDominio() {
           </p>
         )}
       </form>
-      {estado.resumo && <PreviaImportacao resumo={estado.resumo} />}
+      {/* key por importação: remonta a prévia a cada novo upload, resetando
+          a mensagem/botão de "aplicar" da importação anterior. */}
+      {estado.resumo && <PreviaImportacao key={estado.resumo.importacaoId} resumo={estado.resumo} />}
     </div>
   );
 }
