@@ -10,7 +10,7 @@ import { parseClientes } from "@/lib/dominio/parseClientes";
 import { combinarFontes } from "@/lib/dominio/mapear";
 import { reconciliarClientes, type ClienteExistente } from "@/lib/dominio/reconciliar";
 import type { EmpresaDominio, ContatoDominio, ContratoDominio } from "@/lib/dominio/tipos";
-import type { EstadoPrevia, EstadoAplicar } from "./estados";
+import type { EstadoPrevia, EstadoAplicar, ItemPrevia } from "./estados";
 
 const MEIA_HORA = 30 * 60 * 1000;
 const PAPEIS_IMPORTACAO = ["admin", "assistente"] as const;
@@ -104,7 +104,20 @@ export async function gerarPrevia(_prev: EstadoPrevia, formData: FormData): Prom
     }));
   if (contratosRows.length) await supabase.from("importacao_contratos").insert(contratosRows);
 
-  return { resumo: { importacaoId: imp.id, ...resumo } };
+  // Detalhe por item (só cadastral; sem valores financeiros) para a prévia
+  // exibir O QUÊ será gravado e o motivo das pendências. Inalterados ficam fora.
+  const detalhes: ItemPrevia[] = itens
+    .filter((it): it is typeof it & { classe: "novo" | "atualizado" | "pendencia" } => it.classe !== "inalterado")
+    .map((it) => ({
+      classe: it.classe,
+      cpf_cnpj: it.cliente.cpf_cnpj,
+      razao_social: it.cliente.razao_social,
+      regime: it.cliente.regime_tributario,
+      diff: it.diff,
+      pendencias: it.cliente.pendencias,
+    }));
+
+  return { resumo: { importacaoId: imp.id, ...resumo, itens: detalhes } };
 }
 
 export async function aplicarImportacao(importacaoId: string): Promise<EstadoAplicar> {

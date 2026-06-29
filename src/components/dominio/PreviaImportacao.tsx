@@ -1,7 +1,15 @@
 "use client";
 import { useState, useTransition } from "react";
 import { aplicarImportacao } from "@/app/(app)/integracoes/dominio/actions";
-import type { ResumoPrevia } from "@/app/(app)/integracoes/dominio/estados";
+import type { ItemPrevia, ResumoPrevia } from "@/app/(app)/integracoes/dominio/estados";
+
+const LABEL_CAMPO: Record<string, string> = {
+  razao_social: "Razão social",
+  regime_tributario: "Regime",
+  status: "Status",
+  email: "E-mail",
+  telefone: "Telefone",
+};
 
 function Card({ rotulo, n, cor }: { rotulo: string; n: number; cor: string }) {
   return (
@@ -9,6 +17,28 @@ function Card({ rotulo, n, cor }: { rotulo: string; n: number; cor: string }) {
       <div className="text-2xl font-semibold">{n}</div>
       <div className="text-xs">{rotulo}</div>
     </div>
+  );
+}
+
+function fmt(v: unknown): string {
+  return v === null || v === undefined || v === "" ? "—" : String(v);
+}
+
+function Secao({ titulo, itens, render }: { titulo: string; itens: ItemPrevia[]; render: (i: ItemPrevia) => React.ReactNode }) {
+  if (itens.length === 0) return null;
+  return (
+    <details className="rounded-md border border-gray-200">
+      <summary className="cursor-pointer px-3 py-2 text-sm font-medium">
+        {titulo} ({itens.length})
+      </summary>
+      <ul className="max-h-72 divide-y divide-gray-100 overflow-auto border-t border-gray-100 text-sm">
+        {itens.map((i) => (
+          <li key={i.cpf_cnpj} className="px-3 py-2">
+            {render(i)}
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
@@ -27,6 +57,10 @@ export function PreviaImportacao({ resumo }: { resumo: ResumoPrevia }) {
       }
     });
 
+  const novos = resumo.itens.filter((i) => i.classe === "novo");
+  const atualizados = resumo.itens.filter((i) => i.classe === "atualizado");
+  const pendencias = resumo.itens.filter((i) => i.classe === "pendencia");
+
   return (
     <div className="space-y-3 rounded-lg border border-gray-200 p-4">
       <h2 className="text-sm font-semibold">Prévia da importação</h2>
@@ -36,12 +70,47 @@ export function PreviaImportacao({ resumo }: { resumo: ResumoPrevia }) {
         <Card rotulo="Inalterados" n={resumo.inalterados} cor="border-gray-200 bg-gray-50" />
         <Card rotulo="Pendências" n={resumo.pendencias} cor="border-purple-200 bg-purple-50" />
       </div>
-      {resumo.pendencias > 0 && (
-        <p className="text-xs text-gray-600">
-          {resumo.pendencias} registro(s) em pendência (regime sem equivalente, documento inválido ou cliente sem
-          empresa) não serão gravados — revise no Domínio se necessário.
-        </p>
-      )}
+
+      <div className="space-y-2">
+        <Secao
+          titulo="🟣 Pendências (não serão gravadas)"
+          itens={pendencias}
+          render={(i) => (
+            <>
+              <span className="font-medium">{i.razao_social || i.cpf_cnpj}</span>
+              <span className="block text-xs text-gray-600">{i.pendencias.join("; ")}</span>
+            </>
+          )}
+        />
+        <Secao
+          titulo="🟡 Atualizados"
+          itens={atualizados}
+          render={(i) => (
+            <>
+              <span className="font-medium">{i.razao_social}</span>
+              <span className="block text-xs text-gray-600">
+                {Object.entries(i.diff)
+                  .map(([campo, [antigo, novo]]) => `${LABEL_CAMPO[campo] ?? campo}: ${fmt(antigo)} → ${fmt(novo)}`)
+                  .join(" · ")}
+              </span>
+            </>
+          )}
+        />
+        <Secao
+          titulo="🟢 Novos"
+          itens={novos}
+          render={(i) => (
+            <>
+              <span className="font-medium">{i.razao_social}</span>
+              <span className="block text-xs text-gray-600">
+                CNPJ/CPF {i.cpf_cnpj}
+                {i.regime ? ` · ${i.regime}` : ""}
+              </span>
+            </>
+          )}
+        />
+      </div>
+
       {!feito && (
         <button
           onClick={aplicar}

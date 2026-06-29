@@ -10,6 +10,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V3 — Geração automática do contrato (Word/PDF)** (ver `ROADMAP.md`).
 
+## [2.0.2] — 2026-06-29
+
+### Adicionado
+
+- **Prévia detalhada da importação:** além dos contadores, a tela mostra seções expansíveis com os
+  itens — **Pendências** (com o motivo: regime sem equivalente, documento inválido ou cliente sem
+  empresa), **Atualizados** (diff campo a campo) e **Novos** (razão social, CNPJ, regime). Completa
+  a confirmação informada prevista no spec. Valores de honorário não aparecem (isolados por RLS).
+
 ## [2.0.1] — 2026-06-29
 
 Correções da revisão de código da V2.
@@ -83,7 +92,8 @@ hospedagem e e-mails (V1 do roadmap).
 - **Bootstrap do primeiro admin** via `service_role` (`npm run admin:bootstrap`).
 - **Deploy:** publicação no EasyPanel e guia em `docs/DEPLOY.md`.
 
-[Não lançado]: https://github.com/pedrogomesudi/crm-contabil/compare/v2.0.1...HEAD
+[Não lançado]: https://github.com/pedrogomesudi/crm-contabil/compare/v2.0.2...HEAD
+[2.0.2]: https://github.com/pedrogomesudi/crm-contabil/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/pedrogomesudi/crm-contabil/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/pedrogomesudi/crm-contabil/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/pedrogomesudi/crm-contabil/releases/tag/v1.0.0
