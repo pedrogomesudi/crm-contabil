@@ -32,3 +32,20 @@ export function parseValorBR(s: string): number | null {
   if (!Number.isFinite(n)) return NaN;
   return n === 0 ? 0 : n; // normaliza -0
 }
+
+// Formata CPF (11) ou CNPJ (14); tamanho inesperado devolve só os dígitos.
+export function formatarDocumento(doc: string): string {
+  const d = soDigitos(doc);
+  if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  if (d.length === 14) return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+  return d;
+}
+
+export function formatarCep(cep: string): string {
+  const d = soDigitos(cep);
+  return d.length === 8 ? d.replace(/(\d{5})(\d{3})/, "$1-$2") : d;
+}
+
+export function formatarMoeda(valor: number): string {
+  return "R$ " + valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}

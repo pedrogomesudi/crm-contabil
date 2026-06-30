@@ -25,3 +25,21 @@ describe("parseValorBR", () => {
   it("milhar quebrado => NaN", () => expect(Number.isNaN(parseValorBR("1.234.56"))).toBe(true));
   it("-0 normaliza para 0", () => expect(Object.is(parseValorBR("-0,00"), 0)).toBe(true));
 });
+
+import { formatarDocumento, formatarCep, formatarMoeda } from "@/lib/format";
+
+describe("formatadores de contrato", () => {
+  it("formata CNPJ (14 díg) e CPF (11 díg)", () => {
+    expect(formatarDocumento("11222333000181")).toBe("11.222.333/0001-81");
+    expect(formatarDocumento("52998224725")).toBe("529.982.247-25");
+    expect(formatarDocumento("123")).toBe("123"); // tamanho inesperado: devolve cru
+  });
+  it("formata CEP de 8 dígitos", () => {
+    expect(formatarCep("38407162")).toBe("38407-162");
+    expect(formatarCep("")).toBe("");
+  });
+  it("formata moeda em BRL", () => {
+    expect(formatarMoeda(1500)).toBe("R$ 1.500,00");
+    expect(formatarMoeda(1452.5)).toBe("R$ 1.452,50");
+  });
+});
