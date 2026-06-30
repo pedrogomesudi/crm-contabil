@@ -35,6 +35,23 @@ function montarEndereco(formData: FormData): Record<string, string> | null {
   return temAlgum ? e : null;
 }
 
+// Monta o representante (jsonb) a partir dos campos planos do form.
+function montarRepresentante(formData: FormData): Record<string, string> | null {
+  const campos = ["nacionalidade", "estado_civil", "profissao", "rg", "cpf"];
+  const r: Record<string, string> = {};
+  let temAlgum = false;
+  for (const c of campos) {
+    const v = String(formData.get(`rep_${c}`) ?? "")
+      .trim()
+      .slice(0, 80);
+    if (v) {
+      r[c] = v;
+      temAlgum = true;
+    }
+  }
+  return temAlgum ? r : null;
+}
+
 function lerEValidar(formData: FormData) {
   const dados = Object.fromEntries(formData) as Record<string, string>;
   if (dados.cpf_cnpj) dados.cpf_cnpj = dados.cpf_cnpj.replace(/\D/g, ""); // só dígitos (unicidade)
@@ -65,7 +82,7 @@ export async function criarCliente(
   delete payload.status;
   const { data, error } = await supabase
     .from("clientes")
-    .insert({ ...payload, endereco: montarEndereco(formData) })
+    .insert({ ...payload, endereco: montarEndereco(formData), representante: montarRepresentante(formData) })
     .select("id");
   if (error) {
     if (error.code === "23505") {
@@ -112,7 +129,11 @@ export async function atualizarCliente(
   const supabase = await createServerSupabase();
   const { data, error } = await supabase
     .from("clientes")
-    .update({ ...limparVazios(parsed.data), endereco: montarEndereco(formData) })
+    .update({
+      ...limparVazios(parsed.data),
+      endereco: montarEndereco(formData),
+      representante: montarRepresentante(formData),
+    })
     .eq("id", clienteId)
     .eq("atualizado_em", original) // concorrência otimista (instante; PostgREST compara por valor)
     .select("id");
