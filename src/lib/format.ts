@@ -41,9 +41,10 @@ export function formatarDocumento(doc: string): string {
   return d;
 }
 
+// CEP no padrão NN.NNN-NNN (ex.: 38411342 -> 38.411-342), como na minuta.
 export function formatarCep(cep: string): string {
   const d = soDigitos(cep);
-  return d.length === 8 ? d.replace(/(\d{5})(\d{3})/, "$1-$2") : d;
+  return d.length === 8 ? d.replace(/(\d{2})(\d{3})(\d{3})/, "$1.$2-$3") : d;
 }
 
 export function formatarMoeda(valor: number): string {

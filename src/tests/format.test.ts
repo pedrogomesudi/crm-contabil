@@ -34,8 +34,8 @@ describe("formatadores de contrato", () => {
     expect(formatarDocumento("52998224725")).toBe("529.982.247-25");
     expect(formatarDocumento("123")).toBe("123"); // tamanho inesperado: devolve cru
   });
-  it("formata CEP de 8 dígitos", () => {
-    expect(formatarCep("38407162")).toBe("38407-162");
+  it("formata CEP de 8 dígitos no padrão NN.NNN-NNN", () => {
+    expect(formatarCep("38407162")).toBe("38.407-162");
     expect(formatarCep("")).toBe("");
   });
   it("formata moeda em BRL", () => {

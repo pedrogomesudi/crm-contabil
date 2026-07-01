@@ -40,7 +40,9 @@ export async function gerarContrato(
     .maybeSingle();
   const honorario = fin?.honorario_mensal != null ? Number(fin.honorario_mensal) : null;
 
-  const { dados, faltando } = montarDadosContrato(cliente as ClienteContrato, honorario, vigencia);
+  // Data de assinatura = data de geração (hoje, fuso de São Paulo).
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const { dados, faltando } = montarDadosContrato(cliente as ClienteContrato, honorario, vigencia, hoje);
 
   let template: Buffer;
   try {
