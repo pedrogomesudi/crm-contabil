@@ -5,11 +5,23 @@ import type { Papel } from "@/lib/tipos";
 import { UploadDocumento } from "./UploadDocumento";
 import { BotaoBaixar } from "./BotaoBaixar";
 import { BotaoExcluirDocumento } from "./BotaoExcluirDocumento";
+import { EnviarAssinatura } from "@/components/assinatura/EnviarAssinatura";
+import { StatusAssinatura } from "@/components/assinatura/StatusAssinatura";
 
 // Seção de documentos da ficha do cliente. A lista usa o client com RLS (o
 // usuário só vê documentos de clientes visíveis a ele). Anexar exige papel de
 // gestão; excluir é exclusivo do admin.
-export async function DocumentosSection({ clienteId, papel }: { clienteId: string; papel: Papel }) {
+export async function DocumentosSection({
+  clienteId,
+  papel,
+  clienteNome,
+  clienteEmail,
+}: {
+  clienteId: string;
+  papel: Papel;
+  clienteNome: string;
+  clienteEmail: string;
+}) {
   const supabase = await createServerSupabase();
   const { data: documentos, error } = await supabase
     .from("documentos")
@@ -18,6 +30,12 @@ export async function DocumentosSection({ clienteId, papel }: { clienteId: strin
     .order("enviado_em", { ascending: false })
     .order("id")
     .limit(100);
+
+  const { data: assinaturas } = await supabase
+    .from("assinaturas")
+    .select("documento_id, status, assinatura_signatarios(nome, papel, status)")
+    .eq("cliente_id", clienteId);
+  const porDoc = new Map((assinaturas ?? []).map((a) => [a.documento_id, a]));
 
   const podeGerenciar = podeGerenciarDocumentos(papel);
   const ehAdmin = papel === "admin";
@@ -63,6 +81,21 @@ export async function DocumentosSection({ clienteId, papel }: { clienteId: strin
                         />
                       )}
                     </div>
+                    {d.tipo === "Contrato" &&
+                      podeGerenciar &&
+                      (porDoc.get(d.id) ? (
+                        <StatusAssinatura
+                          status={porDoc.get(d.id)!.status}
+                          signatarios={porDoc.get(d.id)!.assinatura_signatarios}
+                        />
+                      ) : (
+                        <EnviarAssinatura
+                          documentoId={d.id}
+                          clienteId={clienteId}
+                          clienteNome={clienteNome}
+                          clienteEmail={clienteEmail}
+                        />
+                      ))}
                   </td>
                 </tr>
               ))}

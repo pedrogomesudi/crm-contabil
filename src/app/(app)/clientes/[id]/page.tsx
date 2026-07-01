@@ -66,7 +66,12 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
           hoje={new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })}
         />
       )}
-      <DocumentosSection clienteId={id} papel={papel} />
+      <DocumentosSection
+        clienteId={id}
+        papel={papel}
+        clienteNome={cliente.responsavel_nome ?? cliente.razao_social}
+        clienteEmail={cliente.email ?? ""}
+      />
     </div>
   );
 }
