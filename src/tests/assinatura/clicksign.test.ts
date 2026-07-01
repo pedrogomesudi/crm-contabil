@@ -32,6 +32,7 @@ describe("enviarParaAssinatura", () => {
         if (url.endsWith("/documents")) return respJson({ data: { id: "doc1" } });
         if (url.endsWith("/signers")) return respJson({ data: { id: "sig-" + calls.length } });
         if (url.endsWith("/requirements")) return respJson({ data: { id: "req" } });
+        if (url.endsWith("/notifications")) return respJson({ data: { id: "notif" } });
         if (init.method === "PATCH")
           return respJson({ data: { id: "env1", attributes: { status: "running" } } }, 200);
         return respJson({}, 200);
@@ -54,6 +55,8 @@ describe("enviarParaAssinatura", () => {
       /^data:application\/pdf;base64,/,
     );
     expect(calls.some((c) => c.method === "PATCH")).toBe(true);
+    // dispara as notificações (senão os e-mails não saem)
+    expect(calls.some((c) => c.url.endsWith("/notifications"))).toBe(true);
   });
 
   it("lança erro se a API responder falha", async () => {

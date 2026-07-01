@@ -75,9 +75,14 @@ export async function enviarParaAssinatura(args: {
     signatarios.push({ ...s, clicksignKey: signerId });
   }
 
-  // 5) ativar (draft -> running): dispara os e-mails
+  // 5) ativar (draft -> running)
   await api(`/envelopes/${envelopeId}`, "PATCH", {
     data: { id: envelopeId, type: "envelopes", attributes: { status: "running" } },
+  });
+
+  // 6) notificar: dispara os e-mails de assinatura (ativar não envia sozinho)
+  await api(`/envelopes/${envelopeId}/notifications`, "POST", {
+    data: { type: "notifications", attributes: {} },
   });
 
   return { envelopeId, documentId, signatarios };
