@@ -146,3 +146,20 @@ A geração de contrato (V3) entrega o **Word** sempre; para o **PDF**, o app ch
 
 > Recursos: Gotenberg é gratuito (open-source). Consome pouca RAM em repouso; durante a conversão
 > sobe ~200–400 MB por alguns segundos. Reserve essa folga no VPS.
+
+## Clicksign (assinatura digital — V4)
+
+A V4 envia o contrato gerado para assinatura na **Clicksign** e recebe o assinado de volta por webhook.
+
+1. No painel da Clicksign, gere o **access_token** (comece no **sandbox** — sem validade jurídica —
+   e troque para produção depois).
+2. No serviço do **app** (EasyPanel), em *Environment*, defina — **runtime, só reiniciar, sem rebuild**:
+   - `CLICKSIGN_URL` — `https://sandbox.clicksign.com/api/v3` (sandbox) ou `https://app.clicksign.com/api/v3` (produção)
+   - `CLICKSIGN_TOKEN` — o access_token do ambiente
+   - `CLICKSIGN_HMAC_SECRET` — um segredo forte (o mesmo cadastrado no webhook)
+3. **Cadastre o webhook** na Clicksign apontando para **`https://<app>/api/webhooks/clicksign`**, usando
+   o mesmo `CLICKSIGN_HMAC_SECRET` (o app valida o header `x-clicksign-signature`).
+4. Trocar **sandbox → produção** muda só `CLICKSIGN_URL`/`CLICKSIGN_TOKEN` (e o webhook do painel de
+   produção).
+
+> Segredos nunca vão para o navegador (não são `NEXT_PUBLIC_`). O webhook é autenticado por HMAC.

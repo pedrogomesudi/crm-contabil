@@ -356,3 +356,19 @@ begin
   if n <> 0 then raise exception 'FALHA: assistente viu importação alheia (devia ser 0)'; end if;
   raise notice 'OK: importação é escopada por dono (assistente não vê alheia)';
 end $$;
+
+-- ===== V4: assinaturas seguem a RLS de gestão de documentos =====
+reset role;
+insert into assinaturas (id, cliente_id, clicksign_envelope_id, status) values
+  ('11111111-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'env_teste', 'enviado')
+  on conflict do nothing;
+
+-- ASSERT: financeiro NÃO gerencia assinaturas (não está em admin/assistente/contador-dono)
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  select count(*) into n from assinaturas;
+  if n <> 0 then raise exception 'FALHA: financeiro viu % assinaturas (devia ser 0)', n; end if;
+  raise notice 'OK: financeiro não acessa assinaturas';
+end $$;

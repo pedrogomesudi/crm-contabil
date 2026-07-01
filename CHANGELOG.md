@@ -8,7 +8,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-- Em planejamento: **V4 — Assinaturas digitais integradas** (ver `ROADMAP.md`).
+- Em planejamento: **V5 — Emissão de NFS-e pelo CRM** (ver `ROADMAP.md`).
+
+## [4.0.0] — 2026-07-01
+
+Integração de **assinaturas digitais via Clicksign** (V4 do roadmap): envia o contrato gerado para
+assinatura, acompanha o status por webhook e traz o PDF assinado de volta aos Documentos.
+
+### Adicionado
+
+- **Cliente Clicksign** (`src/lib/assinatura/clicksign.ts`): monta o envelope v3 (documento em
+  base64 → signatários → requisitos → ativa → notifica) e baixa o PDF assinado.
+- **Webhook** (`src/app/api/webhooks/clicksign/route.ts` + `src/lib/assinatura/webhook.ts`): valida
+  o HMAC (`content-hmac`), atualiza o status por signatário e salva o assinado nos Documentos
+  (idempotente).
+- **Envio pela ficha do cliente**: botão "Enviar para assinatura" no contrato PDF, com formulário de
+  signatários (cliente pré-preenchido + representante do escritório + 2 testemunhas opcionais) e
+  indicador de status.
+- **Tabelas** `assinaturas` e `assinatura_signatarios` (migration 0018) com RLS de gestão de
+  documentos.
+- Variáveis `CLICKSIGN_URL`, `CLICKSIGN_TOKEN`, `CLICKSIGN_HMAC_SECRET` e guia de deploy do webhook.
 
 ## [3.0.0] — 2026-06-30
 
