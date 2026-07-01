@@ -11,7 +11,16 @@ export function gerarDocx(template: Buffer, dados: Record<string, string>): Buff
     nullGetter: () => "",
   });
   doc.render(dados);
-  return doc.getZip().generate({ type: "nodebuffer" });
+  const out = doc.getZip();
+  // Preenche tags {..} também nas relações externas (docxtemplater só processa o
+  // document.xml). É o que faz o mailto: do e-mail linkado apontar para o valor real.
+  const relsPath = "word/_rels/document.xml.rels";
+  const rels = out.file(relsPath);
+  if (rels) {
+    const txt = rels.asText().replace(/\{(\w+)\}/g, (_m, k: string) => dados[k] ?? "");
+    out.file(relsPath, txt);
+  }
+  return out.generate({ type: "nodebuffer" });
 }
 
 // Converte .docx -> PDF via Gotenberg (/forms/libreoffice/convert). Retorna null

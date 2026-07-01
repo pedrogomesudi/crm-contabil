@@ -35,6 +35,17 @@ describe("gerarDocx", () => {
     const tpl = miniDocx("X{ausente}Y");
     expect(textoDe(gerarDocx(tpl, {}))).toBe("XY");
   });
+  it("preenche tags no document.xml.rels (mailto: do e-mail linkado)", () => {
+    const zip = new PizZip(miniDocx("{email}"));
+    zip.file(
+      "word/_rels/document.xml.rels",
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId100" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="mailto:{email}" TargetMode="External"/></Relationships>`,
+    );
+    const out = gerarDocx(zip.generate({ type: "nodebuffer" }), { email: "a@ex.com" });
+    const rels = new PizZip(out).file("word/_rels/document.xml.rels")!.asText();
+    expect(rels).toContain("mailto:a@ex.com");
+    expect(rels).not.toContain("{email}");
+  });
 });
 
 afterEach(() => vi.unstubAllGlobals());
