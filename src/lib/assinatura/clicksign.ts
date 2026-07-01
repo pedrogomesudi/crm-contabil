@@ -1,0 +1,100 @@
+import { required } from "@/lib/env";
+import type { SignatarioInput, ResultadoEnvio, SignatarioEnviado } from "./tipos";
+
+const JSONAPI = "application/vnd.api+json";
+
+function cfg() {
+  return {
+    base: required(process.env.CLICKSIGN_URL, "CLICKSIGN_URL"),
+    token: required(process.env.CLICKSIGN_TOKEN, "CLICKSIGN_TOKEN"),
+  };
+}
+
+async function api(path: string, method: string, body?: unknown): Promise<Record<string, unknown>> {
+  const { base, token } = cfg();
+  const resp = await fetch(`${base}${path}`, {
+    method,
+    headers: { Authorization: token, "Content-Type": JSONAPI, Accept: JSONAPI },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!resp.ok) {
+    const txt = await resp.text().catch(() => "");
+    throw new Error(`Clicksign ${method} ${path} -> ${resp.status} ${txt.slice(0, 300)}`);
+  }
+  return (await resp.json()) as Record<string, unknown>;
+}
+
+function idDe(r: Record<string, unknown>): string {
+  return String((r.data as { id?: string } | undefined)?.id ?? "");
+}
+
+export async function enviarParaAssinatura(args: {
+  pdf: Buffer;
+  nome: string;
+  signatarios: SignatarioInput[];
+}): Promise<ResultadoEnvio> {
+  // 1) envelope (rascunho)
+  const env = await api("/envelopes", "POST", {
+    data: { type: "envelopes", attributes: { name: args.nome } },
+  });
+  const envelopeId = idDe(env);
+
+  // 2) documento (PDF em data URI base64)
+  const doc = await api(`/envelopes/${envelopeId}/documents`, "POST", {
+    data: {
+      type: "documents",
+      attributes: {
+        filename: `${args.nome}.pdf`,
+        content_base64: `data:application/pdf;base64,${args.pdf.toString("base64")}`,
+      },
+    },
+  });
+  const documentId = idDe(doc);
+
+  // 3) signatários + 4) requisitos (qualificação + autenticação e-mail)
+  const signatarios: SignatarioEnviado[] = [];
+  for (const s of args.signatarios) {
+    const sig = await api(`/envelopes/${envelopeId}/signers`, "POST", {
+      data: { type: "signers", attributes: { name: s.nome, email: s.email } },
+    });
+    const signerId = idDe(sig);
+    const rel = {
+      document: { data: { type: "documents", id: documentId } },
+      signer: { data: { type: "signers", id: signerId } },
+    };
+    await api(`/envelopes/${envelopeId}/requirements`, "POST", {
+      data: { type: "requirements", attributes: { action: "agree", role: "sign" }, relationships: rel },
+    });
+    await api(`/envelopes/${envelopeId}/requirements`, "POST", {
+      data: {
+        type: "requirements",
+        attributes: { action: "provide_evidence", auth: "email" },
+        relationships: rel,
+      },
+    });
+    signatarios.push({ ...s, clicksignKey: signerId });
+  }
+
+  // 5) ativar (draft -> running): dispara os e-mails
+  await api(`/envelopes/${envelopeId}`, "PATCH", {
+    data: { id: envelopeId, type: "envelopes", attributes: { status: "running" } },
+  });
+
+  return { envelopeId, documentId, signatarios };
+}
+
+// Baixa o PDF assinado. Após a finalização, o documento tem uma URL de download
+// nos atributos. Campo confirmado no E2E (sandbox); isolado aqui.
+export async function baixarAssinado(envelopeId: string, documentId: string): Promise<Buffer | null> {
+  try {
+    const det = await api(`/envelopes/${envelopeId}/documents/${documentId}`, "GET");
+    const attrs = (det.data as { attributes?: Record<string, string> } | undefined)?.attributes ?? {};
+    const url = attrs.signed_file_url ?? attrs.finished_url ?? attrs.url;
+    if (!url) return null;
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    return Buffer.from(await resp.arrayBuffer());
+  } catch {
+    return null;
+  }
+}
