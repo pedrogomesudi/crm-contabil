@@ -51,30 +51,9 @@ export async function POST(req: Request) {
     await admin.from("assinaturas").update({ status: "recusado" }).eq("id", assin.id);
   } else if (ev.tipo === "finalizou") {
     if (assin.documento_assinado_id) return NextResponse.json({ ok: true }); // já processado
-    const pdf =
-      assin.clicksign_envelope_id && assin.clicksign_document_id
-        ? await baixarAssinado(assin.clicksign_envelope_id, assin.clicksign_document_id)
-        : null;
-    let docAssinadoId: string | null = null;
-    if (pdf) {
-      const caminho = `${assin.cliente_id}/contrato-assinado-${Date.now()}.pdf`;
-      const up = await admin.storage.from("documentos").upload(caminho, pdf, { contentType: "application/pdf" });
-      if (!up.error) {
-        const { data: novo } = await admin
-          .from("documentos")
-          .insert({
-            cliente_id: assin.cliente_id,
-            nome: "Contrato assinado.pdf",
-            tipo: "Contrato assinado",
-            caminho_storage: caminho,
-          })
-          .select("id")
-          .single();
-        docAssinadoId = novo?.id ?? null;
-      }
-    }
-    // Envelope fechado => todos assinaram: garante o status dos signatários
-    // (robustez contra algum evento "sign" perdido).
+
+    // Status é sempre atualizado (idempotente): envelope fechado => todos assinaram.
+    // (também cobre eventual evento "sign" perdido).
     await admin
       .from("assinatura_signatarios")
       .update({ status: "assinado" })
@@ -82,12 +61,34 @@ export async function POST(req: Request) {
       .eq("status", "pendente");
     await admin
       .from("assinaturas")
-      .update({
-        status: "finalizado",
-        finalizado_em: new Date().toISOString(),
-        documento_assinado_id: docAssinadoId,
-      })
+      .update({ status: "finalizado", finalizado_em: new Date().toISOString() })
       .eq("id", assin.id);
+
+    // Baixa o PDF assinado. No instante do fechamento a Clicksign pode ainda não
+    // tê-lo gerado — nesse caso devolvemos 503 para ela reenviar o webhook, e a
+    // próxima tentativa (com documento_assinado_id ainda nulo) salva o arquivo.
+    const pdf =
+      assin.clicksign_envelope_id && assin.clicksign_document_id
+        ? await baixarAssinado(assin.clicksign_envelope_id, assin.clicksign_document_id)
+        : null;
+    if (!pdf) {
+      return NextResponse.json({ erro: "documento assinado ainda não disponível" }, { status: 503 });
+    }
+    const caminho = `${assin.cliente_id}/contrato-assinado-${Date.now()}.pdf`;
+    const up = await admin.storage.from("documentos").upload(caminho, pdf, { contentType: "application/pdf" });
+    if (!up.error) {
+      const { data: novo } = await admin
+        .from("documentos")
+        .insert({
+          cliente_id: assin.cliente_id,
+          nome: "Contrato assinado.pdf",
+          tipo: "Contrato assinado",
+          caminho_storage: caminho,
+        })
+        .select("id")
+        .single();
+      await admin.from("assinaturas").update({ documento_assinado_id: novo?.id ?? null }).eq("id", assin.id);
+    }
   }
 
   return NextResponse.json({ ok: true });
