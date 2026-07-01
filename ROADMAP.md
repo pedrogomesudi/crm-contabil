@@ -12,7 +12,7 @@ Legenda: ✅ concluída · 🚧 em andamento · ⬜ planejada
 | **V1** | Fundação da plataforma | ✅ |
 | **V2** | Integração com o Domínio Sistemas | ✅ |
 | **V3** | Geração automática do contrato (Word/PDF) | ✅ |
-| **V4** | Assinaturas digitais integradas | ⬜ |
+| **V4** | Assinaturas digitais integradas | ✅ |
 | **V5** | Emissão de NFS-e pelo CRM | ⬜ |
 | **V6** | Layout e estética | ⬜ |
 | **V7** | Modo whitelabel (comercialização) | ⬜ |
@@ -60,12 +60,15 @@ do cliente, gerando o contrato em **Word** e **PDF**, salvos nos Documentos do c
 - Detalhes em
   [`docs/superpowers/specs/2026-06-30-v3-geracao-contrato-design.md`](docs/superpowers/specs/2026-06-30-v3-geracao-contrato-design.md).
 
-## V4 — Assinaturas digitais integradas ⬜
+## V4 — Assinaturas digitais integradas ✅
 
-Integração entre o CRM e uma **plataforma de assinaturas digitais**, para enviar, assinar e
-acompanhar a assinatura dos contratos sem sair do CRM.
+Integração entre o CRM e a **Clicksign**, para enviar o contrato gerado, colher assinaturas e
+acompanhar o status sem sair do CRM.
 
-> A definir: provedor de assinatura, validade jurídica (ICP-Brasil x eletrônica), webhooks de status.
+- Envio do contrato PDF já gerado para assinatura (modelo de envelope da Clicksign v3).
+- Signatários: escritório + cliente + **2 testemunhas opcionais** (por envio).
+- **Webhook** (HMAC) atualiza o status por signatário e traz o **PDF assinado** de volta aos Documentos.
+- Assinatura eletrônica avançada (Lei 14.063/2020 + MP 2.200-2/2001). Sandbox → produção por env.
 
 ## V5 — Emissão de NFS-e pelo CRM ⬜
 
