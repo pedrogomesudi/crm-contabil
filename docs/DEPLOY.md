@@ -130,9 +130,19 @@ git push --tags        # se houver remoto
 A geração de contrato (V3) entrega o **Word** sempre; para o **PDF**, o app chama um serviço
 **Gotenberg** (LibreOffice headless via HTTP). Sem ele, a geração funciona entregando só o `.docx`.
 
-1. No EasyPanel, crie um novo serviço a partir da imagem **`gotenberg/gotenberg:8`** (porta interna `3000`).
-2. Não precisa expor publicamente — basta a rede interna do projeto.
-3. No serviço do app, defina a variável **`GOTENBERG_URL`** apontando para o serviço, ex.:
-   `GOTENBERG_URL=http://gotenberg:3000` (use o hostname interno que o EasyPanel atribuir).
-4. Os contratos contêm dados pessoais: manter o Gotenberg **na mesma infraestrutura** (não usar
+1. No EasyPanel, **no mesmo projeto do app**, crie um serviço do tipo *App* a partir da imagem
+   **`gotenberg/gotenberg:8`**. Porta interna **`3000`** (não precisa expor domínio público).
+2. O hostname interno é o **nome do serviço** dentro do projeto. No EasyPanel o host costuma ser
+   `<projeto>_<servico>` — confira no painel do serviço. Ex.: se o serviço se chama `gotenberg` no
+   projeto `crm`, o host é `crm_gotenberg`.
+3. No serviço do **app**, em *Environment*, defina **`GOTENBERG_URL`** apontando para o Gotenberg:
+   `GOTENBERG_URL=http://crm_gotenberg:3000` (ajuste ao host real do passo 2).
+4. **É variável de runtime** (não `NEXT_PUBLIC_`): basta **reiniciar** o app — **não precisa rebuild**.
+5. Os contratos contêm dados pessoais: manter o Gotenberg **na mesma infraestrutura** (não usar
    conversores SaaS externos) atende à LGPD.
+6. Teste: gere um contrato pela ficha do cliente — o `.pdf` deve aparecer nos Documentos junto ao
+   `.docx`. Se sair só o Word com aviso "PDF não gerado", confira o host/porta em `GOTENBERG_URL`
+   (o app loga o motivo da falha em `converterPdf`).
+
+> Recursos: Gotenberg é gratuito (open-source). Consome pouca RAM em repouso; durante a conversão
+> sobe ~200–400 MB por alguns segundos. Reserve essa folga no VPS.

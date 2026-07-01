@@ -25,16 +25,29 @@ export function gerarDocx(template: Buffer, dados: Record<string, string>): Buff
 
 // Converte .docx -> PDF via Gotenberg (/forms/libreoffice/convert). Retorna null
 // (degradação graciosa) se a URL não estiver configurada ou a conversão falhar.
+// Timeout evita que uma indisponibilidade do serviço trave a geração.
 export async function converterPdf(docx: Buffer): Promise<Buffer | null> {
   const base = process.env.GOTENBERG_URL;
   if (!base) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 30_000);
   try {
     const form = new FormData();
     form.append("files", new Blob([new Uint8Array(docx)]), "contrato.docx");
-    const resp = await fetch(`${base}/forms/libreoffice/convert`, { method: "POST", body: form });
-    if (!resp.ok) return null;
+    const resp = await fetch(`${base}/forms/libreoffice/convert`, {
+      method: "POST",
+      body: form,
+      signal: ctrl.signal,
+    });
+    if (!resp.ok) {
+      console.error("converterPdf: Gotenberg respondeu", resp.status);
+      return null;
+    }
     return Buffer.from(await resp.arrayBuffer());
-  } catch {
+  } catch (e) {
+    console.error("converterPdf:", e instanceof Error ? e.message : e);
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
