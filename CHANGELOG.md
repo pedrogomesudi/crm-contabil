@@ -10,6 +10,31 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5 — Emissão de NFS-e pelo CRM** (ver `ROADMAP.md`).
 
+## [4.0.2] — 2026-07-01
+
+Correções de segurança e robustez na assinatura (V4), a partir de code review multi-ângulo.
+
+### Segurança
+
+- **Webhook:** o tipo do evento passa a ser lido do **corpo** (`event.name`, sob HMAC) em vez de um
+  header não assinado — impede forjar a ação (ex.: transformar um `sign` em `refusal`) por replay.
+- **Anti-replay:** eventos `sign`/`refusal` são ignorados quando a assinatura já está em estado
+  terminal (`finalizado`/`recusado`/`cancelado`).
+- **Envio:** valida que o documento pertence ao cliente informado (`documentos.cliente_id`).
+- **Timeouts** nas chamadas à Clicksign e no download do assinado (evita requisições penduradas).
+
+### Corrigido
+
+- **Assinado não é mais perdido:** falha de upload/insert do PDF assinado agora devolve `503` para a
+  Clicksign reenviar, em vez de responder `200` e perder o arquivo.
+- **Sem duplicatas:** o assinado usa caminho determinístico (`upsert`) e reúso da linha de documento,
+  evitando arquivos/registros duplicados em retries ou eventos concorrentes.
+- **E-mails normalizados** (lowercase) no envio e no webhook — o casamento por e-mail não falha por
+  diferença de caixa.
+- **Erro do insert de signatários** passa a ser registrado.
+- **Reenvio pela UI** volta a aparecer quando a assinatura está `recusado`/`cancelado` (antes ficava
+  sem saída); lista de assinaturas ordenada para exibir a mais recente.
+
 ## [4.0.1] — 2026-07-01
 
 ### Corrigido

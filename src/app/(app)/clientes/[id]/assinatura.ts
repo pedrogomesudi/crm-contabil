@@ -11,7 +11,8 @@ export type EstadoAssinatura = { erro?: string; ok?: boolean };
 
 function sig(formData: FormData, prefixo: string, papel: SignatarioInput["papel"]): SignatarioInput | null {
   const nome = String(formData.get(`${prefixo}_nome`) ?? "").trim();
-  const email = String(formData.get(`${prefixo}_email`) ?? "").trim();
+  // e-mail normalizado (lowercase) para casar com o que a Clicksign devolve no webhook.
+  const email = String(formData.get(`${prefixo}_email`) ?? "").trim().toLowerCase();
   if (!nome || !email) return null;
   return { nome, email, papel };
 }
@@ -39,12 +40,15 @@ export async function enviarAssinatura(
     signatarios.push(t1, t2);
   }
 
-  // Baixa o PDF do contrato (RLS: confirma acesso ao documento).
+  // Baixa o PDF do contrato (RLS: confirma acesso ao documento). Exige que o
+  // documento pertença ao cliente informado (evita vincular contrato de um
+  // cliente sob outro cliente que o usuário também acessa).
   const supabase = await createServerSupabase();
   const { data: doc } = await supabase
     .from("documentos")
     .select("nome, caminho_storage")
     .eq("id", documentoId)
+    .eq("cliente_id", clienteId)
     .maybeSingle();
   if (!doc) return { erro: "Documento não encontrado ou sem permissão." };
 
@@ -75,7 +79,7 @@ export async function enviarAssinatura(
     .single();
   if (aErr || !assinatura) return { erro: "Enviado, mas falhou ao registrar. Verifique na Clicksign." };
 
-  await supabase.from("assinatura_signatarios").insert(
+  const { error: sigErr } = await supabase.from("assinatura_signatarios").insert(
     resultado.signatarios.map((s) => ({
       assinatura_id: assinatura.id,
       nome: s.nome,
@@ -85,6 +89,11 @@ export async function enviarAssinatura(
       status: "pendente",
     })),
   );
+  if (sigErr) {
+    // O envelope já foi enviado; o status geral se auto-cura no fechamento, mas
+    // a lista por signatário fica vazia. Loga para diagnóstico.
+    console.error("enviarAssinatura signatarios:", sigErr.message);
+  }
 
   revalidatePath(`/clientes/${clienteId}`);
   return { ok: true };

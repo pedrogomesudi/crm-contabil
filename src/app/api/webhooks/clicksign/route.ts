@@ -7,11 +7,12 @@ import { baixarAssinado } from "@/lib/assinatura/clicksign";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+const TERMINAIS = ["finalizado", "recusado", "cancelado"];
+
 export async function POST(req: Request) {
   const corpo = await req.text(); // corpo CRU para o HMAC
   // Clicksign envia o HMAC-SHA256 no header "content-hmac" como "sha256=<hex>".
   const assinatura = (req.headers.get("content-hmac") ?? "").replace(/^sha256=/, "");
-  const nomeEvento = req.headers.get("event") ?? "";
   const segredo = required(process.env.CLICKSIGN_HMAC_SECRET, "CLICKSIGN_HMAC_SECRET");
   if (!verificarHmac(corpo, assinatura, segredo)) {
     return NextResponse.json({ erro: "assinatura inválida" }, { status: 401 });
@@ -23,7 +24,8 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ erro: "payload inválido" }, { status: 400 });
   }
-  const ev = mapearEvento(nomeEvento, payload);
+  // Tipo do evento vem do corpo (sob HMAC), não de header não assinado.
+  const ev = mapearEvento(payload);
   if (ev.tipo === "ignorar") return NextResponse.json({ ok: true });
 
   const admin = createAdminSupabase();
@@ -35,6 +37,7 @@ export async function POST(req: Request) {
   if (!assin) return NextResponse.json({ ok: true }); // documento não é nosso: ignora
 
   if (ev.tipo === "assinou") {
+    if (TERMINAIS.includes(assin.status)) return NextResponse.json({ ok: true }); // já encerrado
     await admin
       .from("assinatura_signatarios")
       .update({ status: "assinado", assinado_em: new Date().toISOString() })
@@ -43,6 +46,7 @@ export async function POST(req: Request) {
       .neq("status", "assinado"); // idempotente
     if (assin.status === "enviado") await admin.from("assinaturas").update({ status: "parcial" }).eq("id", assin.id);
   } else if (ev.tipo === "recusou") {
+    if (TERMINAIS.includes(assin.status)) return NextResponse.json({ ok: true }); // já encerrado
     await admin
       .from("assinatura_signatarios")
       .update({ status: "recusado" })
@@ -65,19 +69,31 @@ export async function POST(req: Request) {
       .eq("id", assin.id);
 
     // Baixa o PDF assinado. No instante do fechamento a Clicksign pode ainda não
-    // tê-lo gerado — nesse caso devolvemos 503 para ela reenviar o webhook, e a
-    // próxima tentativa (com documento_assinado_id ainda nulo) salva o arquivo.
+    // tê-lo gerado; qualquer falha aqui devolve 503 para ela reenviar o webhook,
+    // e a próxima tentativa (com documento_assinado_id nulo) conclui o salvamento.
     const pdf =
       assin.clicksign_envelope_id && assin.clicksign_document_id
         ? await baixarAssinado(assin.clicksign_envelope_id, assin.clicksign_document_id)
         : null;
-    if (!pdf) {
-      return NextResponse.json({ erro: "documento assinado ainda não disponível" }, { status: 503 });
-    }
-    const caminho = `${assin.cliente_id}/contrato-assinado-${Date.now()}.pdf`;
-    const up = await admin.storage.from("documentos").upload(caminho, pdf, { contentType: "application/pdf" });
-    if (!up.error) {
-      const { data: novo } = await admin
+    if (!pdf) return NextResponse.json({ erro: "assinado ainda não disponível" }, { status: 503 });
+
+    // Caminho determinístico + upsert => retries/concorrência não duplicam arquivo.
+    const caminho = `${assin.cliente_id}/contrato-assinado-${assin.id}.pdf`;
+    const up = await admin.storage.from("documentos").upload(caminho, pdf, {
+      contentType: "application/pdf",
+      upsert: true,
+    });
+    if (up.error) return NextResponse.json({ erro: "falha ao salvar assinado" }, { status: 503 });
+
+    // Reusa a linha de documento se um retry anterior já a criou (evita duplicata).
+    const { data: existente } = await admin
+      .from("documentos")
+      .select("id")
+      .eq("caminho_storage", caminho)
+      .maybeSingle();
+    let docId = existente?.id ?? null;
+    if (!docId) {
+      const { data: novo, error: insErr } = await admin
         .from("documentos")
         .insert({
           cliente_id: assin.cliente_id,
@@ -87,8 +103,14 @@ export async function POST(req: Request) {
         })
         .select("id")
         .single();
-      await admin.from("assinaturas").update({ documento_assinado_id: novo?.id ?? null }).eq("id", assin.id);
+      if (insErr || !novo) return NextResponse.json({ erro: "falha ao registrar assinado" }, { status: 503 });
+      docId = novo.id;
     }
+    const { error: linkErr } = await admin
+      .from("assinaturas")
+      .update({ documento_assinado_id: docId })
+      .eq("id", assin.id);
+    if (linkErr) return NextResponse.json({ erro: "falha ao vincular assinado" }, { status: 503 });
   }
 
   return NextResponse.json({ ok: true });

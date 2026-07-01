@@ -15,20 +15,30 @@ describe("verificarHmac", () => {
 });
 
 describe("mapearEvento", () => {
-  // Formato legado real da Clicksign: signatário em event.data.signer.email,
-  // documento em document.key; o nome do evento vem no header "event".
-  const sign = { event: { data: { signer: { email: "a@x.com" } } }, document: { key: "doc1" } };
+  // Formato legado real da Clicksign: nome do evento em event.name (sob HMAC),
+  // signatário em event.data.signer.email, documento em document.key.
   it("mapeia sign/refusal/auto_close e ignora desconhecido", () => {
-    expect(mapearEvento("sign", sign)).toEqual({ tipo: "assinou", documentKey: "doc1", email: "a@x.com" });
     expect(
-      mapearEvento("refusal", { event: { data: { signer: { email: "b@x.com" } } }, document: { key: "doc1" } }),
+      mapearEvento({ event: { name: "sign", data: { signer: { email: "a@x.com" } } }, document: { key: "doc1" } }),
+    ).toEqual({ tipo: "assinou", documentKey: "doc1", email: "a@x.com" });
+    expect(
+      mapearEvento({ event: { name: "refusal", data: { signer: { email: "b@x.com" } } }, document: { key: "doc1" } }),
     ).toEqual({ tipo: "recusou", documentKey: "doc1", email: "b@x.com" });
-    expect(mapearEvento("auto_close", { document: { key: "doc1" } })).toEqual({
+    expect(mapearEvento({ event: { name: "auto_close" }, document: { key: "doc1" } })).toEqual({
       tipo: "finalizou",
       documentKey: "doc1",
     });
-    expect(mapearEvento("close", { document: { key: "doc1" } })).toEqual({ tipo: "finalizou", documentKey: "doc1" });
-    expect(mapearEvento("add_signer", sign)).toEqual({ tipo: "ignorar" });
-    expect(mapearEvento("sign", {})).toEqual({ tipo: "ignorar" });
+    expect(mapearEvento({ event: { name: "close" }, document: { key: "doc1" } })).toEqual({
+      tipo: "finalizou",
+      documentKey: "doc1",
+    });
+    expect(mapearEvento({ event: { name: "add_signer" }, document: { key: "doc1" } })).toEqual({ tipo: "ignorar" });
+    expect(mapearEvento({})).toEqual({ tipo: "ignorar" });
+  });
+
+  it("normaliza o e-mail do signatário para lowercase", () => {
+    expect(
+      mapearEvento({ event: { name: "sign", data: { signer: { email: " Joao@Empresa.COM " } } }, document: { key: "d" } }),
+    ).toEqual({ tipo: "assinou", documentKey: "d", email: "joao@empresa.com" });
   });
 });

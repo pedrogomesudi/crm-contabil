@@ -34,7 +34,9 @@ export async function DocumentosSection({
   const { data: assinaturas } = await supabase
     .from("assinaturas")
     .select("documento_id, status, assinatura_signatarios(nome, papel, status)")
-    .eq("cliente_id", clienteId);
+    .eq("cliente_id", clienteId)
+    .order("criado_em", { ascending: true });
+  // ascendente => ao colidir por documento_id, a assinatura mais recente sobrescreve no Map.
   const porDoc = new Map((assinaturas ?? []).map((a) => [a.documento_id, a]));
 
   const podeGerenciar = podeGerenciarDocumentos(papel);
@@ -81,22 +83,28 @@ export async function DocumentosSection({
                         />
                       )}
                     </div>
-                    {d.tipo === "Contrato" &&
-                      d.nome.toLowerCase().endsWith(".pdf") &&
-                      podeGerenciar &&
-                      (porDoc.get(d.id) ? (
-                        <StatusAssinatura
-                          status={porDoc.get(d.id)!.status}
-                          signatarios={porDoc.get(d.id)!.assinatura_signatarios}
-                        />
-                      ) : (
-                        <EnviarAssinatura
-                          documentoId={d.id}
-                          clienteId={clienteId}
-                          clienteNome={clienteNome}
-                          clienteEmail={clienteEmail}
-                        />
-                      ))}
+                    {d.tipo === "Contrato" && d.nome.toLowerCase().endsWith(".pdf") && podeGerenciar && (
+                      <div className="mt-2 space-y-2">
+                        {porDoc.get(d.id) && (
+                          <StatusAssinatura
+                            status={porDoc.get(d.id)!.status}
+                            signatarios={porDoc.get(d.id)!.assinatura_signatarios}
+                          />
+                        )}
+                        {(() => {
+                          const st = porDoc.get(d.id)?.status;
+                          // Sem assinatura ativa (nova, recusada ou cancelada) => permite (re)enviar.
+                          return !st || st === "recusado" || st === "cancelado";
+                        })() && (
+                          <EnviarAssinatura
+                            documentoId={d.id}
+                            clienteId={clienteId}
+                            clienteNome={clienteNome}
+                            clienteEmail={clienteEmail}
+                          />
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
