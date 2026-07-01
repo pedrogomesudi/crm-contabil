@@ -10,13 +10,26 @@ function cfg() {
   };
 }
 
+async function comTimeout<T>(ms: number, fn: (signal: AbortSignal) => Promise<T>): Promise<T> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fn(ctrl.signal);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function api(path: string, method: string, body?: unknown): Promise<Record<string, unknown>> {
   const { base, token } = cfg();
-  const resp = await fetch(`${base}${path}`, {
-    method,
-    headers: { Authorization: token, "Content-Type": JSONAPI, Accept: JSONAPI },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  const resp = await comTimeout(30_000, (signal) =>
+    fetch(`${base}${path}`, {
+      method,
+      headers: { Authorization: token, "Content-Type": JSONAPI, Accept: JSONAPI },
+      body: body ? JSON.stringify(body) : undefined,
+      signal,
+    }),
+  );
   if (!resp.ok) {
     const txt = await resp.text().catch(() => "");
     throw new Error(`Clicksign ${method} ${path} -> ${resp.status} ${txt.slice(0, 300)}`);
@@ -96,7 +109,7 @@ export async function baixarAssinado(envelopeId: string, documentId: string): Pr
     const files = (det.data as { links?: { files?: Record<string, string> } } | undefined)?.links?.files;
     const url = files?.signed;
     if (!url) return null;
-    const resp = await fetch(url);
+    const resp = await comTimeout(30_000, (signal) => fetch(url, { signal }));
     if (!resp.ok) return null;
     return Buffer.from(await resp.arrayBuffer());
   } catch {
