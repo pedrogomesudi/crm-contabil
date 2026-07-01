@@ -88,13 +88,13 @@ export async function enviarParaAssinatura(args: {
   return { envelopeId, documentId, signatarios };
 }
 
-// Baixa o PDF assinado. Após a finalização, o documento tem uma URL de download
-// nos atributos. Campo confirmado no E2E (sandbox); isolado aqui.
+// Baixa o PDF assinado. A URL (temporária) vem em data.links.files.signed do
+// documento — confirmado no E2E do sandbox.
 export async function baixarAssinado(envelopeId: string, documentId: string): Promise<Buffer | null> {
   try {
     const det = await api(`/envelopes/${envelopeId}/documents/${documentId}`, "GET");
-    const attrs = (det.data as { attributes?: Record<string, string> } | undefined)?.attributes ?? {};
-    const url = attrs.signed_file_url ?? attrs.finished_url ?? attrs.url;
+    const files = (det.data as { links?: { files?: Record<string, string> } } | undefined)?.links?.files;
+    const url = files?.signed;
     if (!url) return null;
     const resp = await fetch(url);
     if (!resp.ok) return null;

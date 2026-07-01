@@ -6,8 +6,10 @@ export type ResultadoEnvio = {
   documentId: string;
   signatarios: SignatarioEnviado[];
 };
+// O webhook (formato legado da Clicksign) referencia o documento por `document.key`
+// (== nosso clicksign_document_id), não o envelope.
 export type EventoAssinatura =
-  | { tipo: "assinou"; envelopeId: string; email: string }
-  | { tipo: "recusou"; envelopeId: string; email: string }
-  | { tipo: "finalizou"; envelopeId: string }
+  | { tipo: "assinou"; documentKey: string; email: string }
+  | { tipo: "recusou"; documentKey: string; email: string }
+  | { tipo: "finalizou"; documentKey: string }
   | { tipo: "ignorar" };

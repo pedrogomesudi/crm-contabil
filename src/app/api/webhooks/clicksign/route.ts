@@ -9,7 +9,9 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const corpo = await req.text(); // corpo CRU para o HMAC
-  const assinatura = req.headers.get("x-clicksign-signature") ?? "";
+  // Clicksign envia o HMAC-SHA256 no header "content-hmac" como "sha256=<hex>".
+  const assinatura = (req.headers.get("content-hmac") ?? "").replace(/^sha256=/, "");
+  const nomeEvento = req.headers.get("event") ?? "";
   const segredo = required(process.env.CLICKSIGN_HMAC_SECRET, "CLICKSIGN_HMAC_SECRET");
   if (!verificarHmac(corpo, assinatura, segredo)) {
     return NextResponse.json({ erro: "assinatura inválida" }, { status: 401 });
@@ -21,16 +23,16 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ erro: "payload inválido" }, { status: 400 });
   }
-  const ev = mapearEvento(payload);
+  const ev = mapearEvento(nomeEvento, payload);
   if (ev.tipo === "ignorar") return NextResponse.json({ ok: true });
 
   const admin = createAdminSupabase();
   const { data: assin } = await admin
     .from("assinaturas")
-    .select("id, cliente_id, clicksign_document_id, documento_assinado_id, status")
-    .eq("clicksign_envelope_id", ev.envelopeId)
+    .select("id, cliente_id, clicksign_envelope_id, clicksign_document_id, documento_assinado_id, status")
+    .eq("clicksign_document_id", ev.documentKey)
     .maybeSingle();
-  if (!assin) return NextResponse.json({ ok: true }); // envelope não é nosso: ignora
+  if (!assin) return NextResponse.json({ ok: true }); // documento não é nosso: ignora
 
   if (ev.tipo === "assinou") {
     await admin
@@ -49,9 +51,10 @@ export async function POST(req: Request) {
     await admin.from("assinaturas").update({ status: "recusado" }).eq("id", assin.id);
   } else if (ev.tipo === "finalizou") {
     if (assin.documento_assinado_id) return NextResponse.json({ ok: true }); // já processado
-    const pdf = assin.clicksign_document_id
-      ? await baixarAssinado(ev.envelopeId, assin.clicksign_document_id)
-      : null;
+    const pdf =
+      assin.clicksign_envelope_id && assin.clicksign_document_id
+        ? await baixarAssinado(assin.clicksign_envelope_id, assin.clicksign_document_id)
+        : null;
     let docAssinadoId: string | null = null;
     if (pdf) {
       const caminho = `${assin.cliente_id}/contrato-assinado-${Date.now()}.pdf`;
@@ -70,6 +73,13 @@ export async function POST(req: Request) {
         docAssinadoId = novo?.id ?? null;
       }
     }
+    // Envelope fechado => todos assinaram: garante o status dos signatários
+    // (robustez contra algum evento "sign" perdido).
+    await admin
+      .from("assinatura_signatarios")
+      .update({ status: "assinado" })
+      .eq("assinatura_id", assin.id)
+      .eq("status", "pendente");
     await admin
       .from("assinaturas")
       .update({

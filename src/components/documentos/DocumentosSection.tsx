@@ -82,6 +82,7 @@ export async function DocumentosSection({
                       )}
                     </div>
                     {d.tipo === "Contrato" &&
+                      d.nome.toLowerCase().endsWith(".pdf") &&
                       podeGerenciar &&
                       (porDoc.get(d.id) ? (
                         <StatusAssinatura
