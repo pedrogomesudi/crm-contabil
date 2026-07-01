@@ -72,10 +72,14 @@ acompanhar o status sem sair do CRM.
 
 ## V5 — Emissão de NFS-e pelo CRM ⬜
 
-Integração com **emissor de notas fiscais eletrônicas de serviço (NFS-e)**, para emitir notas de
-prestação de serviços diretamente pelo CRM.
+Emissão de NFS-e pelo padrão nacional (nfse.gov.br), integrando direto com a **Sefin Nacional**.
+Dividido em dois subsistemas de complexidade distinta:
 
-> A definir: emissor/municípios atendidos, regime tributário, conciliação com o honorário.
+- **A) NFS-e dos honorários do escritório** *(esta V5)* — 1 emitente (o escritório), a partir do
+  honorário já no CRM; certificado A1 in-house (cifrado); começa por cliente, em homologação.
+  Spec: `docs/superpowers/specs/2026-07-02-v5-nfse-nacional-design.md`.
+- **B) NFS-e dos clientes (multi-emitente)** *(marco próprio, depois)* — N emitentes/municípios/
+  certificados; multi-tenant fiscal. Spec e plano separados quando chegar a vez.
 
 ## V6 — Layout e estética ⬜
 
