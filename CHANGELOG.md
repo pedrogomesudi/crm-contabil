@@ -10,6 +10,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5 — Emissão de NFS-e pelo CRM** (ver `ROADMAP.md`).
 
+## [4.0.1] — 2026-07-01
+
+### Corrigido
+
+- **Webhook de assinatura:** no `auto_close` a Clicksign pode ainda não ter gerado o PDF assinado;
+  agora o webhook responde `503` nesse caso para a Clicksign **reenviar**, e a tentativa seguinte
+  salva o arquivo (o status já fica `finalizado`). Descoberto no teste real de produção.
+
 ## [4.0.0] — 2026-07-01
 
 Integração de **assinaturas digitais via Clicksign** (V4 do roadmap): envia o contrato gerado para
