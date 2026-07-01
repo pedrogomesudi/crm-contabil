@@ -25,7 +25,8 @@ describe("montarDadosContrato", () => {
     // endereço em Title Case, UF preservada em maiúscula
     expect(dados.endereco).toBe("Rua A, 10, Centro, Uberlândia/MG");
     expect(dados.cep).toBe("38.400-000"); // padrão NN.NNN-NNN
-    expect(dados.rep_nome).toBe("Fulano de Tal");
+    expect(dados.rep_nome).toBe("Fulano De Tal"); // Title Case
+    expect(dados.telefone).toBe("(34) 9 9999-0000"); // (NN) N NNNN-NNNN
     expect(dados.rep_cpf).toBe("529.982.247-25");
     expect(dados.honorario).toBe("R$ 1.500,00");
     expect((dados.honorario_extenso ?? "").toLowerCase()).toContain("reais");

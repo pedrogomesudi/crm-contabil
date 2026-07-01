@@ -50,3 +50,11 @@ export function formatarCep(cep: string): string {
 export function formatarMoeda(valor: number): string {
   return "R$ " + valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
+// Telefone: celular (11 díg) -> (NN) N NNNN-NNNN; fixo (10 díg) -> (NN) NNNN-NNNN.
+export function formatarTelefone(tel: string): string {
+  const d = soDigitos(tel);
+  if (d.length === 11) return d.replace(/(\d{2})(\d)(\d{4})(\d{4})/, "($1) $2 $3-$4");
+  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  return d;
+}

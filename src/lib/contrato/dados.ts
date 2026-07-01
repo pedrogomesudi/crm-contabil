@@ -1,4 +1,4 @@
-import { formatarDocumento, formatarCep, formatarMoeda } from "@/lib/format";
+import { formatarDocumento, formatarCep, formatarMoeda, formatarTelefone } from "@/lib/format";
 import { reaisPorExtenso } from "./extenso";
 
 export type ClienteContrato = {
@@ -79,8 +79,8 @@ export function montarDadosContrato(
     endereco: enderecoLinha(cliente.endereco),
     cep: end.cep ? formatarCep(end.cep) : "",
     email: cliente.email ?? "",
-    telefone: cliente.telefone ?? "",
-    rep_nome: cliente.responsavel_nome ?? "",
+    telefone: cliente.telefone ? formatarTelefone(cliente.telefone) : "",
+    rep_nome: cliente.responsavel_nome ? tituloCaso(cliente.responsavel_nome) : "",
     rep_nacionalidade: rep.nacionalidade ?? "",
     rep_estado_civil: rep.estado_civil ?? "",
     rep_profissao: rep.profissao ?? "",

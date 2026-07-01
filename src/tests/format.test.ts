@@ -26,7 +26,7 @@ describe("parseValorBR", () => {
   it("-0 normaliza para 0", () => expect(Object.is(parseValorBR("-0,00"), 0)).toBe(true));
 });
 
-import { formatarDocumento, formatarCep, formatarMoeda } from "@/lib/format";
+import { formatarDocumento, formatarCep, formatarMoeda, formatarTelefone } from "@/lib/format";
 
 describe("formatadores de contrato", () => {
   it("formata CNPJ (14 díg) e CPF (11 díg)", () => {
@@ -41,5 +41,10 @@ describe("formatadores de contrato", () => {
   it("formata moeda em BRL", () => {
     expect(formatarMoeda(1500)).toBe("R$ 1.500,00");
     expect(formatarMoeda(1452.5)).toBe("R$ 1.452,50");
+  });
+  it("formata telefone celular e fixo", () => {
+    expect(formatarTelefone("34996725868")).toBe("(34) 9 9672-5868");
+    expect(formatarTelefone("3432145678")).toBe("(34) 3214-5678");
+    expect(formatarTelefone("123")).toBe("123");
   });
 });
