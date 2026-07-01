@@ -8,7 +8,27 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-- Em planejamento: **V3 — Geração automática do contrato (Word/PDF)** (ver `ROADMAP.md`).
+- Em planejamento: **V4 — Assinaturas digitais integradas** (ver `ROADMAP.md`).
+
+## [3.0.0] — 2026-06-30
+
+Geração automática do **contrato de prestação de serviços contábeis** (V3 do roadmap): preenche a
+minuta padrão do escritório com os dados do cliente e produz Word + PDF.
+
+### Adicionado
+
+- **Motor de geração** (`src/lib/contrato/`): monta o mapa tag→valor a partir do cliente, preenche a
+  minuta tagueada com **docxtemplater** (preservando a formatação) e converte para PDF via
+  **Gotenberg** (LibreOffice headless via HTTP, com degradação graciosa se indisponível).
+- **Representante legal** no cadastro do cliente (`representante` jsonb; migration 0017):
+  nacionalidade, estado civil, profissão, RG e CPF — usados na qualificação da CONTRATANTE.
+- **Tela "Gerar contrato"** na ficha do cliente (admin/financeiro/contador-dono): escolhe a data de
+  início da vigência, gera Word + PDF e salva nos **Documentos** do cliente, com pré-checagem dos
+  campos necessários.
+- **Formatação fiel à minuta:** CNPJ/CPF, CEP (NN.NNN-NNN), telefone ((NN) N NNNN-NNNN), endereço em
+  Title Case, honorário em R$ + valor por extenso, e-mail como hyperlink (mailto dinâmico). Data de
+  assinatura = data de geração.
+- Serviço **Gotenberg** documentado no deploy (`GOTENBERG_URL`).
 
 ## [2.0.2] — 2026-06-29
 
@@ -92,7 +112,8 @@ hospedagem e e-mails (V1 do roadmap).
 - **Bootstrap do primeiro admin** via `service_role` (`npm run admin:bootstrap`).
 - **Deploy:** publicação no EasyPanel e guia em `docs/DEPLOY.md`.
 
-[Não lançado]: https://github.com/pedrogomesudi/crm-contabil/compare/v2.0.2...HEAD
+[Não lançado]: https://github.com/pedrogomesudi/crm-contabil/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/pedrogomesudi/crm-contabil/compare/v2.0.2...v3.0.0
 [2.0.2]: https://github.com/pedrogomesudi/crm-contabil/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/pedrogomesudi/crm-contabil/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/pedrogomesudi/crm-contabil/compare/v1.0.0...v2.0.0

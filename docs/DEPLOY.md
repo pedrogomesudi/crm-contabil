@@ -124,3 +124,15 @@ git push --tags        # se houver remoto
 - **Atualizar o app:** na Opção A, basta `git push` (auto-deploy). Na Opção B, rebuild + push da imagem e
   redeploy no EasyPanel.
 - **Rollback:** o EasyPanel mantém histórico de deploys; reverta para o anterior pela UI.
+
+## Gotenberg (conversão de contrato para PDF — V3)
+
+A geração de contrato (V3) entrega o **Word** sempre; para o **PDF**, o app chama um serviço
+**Gotenberg** (LibreOffice headless via HTTP). Sem ele, a geração funciona entregando só o `.docx`.
+
+1. No EasyPanel, crie um novo serviço a partir da imagem **`gotenberg/gotenberg:8`** (porta interna `3000`).
+2. Não precisa expor publicamente — basta a rede interna do projeto.
+3. No serviço do app, defina a variável **`GOTENBERG_URL`** apontando para o serviço, ex.:
+   `GOTENBERG_URL=http://gotenberg:3000` (use o hostname interno que o EasyPanel atribuir).
+4. Os contratos contêm dados pessoais: manter o Gotenberg **na mesma infraestrutura** (não usar
+   conversores SaaS externos) atende à LGPD.

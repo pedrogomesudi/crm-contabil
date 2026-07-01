@@ -6,6 +6,7 @@ import { podeAtribuirContador, podeVerHonorario } from "@/lib/clientes/permissoe
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
+import { GerarContrato } from "@/components/contrato/GerarContrato";
 import { atualizarCliente } from "../actions";
 
 export const metadata = { title: "Cliente" };
@@ -21,7 +22,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   const { data: cliente } = await supabase
     .from("clientes")
     .select(
-      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, endereco, responsavel_nome, contador_id, status, data_inicio, observacoes, atualizado_em",
+      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, atualizado_em",
     )
     .eq("id", id)
     .maybeSingle();
@@ -59,6 +60,12 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         contadorEditavel={contadorEditavel}
       />
       {mostrarHonorario && <HonorarioForm clienteId={id} valorAtual={valorHonorario} />}
+      {mostrarHonorario && (
+        <GerarContrato
+          clienteId={id}
+          hoje={new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })}
+        />
+      )}
       <DocumentosSection clienteId={id} papel={papel} />
     </div>
   );

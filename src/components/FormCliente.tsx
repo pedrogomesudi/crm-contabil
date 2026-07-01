@@ -17,6 +17,7 @@ export type ClienteDefaults = {
   telefone?: string;
   endereco?: Record<string, string> | null;
   responsavel_nome?: string;
+  representante?: Record<string, string> | null;
   contador_id?: string | null;
   status?: string;
   data_inicio?: string | null;
@@ -156,6 +157,45 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
           </Campo>
           <Campo label="CEP">
             <input name="cep" defaultValue={end.cep ?? ""} className={inputCls} />
+          </Campo>
+        </div>
+      </fieldset>
+
+      <fieldset className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+        <legend className="px-1 text-sm font-semibold text-slate-900">
+          Representante legal (contrato)
+        </legend>
+        <div className="grid grid-cols-2 gap-3">
+          <Campo label="Nacionalidade">
+            <input
+              name="rep_nacionalidade"
+              defaultValue={(c.representante ?? {}).nacionalidade ?? ""}
+              className={inputCls}
+            />
+          </Campo>
+          <Campo label="Estado civil">
+            <input
+              name="rep_estado_civil"
+              defaultValue={(c.representante ?? {}).estado_civil ?? ""}
+              className={inputCls}
+            />
+          </Campo>
+          <Campo label="Profissão">
+            <input
+              name="rep_profissao"
+              defaultValue={(c.representante ?? {}).profissao ?? ""}
+              className={inputCls}
+            />
+          </Campo>
+          <Campo label="RG">
+            <input name="rep_rg" defaultValue={(c.representante ?? {}).rg ?? ""} className={inputCls} />
+          </Campo>
+          <Campo label="CPF do representante">
+            <input
+              name="rep_cpf"
+              defaultValue={(c.representante ?? {}).cpf ?? ""}
+              className={inputCls}
+            />
           </Campo>
         </div>
       </fieldset>

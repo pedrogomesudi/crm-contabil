@@ -32,3 +32,29 @@ export function parseValorBR(s: string): number | null {
   if (!Number.isFinite(n)) return NaN;
   return n === 0 ? 0 : n; // normaliza -0
 }
+
+// Formata CPF (11) ou CNPJ (14); tamanho inesperado devolve só os dígitos.
+export function formatarDocumento(doc: string): string {
+  const d = soDigitos(doc);
+  if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  if (d.length === 14) return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+  return d;
+}
+
+// CEP no padrão NN.NNN-NNN (ex.: 38411342 -> 38.411-342), como na minuta.
+export function formatarCep(cep: string): string {
+  const d = soDigitos(cep);
+  return d.length === 8 ? d.replace(/(\d{2})(\d{3})(\d{3})/, "$1.$2-$3") : d;
+}
+
+export function formatarMoeda(valor: number): string {
+  return "R$ " + valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Telefone: celular (11 díg) -> (NN) N NNNN-NNNN; fixo (10 díg) -> (NN) NNNN-NNNN.
+export function formatarTelefone(tel: string): string {
+  const d = soDigitos(tel);
+  if (d.length === 11) return d.replace(/(\d{2})(\d)(\d{4})(\d{4})/, "($1) $2 $3-$4");
+  if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  return d;
+}
