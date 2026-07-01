@@ -11,7 +11,7 @@ Legenda: ✅ concluída · 🚧 em andamento · ⬜ planejada
 |:------:|-------|:------:|
 | **V1** | Fundação da plataforma | ✅ |
 | **V2** | Integração com o Domínio Sistemas | ✅ |
-| **V3** | Geração automática do contrato (Word/PDF) | ⬜ |
+| **V3** | Geração automática do contrato (Word/PDF) | ✅ |
 | **V4** | Assinaturas digitais integradas | ⬜ |
 | **V5** | Emissão de NFS-e pelo CRM | ⬜ |
 | **V6** | Layout e estética | ⬜ |
@@ -48,12 +48,17 @@ direto ao banco é inviável — por isso o caminho é exportar do Domínio e im
 escala para a comercialização (V7). Detalhes em
 [`docs/superpowers/specs/2026-06-26-v2-dominio-integracao-design.md`](docs/superpowers/specs/2026-06-26-v2-dominio-integracao-design.md).
 
-## V3 — Geração automática do contrato ⬜
+## V3 — Geração automática do contrato ✅
 
-Preenchimento automático do **contrato de prestação de serviços contábeis** com os dados do
-cadastro do cliente, gerando o contrato em **Word** e **PDF**.
+Preenchimento automático do **contrato de prestação de serviços contábeis** com os dados do cadastro
+do cliente, gerando o contrato em **Word** e **PDF**, salvos nos Documentos do cliente.
 
-> A definir: modelo(s) de contrato, campos mesclados, motor de template.
+- Minuta padrão do escritório tagueada + motor **docxtemplater** (preserva formatação).
+- Campos de **representante legal** no cadastro; formatação fiel (CNPJ/CEP/telefone, endereço em
+  Title Case, honorário por extenso, e-mail linkado, data de assinatura = data de geração).
+- PDF via **Gotenberg** (LibreOffice headless), com degradação graciosa para só-Word.
+- Detalhes em
+  [`docs/superpowers/specs/2026-06-30-v3-geracao-contrato-design.md`](docs/superpowers/specs/2026-06-30-v3-geracao-contrato-design.md).
 
 ## V4 — Assinaturas digitais integradas ⬜
 
