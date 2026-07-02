@@ -9,7 +9,7 @@ import { decifrar } from "@/lib/nfse/cripto";
 import { carregarCertificado } from "@/lib/nfse/certificado";
 import { montarDps } from "@/lib/nfse/dps";
 import { assinarDps } from "@/lib/nfse/assinatura";
-import { enviarDps } from "@/lib/nfse/envio";
+import { enviarDps, ehErroTransitorio } from "@/lib/nfse/envio";
 import { baixarDanfsePdf } from "@/lib/nfse/danfse";
 import { classificarSituacao } from "@/lib/nfse/lote";
 import type { ConfigFiscal, Tomador, ResultadoCliente, ClienteLote } from "@/lib/nfse/tipos";
@@ -144,6 +144,11 @@ export async function emitirNfseCliente(clienteId: string, competencia: string):
   let resultado;
   try {
     resultado = await enviarDps(assinado, { pfx: cert.pfx, senha: cert.senha }, ambiente);
+    // Retenta erros transitórios da Sefin (ex.: E0082) antes de gravar.
+    for (let tent = 0; tent < 2 && !resultado.autorizada && ehErroTransitorio(resultado.mensagens); tent++) {
+      await new Promise((r) => setTimeout(r, 1500));
+      resultado = await enviarDps(assinado, { pfx: cert.pfx, senha: cert.senha }, ambiente);
+    }
   } catch (e) {
     console.error("emitirNfseCliente:", e instanceof Error ? e.message : e);
     await supabase.from("nfse").insert({

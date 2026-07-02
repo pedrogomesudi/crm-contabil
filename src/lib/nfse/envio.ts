@@ -7,6 +7,13 @@ export function montarCorpoDps(xmlAssinado: string): string {
   return gzipSync(Buffer.from(xmlAssinado, "utf8")).toString("base64");
 }
 
+// Erros da Sefin conhecidos por serem intermitentes (instabilidade da consulta
+// ao cadastro CNPJ da Receita) — valem uma nova tentativa automática.
+const CODIGOS_TRANSITORIOS = ["E0082"];
+export function ehErroTransitorio(mensagens?: string[]): boolean {
+  return (mensagens ?? []).some((m) => CODIGOS_TRANSITORIOS.some((c) => m.includes(c)));
+}
+
 export function parseResposta(status: number, corpo: Record<string, unknown>): ResultadoEmissao {
   if (status >= 200 && status < 300 && corpo.chaveAcesso) {
     return {
