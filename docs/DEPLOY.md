@@ -172,7 +172,7 @@ O CRM emite a NFS-e dos honorários pela API nacional (Sefin), com o certificado
 2. No serviço do **app** (EasyPanel), defina — **runtime, só reiniciar**:
    - `NFSE_CERT_KEY` — a chave gerada (nunca perca/mude: o certificado guardado é cifrado com ela).
    - `NFSE_URL_HOMOLOGACAO` — `https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional`
-   - `NFSE_URL_PRODUCAO` — `https://sefin.nfse.gov.br/API/SefinNacional`
+   - `NFSE_URL_PRODUCAO` — `https://sefin.nfse.gov.br/SefinNacional`
 3. No app, em **Configurações → NFS-e**, preencha os **dados fiscais** do escritório e faça o **upload
    do certificado A1** (.pfx + senha). O certificado é validado e guardado **cifrado**.
 4. Comece com o ambiente em **homologação** (produção restrita). Emita uma nota de teste e confira a
