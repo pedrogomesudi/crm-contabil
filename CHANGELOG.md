@@ -10,6 +10,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
 
+## [5.3.0] — 2026-07-02
+
+### Adicionado
+
+- **NFS-e avulsa (serviço extra):** a ficha permite emitir **mais de uma nota** por cliente na mesma
+  competência — com **valor editável** (pré-preenchido com o honorário), **descrição** própria e um
+  checkbox **"nota avulsa"**. A trava anti-duplicidade vale só para a nota **recorrente**; a emissão
+  em lote passa a considerar só recorrentes ao marcar "já emitida" (um cliente com apenas uma avulsa
+  segue apto para a recorrente). Coluna `nfse.avulsa` (migration 0022).
+
 ## [5.2.4] — 2026-07-02
 
 ### Corrigido
