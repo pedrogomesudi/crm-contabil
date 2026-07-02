@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
 
+## [5.2.3] — 2026-07-02
+
+### Adicionado
+
+- **Marcar/desmarcar todos** no lote: checkbox no cabeçalho da tabela alterna todas as notas aptas de
+  uma vez — útil para emitir só 2-3 num universo de 60+ (desmarca tudo e escolhe as poucas).
+
 ## [5.2.2] — 2026-07-02
 
 ### Corrigido

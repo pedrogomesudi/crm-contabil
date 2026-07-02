@@ -87,7 +87,13 @@ export function LoteNfse() {
     URL.revokeObjectURL(url);
   }
 
-  const selecionados = linhas.filter((l) => l.marcado && l.situacao === "apta");
+  function marcarTodos(marcar: boolean) {
+    setLinhas((ls) => ls.map((l) => (l.situacao === "apta" ? { ...l, marcado: marcar } : l)));
+  }
+
+  const aptas = linhas.filter((l) => l.situacao === "apta");
+  const selecionados = aptas.filter((l) => l.marcado);
+  const todasMarcadas = aptas.length > 0 && selecionados.length === aptas.length;
   const totalValor = selecionados.reduce((s, l) => s + l.honorario, 0);
 
   return (
@@ -120,7 +126,15 @@ export function LoteNfse() {
             <table className="w-full">
               <thead className="bg-slate-100 text-left">
                 <tr>
-                  <th className="p-2"> </th>
+                  <th className="p-2">
+                    <input
+                      type="checkbox"
+                      aria-label="Marcar/desmarcar todos"
+                      checked={todasMarcadas}
+                      disabled={executando || aptas.length === 0}
+                      onChange={(e) => marcarTodos(e.target.checked)}
+                    />
+                  </th>
                   <th className="p-2">Cliente</th>
                   <th className="p-2">Honorário</th>
                   <th className="p-2">Situação / Resultado</th>
