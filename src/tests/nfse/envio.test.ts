@@ -22,9 +22,14 @@ describe("parseResposta", () => {
     expect(r.autorizada).toBe(false);
     expect(r.mensagens?.[0]).toContain("IM inválida");
   });
-  it("cria mensagem genérica quando não há erros estruturados", () => {
-    const r = parseResposta(500, {});
+  it("inclui o corpo cru quando não há erros estruturados", () => {
+    const r = parseResposta(400, { detalhe: "coisa estranha" });
     expect(r.autorizada).toBe(false);
-    expect(r.mensagens?.[0]).toContain("500");
+    expect(r.mensagens?.[0]).toContain("400");
+    expect(r.mensagens?.[0]).toContain("coisa estranha");
+  });
+  it("lê o formato alternativo 'mensagens'", () => {
+    const r = parseResposta(400, { mensagens: [{ codigo: "E123", descricao: "cTribNac inválido" }] });
+    expect(r.mensagens?.[0]).toContain("cTribNac inválido");
   });
 });

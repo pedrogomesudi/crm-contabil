@@ -16,9 +16,24 @@ export function parseResposta(status: number, corpo: Record<string, unknown>): R
       xmlNfse: typeof corpo.nfseXmlGZipB64 === "string" ? corpo.nfseXmlGZipB64 : undefined,
     };
   }
-  const erros = Array.isArray(corpo.erros) ? (corpo.erros as { codigo?: string; descricao?: string }[]) : [];
-  const mensagens = erros.map((e) => `${e.codigo ?? ""} ${e.descricao ?? ""}`.trim()).filter(Boolean);
-  return { autorizada: false, mensagens: mensagens.length ? mensagens : [`HTTP ${status}`] };
+  // A Sefin pode devolver erros em formatos diferentes; tentamos os conhecidos e,
+  // por fim, incluímos o corpo cru para diagnóstico.
+  type Erro = { codigo?: string; Codigo?: string; code?: string; descricao?: string; Descricao?: string; mensagem?: string; message?: string };
+  const lista =
+    (Array.isArray(corpo.erros) && (corpo.erros as Erro[])) ||
+    (Array.isArray(corpo.mensagens) && (corpo.mensagens as Erro[])) ||
+    (Array.isArray(corpo.Errors) && (corpo.Errors as Erro[])) ||
+    [];
+  const mensagens = lista
+    .map((e) =>
+      `${e.codigo ?? e.Codigo ?? e.code ?? ""} ${e.descricao ?? e.Descricao ?? e.mensagem ?? e.message ?? ""}`.trim(),
+    )
+    .filter(Boolean);
+  if (!mensagens.length) {
+    const raw = typeof corpo.message === "string" ? corpo.message : JSON.stringify(corpo);
+    mensagens.push(`HTTP ${status}: ${raw.slice(0, 800)}`);
+  }
+  return { autorizada: false, mensagens };
 }
 
 function baseUrl(ambiente: "homologacao" | "producao"): string {
