@@ -389,7 +389,8 @@ begin
   if n <> 0 then raise exception 'FALHA: assistente viu nfse_config (devia ser 0)'; end if;
   raise notice 'OK: assistente não acessa nfse nem config';
   perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
-  select count(*) into n from nfse;
-  if n <> 1 then raise exception 'FALHA: financeiro viu % nfse (devia ser 1)', n; end if;
+  -- Checa a nota de teste específica (robusto a dados reais que possam existir).
+  select count(*) into n from nfse where id = '22222222-0000-0000-0000-000000000001';
+  if n <> 1 then raise exception 'FALHA: financeiro não viu a nfse de teste (viu %)', n; end if;
   raise notice 'OK: financeiro vê nfse';
 end $$;
