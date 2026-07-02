@@ -54,3 +54,13 @@ export type LinhaRelatorio = {
   chave: string;
   motivo: string;
 };
+
+export type DadosCancelamento = {
+  chave: string;
+  nDFSe: string;
+  cnpj: string;
+  ambiente: "homologacao" | "producao";
+  cMotivo: "1" | "2" | "9";
+  xMotivo: string;
+};
+export type ResultadoEvento = { aceito: boolean; idEvento?: string; mensagens?: string[]; xml?: string };
