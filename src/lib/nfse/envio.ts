@@ -50,14 +50,17 @@ function baseUrl(ambiente: "homologacao" | "producao"): string {
 }
 
 // POST /nfse com mTLS (certificado de cliente = A1). node:https expõe pfx no request.
-export async function enviarDps(
-  xmlAssinado: string,
+// POST JSON com mTLS (certificado de cliente = A1) a um caminho da Sefin.
+// Reutilizado pela emissão (DPS) e pelo evento de cancelamento.
+export async function postJsonMtls(
+  caminho: string,
+  corpo: Record<string, unknown>,
   cert: { pfx: Buffer; senha: string },
   ambiente: "homologacao" | "producao",
-): Promise<ResultadoEmissao> {
-  const url = new URL(`${baseUrl(ambiente)}/nfse`);
-  const body = JSON.stringify({ dpsXmlGZipB64: montarCorpoDps(xmlAssinado) });
-  const corpo = await new Promise<{ status: number; json: Record<string, unknown> }>((resolve, reject) => {
+): Promise<{ status: number; json: Record<string, unknown> }> {
+  const url = new URL(`${baseUrl(ambiente)}${caminho}`);
+  const body = JSON.stringify(corpo);
+  return new Promise((resolve, reject) => {
     const req = httpsRequest(
       {
         method: "POST",
@@ -79,7 +82,7 @@ export async function enviarDps(
             json = txt ? (JSON.parse(txt) as Record<string, unknown>) : {};
           } catch {
             // Corpo não-JSON (ex.: página HTML de erro do IIS): preserva o texto
-            // para o parseResposta incluir junto do status (404 vs 403 etc.).
+            // para o parse incluir junto do status (404 vs 403 etc.).
             json = { corpoNaoJson: txt.replace(/\s+/g, " ").slice(0, 400) };
           }
           resolve({ status: res.statusCode ?? 0, json });
@@ -91,5 +94,18 @@ export async function enviarDps(
     req.write(body);
     req.end();
   });
-  return parseResposta(corpo.status, corpo.json);
+}
+
+export async function enviarDps(
+  xmlAssinado: string,
+  cert: { pfx: Buffer; senha: string },
+  ambiente: "homologacao" | "producao",
+): Promise<ResultadoEmissao> {
+  const { status, json } = await postJsonMtls(
+    "/nfse",
+    { dpsXmlGZipB64: montarCorpoDps(xmlAssinado) },
+    cert,
+    ambiente,
+  );
+  return parseResposta(status, json);
 }

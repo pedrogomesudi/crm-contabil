@@ -11,6 +11,7 @@ import { montarDps } from "@/lib/nfse/dps";
 import { assinarDps } from "@/lib/nfse/assinatura";
 import { enviarDps, ehErroTransitorio } from "@/lib/nfse/envio";
 import { baixarDanfsePdf } from "@/lib/nfse/danfse";
+import { montarEventoCancelamento, assinarEvento, enviarCancelamento } from "@/lib/nfse/cancelamento";
 import { classificarSituacao } from "@/lib/nfse/lote";
 import type { ConfigFiscal, Tomador, ResultadoCliente, ClienteLote } from "@/lib/nfse/tipos";
 
@@ -240,6 +241,85 @@ export async function listarElegiveisLote(competencia: string): Promise<ClienteL
     });
   }
   return lista;
+}
+
+// Cancela uma NFS-e autorizada enviando o evento de cancelamento à Sefin.
+export async function cancelarNfse(
+  nfseId: string,
+  cMotivo: "1" | "2" | "9",
+  justificativa: string,
+): Promise<{ erro?: string; ok?: boolean }> {
+  const perfil = await getPerfilAtual();
+  if (!perfil?.ativo || !podeVerHonorario(perfil.papel)) return { erro: "Sem permissão." };
+  if (!justificativa || justificativa.trim().length < 15)
+    return { erro: "Justificativa obrigatória (mín. 15 caracteres)." };
+
+  const supabase = await createServerSupabase();
+  const { data: nota } = await supabase
+    .from("nfse")
+    .select("id, cliente_id, chave_acesso, numero, nfse_xml, status, ambiente")
+    .eq("id", nfseId)
+    .maybeSingle();
+  if (!nota) return { erro: "Nota não encontrada." };
+  if (nota.status !== "autorizada") return { erro: "Só notas autorizadas podem ser canceladas." };
+  if (!nota.chave_acesso) return { erro: "Nota sem chave de acesso." };
+
+  const { data: cfg } = await supabase.from("nfse_config").select("cnpj").eq("id", 1).maybeSingle();
+  if (!cfg?.cnpj) return { erro: "Config fiscal ausente." };
+
+  // nDFSe: usa o número; se vazio, extrai o nNFSe do XML da nota.
+  let nDFSe = nota.numero ?? "";
+  if (!nDFSe && typeof nota.nfse_xml === "string") {
+    const m = /<nNFSe>(\d+)<\/nNFSe>/.exec(nota.nfse_xml);
+    if (m) nDFSe = m[1]!;
+  }
+
+  const ambiente: "homologacao" | "producao" = nota.ambiente === "producao" ? "producao" : "homologacao";
+  const chaveKey = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
+  const { data: certRow } = await createAdminSupabase()
+    .from("nfse_certificado")
+    .select("pfx_cifrado, senha_cifrada")
+    .eq("id", 1)
+    .maybeSingle();
+  if (!certRow) return { erro: "Certificado não cadastrado." };
+  let cert;
+  try {
+    const pfx = decifrar(certRow.pfx_cifrado, chaveKey);
+    const senha = decifrar(certRow.senha_cifrada, chaveKey).toString("utf8");
+    cert = carregarCertificado(pfx, senha);
+  } catch {
+    return { erro: "Falha ao abrir o certificado." };
+  }
+
+  const { xml, idEvento } = montarEventoCancelamento({
+    chave: nota.chave_acesso,
+    nDFSe,
+    cnpj: cfg.cnpj,
+    ambiente,
+    cMotivo,
+    xMotivo: justificativa.trim(),
+  });
+  const assinado = assinarEvento(xml, idEvento, cert);
+
+  let r;
+  try {
+    r = await enviarCancelamento(assinado, nota.chave_acesso, { pfx: cert.pfx, senha: cert.senha }, ambiente);
+  } catch (e) {
+    console.error("cancelarNfse:", e instanceof Error ? e.message : e);
+    return { erro: "Falha ao comunicar com a Sefin." };
+  }
+  if (!r.aceito) return { erro: `Cancelamento rejeitado: ${r.mensagens?.join("; ")}` };
+
+  await supabase
+    .from("nfse")
+    .update({
+      status: "cancelada",
+      cancelado_em: new Date().toISOString(),
+      cancelamento: { cMotivo, xMotivo: justificativa.trim(), idEvento: r.idEvento ?? null, xml: r.xml ?? null },
+    })
+    .eq("id", nfseId);
+  revalidatePath(`/clientes/${nota.cliente_id}`);
+  return { ok: true };
 }
 
 export async function emitirNfse(clienteId: string, _prev: EstadoNfse, formData: FormData): Promise<EstadoNfse> {

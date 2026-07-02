@@ -4,6 +4,7 @@ import { formatarData } from "@/lib/format";
 import type { Papel } from "@/lib/tipos";
 import { EmitirNfse } from "./EmitirNfse";
 import { BaixarNfse } from "./BaixarNfse";
+import { CancelarNfse } from "./CancelarNfse";
 
 const ROTULO_STATUS: Record<string, string> = {
   processando: "Processando",
@@ -82,7 +83,10 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
                   </td>
                   <td className="p-2">
                     {n.status === "autorizada" && n.chave_acesso && (
-                      <BaixarNfse nfseId={n.id} numero={n.numero ?? ""} chave={n.chave_acesso} />
+                      <div className="space-y-1">
+                        <BaixarNfse nfseId={n.id} numero={n.numero ?? ""} chave={n.chave_acesso} />
+                        <CancelarNfse nfseId={n.id} />
+                      </div>
                     )}
                   </td>
                 </tr>
