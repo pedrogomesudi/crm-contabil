@@ -10,6 +10,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
 
+## [5.2.0] — 2026-07-02
+
+### Adicionado
+
+- **Emissão de NFS-e em lote** (`/nfse/lote`): escolha a competência, veja o preview dos clientes
+  ativos com honorário (pré-marcados; já-emitidas e sem-CNPJ travadas), desmarque exceções e emita
+  **uma nota por vez** com **progresso ao vivo** (e botão **Parar**). Ao final, **relatório CSV** com
+  o que saiu, o que não saiu e o motivo. Reusa o motor de emissão da V5 (`emitirNfseCliente`); a
+  emissão da ficha passou a delegar para ele. Link "Emitir NFS-e em lote" na lista de clientes.
+- **Proteção contra CSV formula injection** no relatório.
+
 ## [5.1.1] — 2026-07-02
 
 ### Adicionado
