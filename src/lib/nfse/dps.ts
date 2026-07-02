@@ -5,10 +5,12 @@ function valor2(n: number): string {
   return n.toFixed(2);
 }
 
-// dhEmi no formato exigido pelo schema nacional: com offset -03:00 (Brasília,
-// sem horário de verão) e sem milissegundos — não o ".000Z" do toISOString().
+// dhEmi no formato exigido pelo schema nacional: offset -03:00 (Brasília, sem
+// horário de verão) e sem milissegundos. Recua 2 min ("margem") para absorver
+// desvio de relógio do servidor e evitar E0008 (dhEmi posterior ao processamento).
+const MARGEM_DHEMI_MS = 120_000;
 function dhEmiBrasilia(): string {
-  const bras = new Date(Date.now() - 3 * 3600 * 1000);
+  const bras = new Date(Date.now() - 3 * 3600 * 1000 - MARGEM_DHEMI_MS);
   return bras.toISOString().replace(/\.\d{3}Z$/, "-03:00");
 }
 
