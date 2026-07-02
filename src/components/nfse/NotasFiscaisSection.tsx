@@ -23,7 +23,7 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
     supabase.from("nfse_config").select("ambiente").eq("id", 1).maybeSingle(),
     supabase
       .from("nfse")
-      .select("id, competencia, status, numero, valor, chave_acesso, mensagens, ambiente")
+      .select("id, competencia, status, numero, valor, chave_acesso, mensagens, ambiente, avulsa")
       .eq("cliente_id", clienteId)
       .order("competencia", { ascending: false })
       .order("criado_em", { ascending: false })
@@ -67,6 +67,11 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
                     {n.ambiente === "homologacao" && (
                       <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
                         homologação
+                      </span>
+                    )}
+                    {n.avulsa && (
+                      <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-700">
+                        avulsa
                       </span>
                     )}
                     {n.status === "rejeitada" && Array.isArray(n.mensagens) && (
