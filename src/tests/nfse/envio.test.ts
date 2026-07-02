@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { gunzipSync } from "node:zlib";
-import { montarCorpoDps, parseResposta } from "@/lib/nfse/envio";
+import { montarCorpoDps, parseResposta, ehErroTransitorio } from "@/lib/nfse/envio";
 
 describe("montarCorpoDps", () => {
   it("comprime (gzip) e codifica (base64) o XML", () => {
@@ -31,5 +31,15 @@ describe("parseResposta", () => {
   it("lê o formato alternativo 'mensagens'", () => {
     const r = parseResposta(400, { mensagens: [{ codigo: "E123", descricao: "cTribNac inválido" }] });
     expect(r.mensagens?.[0]).toContain("cTribNac inválido");
+  });
+});
+
+describe("ehErroTransitorio", () => {
+  it("reconhece E0082 (instabilidade do cadastro CNPJ) como transitório", () => {
+    expect(ehErroTransitorio(["E0082 CNPJ do prestador não encontrado"])).toBe(true);
+  });
+  it("não trata erro de schema como transitório", () => {
+    expect(ehErroTransitorio(["E1235 Falha no esquema XML"])).toBe(false);
+    expect(ehErroTransitorio(undefined)).toBe(false);
   });
 });
