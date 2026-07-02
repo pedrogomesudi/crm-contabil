@@ -12,7 +12,8 @@ function dhBrasilia(): string {
 // O conjunto exato de campos é validado na homologação (isolado aqui).
 export function montarEventoCancelamento(d: DadosCancelamento): { xml: string; idEvento: string } {
   const tpAmb = d.ambiente === "producao" ? "1" : "2";
-  const idEvento = "PRE" + d.chave + "01"; // pedido de registro de evento; nº do pedido = 01
+  // Id = "EVT" + chNFSe(50) + tipoEvento(6) + nSeqEvento(3). Cancelamento = 101101.
+  const idEvento = "EVT" + d.chave + "101101" + "001";
   const doc = create({ version: "1.0", encoding: "UTF-8" }).ele("pedRegEvento", {
     xmlns: "http://www.sped.fazenda.gov.br/nfse",
     versao: "1.00",
@@ -40,15 +41,18 @@ export function parseRespostaEvento(status: number, corpo: Record<string, unknow
   if (status >= 200 && status < 300 && ret.cStat && /^1\d\d$/.test(ret.cStat)) {
     return { aceito: true, idEvento: ret.idEvento, mensagens: ret.xMotivo ? [ret.xMotivo] : undefined };
   }
-  // Erros em formatos conhecidos; por fim, o corpo cru para diagnóstico.
-  type Erro = { codigo?: string; Codigo?: string; descricao?: string; Descricao?: string; mensagem?: string };
+  // Erros em formatos conhecidos (a Sefin usa `erro` singular); por fim, o corpo cru.
+  type Erro = { codigo?: string; Codigo?: string; descricao?: string; Descricao?: string; mensagem?: string; complemento?: string };
   const lista =
+    (Array.isArray(corpo.erro) && (corpo.erro as Erro[])) ||
     (Array.isArray(corpo.erros) && (corpo.erros as Erro[])) ||
     (Array.isArray(corpo.mensagens) && (corpo.mensagens as Erro[])) ||
     (Array.isArray(corpo.Errors) && (corpo.Errors as Erro[])) ||
     [];
   const mensagens = lista
-    .map((x) => `${x.codigo ?? x.Codigo ?? ""} ${x.descricao ?? x.Descricao ?? x.mensagem ?? ""}`.trim())
+    .map((x) =>
+      `${x.codigo ?? x.Codigo ?? ""} ${x.descricao ?? x.Descricao ?? x.mensagem ?? ""} ${x.complemento ?? ""}`.trim(),
+    )
     .filter(Boolean);
   if (!mensagens.length) {
     if (ret.xMotivo) mensagens.push(`${ret.cStat ?? status} ${ret.xMotivo}`);
