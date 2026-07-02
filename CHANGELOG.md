@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
 
+## [5.1.1] — 2026-07-02
+
+### Adicionado
+
+- **Selo de ambiente** nas notas: NFS-e emitidas em **homologação** exibem um selo "homologação" na
+  lista, para não se confundirem com as de produção (validade jurídica).
+
 ## [5.1.0] — 2026-07-02
 
 ### Adicionado
