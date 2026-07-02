@@ -1,0 +1,65 @@
+"use server";
+import { revalidatePath } from "next/cache";
+import { getPerfilAtual } from "@/lib/auth/perfil";
+import { createServerSupabase } from "@/lib/supabase/server";
+import { required } from "@/lib/env";
+import { cifrar } from "@/lib/nfse/cripto";
+import { carregarCertificado } from "@/lib/nfse/certificado";
+
+export type EstadoConfig = { erro?: string; ok?: boolean };
+
+async function exigirAdmin() {
+  const perfil = await getPerfilAtual();
+  if (!perfil || !perfil.ativo || perfil.papel !== "admin") return null;
+  return perfil;
+}
+
+export async function salvarConfig(_prev: EstadoConfig, formData: FormData): Promise<EstadoConfig> {
+  if (!(await exigirAdmin())) return { erro: "Apenas admin." };
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("nfse_config").upsert({
+    id: 1,
+    cnpj: String(formData.get("cnpj") ?? "").replace(/\D/g, ""),
+    inscricao_municipal: String(formData.get("im") ?? "").trim(),
+    razao_social: String(formData.get("razao_social") ?? "").trim(),
+    codigo_municipio: String(formData.get("codigo_municipio") ?? "").trim(),
+    uf: String(formData.get("uf") ?? "").trim(),
+    item_lc116: String(formData.get("item_lc116") ?? "").trim(),
+    codigo_tributacao_municipal: String(formData.get("codigo_trib") ?? "").trim(),
+    aliquota_iss: Number(formData.get("aliquota_iss") ?? 0),
+    natureza_operacao: String(formData.get("natureza") ?? "1").trim(),
+    simples_nacional: formData.get("simples") === "on",
+    ambiente: String(formData.get("ambiente") ?? "homologacao"),
+    atualizado_em: new Date().toISOString(),
+  });
+  if (error) return { erro: "Falha ao salvar a configuração." };
+  revalidatePath("/configuracoes/nfse");
+  return { ok: true };
+}
+
+export async function salvarCertificado(_prev: EstadoConfig, formData: FormData): Promise<EstadoConfig> {
+  if (!(await exigirAdmin())) return { erro: "Apenas admin." };
+  const arquivo = formData.get("pfx") as File | null;
+  const senha = String(formData.get("senha") ?? "");
+  if (!arquivo || arquivo.size === 0 || !senha) return { erro: "Envie o .pfx e a senha." };
+  const pfx = Buffer.from(await arquivo.arrayBuffer());
+  let validade: Date;
+  try {
+    validade = carregarCertificado(pfx, senha).validade; // valida senha + extrai validade
+  } catch {
+    return { erro: "Certificado ou senha inválidos." };
+  }
+  const chave = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("nfse_certificado").upsert({
+    id: 1,
+    nome_arquivo: arquivo.name,
+    pfx_cifrado: cifrar(pfx, chave),
+    senha_cifrada: cifrar(Buffer.from(senha, "utf8"), chave),
+    validade: validade.toISOString(),
+    atualizado_em: new Date().toISOString(),
+  });
+  if (error) return { erro: "Falha ao salvar o certificado." };
+  revalidatePath("/configuracoes/nfse");
+  return { ok: true };
+}

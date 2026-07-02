@@ -1,0 +1,103 @@
+"use client";
+import { useActionState } from "react";
+import { salvarConfig, salvarCertificado, type EstadoConfig } from "./actions";
+
+const inputCls = "w-full rounded border border-slate-300 px-2 py-1";
+
+export function FormConfig({ inicial }: { inicial: Record<string, string | boolean> }) {
+  const [estado, action, pend] = useActionState<EstadoConfig, FormData>(salvarConfig, {});
+  return (
+    <form action={action} className="space-y-2 text-sm">
+      <div className="grid grid-cols-2 gap-2">
+        <label className="block">
+          CNPJ
+          <input name="cnpj" defaultValue={String(inicial.cnpj)} required className={inputCls} />
+        </label>
+        <label className="block">
+          Inscrição municipal
+          <input name="im" defaultValue={String(inicial.im)} required className={inputCls} />
+        </label>
+        <label className="col-span-2 block">
+          Razão social
+          <input name="razao_social" defaultValue={String(inicial.razao_social)} required className={inputCls} />
+        </label>
+        <label className="block">
+          Código do município (IBGE)
+          <input name="codigo_municipio" defaultValue={String(inicial.codigo_municipio)} required className={inputCls} />
+        </label>
+        <label className="block">
+          UF
+          <input name="uf" defaultValue={String(inicial.uf)} required className={inputCls} />
+        </label>
+        <label className="block">
+          Item LC 116
+          <input name="item_lc116" defaultValue={String(inicial.item_lc116)} required className={inputCls} />
+        </label>
+        <label className="block">
+          Código tributação municipal
+          <input name="codigo_trib" defaultValue={String(inicial.codigo_trib)} required className={inputCls} />
+        </label>
+        <label className="block">
+          Alíquota ISS (%)
+          <input
+            name="aliquota_iss"
+            type="number"
+            step="0.01"
+            defaultValue={String(inicial.aliquota_iss)}
+            required
+            className={inputCls}
+          />
+        </label>
+        <label className="block">
+          Natureza da operação
+          <input name="natureza" defaultValue={String(inicial.natureza)} required className={inputCls} />
+        </label>
+        <label className="block">
+          Ambiente
+          <select name="ambiente" defaultValue={String(inicial.ambiente)} className={inputCls}>
+            <option value="homologacao">Homologação (produção restrita)</option>
+            <option value="producao">Produção</option>
+          </select>
+        </label>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" name="simples" defaultChecked={Boolean(inicial.simples)} />
+          Optante do Simples Nacional
+        </label>
+      </div>
+      {estado.erro && (
+        <p role="alert" className="text-red-600">
+          {estado.erro}
+        </p>
+      )}
+      {estado.ok && <p className="text-green-700">Configuração salva ✓</p>}
+      <button disabled={pend} className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-60">
+        {pend ? "Salvando..." : "Salvar configuração"}
+      </button>
+    </form>
+  );
+}
+
+export function FormCertificado() {
+  const [estado, action, pend] = useActionState<EstadoConfig, FormData>(salvarCertificado, {});
+  return (
+    <form action={action} className="space-y-2 text-sm">
+      <label className="block">
+        Arquivo .pfx / .p12
+        <input name="pfx" type="file" accept=".pfx,.p12" required className={inputCls} />
+      </label>
+      <label className="block">
+        Senha do certificado
+        <input name="senha" type="password" required className={inputCls} />
+      </label>
+      {estado.erro && (
+        <p role="alert" className="text-red-600">
+          {estado.erro}
+        </p>
+      )}
+      {estado.ok && <p className="text-green-700">Certificado salvo ✓</p>}
+      <button disabled={pend} className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-60">
+        {pend ? "Enviando..." : "Salvar certificado"}
+      </button>
+    </form>
+  );
+}

@@ -6,6 +6,7 @@ import { podeAtribuirContador, podeVerHonorario } from "@/lib/clientes/permissoe
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
+import { NotasFiscaisSection } from "@/components/nfse/NotasFiscaisSection";
 import { GerarContrato } from "@/components/contrato/GerarContrato";
 import { atualizarCliente } from "../actions";
 
@@ -72,6 +73,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         clienteNome={cliente.responsavel_nome ?? cliente.razao_social}
         clienteEmail={cliente.email ?? ""}
       />
+      <NotasFiscaisSection clienteId={id} papel={papel} />
     </div>
   );
 }

@@ -372,3 +372,24 @@ begin
   if n <> 0 then raise exception 'FALHA: financeiro viu % assinaturas (devia ser 0)', n; end if;
   raise notice 'OK: financeiro não acessa assinaturas';
 end $$;
+
+-- ===== V5: NFS-e segue a RLS financeira; config/cert são só admin =====
+reset role;
+insert into nfse (id, cliente_id, valor, competencia, status, ambiente) values
+  ('22222222-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 100, '2026-07-01', 'autorizada', 'homologacao')
+  on conflict do nothing;
+
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  select count(*) into n from nfse;
+  if n <> 0 then raise exception 'FALHA: assistente viu % nfse (devia ser 0)', n; end if;
+  select count(*) into n from nfse_config;
+  if n <> 0 then raise exception 'FALHA: assistente viu nfse_config (devia ser 0)'; end if;
+  raise notice 'OK: assistente não acessa nfse nem config';
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  select count(*) into n from nfse;
+  if n <> 1 then raise exception 'FALHA: financeiro viu % nfse (devia ser 1)', n; end if;
+  raise notice 'OK: financeiro vê nfse';
+end $$;
