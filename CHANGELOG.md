@@ -10,6 +10,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
 
+## [5.0.4] — 2026-07-02
+
+### Corrigido
+
+- **DPS (schema E1235):** `dhEmi` no formato exigido (`-03:00`, sem milissegundos) e inclusão do
+  bloco de endereço do tomador (`toma > end`), alinhando ao XSD nacional (nota real).
+
+## [5.0.3] — 2026-07-02
+
+### Corrigido
+
+- **Diagnóstico de rejeição:** o parser passa a capturar o corpo cru da resposta da Sefin (e formatos
+  de erro alternativos), para expor o motivo real da recusa em vez de só "HTTP 400".
+
 ## [5.0.2] — 2026-07-02
 
 ### Corrigido

@@ -16,7 +16,11 @@ const dados: DadosDps = {
     simplesNacional: true,
     ambiente: "homologacao",
   },
-  tomador: { documento: "98765432000188", razaoSocial: "CLIENTE LTDA", endereco: { cep: "38400000" } },
+  tomador: {
+    documento: "98765432000188",
+    razaoSocial: "CLIENTE LTDA",
+    endereco: { cep: "38400-000", logradouro: "RUA X", numero: "10", bairro: "CENTRO" },
+  },
   valor: 500,
   competencia: "2026-07-01",
   serie: "1",
@@ -47,6 +51,19 @@ describe("montarDps", () => {
     expect(xml).toContain("<opSimpNac>1</opSimpNac>");
     expect(xml).toContain("<pAliq>2.00</pAliq>");
     expect(xml).not.toContain("<pTotTribSN>");
+  });
+
+  it("formata dhEmi com offset -03:00 e sem milissegundos", () => {
+    const { xml } = montarDps(dados);
+    expect(xml).toMatch(/<dhEmi>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}-03:00<\/dhEmi>/);
+    expect(xml).not.toContain(".000");
+  });
+
+  it("inclui o endereço do tomador (end) com CEP só dígitos", () => {
+    const { xml } = montarDps(dados);
+    expect(xml).toContain("<end>");
+    expect(xml).toContain("<CEP>38400000</CEP>");
+    expect(xml).toContain("<xLgr>RUA X</xLgr>");
   });
 
   it("usa tpAmb=1 em produção", () => {
