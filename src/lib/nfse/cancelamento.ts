@@ -12,8 +12,9 @@ function dhBrasilia(): string {
 // O conjunto exato de campos é validado na homologação (isolado aqui).
 export function montarEventoCancelamento(d: DadosCancelamento): { xml: string; idEvento: string } {
   const tpAmb = d.ambiente === "producao" ? "1" : "2";
-  // Id = "EVT" + chNFSe(50) + tipoEvento(6) + nSeqEvento(3). Cancelamento = 101101.
-  const idEvento = "EVT" + d.chave + "101101" + "001";
+  // Id do pedido de registro de evento (TSIdPedRegEvt):
+  // "PRE" + chNFSe(50) + tipoEvento(6) + nSeqEvento(3). Cancelamento = 101101.
+  const idEvento = "PRE" + d.chave + "101101" + "001";
   const doc = create({ version: "1.0", encoding: "UTF-8" }).ele("pedRegEvento", {
     xmlns: "http://www.sped.fazenda.gov.br/nfse",
     versao: "1.00",
