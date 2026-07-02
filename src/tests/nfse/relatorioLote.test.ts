@@ -34,4 +34,15 @@ describe("montarCsv", () => {
     expect(linhasCsv[2]).toContain('"BETA, ""X"" S.A."');
     expect(linhasCsv[2]).toContain("E1235 falha no schema");
   });
+
+  it("neutraliza fórmula (CSV injection) prefixando com aspa simples", () => {
+    const csv = montarCsv([
+      { cliente: "=1+1", documento: "x", competencia: "2026-07-01", valor: 0, resultado: "@SUM(A1)", numero: "", chave: "", motivo: "-2+3" },
+    ]);
+    const l = csv.trim().split("\n")[1]!;
+    expect(l).toContain("'=1+1");
+    expect(l).toContain("'@SUM(A1)");
+    expect(l).toContain("'-2+3");
+    expect(l).not.toMatch(/(^|,)=1\+1/);
+  });
 });

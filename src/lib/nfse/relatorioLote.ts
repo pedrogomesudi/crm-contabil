@@ -11,10 +11,15 @@ const CABECALHO = [
   "Motivo",
 ];
 
+// Gatilhos de fórmula (Excel/Sheets): valor começando com estes executaria fórmula.
+const FORMULA = /^[=+\-@\t\r]/;
+
 function campo(v: string): string {
+  let s = v;
+  if (FORMULA.test(s)) s = "'" + s; // neutraliza a fórmula (CSV injection)
   // Escapa se contiver vírgula, aspas ou quebra de linha (RFC 4180).
-  if (/[",\n\r]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
-  return v;
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
 }
 
 export function montarCsv(linhas: LinhaRelatorio[]): string {
