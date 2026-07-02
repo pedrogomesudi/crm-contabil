@@ -26,7 +26,6 @@ export function montarEventoCancelamento(d: DadosCancelamento): { xml: string; i
   inf.ele("dhEvento").txt(dhBrasilia());
   inf.ele("CNPJAutor").txt(d.cnpj);
   inf.ele("chNFSe").txt(d.chave);
-  inf.ele("nPedRegEvento").txt("1");
   const e = inf.ele("e101101");
   e.ele("descEvento").txt("Cancelamento de NFS-e");
   e.ele("cMotivo").txt(d.cMotivo);
