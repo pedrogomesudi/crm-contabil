@@ -13,7 +13,7 @@ Legenda: ✅ concluída · 🚧 em andamento · ⬜ planejada
 | **V2** | Integração com o Domínio Sistemas | ✅ |
 | **V3** | Geração automática do contrato (Word/PDF) | ✅ |
 | **V4** | Assinaturas digitais integradas | ✅ |
-| **V5** | Emissão de NFS-e pelo CRM | ⬜ |
+| **V5** | Emissão de NFS-e pelo CRM (A: honorários) | ✅ |
 | **V6** | Layout e estética | ⬜ |
 | **V7** | Modo whitelabel (comercialização) | ⬜ |
 | **V8** | Segurança da informação e legalidade técnica | ⬜ |
