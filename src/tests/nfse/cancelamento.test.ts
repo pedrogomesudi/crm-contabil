@@ -12,9 +12,11 @@ const d: DadosCancelamento = {
 };
 
 describe("montarEventoCancelamento", () => {
-  it("monta o evento com Id, chNFSe, cMotivo, xMotivo e tpAmb de homologação", () => {
+  it("monta o evento com Id EVT+chave+tipo+seq, chNFSe, cMotivo, xMotivo e tpAmb de homologação", () => {
     const { xml, idEvento } = montarEventoCancelamento(d);
-    expect(idEvento).toMatch(/^PRE/);
+    // EVT + chave(50) + 101101(6) + 001(3) = 3 + 59
+    expect(idEvento).toBe(`EVT${d.chave}101101001`);
+    expect(idEvento).toHaveLength(3 + 50 + 6 + 3);
     expect(xml).toContain(`Id="${idEvento}"`);
     expect(xml).toContain("<tpAmb>2</tpAmb>");
     expect(xml).toContain(`<chNFSe>${d.chave}</chNFSe>`);
@@ -31,10 +33,13 @@ describe("parseRespostaEvento", () => {
     expect(r.aceito).toBe(true);
     expect(r.idEvento).toBe("ID1");
   });
-  it("interpreta rejeição", () => {
-    const r = parseRespostaEvento(400, { erros: [{ codigo: "E0840", descricao: "Fora do prazo" }] });
+  it("interpreta rejeição no campo 'erro' (singular) com complemento", () => {
+    const r = parseRespostaEvento(400, {
+      erro: [{ codigo: "E1235", descricao: "Falha no esquema XML", complemento: "The 'Id' attribute is invalid" }],
+    });
     expect(r.aceito).toBe(false);
-    expect(r.mensagens?.[0]).toContain("Fora do prazo");
+    expect(r.mensagens?.[0]).toContain("E1235");
+    expect(r.mensagens?.[0]).toContain("Id");
   });
   it("inclui o corpo cru quando não há erro estruturado", () => {
     const r = parseRespostaEvento(400, { detalhe: "coisa estranha" });
