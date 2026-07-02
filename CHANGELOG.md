@@ -10,6 +10,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
 
+## [5.0.2] — 2026-07-02
+
+### Corrigido
+
+- **Emissão de NFS-e:** a action lia colunas inexistentes (`cnpj`/`cpf`) — o documento do tomador
+  vem de `clientes.cpf_cnpj`. Isso causava "Cliente não encontrado". Erros de query passam a ser
+  logados em vez de virar a mesma mensagem.
+
 ## [5.0.1] — 2026-07-02
 
 ### Corrigido
