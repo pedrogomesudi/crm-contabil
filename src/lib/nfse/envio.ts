@@ -71,7 +71,9 @@ export async function enviarDps(
           try {
             json = txt ? (JSON.parse(txt) as Record<string, unknown>) : {};
           } catch {
-            json = { erros: [{ descricao: txt.slice(0, 200) }] };
+            // Corpo não-JSON (ex.: página HTML de erro do IIS): preserva o texto
+            // para o parseResposta incluir junto do status (404 vs 403 etc.).
+            json = { corpoNaoJson: txt.replace(/\s+/g, " ").slice(0, 400) };
           }
           resolve({ status: res.statusCode ?? 0, json });
         });
