@@ -15,6 +15,7 @@ import { classificarSituacao } from "@/lib/nfse/lote";
 import type { ConfigFiscal, Tomador, ResultadoCliente, ClienteLote } from "@/lib/nfse/tipos";
 
 export type EstadoNfse = { erro?: string; ok?: boolean };
+export type OpcoesEmissao = { valor?: number; descricao?: string; avulsa?: boolean };
 
 // Retorna o XML autorizado (ou a DPS, se ainda não houver) para download.
 export async function baixarXmlNfse(nfseId: string): Promise<{ erro?: string; conteudo?: string }> {
@@ -65,7 +66,11 @@ export async function baixarDanfseNfse(nfseId: string): Promise<{ erro?: string;
 
 // Emite a NFS-e de um cliente numa competência. Retorno estruturado, usado tanto
 // pela ficha (via emitirNfse) quanto pela emissão em lote.
-export async function emitirNfseCliente(clienteId: string, competencia: string): Promise<ResultadoCliente> {
+export async function emitirNfseCliente(
+  clienteId: string,
+  competencia: string,
+  opcoes?: OpcoesEmissao,
+): Promise<ResultadoCliente> {
   const perfil = await getPerfilAtual();
   if (!perfil?.ativo || !podeVerHonorario(perfil.papel)) return { status: "erro", motivo: "Sem permissão." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(competencia)) return { status: "erro", motivo: "Competência inválida." };
@@ -92,18 +97,24 @@ export async function emitirNfseCliente(clienteId: string, competencia: string):
     .eq("cliente_id", clienteId)
     .maybeSingle();
   const honorario = Number(fin?.honorario_mensal ?? 0);
-  if (!honorario || honorario <= 0) return { status: "pulada", motivo: "Sem honorário." };
+  const avulsa = opcoes?.avulsa ?? false;
+  const valor = opcoes?.valor && opcoes.valor > 0 ? opcoes.valor : honorario;
+  if (!valor || valor <= 0) return { status: "pulada", motivo: "Sem valor/honorário." };
 
   const ambiente: "homologacao" | "producao" = cfg.ambiente === "producao" ? "producao" : "homologacao";
-  const { data: existente } = await supabase
-    .from("nfse")
-    .select("id")
-    .eq("cliente_id", clienteId)
-    .eq("competencia", competencia)
-    .eq("status", "autorizada")
-    .eq("ambiente", ambiente)
-    .maybeSingle();
-  if (existente) return { status: "pulada", motivo: "Já emitida nesta competência." };
+  if (!avulsa) {
+    // Trava só na recorrente: uma avulsa (serviço extra) não bloqueia.
+    const { data: existente } = await supabase
+      .from("nfse")
+      .select("id")
+      .eq("cliente_id", clienteId)
+      .eq("competencia", competencia)
+      .eq("status", "autorizada")
+      .eq("ambiente", ambiente)
+      .eq("avulsa", false)
+      .maybeSingle();
+    if (existente) return { status: "pulada", motivo: "Já emitida nesta competência." };
+  }
 
   const chaveKey = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
   let cert;
@@ -123,7 +134,7 @@ export async function emitirNfseCliente(clienteId: string, competencia: string):
     codigoMunicipio: cfg.codigo_municipio,
     uf: cfg.uf,
     codigoServicoNacional: cfg.codigo_servico_nacional,
-    descricaoServico: cfg.descricao_servico ?? "Honorarios",
+    descricaoServico: opcoes?.descricao?.trim() || cfg.descricao_servico || "Honorarios",
     aliquotaIss: Number(cfg.aliquota_iss),
     pctTribSN: Number(cfg.pct_trib_sn ?? 0),
     simplesNacional: cfg.simples_nacional,
@@ -139,7 +150,7 @@ export async function emitirNfseCliente(clienteId: string, competencia: string):
   // Número da DPS por sequência dedicada (monotônico, sem reuso — evita E0014).
   const { data: ndps } = await supabase.rpc("proximo_ndps");
   const numeroDps = String(ndps ?? Date.now());
-  const { xml, idDps } = montarDps({ config, tomador, valor: honorario, competencia, serie: "1", numeroDps });
+  const { xml, idDps } = montarDps({ config, tomador, valor, competencia, serie: "1", numeroDps });
   const assinado = assinarDps(xml, idDps, cert);
 
   let resultado;
@@ -154,11 +165,12 @@ export async function emitirNfseCliente(clienteId: string, competencia: string):
     console.error("emitirNfseCliente:", e instanceof Error ? e.message : e);
     await supabase.from("nfse").insert({
       cliente_id: clienteId,
-      valor: honorario,
+      valor,
       competencia,
       status: "erro",
       dps_xml: assinado,
       ambiente,
+      avulsa,
       mensagens: [{ descricao: "Falha de comunicação" }],
     });
     return { status: "erro", motivo: "Falha de comunicação com a Sefin." };
@@ -166,7 +178,7 @@ export async function emitirNfseCliente(clienteId: string, competencia: string):
 
   await supabase.from("nfse").insert({
     cliente_id: clienteId,
-    valor: honorario,
+    valor,
     competencia,
     status: resultado.autorizada ? "autorizada" : "rejeitada",
     chave_acesso: resultado.chaveAcesso ?? null,
@@ -175,6 +187,7 @@ export async function emitirNfseCliente(clienteId: string, competencia: string):
     nfse_xml: resultado.xmlNfse ?? null,
     mensagens: resultado.mensagens ? resultado.mensagens.map((m) => ({ descricao: m })) : null,
     ambiente,
+    avulsa,
     autorizada_em: resultado.autorizada ? new Date().toISOString() : null,
   });
   return resultado.autorizada
@@ -231,7 +244,13 @@ export async function listarElegiveisLote(competencia: string): Promise<ClienteL
 export async function emitirNfse(clienteId: string, _prev: EstadoNfse, formData: FormData): Promise<EstadoNfse> {
   const competencia = String(formData.get("competencia") ?? "");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(competencia)) return { erro: "Informe a competência." };
-  const r = await emitirNfseCliente(clienteId, competencia);
+  const valorRaw = Number(formData.get("valor") ?? 0);
+  const descricao = String(formData.get("descricao") ?? "").trim();
+  const r = await emitirNfseCliente(clienteId, competencia, {
+    valor: valorRaw > 0 ? valorRaw : undefined,
+    descricao: descricao || undefined,
+    avulsa: formData.get("avulsa") === "on",
+  });
   revalidatePath(`/clientes/${clienteId}`);
   if (r.status === "autorizada") return { ok: true };
   return { erro: r.motivo ?? "Não foi possível emitir." };
