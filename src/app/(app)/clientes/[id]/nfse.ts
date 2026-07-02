@@ -136,8 +136,9 @@ export async function emitirNfseCliente(clienteId: string, competencia: string):
     endereco: (cliente.endereco as Record<string, string> | null) ?? undefined,
   };
 
-  const { count } = await supabase.from("nfse").select("id", { count: "exact", head: true });
-  const numeroDps = String((count ?? 0) + 1);
+  // Número da DPS por sequência dedicada (monotônico, sem reuso — evita E0014).
+  const { data: ndps } = await supabase.rpc("proximo_ndps");
+  const numeroDps = String(ndps ?? Date.now());
   const { xml, idDps } = montarDps({ config, tomador, valor: honorario, competencia, serie: "1", numeroDps });
   const assinado = assinarDps(xml, idDps, cert);
 
