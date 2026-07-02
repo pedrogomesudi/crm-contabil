@@ -10,6 +10,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
 
+## [5.2.2] — 2026-07-02
+
+### Corrigido
+
+- **Numeração da DPS (E0014):** o `nDPS` passa a vir de uma **sequência dedicada** (`nfse_dps_seq`,
+  migration 0021) em vez da contagem de linhas — monotônico e **sem reuso** mesmo após exclusão de
+  notas. Antes, apagar notas fazia a contagem cair e reusar números de DPS já enviados, causando
+  "E0014 … já existe em uma NFS-e gerada a partir de uma DPS enviada anteriormente".
+
 ## [5.2.1] — 2026-07-02
 
 ### Adicionado
