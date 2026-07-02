@@ -40,9 +40,20 @@ export function parseRespostaEvento(status: number, corpo: Record<string, unknow
   if (status >= 200 && status < 300 && ret.cStat && /^1\d\d$/.test(ret.cStat)) {
     return { aceito: true, idEvento: ret.idEvento, mensagens: ret.xMotivo ? [ret.xMotivo] : undefined };
   }
-  const lista = (Array.isArray(corpo.erros) && (corpo.erros as { codigo?: string; descricao?: string }[])) || [];
-  const mensagens = lista.map((x) => `${x.codigo ?? ""} ${x.descricao ?? ""}`.trim()).filter(Boolean);
-  if (!mensagens.length) mensagens.push(ret.xMotivo ? `${ret.cStat ?? status} ${ret.xMotivo}` : `HTTP ${status}`);
+  // Erros em formatos conhecidos; por fim, o corpo cru para diagnóstico.
+  type Erro = { codigo?: string; Codigo?: string; descricao?: string; Descricao?: string; mensagem?: string };
+  const lista =
+    (Array.isArray(corpo.erros) && (corpo.erros as Erro[])) ||
+    (Array.isArray(corpo.mensagens) && (corpo.mensagens as Erro[])) ||
+    (Array.isArray(corpo.Errors) && (corpo.Errors as Erro[])) ||
+    [];
+  const mensagens = lista
+    .map((x) => `${x.codigo ?? x.Codigo ?? ""} ${x.descricao ?? x.Descricao ?? x.mensagem ?? ""}`.trim())
+    .filter(Boolean);
+  if (!mensagens.length) {
+    if (ret.xMotivo) mensagens.push(`${ret.cStat ?? status} ${ret.xMotivo}`);
+    else mensagens.push(`HTTP ${status}: ${JSON.stringify(corpo).slice(0, 600)}`);
+  }
   return { aceito: false, mensagens };
 }
 

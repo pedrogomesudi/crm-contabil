@@ -36,4 +36,10 @@ describe("parseRespostaEvento", () => {
     expect(r.aceito).toBe(false);
     expect(r.mensagens?.[0]).toContain("Fora do prazo");
   });
+  it("inclui o corpo cru quando não há erro estruturado", () => {
+    const r = parseRespostaEvento(400, { detalhe: "coisa estranha" });
+    expect(r.aceito).toBe(false);
+    expect(r.mensagens?.[0]).toContain("400");
+    expect(r.mensagens?.[0]).toContain("coisa estranha");
+  });
 });
