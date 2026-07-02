@@ -17,7 +17,7 @@ export function CancelarNfse({ nfseId }: { nfseId: string }) {
     );
 
   return (
-    <div className="mt-1 space-y-1 rounded border border-slate-200 p-2 text-xs">
+    <div className="mt-1 w-64 space-y-1 rounded border border-slate-200 p-2 text-xs">
       <select
         value={motivo}
         onChange={(e) => setMotivo(e.target.value as "1" | "2" | "9")}

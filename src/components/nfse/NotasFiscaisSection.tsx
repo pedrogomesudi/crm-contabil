@@ -35,7 +35,7 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
   const ambiente = cfg?.ambiente ?? "homologacao";
 
   return (
-    <section className="max-w-2xl space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+    <section className="max-w-4xl space-y-3 rounded-lg border border-slate-200 bg-white p-4">
       <h2 className="text-sm font-semibold text-slate-900">Notas fiscais (NFS-e)</h2>
 
       {honorario > 0 ? (
@@ -45,7 +45,7 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
       )}
 
       {notas && notas.length > 0 ? (
-        <div className="overflow-hidden rounded border border-slate-200">
+        <div className="overflow-x-auto rounded border border-slate-200">
           <table className="w-full text-sm">
             <caption className="sr-only">Notas fiscais do cliente</caption>
             <thead className="bg-slate-100 text-left text-slate-700">
