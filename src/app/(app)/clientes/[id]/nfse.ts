@@ -48,13 +48,17 @@ export async function emitirNfse(clienteId: string, _prev: EstadoNfse, formData:
   const honorario = Number(fin?.honorario_mensal ?? 0);
   if (!honorario || honorario <= 0) return { erro: "Cliente sem honorário definido." };
 
-  // Anti-duplicidade: já há nota autorizada nesta competência?
+  const ambiente: "homologacao" | "producao" = cfg.ambiente === "producao" ? "producao" : "homologacao";
+
+  // Anti-duplicidade: já há nota autorizada nesta competência NO MESMO AMBIENTE?
+  // (uma nota de homologação não bloqueia uma de produção, e vice-versa.)
   const { data: existente } = await supabase
     .from("nfse")
     .select("id")
     .eq("cliente_id", clienteId)
     .eq("competencia", competencia)
     .eq("status", "autorizada")
+    .eq("ambiente", ambiente)
     .maybeSingle();
   if (existente) return { erro: "Já existe NFS-e autorizada para este cliente nesta competência." };
 
@@ -69,7 +73,6 @@ export async function emitirNfse(clienteId: string, _prev: EstadoNfse, formData:
   }
   if (cert.validade.getTime() < Date.now()) return { erro: "Certificado expirado." };
 
-  const ambiente: "homologacao" | "producao" = cfg.ambiente === "producao" ? "producao" : "homologacao";
   const config: ConfigFiscal = {
     cnpj: cfg.cnpj,
     inscricaoMunicipal: cfg.inscricao_municipal,

@@ -10,6 +10,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
 
+## [5.0.5] — 2026-07-02
+
+### Corrigido
+
+- **Anti-duplicidade por ambiente:** uma NFS-e de **homologação** não bloqueia mais a emissão em
+  **produção** (e vice-versa) para o mesmo cliente/competência — a checagem passou a filtrar por
+  `ambiente`.
+
 ## [5.0.4] — 2026-07-02
 
 ### Corrigido
