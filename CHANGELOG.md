@@ -10,6 +10,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
 
+## [5.0.1] — 2026-07-02
+
+### Corrigido
+
+Ajuste da DPS e da assinatura ao layout **real** (a partir de uma NFS-e autorizada da Elevare):
+
+- **Assinatura:** canonicalização **C14N padrão** (`REC-xml-c14n-20010315`), não exclusive-c14n.
+- **DPS:** regime do Simples Nacional correto (`opSimpNac=3` + `regApTribSN` + `regEspTrib`); serviço
+  por **`cTribNac`** (código nacional de 6 dígitos) + `xDescServ`; Simples sem `pAliq`, usando
+  `tpRetISSQN` + `pTotTribSN`.
+- **Config:** campos `codigo_servico_nacional`, `descricao_servico`, `pct_trib_sn` (migration 0020);
+  tela e emissão ajustadas.
+
 ## [5.0.0] — 2026-07-02
 
 Emissão de **NFS-e dos honorários do escritório** pelo padrão nacional (V5-A do roadmap), integrando

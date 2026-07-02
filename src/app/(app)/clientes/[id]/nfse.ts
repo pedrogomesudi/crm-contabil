@@ -22,7 +22,8 @@ export async function emitirNfse(clienteId: string, _prev: EstadoNfse, formData:
 
   const supabase = await createServerSupabase();
   const { data: cfg } = await supabase.from("nfse_config").select("*").eq("id", 1).maybeSingle();
-  if (!cfg || !cfg.cnpj || !cfg.item_lc116) return { erro: "Configure os dados fiscais em Configurações → NFS-e." };
+  if (!cfg || !cfg.cnpj || !cfg.codigo_servico_nacional)
+    return { erro: "Configure os dados fiscais em Configurações → NFS-e." };
   const { data: certRow } = await supabase.from("nfse_certificado").select("*").eq("id", 1).maybeSingle();
   if (!certRow) return { erro: "Cadastre o certificado A1 em Configurações → NFS-e." };
 
@@ -71,10 +72,10 @@ export async function emitirNfse(clienteId: string, _prev: EstadoNfse, formData:
     razaoSocial: cfg.razao_social,
     codigoMunicipio: cfg.codigo_municipio,
     uf: cfg.uf,
-    itemLc116: cfg.item_lc116,
-    codigoTributacaoMunicipal: cfg.codigo_tributacao_municipal,
+    codigoServicoNacional: cfg.codigo_servico_nacional,
+    descricaoServico: cfg.descricao_servico ?? "Honorarios",
     aliquotaIss: Number(cfg.aliquota_iss),
-    naturezaOperacao: cfg.natureza_operacao,
+    pctTribSN: Number(cfg.pct_trib_sn ?? 0),
     simplesNacional: cfg.simples_nacional,
     ambiente,
   };

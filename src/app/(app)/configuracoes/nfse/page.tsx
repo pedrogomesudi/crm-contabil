@@ -22,10 +22,10 @@ export default async function ConfigNfsePage() {
     razao_social: cfg?.razao_social ?? "",
     codigo_municipio: cfg?.codigo_municipio ?? "3170206",
     uf: cfg?.uf ?? "MG",
-    item_lc116: cfg?.item_lc116 ?? "17.19",
-    codigo_trib: cfg?.codigo_tributacao_municipal ?? "",
+    codigo_servico_nacional: cfg?.codigo_servico_nacional ?? "170201",
+    descricao_servico: cfg?.descricao_servico ?? "Honorarios",
     aliquota_iss: cfg?.aliquota_iss != null ? String(cfg.aliquota_iss) : "",
-    natureza: cfg?.natureza_operacao ?? "1",
+    pct_trib_sn: cfg?.pct_trib_sn != null ? String(cfg.pct_trib_sn) : "",
     simples: cfg?.simples_nacional ?? true,
     ambiente: cfg?.ambiente ?? "homologacao",
   };
