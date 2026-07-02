@@ -8,7 +8,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-- Em planejamento: **V5 — Emissão de NFS-e pelo CRM** (ver `ROADMAP.md`).
+- Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
+
+## [5.0.0] — 2026-07-02
+
+Emissão de **NFS-e dos honorários do escritório** pelo padrão nacional (V5-A do roadmap), integrando
+direto com a **Sefin Nacional**, com o certificado A1 cifrado in-house.
+
+### Adicionado
+
+- **Motor de emissão** (`src/lib/nfse/`): monta a **DPS** (XML, layout nacional), assina em
+  **XMLDSig** (enveloped + exclusive-c14n + RSA-SHA256) com o A1, comprime (GZip+Base64) e envia por
+  **mTLS** à Sefin.
+- **Certificado A1 cifrado** (AES-256-GCM, chave `NFSE_CERT_KEY`): upload em `Configurações → NFS-e`,
+  decifrado apenas no runtime da emissão; nunca vai ao browser.
+- **Configuração fiscal** do escritório (item LC116, ISS, código do município, ambiente) — tela admin.
+- **Emissão pela ficha do cliente**: botão "Emitir NFS-e" a partir do honorário (de
+  `clientes_financeiro`), com anti-duplicidade por competência, e seção de notas com status.
+- **Tabelas** `nfse_config`, `nfse_certificado`, `nfse` (migration 0019) com RLS financeira.
+- Variáveis `NFSE_AMBIENTE`, `NFSE_URL_HOMOLOGACAO`, `NFSE_URL_PRODUCAO`, `NFSE_CERT_KEY` + guia de
+  deploy. Começa em homologação (produção restrita).
 
 ## [4.0.2] — 2026-07-01
 
