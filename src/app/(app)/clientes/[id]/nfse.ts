@@ -11,7 +11,8 @@ import { montarDps } from "@/lib/nfse/dps";
 import { assinarDps } from "@/lib/nfse/assinatura";
 import { enviarDps } from "@/lib/nfse/envio";
 import { baixarDanfsePdf } from "@/lib/nfse/danfse";
-import type { ConfigFiscal, Tomador, ResultadoCliente } from "@/lib/nfse/tipos";
+import { classificarSituacao } from "@/lib/nfse/lote";
+import type { ConfigFiscal, Tomador, ResultadoCliente, ClienteLote } from "@/lib/nfse/tipos";
 
 export type EstadoNfse = { erro?: string; ok?: boolean };
 
@@ -173,6 +174,52 @@ export async function emitirNfseCliente(clienteId: string, competencia: string):
   return resultado.autorizada
     ? { status: "autorizada", chave: resultado.chaveAcesso, numero: resultado.numero }
     : { status: "rejeitada", motivo: resultado.mensagens?.join("; ") };
+}
+
+// Lista os clientes ativos com honorário para o preview do lote, marcando a
+// situação de cada um (apta / já emitida / sem documento).
+export async function listarElegiveisLote(competencia: string): Promise<ClienteLote[]> {
+  const perfil = await getPerfilAtual();
+  if (!perfil?.ativo || !podeVerHonorario(perfil.papel)) return [];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(competencia)) return [];
+  const supabase = await createServerSupabase();
+
+  const { data: cfg } = await supabase.from("nfse_config").select("ambiente").eq("id", 1).maybeSingle();
+  const ambiente = cfg?.ambiente === "producao" ? "producao" : "homologacao";
+
+  // Clientes ativos com honorário (a RLS já limita ao que o usuário vê).
+  const { data: clientes } = await supabase
+    .from("clientes")
+    .select("id, razao_social, cpf_cnpj, endereco, status, clientes_financeiro(honorario_mensal)")
+    .eq("status", "ativo")
+    .order("razao_social");
+
+  // Notas autorizadas nessa competência+ambiente (para marcar já_emitida).
+  const { data: notas } = await supabase
+    .from("nfse")
+    .select("cliente_id")
+    .eq("competencia", competencia)
+    .eq("status", "autorizada")
+    .eq("ambiente", ambiente);
+  const jaEmitidas = new Set((notas ?? []).map((n) => n.cliente_id));
+
+  const lista: ClienteLote[] = [];
+  for (const c of clientes ?? []) {
+    const fin = Array.isArray(c.clientes_financeiro) ? c.clientes_financeiro[0] : c.clientes_financeiro;
+    const honorario = Number((fin as { honorario_mensal?: number } | null)?.honorario_mensal ?? 0);
+    if (!honorario || honorario <= 0) continue; // só recorrentes
+    const documento = String(c.cpf_cnpj ?? "").replace(/\D/g, "");
+    const end = c.endereco as Record<string, string> | null;
+    lista.push({
+      clienteId: c.id,
+      razaoSocial: c.razao_social,
+      documento,
+      honorario,
+      temEndereco: Boolean(end?.cep && end?.logradouro),
+      situacao: classificarSituacao(documento, jaEmitidas.has(c.id)),
+    });
+  }
+  return lista;
 }
 
 export async function emitirNfse(clienteId: string, _prev: EstadoNfse, formData: FormData): Promise<EstadoNfse> {
