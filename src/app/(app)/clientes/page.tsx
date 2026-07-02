@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
-import { podeCriarCliente } from "@/lib/clientes/permissoes";
+import { podeCriarCliente, podeVerHonorario } from "@/lib/clientes/permissoes";
 
 export const metadata = { title: "Clientes" };
 
@@ -49,11 +49,21 @@ export default async function ClientesPage({
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-slate-900">Clientes</h1>
-        {podeCriar && (
-          <Link href="/clientes/novo" className="rounded bg-slate-900 px-3 py-2 text-sm text-white">
-            + Novo cliente
-          </Link>
-        )}
+        <div className="flex gap-2">
+          {podeVerHonorario(perfil?.papel) && (
+            <Link
+              href="/nfse/lote"
+              className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700"
+            >
+              Emitir NFS-e em lote
+            </Link>
+          )}
+          {podeCriar && (
+            <Link href="/clientes/novo" className="rounded bg-slate-900 px-3 py-2 text-sm text-white">
+              + Novo cliente
+            </Link>
+          )}
+        </div>
       </div>
 
       {ok && (
