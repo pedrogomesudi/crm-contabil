@@ -14,9 +14,9 @@ const d: DadosCancelamento = {
 describe("montarEventoCancelamento", () => {
   it("monta o evento com Id EVT+chave+tipo+seq, chNFSe, cMotivo, xMotivo e tpAmb de homologação", () => {
     const { xml, idEvento } = montarEventoCancelamento(d);
-    // PRE + chave(50) + 101101(6) + 001(3) = 3 + 59
-    expect(idEvento).toBe(`PRE${d.chave}101101001`);
-    expect(idEvento).toHaveLength(3 + 50 + 6 + 3);
+    // PRE + chave(50) + 101101(6) = 3 + 56
+    expect(idEvento).toBe(`PRE${d.chave}101101`);
+    expect(idEvento).toHaveLength(3 + 50 + 6);
     expect(xml).toContain(`Id="${idEvento}"`);
     expect(xml).toContain("<tpAmb>2</tpAmb>");
     expect(xml).toContain(`<chNFSe>${d.chave}</chNFSe>`);
