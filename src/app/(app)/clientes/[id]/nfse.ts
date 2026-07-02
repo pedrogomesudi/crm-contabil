@@ -219,7 +219,8 @@ export async function listarElegiveisLote(competencia: string): Promise<ClienteL
     .select("cliente_id")
     .eq("competencia", competencia)
     .eq("status", "autorizada")
-    .eq("ambiente", ambiente);
+    .eq("ambiente", ambiente)
+    .eq("avulsa", false); // só a recorrente marca "já emitida"; avulsas não contam
   const jaEmitidas = new Set((notas ?? []).map((n) => n.cliente_id));
 
   const lista: ClienteLote[] = [];
