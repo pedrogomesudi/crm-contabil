@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
 import { required } from "@/lib/env";
 import { decifrar } from "@/lib/nfse/cripto";
@@ -9,9 +10,57 @@ import { carregarCertificado } from "@/lib/nfse/certificado";
 import { montarDps } from "@/lib/nfse/dps";
 import { assinarDps } from "@/lib/nfse/assinatura";
 import { enviarDps } from "@/lib/nfse/envio";
+import { baixarDanfsePdf } from "@/lib/nfse/danfse";
 import type { ConfigFiscal, Tomador } from "@/lib/nfse/tipos";
 
 export type EstadoNfse = { erro?: string; ok?: boolean };
+
+// Retorna o XML autorizado (ou a DPS, se ainda não houver) para download.
+export async function baixarXmlNfse(nfseId: string): Promise<{ erro?: string; conteudo?: string }> {
+  const perfil = await getPerfilAtual();
+  if (!perfil?.ativo || !podeVerHonorario(perfil.papel)) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { data } = await supabase.from("nfse").select("nfse_xml, dps_xml").eq("id", nfseId).maybeSingle();
+  if (!data) return { erro: "Nota não encontrada." };
+  const conteudo = data.nfse_xml ?? data.dps_xml;
+  if (!conteudo) return { erro: "XML indisponível." };
+  return { conteudo };
+}
+
+// Baixa o DANFSe (PDF) da Sefin (ADN) usando a chave + o certificado (mTLS).
+export async function baixarDanfseNfse(nfseId: string): Promise<{ erro?: string; pdfBase64?: string; chave?: string }> {
+  const perfil = await getPerfilAtual();
+  if (!perfil?.ativo || !podeVerHonorario(perfil.papel)) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { data: nota } = await supabase
+    .from("nfse")
+    .select("chave_acesso, ambiente")
+    .eq("id", nfseId)
+    .maybeSingle();
+  if (!nota?.chave_acesso) return { erro: "Nota sem chave de acesso." };
+  // A nota já foi confirmada acessível ao usuário; o certificado é admin-RLS,
+  // então carregamos via service_role apenas para o mTLS.
+  const admin = createAdminSupabase();
+  const { data: certRow } = await admin
+    .from("nfse_certificado")
+    .select("pfx_cifrado, senha_cifrada")
+    .eq("id", 1)
+    .maybeSingle();
+  if (!certRow) return { erro: "Certificado não cadastrado." };
+  const chaveKey = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
+  let cert;
+  try {
+    const pfx = decifrar(certRow.pfx_cifrado, chaveKey);
+    const senha = decifrar(certRow.senha_cifrada, chaveKey).toString("utf8");
+    cert = carregarCertificado(pfx, senha);
+  } catch {
+    return { erro: "Falha ao abrir o certificado." };
+  }
+  const ambiente: "homologacao" | "producao" = nota.ambiente === "producao" ? "producao" : "homologacao";
+  const pdf = await baixarDanfsePdf(nota.chave_acesso, { pfx: cert.pfx, senha: cert.senha }, ambiente);
+  if (!pdf) return { erro: "DANFSe indisponível no momento.", chave: nota.chave_acesso };
+  return { pdfBase64: pdf.toString("base64") };
+}
 
 export async function emitirNfse(clienteId: string, _prev: EstadoNfse, formData: FormData): Promise<EstadoNfse> {
   const perfil = await getPerfilAtual();
