@@ -28,9 +28,30 @@ export function EmitirNfse({
       {ambiente === "homologacao" && (
         <p className="rounded bg-amber-50 px-2 py-1 text-amber-800">Homologação — sem validade jurídica.</p>
       )}
-      <p>
-        Valor (honorário): <strong>R$ {honorario.toFixed(2)}</strong>
-      </p>
+      <label className="block">
+        Valor (R$)
+        <input
+          type="number"
+          name="valor"
+          step="0.01"
+          min="0"
+          defaultValue={honorario.toFixed(2)}
+          required
+          className="ml-2 w-32 rounded border border-slate-300 px-2 py-1"
+        />
+      </label>
+      <label className="block">
+        Descrição do serviço
+        <input
+          name="descricao"
+          placeholder="Honorarios"
+          className="ml-2 w-64 rounded border border-slate-300 px-2 py-1"
+        />
+      </label>
+      <label className="flex items-center gap-2">
+        <input type="checkbox" name="avulsa" />
+        Nota avulsa (serviço extra) — não conta como a recorrente do mês
+      </label>
       <label className="block">
         Competência
         <input
