@@ -9,10 +9,10 @@ const dados: DadosDps = {
     razaoSocial: "ESCRITORIO LTDA",
     codigoMunicipio: "3170206",
     uf: "MG",
-    itemLc116: "17.19",
-    codigoTributacaoMunicipal: "1719",
+    codigoServicoNacional: "170201",
+    descricaoServico: "Honorarios",
     aliquotaIss: 2,
-    naturezaOperacao: "1",
+    pctTribSN: 6,
     simplesNacional: true,
     ambiente: "homologacao",
   },
@@ -32,6 +32,21 @@ describe("montarDps", () => {
     expect(xml).toContain("12345678000199"); // CNPJ prestador
     expect(xml).toContain("98765432000188"); // tomador
     expect(xml).toContain("<vServ>500.00</vServ>");
+  });
+
+  it("reflete o Simples Nacional (opSimpNac=3, sem pAliq, com pTotTribSN)", () => {
+    const { xml } = montarDps(dados);
+    expect(xml).toContain("<opSimpNac>3</opSimpNac>");
+    expect(xml).toContain("<cTribNac>170201</cTribNac>");
+    expect(xml).toContain("<pTotTribSN>6.00</pTotTribSN>");
+    expect(xml).not.toContain("<pAliq>");
+  });
+
+  it("usa pAliq quando não é Simples", () => {
+    const { xml } = montarDps({ ...dados, config: { ...dados.config, simplesNacional: false } });
+    expect(xml).toContain("<opSimpNac>1</opSimpNac>");
+    expect(xml).toContain("<pAliq>2.00</pAliq>");
+    expect(xml).not.toContain("<pTotTribSN>");
   });
 
   it("usa tpAmb=1 em produção", () => {

@@ -6,10 +6,10 @@ export type ConfigFiscal = {
   razaoSocial: string;
   codigoMunicipio: string;
   uf: string;
-  itemLc116: string;
-  codigoTributacaoMunicipal: string;
-  aliquotaIss: number;
-  naturezaOperacao: string;
+  codigoServicoNacional: string; // cTribNac (6 dígitos), ex.: "170201"
+  descricaoServico: string; // xDescServ, ex.: "Honorarios"
+  aliquotaIss: number; // pAliq (usado quando NÃO Simples)
+  pctTribSN: number; // pTotTribSN (% aproximado de tributos, Simples)
   simplesNacional: boolean;
   ambiente: "homologacao" | "producao";
 };

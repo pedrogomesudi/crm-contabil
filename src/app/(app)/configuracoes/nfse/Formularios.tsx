@@ -30,27 +30,44 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
           <input name="uf" defaultValue={String(inicial.uf)} required className={inputCls} />
         </label>
         <label className="block">
-          Item LC 116
-          <input name="item_lc116" defaultValue={String(inicial.item_lc116)} required className={inputCls} />
-        </label>
-        <label className="block">
-          Código tributação municipal
-          <input name="codigo_trib" defaultValue={String(inicial.codigo_trib)} required className={inputCls} />
-        </label>
-        <label className="block">
-          Alíquota ISS (%)
+          Código de serviço nacional (cTribNac)
           <input
-            name="aliquota_iss"
-            type="number"
-            step="0.01"
-            defaultValue={String(inicial.aliquota_iss)}
+            name="codigo_servico_nacional"
+            defaultValue={String(inicial.codigo_servico_nacional)}
+            placeholder="ex.: 170201"
             required
             className={inputCls}
           />
         </label>
         <label className="block">
-          Natureza da operação
-          <input name="natureza" defaultValue={String(inicial.natureza)} required className={inputCls} />
+          Descrição do serviço
+          <input
+            name="descricao_servico"
+            defaultValue={String(inicial.descricao_servico)}
+            placeholder="Honorarios"
+            required
+            className={inputCls}
+          />
+        </label>
+        <label className="block">
+          Alíquota ISS (%) — se não Simples
+          <input
+            name="aliquota_iss"
+            type="number"
+            step="0.01"
+            defaultValue={String(inicial.aliquota_iss)}
+            className={inputCls}
+          />
+        </label>
+        <label className="block">
+          % aprox. tributos (Simples, pTotTribSN)
+          <input
+            name="pct_trib_sn"
+            type="number"
+            step="0.01"
+            defaultValue={String(inicial.pct_trib_sn)}
+            className={inputCls}
+          />
         </label>
         <label className="block">
           Ambiente
