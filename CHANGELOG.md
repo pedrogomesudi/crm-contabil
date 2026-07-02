@@ -10,6 +10,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
 
+## [5.1.0] — 2026-07-02
+
+### Adicionado
+
+- **Download da NFS-e na ficha:** para notas autorizadas, botões **DANFSe (PDF)** — o app baixa da
+  Sefin (ADN) com o certificado (mTLS) — e **XML** (o autorizado, já armazenado), além de link para o
+  **portal público** (consulta por chave). Assim a nota é impressa/enviada ao cliente sem sair do CRM.
+
+## [5.0.6] — 2026-07-02
+
+### Alterado
+
+- **Diagnóstico:** a resposta não-JSON da Sefin (páginas HTML de erro do IIS) passa a expor o status
+  HTTP e um trecho do corpo, facilitando identificar URL/endpoint errado.
+
 ## [5.0.5] — 2026-07-02
 
 ### Corrigido

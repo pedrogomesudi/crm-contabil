@@ -3,6 +3,7 @@ import { podeVerHonorario } from "@/lib/clientes/permissoes";
 import { formatarData } from "@/lib/format";
 import type { Papel } from "@/lib/tipos";
 import { EmitirNfse } from "./EmitirNfse";
+import { BaixarNfse } from "./BaixarNfse";
 
 const ROTULO_STATUS: Record<string, string> = {
   processando: "Processando",
@@ -52,6 +53,7 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
                 <th className="p-2 font-medium">Número</th>
                 <th className="p-2 font-medium">Valor</th>
                 <th className="p-2 font-medium">Status</th>
+                <th className="p-2 font-medium">Documentos</th>
               </tr>
             </thead>
             <tbody>
@@ -66,6 +68,11 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
                       <span className="block text-xs text-red-600">
                         {(n.mensagens as { descricao?: string }[]).map((m) => m.descricao).join("; ")}
                       </span>
+                    )}
+                  </td>
+                  <td className="p-2">
+                    {n.status === "autorizada" && n.chave_acesso && (
+                      <BaixarNfse nfseId={n.id} numero={n.numero ?? ""} chave={n.chave_acesso} />
                     )}
                   </td>
                 </tr>
