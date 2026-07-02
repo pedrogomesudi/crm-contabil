@@ -163,3 +163,19 @@ A V4 envia o contrato gerado para assinatura na **Clicksign** e recebe o assinad
    produção).
 
 > Segredos nunca vão para o navegador (não são `NEXT_PUBLIC_`). O webhook é autenticado por HMAC.
+
+## NFS-e nacional (V5)
+
+O CRM emite a NFS-e dos honorários pela API nacional (Sefin), com o certificado A1 cifrado in-house.
+
+1. Gere a chave de cifra do certificado: `openssl rand -hex 32` → valor de `NFSE_CERT_KEY`.
+2. No serviço do **app** (EasyPanel), defina — **runtime, só reiniciar**:
+   - `NFSE_CERT_KEY` — a chave gerada (nunca perca/mude: o certificado guardado é cifrado com ela).
+   - `NFSE_URL_HOMOLOGACAO` — `https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional`
+   - `NFSE_URL_PRODUCAO` — `https://sefin.nfse.gov.br/API/SefinNacional`
+3. No app, em **Configurações → NFS-e**, preencha os **dados fiscais** do escritório e faça o **upload
+   do certificado A1** (.pfx + senha). O certificado é validado e guardado **cifrado**.
+4. Comece com o ambiente em **homologação** (produção restrita). Emita uma nota de teste e confira a
+   autorização. Só troque `nfse_config.ambiente` para **produção** após validar.
+
+> `NFSE_CERT_KEY` e a senha do certificado só existem no servidor. O certificado nunca vai ao browser.
