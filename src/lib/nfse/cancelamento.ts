@@ -22,6 +22,7 @@ export function montarEventoCancelamento(d: DadosCancelamento): { xml: string; i
   });
   const inf = doc.ele("infPedReg", { Id: idEvento });
   inf.ele("tpAmb").txt(tpAmb);
+  inf.ele("verAplic").txt("crm-contabil-1");
   inf.ele("dhEvento").txt(dhBrasilia());
   inf.ele("CNPJAutor").txt(d.cnpj);
   inf.ele("chNFSe").txt(d.chave);
