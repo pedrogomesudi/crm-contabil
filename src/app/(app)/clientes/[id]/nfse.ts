@@ -27,13 +27,17 @@ export async function emitirNfse(clienteId: string, _prev: EstadoNfse, formData:
   const { data: certRow } = await supabase.from("nfse_certificado").select("*").eq("id", 1).maybeSingle();
   if (!certRow) return { erro: "Cadastre o certificado A1 em Configurações → NFS-e." };
 
-  const { data: cliente } = await supabase
+  const { data: cliente, error: cliErr } = await supabase
     .from("clientes")
-    .select("razao_social, cnpj, cpf, email, endereco")
+    .select("razao_social, cpf_cnpj, email, endereco")
     .eq("id", clienteId)
     .maybeSingle();
+  if (cliErr) {
+    console.error("emitirNfse cliente:", cliErr.message);
+    return { erro: "Falha ao carregar o cliente." };
+  }
   if (!cliente) return { erro: "Cliente não encontrado." };
-  const documento = String(cliente.cnpj ?? cliente.cpf ?? "").replace(/\D/g, "");
+  const documento = String(cliente.cpf_cnpj ?? "").replace(/\D/g, "");
   if (!documento) return { erro: "Cliente sem CNPJ/CPF — necessário para a NFS-e." };
   // Honorário fica em clientes_financeiro (RLS = admin/financeiro/contador-dono).
   const { data: fin } = await supabase
