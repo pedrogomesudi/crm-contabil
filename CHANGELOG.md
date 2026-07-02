@@ -10,6 +10,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
 
+## [5.4.0] — 2026-07-02
+
+### Adicionado
+
+- **Cancelamento de NFS-e:** botão **"Cancelar"** nas notas autorizadas (na ficha do cliente), com
+  **motivo** (Erro na emissão · Serviço não prestado · Outros) + **justificativa**. Envia o **evento
+  de cancelamento** assinado à Sefin (`/nfse/{chave}/eventos`, mTLS) e marca a nota como
+  **cancelada** (`nfse.cancelado_em`/`cancelamento`, migration 0023). Rejeição da Sefin (fora do
+  prazo etc.) mantém a nota autorizada e mostra o motivo. Assinatura e POST mTLS agora são
+  compartilhados entre a emissão (DPS) e o evento.
+
 ## [5.3.0] — 2026-07-02
 
 ### Adicionado
