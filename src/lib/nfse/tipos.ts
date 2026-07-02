@@ -28,3 +28,29 @@ export type ResultadoEmissao = {
   xmlNfse?: string;
   mensagens?: string[];
 };
+
+export type ResultadoCliente = {
+  status: "autorizada" | "rejeitada" | "erro" | "pulada";
+  chave?: string;
+  numero?: string;
+  motivo?: string;
+};
+export type SituacaoLote = "apta" | "ja_emitida" | "sem_documento";
+export type ClienteLote = {
+  clienteId: string;
+  razaoSocial: string;
+  documento: string;
+  honorario: number;
+  temEndereco: boolean;
+  situacao: SituacaoLote;
+};
+export type LinhaRelatorio = {
+  cliente: string;
+  documento: string;
+  competencia: string;
+  valor: number;
+  resultado: string;
+  numero: string;
+  chave: string;
+  motivo: string;
+};
