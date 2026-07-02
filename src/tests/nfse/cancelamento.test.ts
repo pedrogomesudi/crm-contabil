@@ -33,6 +33,11 @@ describe("parseRespostaEvento", () => {
     expect(r.aceito).toBe(true);
     expect(r.idEvento).toBe("ID1");
   });
+  it("interpreta aceito quando a Sefin devolve 201 + eventoXmlGZipB64", () => {
+    const r = parseRespostaEvento(201, { eventoXmlGZipB64: "H4sIAAAA..." });
+    expect(r.aceito).toBe(true);
+    expect(r.xml).toContain("H4sIAAAA");
+  });
   it("interpreta rejeição no campo 'erro' (singular) com complemento", () => {
     const r = parseRespostaEvento(400, {
       erro: [{ codigo: "E1235", descricao: "Falha no esquema XML", complemento: "The 'Id' attribute is invalid" }],

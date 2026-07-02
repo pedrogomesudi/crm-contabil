@@ -39,9 +39,15 @@ export function assinarEvento(xml: string, idEvento: string, cert: { certPem: st
 
 export function parseRespostaEvento(status: number, corpo: Record<string, unknown>): ResultadoEvento {
   const ret = (corpo.retEvento ?? {}) as { cStat?: string; xMotivo?: string; idEvento?: string };
-  // cStat de sucesso de registro de evento (faixa 1xx). Confirmado na homologação.
-  if (status >= 200 && status < 300 && ret.cStat && /^1\d\d$/.test(ret.cStat)) {
-    return { aceito: true, idEvento: ret.idEvento, mensagens: ret.xMotivo ? [ret.xMotivo] : undefined };
+  // Sucesso: HTTP 2xx com o evento processado (eventoXmlGZipB64) OU cStat 1xx.
+  const eventoXml = typeof corpo.eventoXmlGZipB64 === "string" ? (corpo.eventoXmlGZipB64 as string) : undefined;
+  if (status >= 200 && status < 300 && (eventoXml || (ret.cStat && /^1\d\d$/.test(ret.cStat)))) {
+    return {
+      aceito: true,
+      idEvento: ret.idEvento,
+      xml: eventoXml,
+      mensagens: ret.xMotivo ? [ret.xMotivo] : undefined,
+    };
   }
   // Erros em formatos conhecidos (a Sefin usa `erro` singular); por fim, o corpo cru.
   type Erro = { codigo?: string; Codigo?: string; descricao?: string; Descricao?: string; mensagem?: string; complemento?: string };
