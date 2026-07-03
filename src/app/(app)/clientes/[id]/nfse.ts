@@ -37,18 +37,14 @@ export async function baixarDanfseNfse(nfseId: string): Promise<{ erro?: string;
   const supabase = await createServerSupabase();
   const { data: nota } = await supabase
     .from("nfse")
-    .select("chave_acesso, ambiente")
+    .select("chave_acesso, ambiente, emitente, cliente_id")
     .eq("id", nfseId)
     .maybeSingle();
   if (!nota?.chave_acesso) return { erro: "Nota sem chave de acesso." };
   // A nota já foi confirmada acessível ao usuário; o certificado é admin-RLS,
   // então carregamos via service_role apenas para o mTLS.
   const admin = createAdminSupabase();
-  const { data: certRow } = await admin
-    .from("nfse_certificado")
-    .select("pfx_cifrado, senha_cifrada")
-    .eq("id", 1)
-    .maybeSingle();
+  const certRow = await carregarCertRowDaNota(admin, nota.emitente, nota.cliente_id);
   if (!certRow) return { erro: "Certificado não cadastrado." };
   const chaveKey = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
   let cert;
@@ -258,15 +254,12 @@ export async function cancelarNfse(
   const supabase = await createServerSupabase();
   const { data: nota } = await supabase
     .from("nfse")
-    .select("id, cliente_id, chave_acesso, numero, nfse_xml, status, ambiente")
+    .select("id, cliente_id, chave_acesso, numero, nfse_xml, status, ambiente, emitente")
     .eq("id", nfseId)
     .maybeSingle();
   if (!nota) return { erro: "Nota não encontrada." };
   if (nota.status !== "autorizada") return { erro: "Só notas autorizadas podem ser canceladas." };
   if (!nota.chave_acesso) return { erro: "Nota sem chave de acesso." };
-
-  const { data: cfg } = await supabase.from("nfse_config").select("cnpj").eq("id", 1).maybeSingle();
-  if (!cfg?.cnpj) return { erro: "Config fiscal ausente." };
 
   // nDFSe: usa o número; se vazio, extrai o nNFSe do XML da nota.
   let nDFSe = nota.numero ?? "";
@@ -277,11 +270,19 @@ export async function cancelarNfse(
 
   const ambiente: "homologacao" | "producao" = nota.ambiente === "producao" ? "producao" : "homologacao";
   const chaveKey = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
-  const { data: certRow } = await createAdminSupabase()
-    .from("nfse_certificado")
-    .select("pfx_cifrado, senha_cifrada")
-    .eq("id", 1)
-    .maybeSingle();
+
+  // CNPJ e certificado do emitente da nota: do cliente (V5-B) ou do escritório (V5-A).
+  const admin = createAdminSupabase();
+  let cnpjEmitente: string | null = null;
+  if (nota.emitente === "cliente") {
+    const { data: cli } = await admin.from("clientes").select("cpf_cnpj").eq("id", nota.cliente_id).maybeSingle();
+    cnpjEmitente = String(cli?.cpf_cnpj ?? "").replace(/\D/g, "") || null;
+  } else {
+    const { data: cfg } = await supabase.from("nfse_config").select("cnpj").eq("id", 1).maybeSingle();
+    cnpjEmitente = cfg?.cnpj ?? null;
+  }
+  if (!cnpjEmitente) return { erro: "CNPJ do emitente ausente." };
+  const certRow = await carregarCertRowDaNota(admin, nota.emitente, nota.cliente_id);
   if (!certRow) return { erro: "Certificado não cadastrado." };
   let cert;
   try {
@@ -295,7 +296,7 @@ export async function cancelarNfse(
   const { xml, idEvento } = montarEventoCancelamento({
     chave: nota.chave_acesso,
     nDFSe,
-    cnpj: cfg.cnpj,
+    cnpj: cnpjEmitente,
     ambiente,
     cMotivo,
     xMotivo: justificativa.trim(),
@@ -336,4 +337,27 @@ export async function emitirNfse(clienteId: string, _prev: EstadoNfse, formData:
   revalidatePath(`/clientes/${clienteId}`);
   if (r.status === "autorizada") return { ok: true };
   return { erro: r.motivo ?? "Não foi possível emitir." };
+}
+
+// Retorna a linha (pfx_cifrado, senha_cifrada) do certificado que emitiu a nota:
+// do cliente-emitente (V5-B) ou do escritório (V5-A). Usa client admin (RLS admin).
+async function carregarCertRowDaNota(
+  admin: ReturnType<typeof createAdminSupabase>,
+  emitente: string,
+  clienteId: string,
+): Promise<{ pfx_cifrado: string; senha_cifrada: string } | null> {
+  if (emitente === "cliente") {
+    const { data } = await admin
+      .from("nfse_certificado_cliente")
+      .select("pfx_cifrado, senha_cifrada")
+      .eq("cliente_id", clienteId)
+      .maybeSingle();
+    return data ?? null;
+  }
+  const { data } = await admin
+    .from("nfse_certificado")
+    .select("pfx_cifrado, senha_cifrada")
+    .eq("id", 1)
+    .maybeSingle();
+  return data ?? null;
 }
