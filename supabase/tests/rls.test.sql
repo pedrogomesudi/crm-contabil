@@ -394,3 +394,34 @@ begin
   if n <> 1 then raise exception 'FALHA: financeiro não viu a nfse de teste (viu %)', n; end if;
   raise notice 'OK: financeiro vê nfse';
 end $$;
+
+-- ===== V5-B: emitente/certificado do cliente são só admin; numeração por cliente =====
+do $$
+declare n int; a bigint; b bigint;
+begin
+  -- admin cadastra o emitente do cliente 002 e o enxerga
+  perform _simular('00000000-0000-0000-0000-000000000001'); -- admin
+  insert into nfse_emitente (cliente_id, codigo_municipio, codigo_servico_nacional)
+    values ('aaaaaaaa-0000-0000-0000-000000000002', '3170206', '170201')
+    on conflict (cliente_id) do nothing;
+  select count(*) into n from nfse_emitente where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+  if n <> 1 then raise exception 'FALHA: admin não vê nfse_emitente (viu %)', n; end if;
+
+  -- financeiro e contador NÃO acessam config/cert do emitente
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  select count(*) into n from nfse_emitente;
+  if n <> 0 then raise exception 'FALHA: financeiro viu nfse_emitente (devia ser 0)'; end if;
+  select count(*) into n from nfse_certificado_cliente;
+  if n <> 0 then raise exception 'FALHA: financeiro viu nfse_certificado_cliente (devia ser 0)'; end if;
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  select count(*) into n from nfse_emitente;
+  if n <> 0 then raise exception 'FALHA: contador viu nfse_emitente (devia ser 0)'; end if;
+  raise notice 'OK: nfse_emitente/certificado_cliente são admin-only';
+
+  -- numeração por cliente incrementa monotonicamente (RPC SECURITY DEFINER)
+  reset role;
+  select proximo_ndps_cliente('aaaaaaaa-0000-0000-0000-000000000002') into a;
+  select proximo_ndps_cliente('aaaaaaaa-0000-0000-0000-000000000002') into b;
+  if b <> a + 1 then raise exception 'FALHA: proximo_ndps_cliente não incrementou (% -> %)', a, b; end if;
+  raise notice 'OK: proximo_ndps_cliente incrementa por cliente';
+end $$;

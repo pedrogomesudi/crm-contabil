@@ -33,3 +33,9 @@ export function podeGerenciarDocumentos(papel: Papel | undefined): boolean {
 export function podeExcluirCliente(papel: Papel | undefined): boolean {
   return papel === "admin";
 }
+
+// Quem configura a NFS-e do cliente-emitente (dados fiscais + certificado): só admin.
+// Custódia de certificado é sensível — mesma regra da config do escritório (V5-A).
+export function podeConfigurarNfse(papel: Papel | undefined): boolean {
+  return papel === "admin";
+}

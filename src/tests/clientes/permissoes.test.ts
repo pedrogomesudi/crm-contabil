@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { podeExcluirCliente } from "@/lib/clientes/permissoes";
+import { podeExcluirCliente, podeConfigurarNfse } from "@/lib/clientes/permissoes";
 
 describe("podeExcluirCliente", () => {
   it("permite apenas admin", () => {
@@ -10,5 +10,14 @@ describe("podeExcluirCliente", () => {
     expect(podeExcluirCliente("assistente")).toBe(false);
     expect(podeExcluirCliente("contador")).toBe(false);
     expect(podeExcluirCliente(undefined)).toBe(false);
+  });
+});
+
+describe("podeConfigurarNfse", () => {
+  it("permite apenas admin", () => {
+    expect(podeConfigurarNfse("admin")).toBe(true);
+    expect(podeConfigurarNfse("financeiro")).toBe(false);
+    expect(podeConfigurarNfse("contador")).toBe(false);
+    expect(podeConfigurarNfse(undefined)).toBe(false);
   });
 });
