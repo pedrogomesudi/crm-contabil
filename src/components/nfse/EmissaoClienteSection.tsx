@@ -48,7 +48,14 @@ export async function EmissaoClienteSection({ clienteId, papel }: { clienteId: s
         <details className="rounded border border-slate-200 p-2">
           <summary className="cursor-pointer text-sm text-slate-700">Configuração do emitente</summary>
           <div className="mt-2">
-            <EmitenteConfig clienteId={clienteId} emitente={emitente} certificadoValidade={validade} />
+            {/* key por atualizado_em: após salvar, remonta o form para os campos
+                (incl. o <select> não-controlado) refletirem o valor persistido. */}
+            <EmitenteConfig
+              key={emitente?.atualizado_em ?? "novo"}
+              clienteId={clienteId}
+              emitente={emitente}
+              certificadoValidade={validade}
+            />
           </div>
         </details>
       )}
