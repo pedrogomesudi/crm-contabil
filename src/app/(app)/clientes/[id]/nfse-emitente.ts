@@ -40,6 +40,10 @@ export async function salvarEmitente(
       natureza_operacao: String(formData.get("natureza_operacao") ?? "").trim() || null,
       descricao_servico_padrao: String(formData.get("descricao_servico_padrao") ?? "").trim() || null,
       serie: String(formData.get("serie") ?? "1").trim() || "1",
+      // Contador do próximo número da DPS. Pré-preenchido com o valor atual (a RPC
+      // o incrementa a cada emissão); ajuste ao migrar de outro sistema para não
+      // reusar números já emitidos (erro E0014). Mín. 1.
+      proximo_ndps: Math.max(1, Math.trunc(Number(formData.get("proximo_ndps") ?? 1) || 1)),
       ambiente: String(formData.get("ambiente") ?? "homologacao"),
       atualizado_em: new Date().toISOString(),
     },
