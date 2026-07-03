@@ -22,6 +22,13 @@ export type ClienteIdentidade = {
 // Monta o ConfigFiscal (tipo do motor) a partir do emitente + identidade do cliente.
 // A descrição da nota tem prioridade; se vazia, usa a descrição padrão do emitente.
 // dps.ts não usa uf/inscricaoMunicipal, mas os populamos por completude.
+// Certificado válido = tem validade e ela ainda não passou. Isolado aqui (fora de
+// componente) para não disparar react-hooks/purity ao usar o relógio no render.
+export function certificadoValido(validade: string | null | undefined): boolean {
+  if (!validade) return false;
+  return new Date(validade).getTime() >= Date.now();
+}
+
 export function emitenteParaConfig(
   emitente: EmitenteRow,
   cliente: ClienteIdentidade,

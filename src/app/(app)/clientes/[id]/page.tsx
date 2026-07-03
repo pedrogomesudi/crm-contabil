@@ -7,6 +7,7 @@ import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
 import { NotasFiscaisSection } from "@/components/nfse/NotasFiscaisSection";
+import { EmissaoClienteSection } from "@/components/nfse/EmissaoClienteSection";
 import { GerarContrato } from "@/components/contrato/GerarContrato";
 import { AcoesExclusaoCliente } from "@/components/clientes/AcoesExclusaoCliente";
 import { atualizarCliente } from "../actions";
@@ -81,6 +82,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         clienteEmail={cliente.email ?? ""}
       />
       <NotasFiscaisSection clienteId={id} papel={papel} />
+      <EmissaoClienteSection clienteId={id} papel={papel} />
     </div>
   );
 }
