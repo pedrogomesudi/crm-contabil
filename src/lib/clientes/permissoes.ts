@@ -26,3 +26,10 @@ export function podeVerHonorario(papel: Papel | undefined): boolean {
 export function podeGerenciarDocumentos(papel: Papel | undefined): boolean {
   return papel === "admin" || papel === "contador" || papel === "assistente";
 }
+
+// Quem exclui/restaura cliente (soft delete): apenas admin. A RLS de UPDATE de
+// clientes é ampla (admin/assistente/contador-dono), então esta checagem no
+// servidor é a trava efetiva — mesmo padrão dos gates de honorário/documentos.
+export function podeExcluirCliente(papel: Papel | undefined): boolean {
+  return papel === "admin";
+}
