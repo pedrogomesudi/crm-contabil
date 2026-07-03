@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente, podeVerHonorario } from "@/lib/clientes/permissoes";
+import { normalizarFiltro, aplicarFiltroStatus } from "@/lib/clientes/filtroStatus";
 
 export const metadata = { title: "Clientes" };
 
@@ -25,7 +26,7 @@ export default async function ClientesPage({
 
   let query = supabase
     .from("clientes")
-    .select("id, razao_social, cpf_cnpj, tipo_pessoa, regime_tributario, status")
+    .select("id, razao_social, cpf_cnpj, tipo_pessoa, regime_tributario, status, excluido_em")
     .order("atualizado_em", { ascending: false })
     .limit(LIMITE);
 
@@ -39,9 +40,8 @@ export default async function ClientesPage({
       query = query.ilike("razao_social", `%${escapeLike(q)}%`);
     }
   }
-  if (status === "ativo" || status === "inativo") {
-    query = query.eq("status", status);
-  }
+  const filtro = normalizarFiltro(status);
+  query = aplicarFiltroStatus(query, filtro);
 
   const { data: clientes, error } = await query;
 
@@ -87,9 +87,10 @@ export default async function ClientesPage({
           aria-label="Filtrar por status"
           className="rounded border border-slate-300 px-2 text-sm text-slate-900"
         >
-          <option value="">Todos os status</option>
+          <option value="">Ativos e inativos</option>
           <option value="ativo">Ativos</option>
           <option value="inativo">Inativos</option>
+          <option value="excluido">Excluídos</option>
         </select>
         <button className="rounded border border-slate-300 px-3 text-sm text-slate-700">
           Filtrar
@@ -129,6 +130,11 @@ export default async function ClientesPage({
                       <span className={cl.status === "ativo" ? "text-green-700" : "text-slate-600"}>
                         {cl.status}
                       </span>
+                      {cl.excluido_em && (
+                        <span className="ml-1 rounded bg-slate-200 px-1.5 py-0.5 text-xs text-slate-700">
+                          excluído
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
