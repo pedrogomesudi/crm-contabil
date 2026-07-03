@@ -18,6 +18,7 @@ type EmitenteDefaults = {
   natureza_operacao?: string | null;
   descricao_servico_padrao?: string | null;
   serie?: string | null;
+  proximo_ndps?: number | null;
   ambiente?: string | null;
 } | null;
 
@@ -118,6 +119,20 @@ export function EmitenteConfig({
             defaultValue={emitente?.serie ?? "1"}
             className="mt-1 w-full rounded border border-slate-300 px-2 py-1"
           />
+        </label>
+        <label className="block">
+          Próximo nº da DPS
+          <input
+            type="number"
+            min="1"
+            step="1"
+            name="proximo_ndps"
+            defaultValue={emitente?.proximo_ndps ?? 1}
+            className="mt-1 w-full rounded border border-slate-300 px-2 py-1"
+          />
+          <span className="mt-0.5 block text-xs text-slate-500">
+            Ajuste ao migrar de outro sistema (nº seguinte ao último já emitido).
+          </span>
         </label>
         <label className="block">
           Ambiente
