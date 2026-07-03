@@ -2,9 +2,11 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { getPerfilAtual } from "@/lib/auth/perfil";
 import { clienteSchema } from "@/lib/validation/cliente";
 import { parseValorBR } from "@/lib/format";
 import { ehContadorValido } from "@/lib/clientes/contadores";
+import { podeExcluirCliente } from "@/lib/clientes/permissoes";
 import type { EstadoCliente, EstadoHonorario } from "./estados";
 
 // Normaliza TODA string vazia para null (campos uuid/date/text opcionais). Os
@@ -178,4 +180,48 @@ export async function salvarHonorario(
   }
   revalidatePath(`/clientes/${clienteId}`);
   return { ok: true };
+}
+
+// Soft delete: só admin (a RLS de UPDATE é ampla; a trava é aqui, server-side).
+export async function excluirCliente(clienteId: string): Promise<{ erro?: string }> {
+  const perfil = await getPerfilAtual();
+  if (!podeExcluirCliente(perfil?.papel)) return { erro: "Sem permissão." };
+
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("clientes")
+    .update({ excluido_em: new Date().toISOString() })
+    .eq("id", clienteId)
+    .is("excluido_em", null) // não sobrescreve o carimbo de uma exclusão anterior
+    .select("id");
+  if (error) {
+    console.error("excluirCliente:", error.code, error.message);
+    return { erro: "Não foi possível excluir o cliente." };
+  }
+  if (!data || data.length === 0) return { erro: "Cliente não encontrado ou já excluído." };
+
+  revalidatePath("/clientes");
+  revalidatePath(`/clientes/${clienteId}`);
+  return {};
+}
+
+export async function restaurarCliente(clienteId: string): Promise<{ erro?: string }> {
+  const perfil = await getPerfilAtual();
+  if (!podeExcluirCliente(perfil?.papel)) return { erro: "Sem permissão." };
+
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("clientes")
+    .update({ excluido_em: null })
+    .eq("id", clienteId)
+    .select("id");
+  if (error) {
+    console.error("restaurarCliente:", error.code, error.message);
+    return { erro: "Não foi possível restaurar o cliente." };
+  }
+  if (!data || data.length === 0) return { erro: "Cliente não encontrado." };
+
+  revalidatePath("/clientes");
+  revalidatePath(`/clientes/${clienteId}`);
+  return {};
 }

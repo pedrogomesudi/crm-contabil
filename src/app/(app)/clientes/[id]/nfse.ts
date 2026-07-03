@@ -212,6 +212,7 @@ export async function listarElegiveisLote(competencia: string): Promise<ClienteL
     .from("clientes")
     .select("id, razao_social, cpf_cnpj, endereco, status, clientes_financeiro(honorario_mensal)")
     .eq("status", "ativo")
+    .is("excluido_em", null) // clientes excluídos não entram no lote
     .order("razao_social");
 
   // Notas autorizadas nessa competência+ambiente (para marcar já_emitida).

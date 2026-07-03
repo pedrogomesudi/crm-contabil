@@ -2,12 +2,13 @@ import { notFound, redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { listarContadores, contadorPorId } from "@/lib/clientes/contadores";
-import { podeAtribuirContador, podeVerHonorario } from "@/lib/clientes/permissoes";
+import { podeAtribuirContador, podeVerHonorario, podeExcluirCliente } from "@/lib/clientes/permissoes";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
 import { NotasFiscaisSection } from "@/components/nfse/NotasFiscaisSection";
 import { GerarContrato } from "@/components/contrato/GerarContrato";
+import { AcoesExclusaoCliente } from "@/components/clientes/AcoesExclusaoCliente";
 import { atualizarCliente } from "../actions";
 
 export const metadata = { title: "Cliente" };
@@ -23,7 +24,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   const { data: cliente } = await supabase
     .from("clientes")
     .select(
-      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, atualizado_em",
+      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em",
     )
     .eq("id", id)
     .maybeSingle();
@@ -53,6 +54,12 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold text-slate-900">{cliente.razao_social}</h1>
+      {podeExcluirCliente(papel) && (
+        <AcoesExclusaoCliente
+          clienteId={id}
+          excluidoEm={(cliente as { excluido_em: string | null }).excluido_em}
+        />
+      )}
       <FormCliente
         action={atualizarCliente.bind(null, id)}
         contadores={contadores}
