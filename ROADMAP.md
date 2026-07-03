@@ -13,10 +13,12 @@ Legenda: ✅ concluída · 🚧 em andamento · ⬜ planejada
 | **V2** | Integração com o Domínio Sistemas | ✅ |
 | **V3** | Geração automática do contrato (Word/PDF) | ✅ |
 | **V4** | Assinaturas digitais integradas | ✅ |
-| **V5** | Emissão de NFS-e pelo CRM (A: honorários) | ✅ |
-| **V6** | Layout e estética | ⬜ |
-| **V7** | Modo whitelabel (comercialização) | ⬜ |
-| **V8** | Segurança da informação e legalidade técnica | ⬜ |
+| **V5** | Emissão de NFS-e pelo CRM (A: honorários ✅ · B: multi-emitente ⬜) | 🚧 |
+| **V6** | Módulo Financeiro (contas a receber/pagar) | ⬜ |
+| **V7** | Integração com WhatsApp (atendimento, boletos, avisos) | ⬜ |
+| **V8** | Layout e estética | ⬜ |
+| **V9** | Modo whitelabel (comercialização) | ⬜ |
+| **V10** | Segurança da informação e legalidade técnica | ⬜ |
 
 ---
 
@@ -70,31 +72,67 @@ acompanhar o status sem sair do CRM.
 - **Webhook** (HMAC) atualiza o status por signatário e traz o **PDF assinado** de volta aos Documentos.
 - Assinatura eletrônica avançada (Lei 14.063/2020 + MP 2.200-2/2001). Sandbox → produção por env.
 
-## V5 — Emissão de NFS-e pelo CRM ⬜
+## V5 — Emissão de NFS-e pelo CRM 🚧
 
 Emissão de NFS-e pelo padrão nacional (nfse.gov.br), integrando direto com a **Sefin Nacional**.
 Dividido em dois subsistemas de complexidade distinta:
 
 - **A) NFS-e dos honorários do escritório** ✅ *(v5.0.0)* — 1 emitente (o escritório), a partir do
-  honorário já no CRM; certificado A1 in-house (cifrado); emissão por cliente, em homologação.
-  Spec: `docs/superpowers/specs/2026-07-02-v5-nfse-nacional-design.md`.
-- **B) NFS-e dos clientes (multi-emitente)** *(marco próprio, depois)* — N emitentes/municípios/
-  certificados; multi-tenant fiscal. Spec e plano separados quando chegar a vez.
+  honorário já no CRM; certificado A1 in-house (cifrado); emissão por cliente e em lote, avulsa e
+  cancelamento, em produção. Spec: `docs/superpowers/specs/2026-07-02-v5-nfse-nacional-design.md`.
+- **B) NFS-e dos clientes (multi-emitente)** ⬜ *(próximo marco — "V5-B")* — cada cliente emite as
+  próprias notas: N emitentes, com **múltiplos certificados e municípios** (multi-tenant fiscal).
+  Spec e plano separados quando chegar a vez.
 
-## V6 — Layout e estética ⬜
+## V6 — Módulo Financeiro ⬜
+
+Módulo de **controle de receitas e despesas** (contas a receber e a pagar) do escritório,
+integrado à base de clientes do CRM, tendo o **contrato de honorários** como entidade central do
+contas a receber. Documento de requisitos: **`módulo financeiro.docx`** (raiz do projeto).
+
+Oito blocos funcionais (fase sugerida entre parênteses):
+
+1. **Cadastros básicos** (MVP) — contas bancárias, plano de contas, centros de custo, clientes,
+   fornecedores e tabela de serviços.
+2. **Contratos e contas a receber** (MVP) — contratos de honorários, geração automática de
+   mensalidades, honorários eventuais, 13º, reajustes e baixas.
+3. **Contas a pagar** (MVP) — lançamentos únicos, parcelados e recorrentes, com anexos e aprovação.
+4. **Régua de cobrança** (MVP) — alertas e cobranças automáticas por e-mail/WhatsApp com
+   escalonamento. *(A parte por WhatsApp depende da integração da V7.)*
+5. **Movimentações e conciliação** (F2) — transferências entre contas, importação de extrato
+   (OFX/CSV) e conciliação bancária.
+6. **Relatórios** (MVP/F2) — fluxo de caixa, DRE gerencial, aging, inadimplência, MRR e receita
+   por tipo.
+7. **Dashboards** (MVP) — indicadores consolidados: MRR, churn, inadimplência, saldos e previsão
+   de caixa.
+8. **Integrações e avançado** (F2/F3) — gateway de pagamento (boleto/PIX), NFS-e, portal do
+   cliente, rateios e comissões.
+
+> Marco grande: quando chegar a vez, decompor em sub-projetos (começando pelo MVP) com spec e
+> plano próprios, na cadência brainstorm → spec → plano.
+
+## V7 — Integração com WhatsApp ⬜
+
+Integração do CRM com o **WhatsApp** para relacionamento com clientes: **atendimento**, envio de
+**boletos** e disparo de **mensagens e notícias do escritório**.
+
+> A definir: provedor (API oficial do WhatsApp Cloud vs. BSP), modelos de mensagem aprovados
+> (templates), opt-in/opt-out (LGPD) e a ligação com a régua de cobrança da V6.
+
+## V8 — Layout e estética ⬜
 
 Refinamento visual e de experiência da plataforma (identidade visual, design system, responsividade).
 
 > A definir: direção de design (ver skill `frontend-design`).
 
-## V7 — Modo whitelabel ⬜
+## V9 — Modo whitelabel ⬜
 
 Tornar a plataforma **whitelabel/multi-tenant** para comercialização a qualquer escritório de
 contabilidade (marca, domínio, isolamento de dados por cliente, planos).
 
 > A definir: estratégia de tenancy, customização de marca, cobrança/assinaturas.
 
-## V8 — Segurança da informação e legalidade técnica ⬜
+## V10 — Segurança da informação e legalidade técnica ⬜
 
 Endurecimento de **segurança** e **conformidade legal/técnica** para comercializar a plataforma
 sem riscos (LGPD, retenção, auditoria, pentest, termos de uso e contrato SaaS).
