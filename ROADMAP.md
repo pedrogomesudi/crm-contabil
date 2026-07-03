@@ -13,7 +13,7 @@ Legenda: ✅ concluída · 🚧 em andamento · ⬜ planejada
 | **V2** | Integração com o Domínio Sistemas | ✅ |
 | **V3** | Geração automática do contrato (Word/PDF) | ✅ |
 | **V4** | Assinaturas digitais integradas | ✅ |
-| **V5** | Emissão de NFS-e pelo CRM (A: honorários ✅ · B: multi-emitente ⬜) | 🚧 |
+| **V5** | Emissão de NFS-e pelo CRM (A: honorários ✅ · B: multi-emitente ✅) | ✅ |
 | **V6** | Módulo Financeiro (contas a receber/pagar) | ⬜ |
 | **V7** | Integração com WhatsApp (atendimento, boletos, avisos) | ⬜ |
 | **V8** | Layout e estética | ⬜ |
@@ -72,7 +72,7 @@ acompanhar o status sem sair do CRM.
 - **Webhook** (HMAC) atualiza o status por signatário e traz o **PDF assinado** de volta aos Documentos.
 - Assinatura eletrônica avançada (Lei 14.063/2020 + MP 2.200-2/2001). Sandbox → produção por env.
 
-## V5 — Emissão de NFS-e pelo CRM 🚧
+## V5 — Emissão de NFS-e pelo CRM ✅
 
 Emissão de NFS-e pelo padrão nacional (nfse.gov.br), integrando direto com a **Sefin Nacional**.
 Dividido em dois subsistemas de complexidade distinta:
@@ -80,9 +80,10 @@ Dividido em dois subsistemas de complexidade distinta:
 - **A) NFS-e dos honorários do escritório** ✅ *(v5.0.0)* — 1 emitente (o escritório), a partir do
   honorário já no CRM; certificado A1 in-house (cifrado); emissão por cliente e em lote, avulsa e
   cancelamento, em produção. Spec: `docs/superpowers/specs/2026-07-02-v5-nfse-nacional-design.md`.
-- **B) NFS-e dos clientes (multi-emitente)** ⬜ *(próximo marco — "V5-B")* — cada cliente emite as
-  próprias notas: N emitentes, com **múltiplos certificados e municípios** (multi-tenant fiscal).
-  Spec e plano separados quando chegar a vez.
+- **B) NFS-e dos clientes (multi-emitente)** ✅ *(v5.6.0)* — cada cliente emite as próprias notas
+  como prestador: config fiscal + certificado A1 por cliente (cifrado), numeração de DPS por cliente,
+  emissão por nota com tomador externo, e cancelar/baixar por emitente. Validado em homologação.
+  Spec: `docs/superpowers/specs/2026-07-02-v5b-nfse-multiemitente-design.md`.
 
 ## V6 — Módulo Financeiro ⬜
 
