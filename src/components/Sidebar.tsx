@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Papel } from "@/lib/tipos";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
+import { podeAtender } from "@/lib/clientes/permissoes";
 import { sair } from "@/app/login/actions";
 
 export function Sidebar({ papel, nome }: { papel: Papel; nome: string }) {
@@ -10,6 +11,7 @@ export function Sidebar({ papel, nome }: { papel: Papel; nome: string }) {
   const itens = [
     { href: "/", label: "Início" },
     { href: "/clientes", label: "Clientes" },
+    ...(podeAtender(papel) ? [{ href: "/atendimento", label: "Atendimento" }] : []),
     ...(podeGerenciarFinanceiro(papel)
       ? [{ href: "/financeiro/cadastros", label: "Financeiro" }]
       : []),
