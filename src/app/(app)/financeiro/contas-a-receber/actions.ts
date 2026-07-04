@@ -1,0 +1,116 @@
+"use server";
+import { revalidatePath } from "next/cache";
+import { getPerfilAtual } from "@/lib/auth/perfil";
+import { createServerSupabase } from "@/lib/supabase/server";
+import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
+import { podeVerHonorario } from "@/lib/clientes/permissoes";
+
+export type TituloView = {
+  id: string;
+  cliente: string;
+  origem: string;
+  competencia: string;
+  vencimento: string;
+  valor: number;
+  somaBaixado: number;
+  status: string;
+};
+const ROTA = "/financeiro/contas-a-receber";
+
+async function gateVer() {
+  const p = await getPerfilAtual();
+  return p?.ativo && podeVerHonorario(p.papel) ? p : null;
+}
+async function gateGerir() {
+  const p = await getPerfilAtual();
+  return p?.ativo && podeGerenciarFinanceiro(p.papel) ? p : null;
+}
+
+export async function listarTitulos(competencia: string): Promise<TituloView[]> {
+  if (!(await gateVer())) return [];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(competencia)) return [];
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("titulo")
+    .select("id, origem, competencia, vencimento, valor, status, clientes(razao_social), baixa(valor_recebido)")
+    .eq("competencia", competencia)
+    .order("vencimento");
+  return (data ?? []).map((t) => {
+    const cl = Array.isArray(t.clientes) ? t.clientes[0] : t.clientes;
+    const baixas = (t.baixa ?? []) as { valor_recebido: number }[];
+    return {
+      id: t.id as string,
+      cliente: (cl as { razao_social?: string } | null)?.razao_social ?? "—",
+      origem: t.origem as string,
+      competencia: t.competencia as string,
+      vencimento: t.vencimento as string,
+      valor: Number(t.valor),
+      somaBaixado: baixas.reduce((s, b) => s + Number(b.valor_recebido), 0),
+      status: t.status as string,
+    };
+  });
+}
+
+export async function gerarMensalidades(competencia: string) {
+  if (!(await gateGerir())) return { erro: "Sem permissão." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(competencia)) return { erro: "Competência inválida." };
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase.rpc("gerar_mensalidades", { p_competencia: competencia });
+  if (error) return { erro: "Falha na geração." };
+  const r = data as { gerados?: number; pulados?: number } | null;
+  revalidatePath(ROTA);
+  return { gerados: r?.gerados ?? 0, pulados: r?.pulados ?? 0 };
+}
+
+export async function registrarBaixa(fd: FormData) {
+  const perfil = await gateGerir();
+  if (!perfil) return { erro: "Sem permissão." };
+  const tituloId = String(fd.get("titulo_id") ?? "");
+  const valor = Number(fd.get("valor_recebido") ?? 0);
+  const conta = String(fd.get("conta_bancaria_id") ?? "");
+  const forma = String(fd.get("forma_pagamento") ?? "");
+  const data = String(fd.get("data_recebimento") ?? "");
+  if (!tituloId || !(valor > 0) || !conta || !forma || !data) return { erro: "Preencha valor, data, conta e forma." };
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("baixa").insert({
+    titulo_id: tituloId,
+    data_recebimento: data,
+    valor_recebido: valor,
+    juros: Number(fd.get("juros") ?? 0) || 0,
+    multa: Number(fd.get("multa") ?? 0) || 0,
+    desconto: Number(fd.get("desconto") ?? 0) || 0,
+    conta_bancaria_id: conta,
+    forma_pagamento: forma,
+    criado_por: perfil.id,
+  });
+  if (error) return { erro: "Falha ao registrar a baixa." };
+  revalidatePath(ROTA);
+  return { ok: true };
+}
+
+export async function desfazerBaixa(tituloId: string) {
+  if (!(await gateGerir())) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("baixa").delete().eq("titulo_id", tituloId);
+  if (error) return { erro: "Falha ao desfazer." };
+  revalidatePath(ROTA);
+  return { ok: true };
+}
+
+export async function lerAutomacao(): Promise<boolean> {
+  if (!(await gateVer())) return false;
+  const supabase = await createServerSupabase();
+  const { data } = await supabase.from("financeiro_config").select("geracao_automatica").eq("id", 1).maybeSingle();
+  return Boolean(data?.geracao_automatica);
+}
+
+export async function setAutomacao(ativa: boolean): Promise<void> {
+  const perfil = await gateGerir();
+  if (!perfil) return;
+  const supabase = await createServerSupabase();
+  await supabase
+    .from("financeiro_config")
+    .update({ geracao_automatica: ativa, atualizado_em: new Date().toISOString(), atualizado_por: perfil.id })
+    .eq("id", 1);
+  revalidatePath(ROTA);
+}
