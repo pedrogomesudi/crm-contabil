@@ -373,3 +373,29 @@ async function carregarCertRowDaNota(
     .maybeSingle();
   return data ?? null;
 }
+
+export type NotaParaDownload = { nfseId: string; razaoSocial: string; numero: string | null };
+
+// Lista as NFS-e autorizadas de uma competência (mês) para download em lote.
+// A RLS já limita ao que o usuário vê (contador só as suas). razão social = a do
+// cliente (tomador); usa o snapshot da nota como fallback.
+export async function listarNotasAutorizadasPorCompetencia(competencia: string): Promise<NotaParaDownload[]> {
+  const perfil = await getPerfilAtual();
+  if (!perfil?.ativo || !podeVerHonorario(perfil.papel)) return [];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(competencia)) return [];
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("nfse")
+    .select("id, numero, tomador_razao_social, clientes(razao_social)")
+    .eq("status", "autorizada")
+    .eq("competencia", competencia)
+    .order("numero");
+  return (data ?? []).map((n) => {
+    const cl = Array.isArray(n.clientes) ? n.clientes[0] : n.clientes;
+    const razao =
+      (cl as { razao_social?: string } | null)?.razao_social ??
+      (n.tomador_razao_social as string | null) ??
+      "SEM RAZAO SOCIAL";
+    return { nfseId: n.id as string, razaoSocial: razao, numero: (n.numero as string | null) ?? null };
+  });
+}
