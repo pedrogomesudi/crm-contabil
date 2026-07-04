@@ -31,6 +31,7 @@ export function DashboardFinanceiro({ mesInicial, dadosIniciais }: { mesInicial:
 
   const r = dados.resumo;
   const maxAging = Math.max(1, ...FAIXAS.map((f) => dados.aging[f]?.total ?? 0));
+  const maxAgingP = Math.max(1, ...FAIXAS.map((f) => dados.agingPagar[f]?.total ?? 0));
   const maxFluxo = Math.max(1, ...dados.fluxo.map((m) => Math.max(m.realizado, m.a_receber)));
 
   return (
@@ -43,19 +44,19 @@ export function DashboardFinanceiro({ mesInicial, dadosIniciais }: { mesInicial:
         {pend && <span className="text-xs text-slate-500">atualizando…</span>}
       </div>
 
-      <p className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-        ⚠️ Os valores refletem apenas <strong>entradas</strong> (contas a receber). As despesas/contas a pagar entram numa próxima fase.
-      </p>
-
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <CardResumo titulo="Saldo (entradas)" valor={formatarMoeda(r.saldo)} />
+        <CardResumo titulo="Saldo real" valor={formatarMoeda(r.saldo_real)} />
         <CardResumo titulo="MRR (recorrente)" valor={formatarMoeda(r.mrr)} />
         <CardResumo titulo="Recebido no mês" valor={formatarMoeda(r.recebido_mes)} />
+        <CardResumo titulo="Saídas no mês" valor={formatarMoeda(r.saidas_mes)} />
         <CardResumo titulo="A receber no mês" valor={formatarMoeda(r.a_receber_mes)} />
+        <CardResumo titulo="A pagar no mês" valor={formatarMoeda(r.a_pagar_mes)} />
         <CardResumo titulo="Inadimplência" valor={`${formatarMoeda(r.inadimplencia_total)} · ${r.inadimplencia_pct}%`} />
         <CardResumo titulo="Previsão 30 dias" valor={formatarMoeda(r.previsao_30)} />
         <CardResumo titulo="Previsão 60 dias" valor={formatarMoeda(r.previsao_60)} />
         <CardResumo titulo="Previsão 90 dias" valor={formatarMoeda(r.previsao_90)} />
+        <CardResumo titulo="Receita do mês" valor={formatarMoeda(r.receita_despesa?.receita ?? 0)} />
+        <CardResumo titulo="Despesa do mês" valor={formatarMoeda(r.receita_despesa?.despesa ?? 0)} />
       </div>
 
       <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
@@ -66,6 +67,22 @@ export function DashboardFinanceiro({ mesInicial, dadosIniciais }: { mesInicial:
             <div key={f} className="grid grid-cols-[8rem_1fr_8rem] items-center gap-2 text-sm">
               <span>{LABEL_FAIXA[f]}</span>
               <Barra valor={item.total} max={maxAging} />
+              <span className="text-right">
+                {formatarMoeda(item.total)} ({item.qtd})
+              </span>
+            </div>
+          );
+        })}
+      </section>
+
+      <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="text-sm font-semibold text-slate-900">Aging de contas a pagar</h2>
+        {FAIXAS.map((f) => {
+          const item = dados.agingPagar[f] ?? { total: 0, qtd: 0 };
+          return (
+            <div key={f} className="grid grid-cols-[8rem_1fr_8rem] items-center gap-2 text-sm">
+              <span>{LABEL_FAIXA[f]}</span>
+              <Barra valor={item.total} max={maxAgingP} />
               <span className="text-right">
                 {formatarMoeda(item.total)} ({item.qtd})
               </span>
