@@ -644,3 +644,32 @@ do $$ begin
     values ('eeeeeeee-0000-0000-0000-000000000001','2026-07-10',500,'bbbbbbbb-0000-0000-0000-0000000000f1','PIX');
   raise notice 'OK: financeiro registra baixa';
 end $$;
+
+-- ===== V6.2 — triggers de sync e status =====
+do $$ declare v numeric; begin
+  reset role;
+  insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario)
+    values ('aaaaaaaa-0000-0000-0000-0000000000c1','PJ','Cliente Sync','55000000000191','Simples') on conflict do nothing;
+  insert into contrato (cliente_id, descricao, valor_mensal, dia_vencimento, data_inicio)
+    values ('aaaaaaaa-0000-0000-0000-0000000000c1','A',300,10,'2026-01-01'),
+           ('aaaaaaaa-0000-0000-0000-0000000000c1','B',200,10,'2026-01-01');
+  select honorario_mensal into v from clientes_financeiro where cliente_id='aaaaaaaa-0000-0000-0000-0000000000c1';
+  if v is distinct from 500 then raise exception 'FALHA: sync honorário <> 500 (=%)', v; end if;
+  raise notice 'OK: contrato sincroniza honorário (soma=500)';
+end $$;
+
+do $$ declare s titulo_status; begin
+  reset role;
+  insert into titulo (id, cliente_id, contrato_id, origem, valor, competencia, vencimento)
+    values ('eeeeeeee-0000-0000-0000-0000000000c1','aaaaaaaa-0000-0000-0000-0000000000c1',null,'MENSALIDADE',100,'2026-07-01','2026-07-10')
+    on conflict do nothing;
+  insert into baixa (titulo_id, data_recebimento, valor_recebido, conta_bancaria_id, forma_pagamento)
+    values ('eeeeeeee-0000-0000-0000-0000000000c1','2026-07-05',40,'bbbbbbbb-0000-0000-0000-0000000000f1','PIX');
+  select status into s from titulo where id='eeeeeeee-0000-0000-0000-0000000000c1';
+  if s <> 'BAIXADO_PARCIAL' then raise exception 'FALHA: status parcial errado (=%)', s; end if;
+  insert into baixa (titulo_id, data_recebimento, valor_recebido, conta_bancaria_id, forma_pagamento)
+    values ('eeeeeeee-0000-0000-0000-0000000000c1','2026-07-06',60,'bbbbbbbb-0000-0000-0000-0000000000f1','PIX');
+  select status into s from titulo where id='eeeeeeee-0000-0000-0000-0000000000c1';
+  if s <> 'BAIXADO' then raise exception 'FALHA: status total errado (=%)', s; end if;
+  raise notice 'OK: baixas recalculam status (parcial -> total)';
+end $$;
