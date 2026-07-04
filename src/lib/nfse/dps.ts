@@ -61,7 +61,10 @@ export function montarDps(d: DadosDps): { xml: string; idDps: string } {
   if (e?.cep && e?.logradouro) {
     const end = toma.ele("end");
     const endNac = end.ele("endNac");
-    endNac.ele("cMun").txt(d.config.codigoMunicipio); // IBGE do município do tomador
+    // IBGE do município do TOMADOR (tem que casar com o CEP, senão SEFIN dá E0240).
+    // Usa o município resolvido do endereço do tomador; só cai no do prestador
+    // quando não foi possível resolver (fallback).
+    endNac.ele("cMun").txt(e.codigo_municipio || d.config.codigoMunicipio);
     endNac.ele("CEP").txt(String(e.cep).replace(/\D/g, ""));
     end.ele("xLgr").txt(e.logradouro);
     end.ele("nro").txt(e.numero || "S/N");
