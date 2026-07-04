@@ -596,3 +596,51 @@ begin
 
   raise notice 'OK: import não altera existentes; honorário atualiza com contrato e preserva sem contrato';
 end $$;
+
+-- ===== V6.2 — RLS de contrato/titulo/baixa =====
+reset role;
+insert into contrato (id, cliente_id, descricao, valor_mensal, dia_vencimento, data_inicio)
+  values ('dddddddd-0000-0000-0000-000000000001','aaaaaaaa-0000-0000-0000-000000000001','Contábil',500,10,'2026-01-01')
+  on conflict do nothing;
+insert into titulo (id, cliente_id, contrato_id, origem, valor, competencia, vencimento)
+  values ('eeeeeeee-0000-0000-0000-000000000001','aaaaaaaa-0000-0000-0000-000000000001','dddddddd-0000-0000-0000-000000000001','MENSALIDADE',500,'2026-07-01','2026-07-10')
+  on conflict do nothing;
+
+-- ASSERT R1: contador vê o contrato/título do SEU cliente
+do $$ declare n int; begin
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  select count(*) into n from contrato where cliente_id='aaaaaaaa-0000-0000-0000-000000000001';
+  if n <> 1 then raise exception 'FALHA: contador não viu o contrato do seu cliente (n=%)', n; end if;
+  select count(*) into n from titulo where cliente_id='aaaaaaaa-0000-0000-0000-000000000001';
+  if n <> 1 then raise exception 'FALHA: contador não viu o título do seu cliente (n=%)', n; end if;
+  raise notice 'OK: contador vê contrato/título do próprio cliente';
+end $$;
+
+-- ASSERT R2: contador NÃO escreve título
+do $$ declare ok boolean := false; begin
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  begin
+    insert into titulo (cliente_id, origem, valor, competencia, vencimento)
+      values ('aaaaaaaa-0000-0000-0000-000000000001','MENSALIDADE',9,'2026-08-01','2026-08-10');
+  exception when others then ok := true; end;
+  if not ok then raise exception 'FALHA: contador conseguiu inserir título'; end if;
+  raise notice 'OK: contador não escreve título';
+end $$;
+
+-- ASSERT R3: assistente NÃO vê nada financeiro
+do $$ declare n int; begin
+  perform _simular('00000000-0000-0000-0000-000000000002');
+  select count(*) into n from contrato; if n <> 0 then raise exception 'FALHA: assistente viu contrato'; end if;
+  select count(*) into n from titulo;   if n <> 0 then raise exception 'FALHA: assistente viu titulo'; end if;
+  raise notice 'OK: assistente não vê contrato/titulo';
+end $$;
+
+-- ASSERT R4: financeiro gerencia (registra baixa)
+do $$ begin
+  reset role;
+  insert into conta_bancaria (id, nome, tipo) values ('bbbbbbbb-0000-0000-0000-0000000000f1','Conta Rec','CORRENTE') on conflict do nothing;
+  perform _simular('00000000-0000-0000-0000-000000000004');
+  insert into baixa (titulo_id, data_recebimento, valor_recebido, conta_bancaria_id, forma_pagamento)
+    values ('eeeeeeee-0000-0000-0000-000000000001','2026-07-10',500,'bbbbbbbb-0000-0000-0000-0000000000f1','PIX');
+  raise notice 'OK: financeiro registra baixa';
+end $$;
