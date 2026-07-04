@@ -14,6 +14,7 @@ export type ResumoPrevia = {
   pendencias: number;
   erros: number;
   itens: ItemPrevia[];
+  avisos?: string[];
 };
 export type EstadoPrevia = { erro?: string; resumo?: ResumoPrevia };
 export type EstadoAplicar = { erro?: string; ok?: boolean; gravados?: number };
