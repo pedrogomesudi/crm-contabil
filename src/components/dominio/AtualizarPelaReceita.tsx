@@ -5,6 +5,7 @@ import { listarClientesReceita, atualizarViaReceita } from "@/app/(app)/integrac
 type Linha = {
   cpf_cnpj: string;
   razao_social: string;
+  marcado: boolean;
   status?: "processando" | "ok" | "erro";
   detalhe?: string;
 };
@@ -21,15 +22,24 @@ export function AtualizarPelaReceita() {
   async function carregar() {
     setCarregando(true);
     const lista = await listarClientesReceita();
-    setLinhas(lista.map((c) => ({ cpf_cnpj: c.cpf_cnpj, razao_social: c.razao_social })));
+    // Todos começam selecionados; o usuário desmarca o que não quiser.
+    setLinhas(lista.map((c) => ({ cpf_cnpj: c.cpf_cnpj, razao_social: c.razao_social, marcado: true })));
     setCarregando(false);
   }
 
+  function marcarTodos(marcar: boolean) {
+    setLinhas((ls) => ls.map((l) => ({ ...l, marcado: marcar })));
+  }
+  function alternar(cpf: string) {
+    setLinhas((ls) => ls.map((l) => (l.cpf_cnpj === cpf ? { ...l, marcado: !l.marcado } : l)));
+  }
+
   async function executar() {
+    const alvos = linhas.filter((l) => l.marcado);
     setExecutando(true);
     pararRef.current = false;
-    setProg({ feitas: 0, total: linhas.length, ok: 0, falha: 0 });
-    for (const alvo of linhas) {
+    setProg({ feitas: 0, total: alvos.length, ok: 0, falha: 0 });
+    for (const alvo of alvos) {
       if (pararRef.current) break;
       setLinhas((ls) => ls.map((l) => (l.cpf_cnpj === alvo.cpf_cnpj ? { ...l, status: "processando" } : l)));
       const r = await atualizarViaReceita(alvo.cpf_cnpj);
@@ -51,13 +61,17 @@ export function AtualizarPelaReceita() {
     setExecutando(false);
   }
 
+  const marcados = linhas.filter((l) => l.marcado).length;
+  const todosMarcados = linhas.length > 0 && marcados === linhas.length;
+
   return (
     <div className="space-y-3 rounded-lg border border-gray-200 p-4 text-sm">
       <div>
         <h2 className="text-sm font-semibold">Atualizar pela Receita Federal</h2>
         <p className="text-xs text-gray-600">
-          Consulta cada <strong>CNPJ</strong> na Receita (via BrasilAPI) e atualiza <strong>razão social</strong> e{" "}
-          <strong>endereço completo</strong>. Clientes com CPF são ignorados. O processo roda um a um, no navegador.
+          Consulta cada <strong>CNPJ</strong> na Receita (via BrasilAPI, com fallback ReceitaWS) e atualiza{" "}
+          <strong>razão social</strong> e <strong>endereço completo</strong>. Clientes com CPF são ignorados. Roda um a
+          um, no navegador — marque quais atualizar.
         </p>
       </div>
 
@@ -72,10 +86,10 @@ export function AtualizarPelaReceita() {
         {linhas.length > 0 && (
           <button
             onClick={executar}
-            disabled={executando}
+            disabled={executando || marcados === 0}
             className="rounded bg-blue-600 px-3 py-1 text-white disabled:opacity-60"
           >
-            {executando ? `Atualizando ${prog.feitas}/${prog.total}…` : `Atualizar ${linhas.length} cliente(s)`}
+            {executando ? `Atualizando ${prog.feitas}/${prog.total}…` : `Atualizar ${marcados} selecionado(s)`}
           </button>
         )}
         {executando && (
@@ -95,6 +109,15 @@ export function AtualizarPelaReceita() {
           <table className="w-full">
             <thead className="bg-slate-100 text-left">
               <tr>
+                <th className="p-2">
+                  <input
+                    type="checkbox"
+                    aria-label="Marcar/desmarcar todos"
+                    checked={todosMarcados}
+                    disabled={executando}
+                    onChange={(e) => marcarTodos(e.target.checked)}
+                  />
+                </th>
                 <th className="p-2">Cliente</th>
                 <th className="p-2">Resultado</th>
               </tr>
@@ -102,6 +125,15 @@ export function AtualizarPelaReceita() {
             <tbody>
               {linhas.map((l) => (
                 <tr key={l.cpf_cnpj} className="border-t border-slate-100">
+                  <td className="p-2">
+                    <input
+                      type="checkbox"
+                      aria-label={`Selecionar ${l.razao_social}`}
+                      checked={l.marcado}
+                      disabled={executando}
+                      onChange={() => alternar(l.cpf_cnpj)}
+                    />
+                  </td>
                   <td className="p-2">{l.razao_social}</td>
                   <td className="p-2">
                     {l.status === "processando" && <span className="text-slate-500">consultando…</span>}
