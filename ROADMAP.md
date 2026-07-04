@@ -14,7 +14,7 @@ Legenda: ✅ concluída · 🚧 em andamento · ⬜ planejada
 | **V3** | Geração automática do contrato (Word/PDF) | ✅ |
 | **V4** | Assinaturas digitais integradas | ✅ |
 | **V5** | Emissão de NFS-e pelo CRM (A: honorários ✅ · B: multi-emitente ✅) | ✅ |
-| **V6** | Módulo Financeiro (contas a receber/pagar) | ⬜ |
+| **V6** | Módulo Financeiro (contas a receber/pagar) | ✅ |
 | **V7** | Integração com WhatsApp (atendimento, boletos, avisos) | ⬜ |
 | **V8** | Layout e estética | ⬜ |
 | **V9** | Modo whitelabel (comercialização) | ⬜ |
@@ -120,8 +120,10 @@ Oito blocos funcionais (fase sugerida entre parênteses):
 - **V6.2 — Motor de recorrência** ✅ — contratos na ficha (sync do honorário), geração idempotente
   de mensalidades + 13º + **pró-rata (RF-013)**, contas a receber com **baixa (recebimento)**,
   disparo manual + automação (pg_cron). Migrations 0028–0031.
-- **V6.3 — Estornos auditados e contas a pagar** ⬜ (a baixa de receber já existe na V6.2; falta o
-  estorno auditado, contas a pagar e aprovação).
+- **V6.3 — Contas a pagar + estorno auditado** ✅ — titulo RECEBER/PAGAR, despesa única/parcelada/
+  recorrente (+pg_cron), baixa de pagamento, estorno auditado (justificativa, não deleta), anexos,
+  dashboard com saldo real (entradas − saídas) e aging de pagar. Migrations 0033–0037. **Módulo
+  Financeiro fechado** (aprovação de pagamento = incremento futuro).
 - **V6.4 — Régua de cobrança** ⬜ (casa com a V7).
 - **V6.5 — Relatórios e dashboard** ✅ — dashboard financeiro (`/financeiro/dashboard`): saldo, MRR,
   recebido/a receber, inadimplência, previsão, aging, fluxo de caixa (6m), maiores devedores, receita

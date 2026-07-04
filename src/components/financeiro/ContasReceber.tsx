@@ -4,10 +4,10 @@ import {
   listarTitulos,
   gerarMensalidades,
   registrarBaixa,
-  desfazerBaixa,
   setAutomacao,
   type TituloView,
 } from "@/app/(app)/financeiro/contas-a-receber/actions";
+import { estornarBaixaDoTitulo } from "@/app/(app)/financeiro/contas-a-pagar/actions";
 import { saldoTitulo, ehVencido, LABEL_STATUS } from "@/lib/financeiro/titulos";
 import { formatarMoeda, formatarData } from "@/lib/format";
 
@@ -97,12 +97,14 @@ export function ContasReceber({
                           className="text-slate-600 underline"
                           onClick={() =>
                             start(async () => {
-                              await desfazerBaixa(t.id);
-                              setTitulos(await listarTitulos(competencia));
+                              const motivo = prompt("Justificativa do estorno?") ?? "";
+                              if (motivo.trim().length < 3) return;
+                              const r = await estornarBaixaDoTitulo(t.id, motivo);
+                              if (!r.erro) setTitulos(await listarTitulos(competencia));
                             })
                           }
                         >
-                          Desfazer baixa
+                          Estornar
                         </button>
                       ) : (
                         <button type="button" className="text-blue-600 underline" onClick={() => setBaixando(t.id)}>

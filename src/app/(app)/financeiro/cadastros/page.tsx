@@ -6,6 +6,7 @@ import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 const ITENS = [
   { href: "/financeiro/dashboard", label: "Dashboard financeiro" },
   { href: "/financeiro/contas-a-receber", label: "Contas a receber" },
+  { href: "/financeiro/contas-a-pagar", label: "Contas a pagar" },
   { href: "/financeiro/cadastros/contas", label: "Contas bancárias" },
   { href: "/financeiro/cadastros/plano-de-contas", label: "Plano de contas" },
   { href: "/financeiro/cadastros/centros-de-custo", label: "Centros de custo" },
