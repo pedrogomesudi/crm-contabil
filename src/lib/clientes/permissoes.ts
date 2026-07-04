@@ -44,3 +44,8 @@ export function podeConfigurarNfse(papel: Papel | undefined): boolean {
 export function podeConfigurarWhatsapp(papel: Papel | undefined): boolean {
   return papel === "admin";
 }
+
+// Atendimento (inbox WhatsApp): admin, financeiro e contador (a RLS escopa o contador).
+export function podeAtender(papel: Papel | undefined): boolean {
+  return papel === "admin" || papel === "financeiro" || papel === "contador";
+}
