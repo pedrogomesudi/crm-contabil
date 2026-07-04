@@ -741,7 +741,7 @@ end $$;
 -- ASSERT P2: financeiro gerencia despesa_recorrente
 do $$ begin
   perform _simular('00000000-0000-0000-0000-000000000004');
-  insert into despesa_recorrente (descricao, valor_mensal, dia_vencimento, data_inicio) values ('Aluguel',1000,5,'2026-01-01');
+  insert into despesa_recorrente (descricao, fornecedor_id, valor_mensal, dia_vencimento, data_inicio) values ('Aluguel','ffffffff-0000-0000-0000-000000000001',1000,5,'2026-01-01');
   raise notice 'OK: financeiro gerencia despesa_recorrente';
 end $$;
 
@@ -765,4 +765,22 @@ do $$ declare s titulo_status; n int; begin
   select count(*) into n from baixa where id='cccccccc-0000-0000-0000-0000000000a1';
   if n <> 1 then raise exception 'FALHA: estorno deletou a baixa (trilha perdida)'; end if;
   raise notice 'OK: estorno marca (não deleta) e volta status p/ ABERTO';
+end $$;
+
+-- ===== V6.3 — RPC gerar_despesas_recorrentes + dashboard com saídas =====
+do $$ declare r jsonb; d jsonb; n int; begin
+  reset role;
+  insert into despesa_recorrente (id, descricao, fornecedor_id, valor_mensal, dia_vencimento, data_inicio)
+    values ('99999999-0000-0000-0000-0000000000d1','Software','ffffffff-0000-0000-0000-000000000001',500,10,'2026-01-01') on conflict do nothing;
+  r := gerar_despesas_recorrentes('2026-07-01');
+  select count(*) into n from titulo where grupo_parcelamento_id='99999999-0000-0000-0000-0000000000d1' and origem='DESPESA_RECORRENTE';
+  if n <> 1 then raise exception 'FALHA: recorrente não gerou 1 título (n=%)', n; end if;
+  r := gerar_despesas_recorrentes('2026-07-01');
+  select count(*) into n from titulo where grupo_parcelamento_id='99999999-0000-0000-0000-0000000000d1' and origem='DESPESA_RECORRENTE';
+  if n <> 1 then raise exception 'FALHA: recorrente duplicou (n=%)', n; end if;
+
+  d := financeiro_dashboard('2026-07-01');
+  if (d->>'a_pagar_mes')::numeric < 500 then raise exception 'FALHA: a_pagar_mes não considera despesas (=%)', d->>'a_pagar_mes'; end if;
+  if not (d ? 'saldo_real') then raise exception 'FALHA: dashboard sem saldo_real'; end if;
+  raise notice 'OK: despesas recorrentes (idempotente) + dashboard com a_pagar/saldo_real';
 end $$;
