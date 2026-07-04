@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { UploadDominio } from "@/components/dominio/UploadDominio";
 import { ImportarEnderecos } from "@/components/dominio/ImportarEnderecos";
+import { AtualizarPelaReceita } from "@/components/dominio/AtualizarPelaReceita";
 
 export default async function IntegracaoDominioPage() {
   const perfil = await getPerfilAtual();
@@ -18,6 +19,7 @@ export default async function IntegracaoDominioPage() {
       </header>
       <UploadDominio />
       <ImportarEnderecos />
+      <AtualizarPelaReceita />
     </main>
   );
 }
