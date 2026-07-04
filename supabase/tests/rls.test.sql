@@ -699,3 +699,27 @@ do $$ declare r1 jsonb; r2 jsonb; v numeric; n int; begin
 
   raise notice 'OK: gerar_mensalidades (pró-rata 1600, 13º, idempotente, encerramento cancela)';
 end $$;
+
+-- ===== V6.5 — RPCs de relatório =====
+do $$ declare d jsonb; ag jsonb; fx jsonb; begin
+  reset role;
+  insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario)
+    values ('aaaaaaaa-0000-0000-0000-0000000000e1','PJ','Cli Relatorio','55000000000353','Simples') on conflict do nothing;
+  insert into contrato (id, cliente_id, descricao, valor_mensal, dia_vencimento, data_inicio)
+    values ('dddddddd-0000-0000-0000-0000000000e1','aaaaaaaa-0000-0000-0000-0000000000e1','R',777,10,'2026-01-01') on conflict do nothing;
+  insert into titulo (id, cliente_id, contrato_id, origem, valor, competencia, vencimento)
+    values ('eeeeeeee-0000-0000-0000-0000000000e1','aaaaaaaa-0000-0000-0000-0000000000e1','dddddddd-0000-0000-0000-0000000000e1','MENSALIDADE',777,'2000-01-01','2000-01-10')
+    on conflict do nothing;
+
+  d := financeiro_dashboard('2026-07-01');
+  if (d->>'mrr')::numeric < 777 then raise exception 'FALHA: MRR não inclui contrato (=%)', d->>'mrr'; end if;
+  if (d->>'inadimplencia_total')::numeric < 777 then raise exception 'FALHA: inadimplência não inclui vencido (=%)', d->>'inadimplencia_total'; end if;
+
+  ag := financeiro_aging();
+  if (ag->'d90_mais'->>'total')::numeric < 777 then raise exception 'FALHA: aging d90_mais não inclui o vencido (=%)', ag->'d90_mais'->>'total'; end if;
+
+  fx := financeiro_fluxo_caixa(6);
+  if jsonb_array_length(fx) <> 6 then raise exception 'FALHA: fluxo não tem 6 meses (=%)', jsonb_array_length(fx); end if;
+
+  raise notice 'OK: RPCs de relatório (MRR/inadimplência/aging d90_mais/fluxo 6 meses)';
+end $$;

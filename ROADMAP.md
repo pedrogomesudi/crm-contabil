@@ -123,7 +123,9 @@ Oito blocos funcionais (fase sugerida entre parênteses):
 - **V6.3 — Estornos auditados e contas a pagar** ⬜ (a baixa de receber já existe na V6.2; falta o
   estorno auditado, contas a pagar e aprovação).
 - **V6.4 — Régua de cobrança** ⬜ (casa com a V7).
-- **V6.5 — Relatórios e dashboard** ⬜ — fluxo de caixa, aging, inadimplência, MRR, churn.
+- **V6.5 — Relatórios e dashboard** ✅ — dashboard financeiro (`/financeiro/dashboard`): saldo, MRR,
+  recebido/a receber, inadimplência, previsão, aging, fluxo de caixa (6m), maiores devedores, receita
+  por tipo. RPCs SECURITY INVOKER + barras CSS. Só lado receita até a V6.3 (contas a pagar). Migration 0032.
 
 ## V7 — Integração com WhatsApp ⬜
 

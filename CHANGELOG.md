@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **V6.5 — Relatórios e Dashboard financeiro:** página **`/financeiro/dashboard`** (gate financeiro) com
+  cards de **saldo, MRR, recebido/a receber, inadimplência (R$ e %) e previsão de caixa 30/60/90**;
+  **aging** de contas a receber (a vencer / 1–30 / 31–60 / 61–90 / 90+) em barras; **fluxo de caixa**
+  dos últimos 6 meses (recebido × a receber); **maiores devedores** e **receita por tipo**
+  (mensalidade × 13º). RPCs de agregação SECURITY INVOKER (a RLS escopa o contador). Barras/tabelas em
+  CSS puro (sem biblioteca). Ressalva na tela: valores refletem só **entradas** até as contas a pagar
+  (V6.3). Migration 0032.
 - **V6.2 — Motor de Recorrência (contas a receber):** entidade **contrato** de honorários na ficha do
   cliente (vários por cliente; ao salvar, **sincroniza o honorário** — a NFS-e passa a faturar pelo
   contrato sem mudar o caminho fiscal). **Geração de mensalidades** (botão "Gerar mensalidades do mês"
