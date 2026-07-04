@@ -1,5 +1,7 @@
-// Consulta de CNPJ na BrasilAPI (espelha o cadastro oficial da Receita Federal).
-// Gratuito, sem chave. Retorna razão social, situação cadastral e endereço.
+// Consulta de CNPJ na Receita Federal via fontes públicas. Provedor primário:
+// BrasilAPI. Fallback (só quando a BrasilAPI não tem o CNPJ — 404, típico de
+// empresas recém-abertas): ReceitaWS. Ambos gratuitos, sem chave. Retornam
+// razão social, situação cadastral e endereço.
 
 export type EnderecoReceita = {
   logradouro?: string;
@@ -16,12 +18,17 @@ export type DadosReceita = {
   endereco: EnderecoReceita;
 };
 
+const UA = "crm-contabil/1.0 (+integracao-receita)";
 const limpar = (v: unknown): string | undefined => {
   const s = String(v ?? "").trim();
   return s ? s : undefined;
 };
+const cepDigitos = (v: unknown): string | undefined => {
+  const s = String(v ?? "").replace(/\D/g, "");
+  return s ? s : undefined;
+};
 
-// Mapeia a resposta bruta da BrasilAPI para o shape do CRM. Puro (testável).
+// Mapeia a resposta da BrasilAPI para o shape do CRM. Puro (testável).
 export function mapearReceita(d: Record<string, unknown>): DadosReceita {
   const endereco: EnderecoReceita = {};
   const set = (k: keyof EnderecoReceita, valor: unknown) => {
@@ -34,7 +41,8 @@ export function mapearReceita(d: Record<string, unknown>): DadosReceita {
   set("bairro", d.bairro);
   set("cidade", d.municipio);
   set("uf", d.uf);
-  set("cep", d.cep);
+  const cep = cepDigitos(d.cep);
+  if (cep) endereco.cep = cep;
   return {
     razaoSocial: limpar(d.razao_social) ?? null,
     situacao: limpar(d.descricao_situacao_cadastral) ?? null,
@@ -42,29 +50,88 @@ export function mapearReceita(d: Record<string, unknown>): DadosReceita {
   };
 }
 
-export type ResultadoConsulta = { dados?: DadosReceita; erro?: string };
+// Mapeia a resposta da ReceitaWS (campos com nomes diferentes). Puro (testável).
+export function mapearReceitaWs(d: Record<string, unknown>): DadosReceita {
+  const endereco: EnderecoReceita = {};
+  const set = (k: keyof EnderecoReceita, valor: unknown) => {
+    const v = limpar(valor);
+    if (v) endereco[k] = v;
+  };
+  set("logradouro", d.logradouro);
+  set("numero", d.numero);
+  set("complemento", d.complemento);
+  set("bairro", d.bairro);
+  set("cidade", d.municipio);
+  set("uf", d.uf);
+  const cep = cepDigitos(d.cep);
+  if (cep) endereco.cep = cep;
+  return {
+    razaoSocial: limpar(d.nome) ?? null,
+    situacao: limpar(d.situacao) ?? null,
+    endereco,
+  };
+}
 
-// Consulta um CNPJ (14 dígitos) na BrasilAPI, com timeout. Erros viram { erro }.
-export async function consultarCnpj(cnpj: string): Promise<ResultadoConsulta> {
-  const doc = cnpj.replace(/\D/g, "");
-  if (doc.length !== 14) return { erro: "Não é um CNPJ (14 dígitos)." };
+type Interno = { dados?: DadosReceita; erro?: string; naoEncontrado?: boolean };
+
+async function comTimeout<T>(fn: (signal: AbortSignal) => Promise<T>): Promise<T> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 15000);
   try {
-    const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${doc}`, {
-      signal: ctrl.signal,
-      // User-Agent explícito: o Cloudflare da BrasilAPI bloqueia (403) o UA
-      // padrão do fetch do Node ("node"). Um UA descritivo passa normalmente.
-      headers: { accept: "application/json", "user-agent": "crm-contabil/1.0 (+integracao-receita)" },
-    });
-    if (res.status === 404) return { erro: "CNPJ não encontrado na Receita." };
-    if (res.status === 429) return { erro: "Limite de consultas atingido — tente novamente em instantes." };
-    if (!res.ok) return { erro: `Falha na consulta (HTTP ${res.status}).` };
-    const dados = (await res.json()) as Record<string, unknown>;
-    return { dados: mapearReceita(dados) };
-  } catch (e) {
-    return { erro: e instanceof Error && e.name === "AbortError" ? "Tempo esgotado na consulta." : "Erro de rede na consulta." };
+    return await fn(ctrl.signal);
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function consultarBrasilApi(doc: string): Promise<Interno> {
+  try {
+    return await comTimeout(async (signal) => {
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${doc}`, {
+        signal,
+        headers: { accept: "application/json", "user-agent": UA },
+      });
+      if (res.status === 404) return { erro: "CNPJ não encontrado na Receita.", naoEncontrado: true };
+      if (res.status === 429) return { erro: "Limite de consultas atingido — tente novamente em instantes." };
+      if (!res.ok) return { erro: `Falha na consulta (HTTP ${res.status}).` };
+      return { dados: mapearReceita((await res.json()) as Record<string, unknown>) };
+    });
+  } catch (e) {
+    return { erro: e instanceof Error && e.name === "AbortError" ? "Tempo esgotado na consulta." : "Erro de rede na consulta." };
+  }
+}
+
+async function consultarReceitaWs(doc: string): Promise<Interno> {
+  try {
+    return await comTimeout(async (signal) => {
+      const res = await fetch(`https://receitaws.com.br/v1/cnpj/${doc}`, {
+        signal,
+        headers: { accept: "application/json", "user-agent": UA },
+      });
+      if (res.status === 429) return { erro: "Limite de consultas atingido na fonte alternativa — tente novamente em instantes." };
+      if (!res.ok) return { erro: `Falha na consulta alternativa (HTTP ${res.status}).` };
+      const d = (await res.json()) as Record<string, unknown>;
+      if (String(d.status ?? "").toUpperCase() !== "OK") return { erro: "CNPJ não encontrado na Receita.", naoEncontrado: true };
+      return { dados: mapearReceitaWs(d) };
+    });
+  } catch (e) {
+    return { erro: e instanceof Error && e.name === "AbortError" ? "Tempo esgotado na consulta alternativa." : "Erro de rede na consulta alternativa." };
+  }
+}
+
+export type ResultadoConsulta = { dados?: DadosReceita; erro?: string };
+
+// Consulta um CNPJ (14 dígitos): BrasilAPI e, só se ela não tiver o CNPJ (404),
+// tenta a ReceitaWS (costuma ter empresas recém-abertas). Erros viram { erro }.
+export async function consultarCnpj(cnpj: string): Promise<ResultadoConsulta> {
+  const doc = cnpj.replace(/\D/g, "");
+  if (doc.length !== 14) return { erro: "Não é um CNPJ (14 dígitos)." };
+  const b = await consultarBrasilApi(doc);
+  if (b.dados) return { dados: b.dados };
+  if (b.naoEncontrado) {
+    const r = await consultarReceitaWs(doc);
+    if (r.dados) return { dados: r.dados };
+    return { erro: r.erro ?? b.erro };
+  }
+  return { erro: b.erro };
 }
