@@ -784,3 +784,33 @@ do $$ declare r jsonb; d jsonb; n int; begin
   if not (d ? 'saldo_real') then raise exception 'FALHA: dashboard sem saldo_real'; end if;
   raise notice 'OK: despesas recorrentes (idempotente) + dashboard com a_pagar/saldo_real';
 end $$;
+
+-- ===== V7.1 — RLS de WhatsApp =====
+reset role;
+insert into whatsapp_mensagem (id, cliente_id, telefone, texto, status)
+  values ('11111111-0000-0000-0000-00000000fa01','aaaaaaaa-0000-0000-0000-000000000001','5534999','oi','ENVIADO')
+  on conflict do nothing;
+
+-- ASSERT W1: assistente NÃO vê config nem histórico
+do $$ declare n int; begin
+  perform _simular('00000000-0000-0000-0000-000000000002');
+  select count(*) into n from whatsapp_config; if n <> 0 then raise exception 'FALHA: assistente viu config wa'; end if;
+  select count(*) into n from whatsapp_mensagem; if n <> 0 then raise exception 'FALHA: assistente viu histórico wa'; end if;
+  raise notice 'OK: assistente não vê WhatsApp';
+end $$;
+
+-- ASSERT W2: contador vê o histórico do SEU cliente; NÃO vê a config
+do $$ declare n int; begin
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  select count(*) into n from whatsapp_mensagem where cliente_id='aaaaaaaa-0000-0000-0000-000000000001';
+  if n <> 1 then raise exception 'FALHA: contador não viu histórico do seu cliente (n=%)', n; end if;
+  select count(*) into n from whatsapp_config; if n <> 0 then raise exception 'FALHA: contador viu config wa (só admin)'; end if;
+  raise notice 'OK: contador vê histórico do próprio cliente, não a config';
+end $$;
+
+-- ASSERT W3: admin gerencia a config
+do $$ begin
+  perform _simular('00000000-0000-0000-0000-000000000001');
+  update whatsapp_config set instance='inst-teste' where id=1;
+  raise notice 'OK: admin gerencia config wa';
+end $$;
