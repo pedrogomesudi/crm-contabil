@@ -72,6 +72,16 @@ export function mapearReceitaWs(d: Record<string, unknown>): DadosReceita {
   };
 }
 
+// Mescla dois resultados: o primário vence onde tem valor; o secundário preenche
+// as lacunas (ex.: BrasilAPI achou mas sem logradouro → ReceitaWS completa).
+export function mesclarDados(primario: DadosReceita, secundario: DadosReceita): DadosReceita {
+  return {
+    razaoSocial: primario.razaoSocial ?? secundario.razaoSocial,
+    situacao: primario.situacao ?? secundario.situacao,
+    endereco: { ...secundario.endereco, ...primario.endereco },
+  };
+}
+
 type Interno = { dados?: DadosReceita; erro?: string; naoEncontrado?: boolean };
 
 async function comTimeout<T>(fn: (signal: AbortSignal) => Promise<T>): Promise<T> {
@@ -127,7 +137,16 @@ export async function consultarCnpj(cnpj: string): Promise<ResultadoConsulta> {
   const doc = cnpj.replace(/\D/g, "");
   if (doc.length !== 14) return { erro: "Não é um CNPJ (14 dígitos)." };
   const b = await consultarBrasilApi(doc);
-  if (b.dados) return { dados: b.dados };
+  if (b.dados) {
+    // Achou na BrasilAPI, mas o endereço pode vir incompleto (sem logradouro).
+    // Nesse caso, complementa pela ReceitaWS (mescla). Se a ReceitaWS falhar,
+    // mantém o que a BrasilAPI trouxe (degradação graciosa).
+    if (!b.dados.endereco.logradouro) {
+      const r = await consultarReceitaWs(doc);
+      if (r.dados) return { dados: mesclarDados(b.dados, r.dados) };
+    }
+    return { dados: b.dados };
+  }
   if (b.naoEncontrado) {
     const r = await consultarReceitaWs(doc);
     if (r.dados) return { dados: r.dados };
