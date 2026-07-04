@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
-import { CardResumo } from "@/components/CardResumo";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { formatarData } from "@/lib/format";
 import { REGIMES } from "@/lib/tipos";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { StatCard } from "@/components/ui/StatCard";
+import { Card } from "@/components/ui/Card";
+import { Botao } from "@/components/ui/Botao";
 
 export const metadata = { title: "Início" };
 
@@ -46,110 +49,96 @@ export default async function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Início</h1>
-        <div className="flex gap-2">
-          {podeCriar && (
-            <Link
-              href="/clientes/novo"
-              className="rounded bg-slate-900 px-3 py-2 text-sm text-white"
-            >
-              <span aria-hidden="true">+ </span>Novo cliente
+      <PageHeader
+        titulo="Início"
+        subtitulo={`${nf.format(ativos)} clientes ativos · ${nf.format(total)} no total`}
+        acoes={
+          <>
+            {podeCriar && (
+              <Link href="/clientes/novo">
+                <Botao variante="primario">
+                  <span aria-hidden="true">+ </span>Novo cliente
+                </Botao>
+              </Link>
+            )}
+            <Link href="/clientes">
+              <Botao variante="secundario">Ver todos</Botao>
             </Link>
-          )}
-          <Link
-            href="/clientes"
-            className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700"
-          >
-            Ver todos
-          </Link>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {erroResumo ? (
         <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
           Não foi possível carregar o resumo. Tente novamente.
         </p>
       ) : total === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
-          <p className="text-slate-600">
+        <Card className="p-8 text-center">
+          <p className="text-cinza">
             {ehContador
               ? "Você ainda não tem clientes atribuídos."
               : "Nenhum cliente cadastrado ainda."}
           </p>
           {podeCriar && (
-            <Link
-              href="/clientes/novo"
-              className="mt-3 inline-block rounded bg-slate-900 px-4 py-2 text-sm text-white"
-            >
-              {ehContador ? "Cadastrar um cliente" : "Cadastrar o primeiro cliente"}
+            <Link href="/clientes/novo" className="mt-3 inline-block">
+              <Botao variante="primario">
+                {ehContador ? "Cadastrar um cliente" : "Cadastrar o primeiro cliente"}
+              </Botao>
             </Link>
           )}
-        </div>
+        </Card>
       ) : (
         <>
           {/* Números-resumo */}
-          <section
-            aria-label="Resumo de clientes"
-            className="grid grid-cols-2 gap-4 sm:grid-cols-3"
-          >
-            <CardResumo titulo="Total de clientes" valor={nf.format(total)} />
-            <CardResumo titulo="Ativos" valor={nf.format(ativos)} />
-            <CardResumo titulo="Inativos" valor={nf.format(inativos)} />
+          <section aria-label="Resumo de clientes" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <StatCard rotulo="Total de clientes" valor={nf.format(total)} />
+            <StatCard rotulo="Ativos" valor={nf.format(ativos)} variante="positivo" />
+            <StatCard rotulo="Inativos" valor={nf.format(inativos)} />
           </section>
 
           {/* Distribuição por regime */}
-          <section
-            aria-labelledby="h-regime"
-            className="rounded-xl border border-slate-200 bg-white p-4"
-          >
-            <h2 id="h-regime" className="mb-3 text-sm font-semibold text-slate-900">
+          <Card>
+            <h2 id="h-regime" className="mb-3 font-display text-sm font-semibold text-texto">
               Por regime tributário
             </h2>
             <dl className="grid grid-cols-3 gap-3 sm:grid-cols-5">
               {REGIMES.map((regime) => (
-                <div key={regime} className="rounded border border-slate-100 bg-slate-50 p-3">
-                  <dt className="text-xs text-slate-600">{regime}</dt>
-                  <dd className="text-lg font-semibold text-slate-900">
+                <div key={regime} className="rounded-lg border border-linha bg-creme p-3">
+                  <dt className="text-xs text-cinza">{regime}</dt>
+                  <dd className="font-display text-lg font-semibold text-texto">
                     {nf.format(porRegime[regime] ?? 0)}
                   </dd>
                 </div>
               ))}
             </dl>
-          </section>
+          </Card>
 
           {/* Clientes atualizados recentemente */}
-          <section
-            aria-labelledby="h-recentes"
-            className="rounded-xl border border-slate-200 bg-white p-4"
-          >
-            <h2 id="h-recentes" className="mb-3 text-sm font-semibold text-slate-900">
+          <Card>
+            <h2 id="h-recentes" className="mb-3 font-display text-sm font-semibold text-texto">
               Clientes atualizados recentemente
             </h2>
             {erroRecentes ? (
-              <p role="alert" className="text-sm text-red-700">
+              <p role="alert" className="text-sm text-negativo">
                 Não foi possível carregar os clientes recentes.
               </p>
             ) : recentes.length === 0 ? (
-              <p className="text-sm text-slate-500">Nenhum cliente recente.</p>
+              <p className="text-sm text-cinza">Nenhum cliente recente.</p>
             ) : (
-              <ul className="divide-y divide-slate-100 text-sm">
+              <ul className="divide-y divide-linha text-sm">
                 {recentes.map((c) => (
                   <li key={c.id} className="flex items-center justify-between py-2">
-                    <Link href={`/clientes/${c.id}`} className="text-slate-900 underline">
+                    <Link href={`/clientes/${c.id}`} className="text-texto underline">
                       {c.razao_social}
                     </Link>
-                    <time
-                      dateTime={c.atualizado_em ?? undefined}
-                      className="text-xs text-slate-600"
-                    >
+                    <time dateTime={c.atualizado_em ?? undefined} className="font-mono text-xs text-cinza-claro">
                       {formatarData(c.atualizado_em)}
                     </time>
                   </li>
                 ))}
               </ul>
             )}
-          </section>
+          </Card>
         </>
       )}
     </div>
