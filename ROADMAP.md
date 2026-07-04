@@ -129,13 +129,19 @@ Oito blocos funcionais (fase sugerida entre parênteses):
   recebido/a receber, inadimplência, previsão, aging, fluxo de caixa (6m), maiores devedores, receita
   por tipo. RPCs SECURITY INVOKER + barras CSS. Só lado receita até a V6.3 (contas a pagar). Migration 0032.
 
-## V7 — Integração com WhatsApp ⬜
+## V7 — Integração com WhatsApp 🚧
 
 Integração do CRM com o **WhatsApp** para relacionamento com clientes: **atendimento**, envio de
-**boletos** e disparo de **mensagens e notícias do escritório**.
+**boletos** e disparo de **mensagens e notícias do escritório**. Provedor escolhido: **Z-API**
+(não-oficial; cliente isolado para troca futura).
 
-> A definir: provedor (API oficial do WhatsApp Cloud vs. BSP), modelos de mensagem aprovados
-> (templates), opt-in/opt-out (LGPD) e a ligação com a régua de cobrança da V6.
+- **V7.1 — Envio (fundação)** ✅ — config Z-API cifrada (`/configuracoes/whatsapp`), cliente
+  `whatsapp/zapi.ts`, helpers de telefone/template, botão "Cobrar (WhatsApp)" num título + histórico
+  `whatsapp_mensagem`. Migration 0038.
+- **V7.2 — Régua de cobrança automática** ⬜ — etapas D-3/D+1/D+7/D+15 sobre títulos vencidos (reusa a V7.1).
+- **V7.3 — Atendimento (inbox bidirecional)** ⬜ — webhook de entrada + caixa de entrada.
+
+> Opt-in/opt-out (LGPD) a tratar na V7.2 (régua). Número dedicado do escritório (risco do não-oficial).
 
 ## V8 — Layout e estética ⬜
 

@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **V7.1 — Envio WhatsApp (fundação, Z-API):** integração com o **Z-API** (provedor não-oficial) para
+  envio de mensagens. Tela **`/configuracoes/whatsapp`** (admin) com credenciais **cifradas**
+  (AES-256-GCM, env `WHATSAPP_CRIPTO_KEY`) e botão **testar conexão**. Cliente isolado em
+  `whatsapp/zapi.ts` (trocar de provedor = só esse arquivo), helpers de normalização de telefone e
+  templates de mensagem. Botão **"Cobrar (WhatsApp)"** num título de contas a receber → envia a
+  cobrança e grava **histórico** (`whatsapp_mensagem`). Fundação reusada pela régua automática (V7.2).
+  Migration 0038. *(Também corrige o `somaBaixado` em contas a receber para ignorar baixas estornadas.)*
 - **V6.3 — Contas a Pagar + Estorno Auditado (fecha o Módulo Financeiro):** o `titulo` passa a ter
   **tipo RECEBER/PAGAR** (+ fornecedor + parcelamento). Nova tela **`/financeiro/contas-a-pagar`**
   (admin/financeiro): lançar despesa **única**, **parcelada** (N parcelas com rateio) ou **recorrente**

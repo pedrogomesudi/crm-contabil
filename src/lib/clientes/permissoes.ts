@@ -39,3 +39,8 @@ export function podeExcluirCliente(papel: Papel | undefined): boolean {
 export function podeConfigurarNfse(papel: Papel | undefined): boolean {
   return papel === "admin";
 }
+
+// Configura o WhatsApp (credenciais Z-API): só admin (custódia de credenciais).
+export function podeConfigurarWhatsapp(papel: Papel | undefined): boolean {
+  return papel === "admin";
+}

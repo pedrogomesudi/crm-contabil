@@ -8,6 +8,7 @@ import {
   type TituloView,
 } from "@/app/(app)/financeiro/contas-a-receber/actions";
 import { estornarBaixaDoTitulo } from "@/app/(app)/financeiro/contas-a-pagar/actions";
+import { cobrarViaWhatsapp } from "@/app/(app)/financeiro/contas-a-receber/whatsapp";
 import { saldoTitulo, ehVencido, LABEL_STATUS } from "@/lib/financeiro/titulos";
 import { formatarMoeda, formatarData } from "@/lib/format";
 
@@ -109,6 +110,20 @@ export function ContasReceber({
                       ) : (
                         <button type="button" className="text-blue-600 underline" onClick={() => setBaixando(t.id)}>
                           Baixar
+                        </button>
+                      )}
+                      {t.temTelefone && saldo > 0 && (
+                        <button
+                          type="button"
+                          className="ml-2 text-green-700 underline"
+                          onClick={() =>
+                            start(async () => {
+                              const r = await cobrarViaWhatsapp(t.id);
+                              setMsg(r.erro ?? "Cobrança enviada por WhatsApp.");
+                            })
+                          }
+                        >
+                          Cobrar (WhatsApp)
                         </button>
                       )}
                     </td>
