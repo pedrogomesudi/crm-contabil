@@ -53,7 +53,9 @@ export async function consultarCnpj(cnpj: string): Promise<ResultadoConsulta> {
   try {
     const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${doc}`, {
       signal: ctrl.signal,
-      headers: { accept: "application/json" },
+      // User-Agent explícito: o Cloudflare da BrasilAPI bloqueia (403) o UA
+      // padrão do fetch do Node ("node"). Um UA descritivo passa normalmente.
+      headers: { accept: "application/json", "user-agent": "crm-contabil/1.0 (+integracao-receita)" },
     });
     if (res.status === 404) return { erro: "CNPJ não encontrado na Receita." };
     if (res.status === 429) return { erro: "Limite de consultas atingido — tente novamente em instantes." };
