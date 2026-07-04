@@ -425,3 +425,103 @@ begin
   if b <> a + 1 then raise exception 'FALHA: proximo_ndps_cliente não incrementou (% -> %)', a, b; end if;
   raise notice 'OK: proximo_ndps_cliente incrementa por cliente';
 end $$;
+
+-- ===== V6.1 — RLS DOS CADASTROS FINANCEIROS =====
+
+-- Seed de apoio (como owner): uma conta e uma categoria para os SELECTs.
+reset role;
+insert into conta_bancaria (id, nome, tipo, saldo_inicial)
+  values ('bbbbbbbb-0000-0000-0000-000000000001','Conta Teste','CORRENTE',0)
+  on conflict do nothing;
+
+-- ASSERT F1: financeiro gerencia conta_bancaria (INSERT permitido)
+do $$
+begin
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  insert into conta_bancaria (nome, tipo) values ('Conta do Financeiro','CAIXA');
+  raise notice 'OK: financeiro insere conta_bancaria';
+end $$;
+
+-- ASSERT F2: contador NÃO vê conta_bancaria (SELECT bloqueado => 0 linhas)
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  select count(*) into n from conta_bancaria;
+  if n <> 0 then raise exception 'FALHA: contador viu % contas', n; end if;
+  raise notice 'OK: contador não vê conta_bancaria';
+end $$;
+
+-- ASSERT F3: contador NÃO insere conta_bancaria (INSERT bloqueado)
+do $$
+declare ok boolean := false;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  begin
+    insert into conta_bancaria (nome, tipo) values ('Hack','CAIXA');
+  exception when others then ok := true;
+  end;
+  if not ok then raise exception 'FALHA: contador conseguiu inserir conta_bancaria'; end if;
+  raise notice 'OK: contador não insere conta_bancaria';
+end $$;
+
+-- ASSERT F4: contador LÊ categoria (SELECT liberado => vê os seeds)
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  select count(*) into n from categoria;
+  if n = 0 then raise exception 'FALHA: contador não viu categorias (esperava seeds)'; end if;
+  raise notice 'OK: contador lê categoria (% linhas)', n;
+end $$;
+
+-- ASSERT F5: contador NÃO escreve em categoria (INSERT bloqueado)
+do $$
+declare ok boolean := false;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  begin
+    insert into categoria (nome, natureza) values ('Categoria Hack','RECEITA');
+  exception when others then ok := true;
+  end;
+  if not ok then raise exception 'FALHA: contador escreveu em categoria'; end if;
+  raise notice 'OK: contador não escreve em categoria';
+end $$;
+
+-- ASSERT F6: contador LÊ servico (SELECT liberado)
+do $$
+declare n int;
+begin
+  reset role;
+  insert into servico (id, nome) values ('cccccccc-0000-0000-0000-000000000001','Abertura de empresa')
+    on conflict do nothing;
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  select count(*) into n from servico;
+  if n = 0 then raise exception 'FALHA: contador não viu serviços'; end if;
+  raise notice 'OK: contador lê servico (% linhas)', n;
+end $$;
+
+-- ASSERT F7: assistente NÃO vê nada financeiro (categoria bloqueada)
+do $$
+declare n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  select count(*) into n from categoria;
+  if n <> 0 then raise exception 'FALHA: assistente viu % categorias', n; end if;
+  raise notice 'OK: assistente não vê categoria';
+end $$;
+
+-- ASSERT F8: gatilho de 2 níveis barra o 3º nível do plano de contas
+do $$
+declare v_pai uuid; v_filho uuid; ok boolean := false;
+begin
+  reset role;
+  insert into categoria (nome, natureza) values ('Pai N1','DESPESA') returning id into v_pai;
+  insert into categoria (nome, natureza, categoria_pai_id) values ('Filho N2','DESPESA', v_pai) returning id into v_filho;
+  begin
+    insert into categoria (nome, natureza, categoria_pai_id) values ('Neto N3','DESPESA', v_filho);
+  exception when others then ok := true;
+  end;
+  if not ok then raise exception 'FALHA: aceitou 3º nível no plano de contas'; end if;
+  raise notice 'OK: plano de contas limitado a 2 níveis';
+end $$;
