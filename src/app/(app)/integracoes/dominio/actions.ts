@@ -8,7 +8,8 @@ import { parseEmpresas } from "@/lib/dominio/parseEmpresas";
 import { parseContratos } from "@/lib/dominio/parseContratos";
 import { parseClientes } from "@/lib/dominio/parseClientes";
 import { combinarFontes } from "@/lib/dominio/mapear";
-import { avisoContratosNaoVinculados } from "@/lib/dominio/avisos";
+import { vincularContratosPorNome, normalizarRazao } from "@/lib/dominio/vinculoContratos";
+import { avisoContratosNaoVinculados, avisoContratosNaoCasados } from "@/lib/dominio/avisos";
 import { reconciliarClientes, type ClienteExistente } from "@/lib/dominio/reconciliar";
 import type { EmpresaDominio, ContatoDominio, ContratoDominio } from "@/lib/dominio/tipos";
 import type { EstadoPrevia, EstadoAplicar, ItemPrevia } from "./estados";
@@ -60,13 +61,12 @@ export async function gerarPrevia(_prev: EstadoPrevia, formData: FormData): Prom
   const existentes = (existentesRaw ?? []) as ClienteExistente[];
 
   const itens = reconciliarClientes(normalizados, existentes);
-  const contratosPorCodigo = new Map<string, ContratoDominio[]>();
-  for (const c of contratos) {
-    const k = String(c.codigoCliente);
-    const lista = contratosPorCodigo.get(k) ?? [];
-    lista.push(c);
-    contratosPorCodigo.set(k, lista);
-  }
+  // Vínculo contrato->cliente por NOME (razão social normalizada) resolvendo o
+  // CNPJ pelas empresas do Regime. Dispensa o relatório "Clientes"/código.
+  const { porCnpj: contratosPorCnpj, naoCasados, ambiguos } = vincularContratosPorNome(
+    contratos,
+    normalizados.map((n) => ({ cpfCnpj: n.cpf_cnpj, razaoSocial: n.razao_social })),
+  );
 
   const resumo = { novos: 0, atualizados: 0, inalterados: 0, pendencias: 0, erros: 0 };
   for (const it of itens) {
@@ -97,20 +97,23 @@ export async function gerarPrevia(_prev: EstadoPrevia, formData: FormData): Prom
   // financeiro (assistente não vê). Falha de permissão aqui não bloqueia o
   // cadastral — apenas significa que este papel não importa financeiro.
   const contratosRows = itens
-    .filter((it) => it.cliente.dominio_codigo && contratosPorCodigo.has(it.cliente.dominio_codigo))
+    .filter((it) => contratosPorCnpj.has(it.cliente.cpf_cnpj))
     .map((it) => ({
       importacao_id: imp.id,
       cpf_cnpj: it.cliente.cpf_cnpj,
-      payload: contratosPorCodigo.get(it.cliente.dominio_codigo as string) ?? [],
+      payload: contratosPorCnpj.get(it.cliente.cpf_cnpj) ?? [],
     }));
   if (contratosRows.length) await supabase.from("importacao_contratos").insert(contratosRows);
 
-  // Blindagem: se vieram contratos mas NENHUM vinculou a um cliente, o relatório
-  // "Clientes" provavelmente está errado/ausente (é dele que sai o código do
-  // vínculo). Avisa em alto e bom som para não importar honorário zerado em silêncio.
+  // Blindagem: avisa quando contratos não vinculam (nenhum => Regime ausente/nomes
+  // divergentes; parcial => lista os não-casados e ambíguos). Evita importar
+  // honorário zerado em silêncio.
   const avisos: string[] = [];
-  const avisoContratos = avisoContratosNaoVinculados(contratosPorCodigo.size, contratosRows.length);
-  if (avisoContratos) avisos.push(avisoContratos);
+  const distintosComContrato = new Set(contratos.map((c) => normalizarRazao(c.clienteNome))).size;
+  const avisoZero = avisoContratosNaoVinculados(distintosComContrato, contratosPorCnpj.size);
+  if (avisoZero) avisos.push(avisoZero);
+  const avisoParcial = avisoContratosNaoCasados(naoCasados, ambiguos);
+  if (avisoParcial) avisos.push(avisoParcial);
 
   // Detalhe por item (só cadastral; sem valores financeiros) para a prévia
   // exibir O QUÊ será gravado e o motivo das pendências. Inalterados ficam fora.
