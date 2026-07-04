@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mapearReceita, mapearReceitaWs } from "@/lib/receita/brasilapi";
+import { mapearReceita, mapearReceitaWs, mesclarDados } from "@/lib/receita/brasilapi";
 
 describe("mapearReceita", () => {
   it("extrai razão social, situação e endereço completo", () => {
@@ -70,5 +70,44 @@ describe("mapearReceitaWs (fonte alternativa)", () => {
       uf: "MG",
       cep: "38411217",
     });
+  });
+});
+
+describe("mesclarDados", () => {
+  it("primário sem logradouro é completado pelo secundário", () => {
+    const primario = {
+      razaoSocial: "LEONEL BATISTA SOARES",
+      situacao: "ATIVA",
+      endereco: { bairro: "MORUMBI", cep: "38407162", cidade: "UBERLANDIA", uf: "MG" },
+    };
+    const secundario = {
+      razaoSocial: "LEONEL BATISTA SOARES",
+      situacao: "ATIVA",
+      endereco: {
+        logradouro: "RUA INGA",
+        numero: "127",
+        complemento: "SALA 1",
+        bairro: "MORUMBI",
+        cep: "38407162",
+        cidade: "UBERLANDIA",
+        uf: "MG",
+      },
+    };
+    const r = mesclarDados(primario, secundario);
+    expect(r.endereco.logradouro).toBe("RUA INGA");
+    expect(r.endereco.numero).toBe("127");
+    expect(r.endereco.complemento).toBe("SALA 1");
+    expect(r.endereco.bairro).toBe("MORUMBI"); // mantido do primário
+  });
+
+  it("primário vence onde tem valor", () => {
+    const r = mesclarDados(
+      { razaoSocial: "A", situacao: null, endereco: { logradouro: "RUA A" } },
+      { razaoSocial: "B", situacao: "ATIVA", endereco: { logradouro: "RUA B", numero: "9" } },
+    );
+    expect(r.razaoSocial).toBe("A");
+    expect(r.situacao).toBe("ATIVA"); // primário null → usa secundário
+    expect(r.endereco.logradouro).toBe("RUA A"); // primário vence
+    expect(r.endereco.numero).toBe("9"); // secundário completa
   });
 });
