@@ -117,9 +117,11 @@ Oito blocos funcionais (fase sugerida entre parênteses):
 - **V6.1 — Fundação financeira** ✅ — cadastros de apoio (contas bancárias, plano de contas,
   centros de custo, fornecedores, serviços) + extensão financeira do cliente + permissões + RLS +
   telas CRUD. *(Pró-rata e status financeiro suspenso/encerrado adiados para o V6.2.)*
-- **V6.2 — Motor de recorrência** ⬜ — contratos, geração idempotente de mensalidades + 13º,
-  títulos a receber, **pró-rata (RF-013)**.
-- **V6.3 — Baixas, estornos e contas a pagar** ⬜.
+- **V6.2 — Motor de recorrência** ✅ — contratos na ficha (sync do honorário), geração idempotente
+  de mensalidades + 13º + **pró-rata (RF-013)**, contas a receber com **baixa (recebimento)**,
+  disparo manual + automação (pg_cron). Migrations 0028–0031.
+- **V6.3 — Estornos auditados e contas a pagar** ⬜ (a baixa de receber já existe na V6.2; falta o
+  estorno auditado, contas a pagar e aprovação).
 - **V6.4 — Régua de cobrança** ⬜ (casa com a V7).
 - **V6.5 — Relatórios e dashboard** ⬜ — fluxo de caixa, aging, inadimplência, MRR, churn.
 

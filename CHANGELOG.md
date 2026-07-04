@@ -10,6 +10,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **V6.2 — Motor de Recorrência (contas a receber):** entidade **contrato** de honorários na ficha do
+  cliente (vários por cliente; ao salvar, **sincroniza o honorário** — a NFS-e passa a faturar pelo
+  contrato sem mudar o caminho fiscal). **Geração de mensalidades** (botão "Gerar mensalidades do mês"
+  + **automação** mensal via pg_cron, ligável por toggle) com **pró-rata** no 1º mês, **13º** e
+  **idempotência**. Tela **`/financeiro/contas-a-receber`**: título por competência, **baixa
+  (recebimento)** na conta bancária (total/parcial, com juros/multa/desconto) e **desfazer baixa**.
+  Status do título derivado das baixas (trigger). Migrations 0028–0031; RLS financeira (admin/
+  financeiro tudo, contador só os seus). A **NFS-e avulsa** permanece intocada.
 - **V6.1 — Fundação Financeira (primeira fatia da V6):** cadastros de apoio do módulo financeiro —
   **contas bancárias**, **plano de contas** (hierárquico, 2 níveis, com seed padrão), **centros de
   custo** (seed dos 6 departamentos), **fornecedores** (com validação de CNPJ/CPF) e **tabela de
