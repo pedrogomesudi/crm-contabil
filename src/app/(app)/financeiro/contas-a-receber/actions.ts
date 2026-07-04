@@ -14,6 +14,7 @@ export type TituloView = {
   valor: number;
   somaBaixado: number;
   status: string;
+  temTelefone: boolean;
 };
 const ROTA = "/financeiro/contas-a-receber";
 
@@ -32,21 +33,23 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("titulo")
-    .select("id, origem, competencia, vencimento, valor, status, clientes(razao_social), baixa(valor_recebido)")
+    .select("id, origem, competencia, vencimento, valor, status, clientes(razao_social, telefone), baixa(valor_recebido, estornada)")
     .eq("competencia", competencia)
     .order("vencimento");
   return (data ?? []).map((t) => {
     const cl = Array.isArray(t.clientes) ? t.clientes[0] : t.clientes;
-    const baixas = (t.baixa ?? []) as { valor_recebido: number }[];
+    const cliente = cl as { razao_social?: string; telefone?: string } | null;
+    const baixas = (t.baixa ?? []) as { valor_recebido: number; estornada: boolean }[];
     return {
       id: t.id as string,
-      cliente: (cl as { razao_social?: string } | null)?.razao_social ?? "—",
+      cliente: cliente?.razao_social ?? "—",
       origem: t.origem as string,
       competencia: t.competencia as string,
       vencimento: t.vencimento as string,
       valor: Number(t.valor),
-      somaBaixado: baixas.reduce((s, b) => s + Number(b.valor_recebido), 0),
+      somaBaixado: baixas.filter((b) => !b.estornada).reduce((s, b) => s + Number(b.valor_recebido), 0),
       status: t.status as string,
+      temTelefone: Boolean(cliente?.telefone),
     };
   });
 }
