@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 
 export type CampoDesc = {
@@ -17,12 +18,14 @@ export function CadastroCrud({
   itens,
   salvar,
   alternarAtiva,
+  voltarHref = "/financeiro/cadastros",
 }: {
   titulo: string;
   campos: CampoDesc[];
   itens: RegistroCrud[];
   salvar: (prev: EstadoCrud, fd: FormData) => Promise<EstadoCrud>;
   alternarAtiva: (fd: FormData) => Promise<void>;
+  voltarHref?: string;
 }) {
   const [editando, setEditando] = useState<RegistroCrud | null>(null);
   const [estado, action, pending] = useActionState(salvar, {} as EstadoCrud);
@@ -92,6 +95,12 @@ export function CadastroCrud({
                 Cancelar
               </button>
             )}
+            <Link
+              href={voltarHref}
+              className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              Voltar
+            </Link>
           </div>
         </form>
       </section>
