@@ -77,3 +77,10 @@ npm run db:test       # roda os asserts de RLS contra o banco
   3. A régua só dispara com o toggle **"ativa"** ligado em **Financeiro → Régua de cobrança**; o botão
      **"Processar agora"** roda manualmente (útil para testar). Etapas e opt-out por cliente são
      configuráveis pela mesma tela / ficha do cliente.
+- **Atendimento (inbox bidirecional):**
+  1. Defina `ZAPI_WEBHOOK_SECRET` (string aleatória) no ambiente.
+  2. No painel do **Z-API**, configure o webhook **"Ao receber"** (on-message-received) para
+     `POST https://<seu-dominio>/api/webhooks/zapi/<ZAPI_WEBHOOK_SECRET>`.
+  3. As conversas ficam em **Atendimento** (menu): lista à esquerda, thread à direita, resposta na
+     caixa. Atualiza por polling (~15s). A thread é **unificada** por telefone (mostra recebidas,
+     respostas e as cobranças/régua já enviadas). Só **texto** (mídia recebida vira um marcador).

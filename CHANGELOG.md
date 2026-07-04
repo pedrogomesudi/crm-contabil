@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **V7.3 — Atendimento / Inbox WhatsApp (fecha a V7):** caixa de entrada bidirecional. `whatsapp_mensagem`
+  vira **bidirecional** (`direcao` IN/OUT, `lida`, `z_message_id`) — a conversa é **derivada por telefone**,
+  então a thread já nasce **unificada** (recebidas + respostas + cobranças/régua). **Webhook**
+  `POST /api/webhooks/zapi/[secret]` (protegido por `ZAPI_WEBHOOK_SECRET`) com **dedup** por `z_message_id`
+  e resolução best-effort do cliente. Tela **`/atendimento`** (menu; gate admin/financeiro/contador):
+  dois painéis, resposta na thread, badge de não-lidas, atualização por **polling**. Só texto (mídia
+  recebida vira marcador). Migration 0040.
 - **V7.2 — Régua de Cobrança Automática:** cobrança dos honorários por WhatsApp em **etapas
   configuráveis** (seed D-3/D+1/D+7/D+15) sobre os títulos a receber. Tela **`/financeiro/regua-cobranca`**
   (admin/financeiro): toggle liga/desliga, **CRUD das etapas** (dias, template com `{nome}/{valor}/{vencimento}/{dias}`),

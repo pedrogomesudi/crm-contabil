@@ -854,3 +854,37 @@ do $$ declare erro boolean := false; v_etapa uuid; begin
   if not erro then raise exception 'FALHA: permitiu reenvio da mesma etapa para o título'; end if;
   raise notice 'OK: idempotência (titulo_id, etapa_id)';
 end $$;
+
+-- ===== V7.3 — atendimento: thread + dedup =====
+-- entrada de um cliente do contador (aaaa..001)
+reset role;
+insert into whatsapp_mensagem (id, cliente_id, telefone, texto, status, direcao, lida, z_message_id)
+  values ('33333333-0000-0000-0000-0000000000d1','aaaaaaaa-0000-0000-0000-000000000001','5534000','oi entrada','RECEBIDO','IN',false,'ZID-1')
+  on conflict do nothing;
+
+-- ASSERT A1: contador vê a entrada do SEU cliente
+do $$ declare n int; begin
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  select count(*) into n from whatsapp_mensagem where telefone='5534000' and direcao='IN';
+  if n <> 1 then raise exception 'FALHA: contador não viu entrada do seu cliente (n=%)', n; end if;
+  raise notice 'OK: contador vê thread do próprio cliente';
+end $$;
+
+-- ASSERT A2: assistente NÃO vê a entrada
+do $$ declare n int; begin
+  perform _simular('00000000-0000-0000-0000-000000000002');
+  select count(*) into n from whatsapp_mensagem where telefone='5534000';
+  if n <> 0 then raise exception 'FALHA: assistente viu thread'; end if;
+  raise notice 'OK: assistente não vê atendimento';
+end $$;
+
+-- ASSERT A3: dedup por z_message_id
+do $$ declare erro boolean := false; begin
+  reset role;
+  begin
+    insert into whatsapp_mensagem (telefone, texto, status, direcao, z_message_id)
+      values ('5534000','dup','RECEBIDO','IN','ZID-1');
+  exception when unique_violation then erro := true; end;
+  if not erro then raise exception 'FALHA: permitiu z_message_id duplicado'; end if;
+  raise notice 'OK: dedup por z_message_id';
+end $$;
