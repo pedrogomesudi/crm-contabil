@@ -8,6 +8,7 @@ import { parseEmpresas } from "@/lib/dominio/parseEmpresas";
 import { parseContratos } from "@/lib/dominio/parseContratos";
 import { parseClientes } from "@/lib/dominio/parseClientes";
 import { combinarFontes } from "@/lib/dominio/mapear";
+import { avisoContratosNaoVinculados } from "@/lib/dominio/avisos";
 import { reconciliarClientes, type ClienteExistente } from "@/lib/dominio/reconciliar";
 import type { EmpresaDominio, ContatoDominio, ContratoDominio } from "@/lib/dominio/tipos";
 import type { EstadoPrevia, EstadoAplicar, ItemPrevia } from "./estados";
@@ -104,6 +105,13 @@ export async function gerarPrevia(_prev: EstadoPrevia, formData: FormData): Prom
     }));
   if (contratosRows.length) await supabase.from("importacao_contratos").insert(contratosRows);
 
+  // Blindagem: se vieram contratos mas NENHUM vinculou a um cliente, o relatório
+  // "Clientes" provavelmente está errado/ausente (é dele que sai o código do
+  // vínculo). Avisa em alto e bom som para não importar honorário zerado em silêncio.
+  const avisos: string[] = [];
+  const avisoContratos = avisoContratosNaoVinculados(contratosPorCodigo.size, contratosRows.length);
+  if (avisoContratos) avisos.push(avisoContratos);
+
   // Detalhe por item (só cadastral; sem valores financeiros) para a prévia
   // exibir O QUÊ será gravado e o motivo das pendências. Inalterados ficam fora.
   const detalhes: ItemPrevia[] = itens
@@ -117,7 +125,7 @@ export async function gerarPrevia(_prev: EstadoPrevia, formData: FormData): Prom
       pendencias: it.cliente.pendencias,
     }));
 
-  return { resumo: { importacaoId: imp.id, ...resumo, itens: detalhes } };
+  return { resumo: { importacaoId: imp.id, ...resumo, itens: detalhes, avisos } };
 }
 
 export async function aplicarImportacao(importacaoId: string): Promise<EstadoAplicar> {

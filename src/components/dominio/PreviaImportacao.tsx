@@ -64,6 +64,15 @@ export function PreviaImportacao({ resumo }: { resumo: ResumoPrevia }) {
   return (
     <div className="space-y-3 rounded-lg border border-gray-200 p-4">
       <h2 className="text-sm font-semibold">Prévia da importação</h2>
+      {resumo.avisos?.map((a, i) => (
+        <p
+          key={i}
+          role="alert"
+          className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800"
+        >
+          ⚠️ {a}
+        </p>
+      ))}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Card rotulo="Novos" n={resumo.novos} cor="border-green-200 bg-green-50" />
         <Card rotulo="Atualizados" n={resumo.atualizados} cor="border-yellow-200 bg-yellow-50" />
