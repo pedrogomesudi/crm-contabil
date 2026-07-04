@@ -43,13 +43,27 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
 
   const mostrarHonorario = podeVerHonorario(papel);
   let valorHonorario: number | null = null;
+  let extensaoFinanceira = {
+    dia_vencimento: null as number | null,
+    qtd_funcionarios: null as number | null,
+    faixa_faturamento: null as string | null,
+    data_saida: null as string | null,
+  };
   if (mostrarHonorario) {
     const { data: fin } = await supabase
       .from("clientes_financeiro")
-      .select("honorario_mensal")
+      .select("honorario_mensal, dia_vencimento, qtd_funcionarios, faixa_faturamento, data_saida")
       .eq("cliente_id", id)
       .maybeSingle();
     valorHonorario = fin?.honorario_mensal != null ? Number(fin.honorario_mensal) : null;
+    if (fin) {
+      extensaoFinanceira = {
+        dia_vencimento: fin.dia_vencimento ?? null,
+        qtd_funcionarios: fin.qtd_funcionarios ?? null,
+        faixa_faturamento: fin.faixa_faturamento ?? null,
+        data_saida: fin.data_saida ?? null,
+      };
+    }
   }
 
   return (
@@ -68,7 +82,9 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         modo="editar"
         contadorEditavel={contadorEditavel}
       />
-      {mostrarHonorario && <HonorarioForm clienteId={id} valorAtual={valorHonorario} />}
+      {mostrarHonorario && (
+        <HonorarioForm clienteId={id} valorAtual={valorHonorario} extensao={extensaoFinanceira} />
+      )}
       {mostrarHonorario && (
         <GerarContrato
           clienteId={id}

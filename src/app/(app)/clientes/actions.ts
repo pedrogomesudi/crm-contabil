@@ -7,6 +7,7 @@ import { clienteSchema } from "@/lib/validation/cliente";
 import { parseValorBR } from "@/lib/format";
 import { ehContadorValido } from "@/lib/clientes/contadores";
 import { podeExcluirCliente } from "@/lib/clientes/permissoes";
+import { normalizarExtensaoFinanceira } from "@/lib/financeiro/extensaoCliente";
 import type { EstadoCliente, EstadoHonorario } from "./estados";
 
 // Normaliza TODA string vazia para null (campos uuid/date/text opcionais). Os
@@ -162,6 +163,8 @@ export async function salvarHonorario(
   if (valor !== null && (!Number.isFinite(valor) || valor < 0)) {
     return { erro: "Honorário inválido." };
   }
+  const ext = normalizarExtensaoFinanceira(formData);
+  if ("erro" in ext) return { erro: ext.erro };
   const supabase = await createServerSupabase();
   const {
     data: { user },
@@ -173,7 +176,10 @@ export async function salvarHonorario(
   // atualizado_em são preenchidos pelo trigger no banco (autoria não-forjável).
   const { data, error } = await supabase
     .from("clientes_financeiro")
-    .upsert({ cliente_id: clienteId, honorario_mensal: valor }, { onConflict: "cliente_id" })
+    .upsert(
+      { cliente_id: clienteId, honorario_mensal: valor, ...ext },
+      { onConflict: "cliente_id" },
+    )
     .select("cliente_id");
   if (error || !data || data.length === 0) {
     return { erro: "Sem permissão para alterar honorário." };

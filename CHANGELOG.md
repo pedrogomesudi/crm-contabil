@@ -8,7 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-- Em planejamento: **V5-B — NFS-e dos clientes (multi-emitente)** e **V6 — Layout/estética** (ver `ROADMAP.md`).
+### Adicionado
+
+- **V6.1 — Fundação Financeira (primeira fatia da V6):** cadastros de apoio do módulo financeiro —
+  **contas bancárias**, **plano de contas** (hierárquico, 2 níveis, com seed padrão), **centros de
+  custo** (seed dos 6 departamentos), **fornecedores** (com validação de CNPJ/CPF) e **tabela de
+  serviços** eventuais — em `/financeiro/cadastros/*`. Estende a ficha do cliente com **dia de
+  vencimento, qtd. de funcionários, faixa de faturamento e data de saída**. Permissões em
+  `src/lib/financeiro/permissoes.ts` (admin+financeiro gerenciam; contador lê plano de contas e
+  serviços; assistente não vê nada financeiro), espelhadas na RLS (migration 0026). Pró-rata
+  (RF-013) e o status financeiro suspenso/encerrado ficam para o **V6.2** (nascem no contrato).
+
+- Em planejamento: **V6.2 — Motor de recorrência** (contratos + geração de mensalidades) — ver `ROADMAP.md`.
 
 ## [5.4.0] — 2026-07-02
 

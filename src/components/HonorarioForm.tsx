@@ -3,13 +3,23 @@ import { useActionState } from "react";
 import { salvarHonorario } from "@/app/(app)/clientes/actions";
 import type { EstadoHonorario } from "@/app/(app)/clientes/estados";
 import { Campo, inputCls } from "@/components/ui/Campo";
+import { FAIXAS_FATURAMENTO, FAIXA_LABEL } from "@/lib/financeiro/tipos";
+
+export type ExtensaoFinanceiraForm = {
+  dia_vencimento: number | null;
+  qtd_funcionarios: number | null;
+  faixa_faturamento: string | null;
+  data_saida: string | null;
+};
 
 export function HonorarioForm({
   clienteId,
   valorAtual,
+  extensao,
 }: {
   clienteId: string;
   valorAtual: number | null;
+  extensao: ExtensaoFinanceiraForm;
 }) {
   const action = salvarHonorario.bind(null, clienteId);
   const [estado, formAction, pending] = useActionState<EstadoHonorario, FormData>(action, {});
@@ -31,6 +41,49 @@ export function HonorarioForm({
           className={`${inputCls} w-48`}
         />
       </Campo>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Campo label="Dia de vencimento (1–28)">
+          <input
+            name="dia_vencimento"
+            type="number"
+            min={1}
+            max={28}
+            defaultValue={extensao.dia_vencimento ?? ""}
+            className={`${inputCls} w-32`}
+          />
+        </Campo>
+        <Campo label="Qtd. funcionários">
+          <input
+            name="qtd_funcionarios"
+            type="number"
+            min={0}
+            defaultValue={extensao.qtd_funcionarios ?? ""}
+            className={`${inputCls} w-32`}
+          />
+        </Campo>
+        <Campo label="Faixa de faturamento">
+          <select
+            name="faixa_faturamento"
+            defaultValue={extensao.faixa_faturamento ?? ""}
+            className={inputCls}
+          >
+            <option value="">—</option>
+            {FAIXAS_FATURAMENTO.map((f) => (
+              <option key={f} value={f}>
+                {FAIXA_LABEL[f]}
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <Campo label="Data de saída">
+          <input
+            name="data_saida"
+            type="date"
+            defaultValue={extensao.data_saida ?? ""}
+            className={inputCls}
+          />
+        </Campo>
+      </div>
       {estado.erro && (
         <p role="alert" className="text-sm text-red-600">
           {estado.erro}
