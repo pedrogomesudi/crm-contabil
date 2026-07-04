@@ -10,6 +10,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **V7.2 — Régua de Cobrança Automática:** cobrança dos honorários por WhatsApp em **etapas
+  configuráveis** (seed D-3/D+1/D+7/D+15) sobre os títulos a receber. Tela **`/financeiro/regua-cobranca`**
+  (admin/financeiro): toggle liga/desliga, **CRUD das etapas** (dias, template com `{nome}/{valor}/{vencimento}/{dias}`),
+  botão **"Processar agora"** e histórico. **Opt-out por cliente** (LGPD) na ficha
+  (`clientes_financeiro.cobranca_whatsapp`). **Idempotência** por `(titulo, etapa)` — cada etapa dispara
+  uma vez. Motor server-side (`regua-motor.ts`) acionado pela rota protegida **`POST /api/cron/regua-cobranca`**
+  (`CRON_SECRET`, service_role) + agendador externo diário, e pelo botão manual. Reusa o cliente Z-API,
+  templates e histórico da V7.1. Migration 0039.
 - **V7.1 — Envio WhatsApp (fundação, Z-API):** integração com o **Z-API** (provedor não-oficial) para
   envio de mensagens. Tela **`/configuracoes/whatsapp`** (admin) com credenciais **cifradas**
   (AES-256-GCM, env `WHATSAPP_CRIPTO_KEY`) e botão **testar conexão**. Cliente isolado em
