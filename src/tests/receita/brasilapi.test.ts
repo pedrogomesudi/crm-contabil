@@ -5,6 +5,7 @@ describe("mapearReceita", () => {
   it("extrai razão social, situação e endereço completo", () => {
     const r = mapearReceita({
       razao_social: "DGX GESTAO E NEGOCIOS LTDA",
+      nome_fantasia: "DGX",
       descricao_situacao_cadastral: "ATIVA",
       logradouro: "BELKINA DE CARVALHO CUNHA",
       numero: "130",
@@ -15,6 +16,7 @@ describe("mapearReceita", () => {
       uf: "MG",
     });
     expect(r.razaoSocial).toBe("DGX GESTAO E NEGOCIOS LTDA");
+    expect(r.nomeFantasia).toBe("DGX");
     expect(r.situacao).toBe("ATIVA");
     expect(r.endereco).toEqual({
       logradouro: "BELKINA DE CARVALHO CUNHA",
@@ -50,6 +52,7 @@ describe("mapearReceitaWs (fonte alternativa)", () => {
   it("mapeia nome→razão e endereço; normaliza CEP para dígitos", () => {
     const r = mapearReceitaWs({
       nome: "JORDANA FERNANDES ACADEMY LTDA",
+      fantasia: "JORDANA ACADEMY",
       situacao: "ATIVA",
       logradouro: "AV DOS VINHEDOS",
       numero: "21",
@@ -60,6 +63,7 @@ describe("mapearReceitaWs (fonte alternativa)", () => {
       cep: "38.411-217",
     });
     expect(r.razaoSocial).toBe("JORDANA FERNANDES ACADEMY LTDA");
+    expect(r.nomeFantasia).toBe("JORDANA ACADEMY");
     expect(r.situacao).toBe("ATIVA");
     expect(r.endereco).toEqual({
       logradouro: "AV DOS VINHEDOS",
@@ -77,11 +81,13 @@ describe("mesclarDados", () => {
   it("primário sem logradouro é completado pelo secundário", () => {
     const primario = {
       razaoSocial: "LEONEL BATISTA SOARES",
+      nomeFantasia: null,
       situacao: "ATIVA",
       endereco: { bairro: "MORUMBI", cep: "38407162", cidade: "UBERLANDIA", uf: "MG" },
     };
     const secundario = {
       razaoSocial: "LEONEL BATISTA SOARES",
+      nomeFantasia: null,
       situacao: "ATIVA",
       endereco: {
         logradouro: "RUA INGA",
@@ -102,8 +108,8 @@ describe("mesclarDados", () => {
 
   it("primário vence onde tem valor", () => {
     const r = mesclarDados(
-      { razaoSocial: "A", situacao: null, endereco: { logradouro: "RUA A" } },
-      { razaoSocial: "B", situacao: "ATIVA", endereco: { logradouro: "RUA B", numero: "9" } },
+      { razaoSocial: "A", nomeFantasia: null, situacao: null, endereco: { logradouro: "RUA A" } },
+      { razaoSocial: "B", nomeFantasia: "FANT", situacao: "ATIVA", endereco: { logradouro: "RUA B", numero: "9" } },
     );
     expect(r.razaoSocial).toBe("A");
     expect(r.situacao).toBe("ATIVA"); // primário null → usa secundário
