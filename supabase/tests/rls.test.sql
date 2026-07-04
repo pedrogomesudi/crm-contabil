@@ -723,3 +723,46 @@ do $$ declare d jsonb; ag jsonb; fx jsonb; begin
 
   raise notice 'OK: RPCs de relatório (MRR/inadimplência/aging d90_mais/fluxo 6 meses)';
 end $$;
+
+-- ===== V6.3 — RLS de contas a pagar + estorno =====
+reset role;
+insert into fornecedor (id, nome) values ('ffffffff-0000-0000-0000-000000000001','Fornecedor Teste') on conflict do nothing;
+insert into titulo (id, tipo, fornecedor_id, origem, valor, competencia, vencimento)
+  values ('eeeeeeee-0000-0000-0000-0000000000a1','PAGAR','ffffffff-0000-0000-0000-000000000001','DESPESA_AVULSA',300,'2026-07-01','2026-07-15')
+  on conflict do nothing;
+
+-- ASSERT P1: contador NÃO vê contas a pagar (cliente nulo => não casa)
+do $$ declare n int; begin
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  select count(*) into n from titulo where tipo='PAGAR'; if n <> 0 then raise exception 'FALHA: contador viu PAGAR (n=%)', n; end if;
+  raise notice 'OK: contador não vê contas a pagar';
+end $$;
+
+-- ASSERT P2: financeiro gerencia despesa_recorrente
+do $$ begin
+  perform _simular('00000000-0000-0000-0000-000000000004');
+  insert into despesa_recorrente (descricao, valor_mensal, dia_vencimento, data_inicio) values ('Aluguel',1000,5,'2026-01-01');
+  raise notice 'OK: financeiro gerencia despesa_recorrente';
+end $$;
+
+-- ASSERT P3: assistente NÃO vê despesa_recorrente
+do $$ declare n int; begin
+  perform _simular('00000000-0000-0000-0000-000000000002');
+  select count(*) into n from despesa_recorrente; if n <> 0 then raise exception 'FALHA: assistente viu despesa_recorrente'; end if;
+  raise notice 'OK: assistente não vê despesa_recorrente';
+end $$;
+
+-- ASSERT P4: estorno marca (não deleta) e recomputa status
+do $$ declare s titulo_status; n int; begin
+  reset role;
+  insert into baixa (id, titulo_id, data_recebimento, valor_recebido, conta_bancaria_id, forma_pagamento)
+    values ('cccccccc-0000-0000-0000-0000000000a1','eeeeeeee-0000-0000-0000-0000000000a1','2026-07-15',300,'bbbbbbbb-0000-0000-0000-0000000000f1','PIX');
+  select status into s from titulo where id='eeeeeeee-0000-0000-0000-0000000000a1';
+  if s <> 'BAIXADO' then raise exception 'FALHA: pagar não ficou BAIXADO (=%)', s; end if;
+  update baixa set estornada=true, estorno_motivo='erro', estorno_em=now() where id='cccccccc-0000-0000-0000-0000000000a1';
+  select status into s from titulo where id='eeeeeeee-0000-0000-0000-0000000000a1';
+  if s <> 'ABERTO' then raise exception 'FALHA: estorno não voltou p/ ABERTO (=%)', s; end if;
+  select count(*) into n from baixa where id='cccccccc-0000-0000-0000-0000000000a1';
+  if n <> 1 then raise exception 'FALHA: estorno deletou a baixa (trilha perdida)'; end if;
+  raise notice 'OK: estorno marca (não deleta) e volta status p/ ABERTO';
+end $$;
