@@ -10,6 +10,7 @@ import { NotasFiscaisSection } from "@/components/nfse/NotasFiscaisSection";
 import { EmissaoClienteSection } from "@/components/nfse/EmissaoClienteSection";
 import { GerarContrato } from "@/components/contrato/GerarContrato";
 import { AcoesExclusaoCliente } from "@/components/clientes/AcoesExclusaoCliente";
+import { BotaoAtualizarReceita } from "@/components/clientes/BotaoAtualizarReceita";
 import { atualizarCliente } from "../actions";
 
 export const metadata = { title: "Cliente" };
@@ -75,7 +76,12 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
           excluidoEm={(cliente as { excluido_em: string | null }).excluido_em}
         />
       )}
+      {["admin", "assistente"].includes(papel) &&
+        String(cliente.cpf_cnpj ?? "").replace(/\D/g, "").length === 14 && (
+          <BotaoAtualizarReceita cpfCnpj={cliente.cpf_cnpj} />
+        )}
       <FormCliente
+        key={cliente.atualizado_em}
         action={atualizarCliente.bind(null, id)}
         contadores={contadores}
         cliente={cliente as ClienteDefaults}
