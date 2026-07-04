@@ -10,6 +10,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **V6.3 — Contas a Pagar + Estorno Auditado (fecha o Módulo Financeiro):** o `titulo` passa a ter
+  **tipo RECEBER/PAGAR** (+ fornecedor + parcelamento). Nova tela **`/financeiro/contas-a-pagar`**
+  (admin/financeiro): lançar despesa **única**, **parcelada** (N parcelas com rateio) ou **recorrente**
+  (template que gera todo mês, inclusive na automação pg_cron), **pagar** (baixa na conta de saída) e
+  **anexar** NF/boleto/comprovante. **Estorno auditado** (marca a baixa com justificativa, não deleta;
+  o status é recalculado ignorando estornadas) substitui o "desfazer baixa" em receber e pagar. O
+  **dashboard** ganha o lado despesa: **saldo real** (entradas − saídas), saídas/a pagar do mês,
+  **aging de contas a pagar** e receita × despesa — o aviso de "só entradas" saiu. Migrations 0033–0037.
+  Aprovação de pagamento acima de limite fica como incremento futuro.
 - **V6.5 — Relatórios e Dashboard financeiro:** página **`/financeiro/dashboard`** (gate financeiro) com
   cards de **saldo, MRR, recebido/a receber, inadimplência (R$ e %) e previsão de caixa 30/60/90**;
   **aging** de contas a receber (a vencer / 1–30 / 31–60 / 61–90 / 90+) em barras; **fluxo de caixa**
