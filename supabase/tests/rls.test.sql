@@ -814,3 +814,43 @@ do $$ begin
   update whatsapp_config set instance='inst-teste' where id=1;
   raise notice 'OK: admin gerencia config wa';
 end $$;
+
+-- ===== V7.2 — RLS de régua + idempotência =====
+-- ASSERT R1: assistente NÃO gerencia regua_etapa
+do $$ declare n int; begin
+  perform _simular('00000000-0000-0000-0000-000000000002');
+  select count(*) into n from regua_etapa; if n <> 0 then raise exception 'FALHA: assistente viu regua_etapa'; end if;
+  raise notice 'OK: assistente não vê regua_etapa';
+end $$;
+
+-- ASSERT R2: financeiro gerencia regua_etapa
+do $$ declare n int; begin
+  perform _simular('00000000-0000-0000-0000-000000000004');
+  select count(*) into n from regua_etapa where ativa; if n < 4 then raise exception 'FALHA: financeiro não vê etapas seed (n=%)', n; end if;
+  update regua_etapa set ordem = ordem where dias_offset = -3;
+  raise notice 'OK: financeiro gerencia regua_etapa';
+end $$;
+
+-- ASSERT R3: unique parcial barra 2ª etapa ativa no mesmo offset
+do $$ declare erro boolean := false; begin
+  reset role;
+  begin
+    insert into regua_etapa (nome, dias_offset, template) values ('dup', -3, 'x');
+  exception when unique_violation then erro := true; end;
+  if not erro then raise exception 'FALHA: permitiu 2 etapas ativas no mesmo offset'; end if;
+  raise notice 'OK: unique (dias_offset) where ativa barra duplicata';
+end $$;
+
+-- ASSERT R4: unique (titulo_id, etapa_id) barra reenvio da mesma etapa
+do $$ declare erro boolean := false; v_etapa uuid; begin
+  reset role;
+  select id into v_etapa from regua_etapa where dias_offset = 1 limit 1;
+  insert into whatsapp_mensagem (id, titulo_id, etapa_id, telefone, texto, status)
+    values ('22222222-0000-0000-0000-0000000000e1','eeeeeeee-0000-0000-0000-0000000000a1', v_etapa, '5534','x','ENVIADO') on conflict do nothing;
+  begin
+    insert into whatsapp_mensagem (titulo_id, etapa_id, telefone, texto, status)
+      values ('eeeeeeee-0000-0000-0000-0000000000a1', v_etapa, '5534','y','ENVIADO');
+  exception when unique_violation then erro := true; end;
+  if not erro then raise exception 'FALHA: permitiu reenvio da mesma etapa para o título'; end if;
+  raise notice 'OK: idempotência (titulo_id, etapa_id)';
+end $$;

@@ -63,3 +63,17 @@ npm run db:test       # roda os asserts de RLS contra o banco
 1. Defina `ADMIN_EMAIL` e `ADMIN_PASSWORD` (≠ senha do Postgres) no `.env.local`.
 2. `npm run admin:bootstrap` — cria/promove o admin e define `usuarios.papel='admin'`.
 3. Após logar, troque a senha e **remova** as variáveis `ADMIN_*` do `.env.local`.
+
+## WhatsApp (Z-API) e régua de cobrança
+
+- **Credenciais Z-API:** defina `WHATSAPP_CRIPTO_KEY` (chave hex de 32 bytes — gere com
+  `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`) no ambiente. Depois, em
+  **Configurações → WhatsApp**, salve `instance`/`token`/`client-token` (cifrados) e **teste a conexão**.
+  Use um **número dedicado** do escritório (o Z-API é não-oficial — risco de banimento).
+- **Régua de cobrança (disparo diário):**
+  1. Defina `CRON_SECRET` (string aleatória) no ambiente.
+  2. Crie uma **task agendada** (EasyPanel) ou use **cron-job.org**, diária ~08:00 (America/Sao_Paulo):
+     `POST https://<seu-dominio>/api/cron/regua-cobranca` com o header `Authorization: Bearer <CRON_SECRET>`.
+  3. A régua só dispara com o toggle **"ativa"** ligado em **Financeiro → Régua de cobrança**; o botão
+     **"Processar agora"** roda manualmente (útil para testar). Etapas e opt-out por cliente são
+     configuráveis pela mesma tela / ficha do cliente.

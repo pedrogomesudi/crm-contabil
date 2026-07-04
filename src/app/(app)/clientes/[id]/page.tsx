@@ -12,6 +12,7 @@ import { GerarContrato } from "@/components/contrato/GerarContrato";
 import { AcoesExclusaoCliente } from "@/components/clientes/AcoesExclusaoCliente";
 import { BotaoAtualizarReceita } from "@/components/clientes/BotaoAtualizarReceita";
 import { ContratosSection } from "@/components/financeiro/ContratosSection";
+import { OptOutCobranca } from "@/components/clientes/OptOutCobranca";
 import { listarContratos } from "./contratos";
 import { atualizarCliente } from "../actions";
 
@@ -46,6 +47,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
 
   const mostrarHonorario = podeVerHonorario(papel);
   let valorHonorario: number | null = null;
+  let optOutCobranca = true;
   let extensaoFinanceira = {
     dia_vencimento: null as number | null,
     qtd_funcionarios: null as number | null,
@@ -55,10 +57,11 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   if (mostrarHonorario) {
     const { data: fin } = await supabase
       .from("clientes_financeiro")
-      .select("honorario_mensal, dia_vencimento, qtd_funcionarios, faixa_faturamento, data_saida")
+      .select("honorario_mensal, dia_vencimento, qtd_funcionarios, faixa_faturamento, data_saida, cobranca_whatsapp")
       .eq("cliente_id", id)
       .maybeSingle();
     valorHonorario = fin?.honorario_mensal != null ? Number(fin.honorario_mensal) : null;
+    optOutCobranca = fin?.cobranca_whatsapp !== false;
     if (fin) {
       extensaoFinanceira = {
         dia_vencimento: fin.dia_vencimento ?? null,
@@ -96,6 +99,11 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         <HonorarioForm clienteId={id} valorAtual={valorHonorario} extensao={extensaoFinanceira} />
       )}
       {mostrarHonorario && <ContratosSection clienteId={id} contratos={contratos} />}
+      {mostrarHonorario && (
+        <section className="rounded-lg border border-slate-200 bg-white p-4">
+          <OptOutCobranca clienteId={id} ativo={optOutCobranca} />
+        </section>
+      )}
       {mostrarHonorario && (
         <GerarContrato
           clienteId={id}

@@ -138,7 +138,9 @@ Integração do CRM com o **WhatsApp** para relacionamento com clientes: **atend
 - **V7.1 — Envio (fundação)** ✅ — config Z-API cifrada (`/configuracoes/whatsapp`), cliente
   `whatsapp/zapi.ts`, helpers de telefone/template, botão "Cobrar (WhatsApp)" num título + histórico
   `whatsapp_mensagem`. Migration 0038.
-- **V7.2 — Régua de cobrança automática** ⬜ — etapas D-3/D+1/D+7/D+15 sobre títulos vencidos (reusa a V7.1).
+- **V7.2 — Régua de cobrança automática** ✅ — etapas configuráveis (D-3/D+1/D+7/D+15), opt-out por
+  cliente (LGPD), idempotência por (título, etapa), motor server-side via rota protegida
+  (`/api/cron/regua-cobranca`, `CRON_SECRET`) + agendador externo, botão "Processar agora". Migration 0039.
 - **V7.3 — Atendimento (inbox bidirecional)** ⬜ — webhook de entrada + caixa de entrada.
 
 > Opt-in/opt-out (LGPD) a tratar na V7.2 (régua). Número dedicado do escritório (risco do não-oficial).
