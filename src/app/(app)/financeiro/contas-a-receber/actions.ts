@@ -88,14 +88,6 @@ export async function registrarBaixa(fd: FormData) {
   return { ok: true };
 }
 
-export async function desfazerBaixa(tituloId: string) {
-  if (!(await gateGerir())) return { erro: "Sem permissão." };
-  const supabase = await createServerSupabase();
-  const { error } = await supabase.from("baixa").delete().eq("titulo_id", tituloId);
-  if (error) return { erro: "Falha ao desfazer." };
-  revalidatePath(ROTA);
-  return { ok: true };
-}
 
 export async function lerAutomacao(): Promise<boolean> {
   if (!(await gateVer())) return false;
