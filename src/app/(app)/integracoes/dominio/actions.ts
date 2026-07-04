@@ -8,11 +8,14 @@ import { parseEmpresas } from "@/lib/dominio/parseEmpresas";
 import { parseContratos } from "@/lib/dominio/parseContratos";
 import { parseClientes } from "@/lib/dominio/parseClientes";
 import { combinarFontes } from "@/lib/dominio/mapear";
+import { parseEnderecos } from "@/lib/dominio/parseEnderecos";
+import { casarEnderecos } from "@/lib/dominio/casarEnderecos";
+import { createAdminSupabase } from "@/lib/supabase/admin";
 import { vincularContratosPorNome, normalizarRazao } from "@/lib/dominio/vinculoContratos";
 import { avisoContratosNaoVinculados, avisoContratosNaoCasados } from "@/lib/dominio/avisos";
 import { reconciliarClientes, type ClienteExistente } from "@/lib/dominio/reconciliar";
 import type { EmpresaDominio, ContatoDominio, ContratoDominio } from "@/lib/dominio/tipos";
-import type { EstadoPrevia, EstadoAplicar, ItemPrevia } from "./estados";
+import type { EstadoPrevia, EstadoAplicar, EstadoEnderecos, ItemPrevia } from "./estados";
 
 const MEIA_HORA = 30 * 60 * 1000;
 const PAPEIS_IMPORTACAO = ["admin", "assistente"] as const;
@@ -145,4 +148,49 @@ export async function aplicarImportacao(importacaoId: string): Promise<EstadoApl
   revalidatePath("/clientes");
   const res = data as { gravados?: number; honorarios?: number } | null;
   return { ok: true, gravados: res?.gravados ?? 0, honorarios: res?.honorarios ?? 0 };
+}
+
+// Atualiza o endereço dos clientes a partir do relatório "Empresas — Dados
+// Cadastrais" (o Regime não traz endereço completo). Casa por CNPJ; por padrão
+// só preenche quem está sem endereço (não-destrutivo). Grava via service_role
+// (bulk), com a trava de papel no servidor (admin/assistente).
+export async function importarEnderecos(
+  _prev: EstadoEnderecos,
+  formData: FormData,
+): Promise<EstadoEnderecos> {
+  if (!(await papelAutorizado())) return { erro: "Sem permissão (apenas admin/assistente)." };
+  const arquivo = formData.get("arquivo") as File | null;
+  if (!arquivo || arquivo.size === 0) return { erro: "Envie o relatório 'Empresas — Dados Cadastrais' (.xls)." };
+  const sobrescrever = formData.get("sobrescrever") === "on";
+
+  let lista;
+  try {
+    const folha = lerXls(Buffer.from(await arquivo.arrayBuffer()))[0];
+    if (!folha) return { erro: "Arquivo vazio." };
+    lista = parseEnderecos(folha);
+  } catch {
+    return { erro: `Arquivo "${arquivo.name}" não é um .xls válido do Domínio.` };
+  }
+  if (lista.length === 0) {
+    return { erro: "Nenhum endereço encontrado no arquivo. Envie o relatório 'Empresas — Dados Cadastrais'." };
+  }
+
+  const admin = createAdminSupabase();
+  const { data: clientesRaw } = await admin.from("clientes").select("cpf_cnpj, endereco").is("excluido_em", null);
+  const clientes = (clientesRaw ?? []).map((c) => ({ cpf_cnpj: c.cpf_cnpj, temEndereco: c.endereco != null }));
+  const res = casarEnderecos(lista, clientes, sobrescrever);
+
+  for (const g of res.paraGravar) {
+    const { error } = await admin.from("clientes").update({ endereco: g.endereco }).eq("cpf_cnpj", g.cpf_cnpj);
+    if (error) return { erro: "Falha ao gravar endereços. Nenhuma alteração garantida." };
+  }
+  if (res.paraGravar.length) revalidatePath("/clientes");
+
+  return {
+    ok: true,
+    preenchidos: res.vaziosPreenchidos,
+    atualizados: res.jaComEnderecoAtualizados,
+    mantidos: res.jaComEnderecoMantidos,
+    semCliente: res.semClienteNoArquivo,
+  };
 }

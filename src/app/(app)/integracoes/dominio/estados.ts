@@ -18,3 +18,11 @@ export type ResumoPrevia = {
 };
 export type EstadoPrevia = { erro?: string; resumo?: ResumoPrevia };
 export type EstadoAplicar = { erro?: string; ok?: boolean; gravados?: number; honorarios?: number };
+export type EstadoEnderecos = {
+  erro?: string;
+  ok?: boolean;
+  preenchidos?: number;
+  atualizados?: number;
+  mantidos?: number;
+  semCliente?: number;
+};
