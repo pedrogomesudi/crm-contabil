@@ -525,3 +525,74 @@ begin
   if not ok then raise exception 'FALHA: aceitou 3º nível no plano de contas'; end if;
   raise notice 'OK: plano de contas limitado a 2 níveis';
 end $$;
+
+-- ===== aplicar_importacao: NÃO altera clientes existentes (só honorário via contrato) =====
+do $$
+declare
+  v_imp uuid;
+  v_ex1 uuid; v_ex2 uuid; v_nv uuid;
+  v_res jsonb;
+  v_razao text; v_email text; v_hon numeric;
+begin
+  reset role;
+  -- Existentes com cadastro + honorário
+  insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario, status, email)
+    values (gen_random_uuid(), 'PJ', 'ORIGINAL LTDA', '99000000000191', 'Simples', 'ativo', 'orig@x.com')
+    returning id into v_ex1;
+  insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario, status, email)
+    values (gen_random_uuid(), 'PJ', 'PRESERVA LTDA', '99000000000272', 'Simples', 'ativo', 'preserva@x.com')
+    returning id into v_ex2;
+  insert into clientes_financeiro (cliente_id, honorario_mensal) values (v_ex1, 500), (v_ex2, 800);
+
+  -- Importação prévia (admin = ...001)
+  insert into importacoes (id, status, arquivos, executado_por, expira_em, novos, atualizados, inalterados, pendencias, erros)
+    values (gen_random_uuid(), 'previa', '[]'::jsonb, '00000000-0000-0000-0000-000000000001', now() + interval '1 hour', 1, 1, 1, 0, 0)
+    returning id into v_imp;
+
+  -- Itens: EX1 'atualizado' com cadastro DIFERENTE; EX2 'inalterado'; NV 'novo'
+  insert into importacao_itens (importacao_id, classe, cpf_cnpj, payload) values
+    (v_imp, 'atualizado', '99000000000191', jsonb_build_object('cliente', jsonb_build_object(
+        'cpf_cnpj','99000000000191','tipo_pessoa','PJ','razao_social','MUDADO LTDA','nome_fantasia',null,
+        'regime_tributario','Simples','status','ativo','cnae',null,'inscricao_estadual',null,
+        'endereco',null,'email','novo@x.com','telefone',null,'dominio_codigo',null))),
+    (v_imp, 'inalterado', '99000000000272', jsonb_build_object('cliente', jsonb_build_object(
+        'cpf_cnpj','99000000000272','tipo_pessoa','PJ','razao_social','PRESERVA LTDA','nome_fantasia',null,
+        'regime_tributario','Simples','status','ativo','cnae',null,'inscricao_estadual',null,
+        'endereco',null,'email','preserva@x.com','telefone',null,'dominio_codigo',null))),
+    (v_imp, 'novo', '99000000000353', jsonb_build_object('cliente', jsonb_build_object(
+        'cpf_cnpj','99000000000353','tipo_pessoa','PJ','razao_social','NOVO CLIENTE LTDA','nome_fantasia',null,
+        'regime_tributario','Simples','status','ativo','cnae',null,'inscricao_estadual',null,
+        'endereco',null,'email','nv@x.com','telefone',null,'dominio_codigo',null)));
+
+  -- Contratos: honorário para EX1 (750) e para NV (300); EX2 SEM contrato
+  insert into importacao_contratos (importacao_id, cpf_cnpj, payload) values
+    (v_imp, '99000000000191', jsonb_build_array(jsonb_build_object('codigoCliente','1','tipoContrato','HONORARIOS CONTABEIS','encerradoEm',null,'valorAtual',750,'valorOriginal',750))),
+    (v_imp, '99000000000353', jsonb_build_array(jsonb_build_object('codigoCliente','2','tipoContrato','HONORARIOS CONTABEIS','encerradoEm',null,'valorAtual',300,'valorOriginal',300)));
+
+  -- Aplica como admin
+  perform _simular('00000000-0000-0000-0000-000000000001');
+  select aplicar_importacao(v_imp) into v_res;
+  reset role;
+
+  -- EX1: cadastro PRESERVADO (razao e email inalterados), honorário ATUALIZADO p/ 750
+  select razao_social, email into v_razao, v_email from clientes where id = v_ex1;
+  if v_razao <> 'ORIGINAL LTDA' then raise exception 'FALHA: cadastro do existente foi alterado (razao=%)', v_razao; end if;
+  if v_email <> 'orig@x.com' then raise exception 'FALHA: email do existente foi alterado (email=%)', v_email; end if;
+  select honorario_mensal into v_hon from clientes_financeiro where cliente_id = v_ex1;
+  if v_hon <> 750 then raise exception 'FALHA: honorário do existente não atualizou p/ 750 (=%)', v_hon; end if;
+
+  -- EX2: SEM contrato => honorário PRESERVADO (800), nunca zerado
+  select honorario_mensal into v_hon from clientes_financeiro where cliente_id = v_ex2;
+  if v_hon is distinct from 800 then raise exception 'FALHA: honorário sem contrato foi alterado/zerado (=%)', v_hon; end if;
+
+  -- NV: criado, com honorário 300
+  select id into v_nv from clientes where cpf_cnpj = '99000000000353';
+  if v_nv is null then raise exception 'FALHA: cliente novo não foi criado'; end if;
+  select honorario_mensal into v_hon from clientes_financeiro where cliente_id = v_nv;
+  if v_hon <> 300 then raise exception 'FALHA: honorário do novo cliente errado (=%)', v_hon; end if;
+
+  -- gravados = 1 (só o novo)
+  if (v_res->>'gravados')::int <> 1 then raise exception 'FALHA: gravados<>1 (=%)', v_res->>'gravados'; end if;
+
+  raise notice 'OK: import não altera existentes; honorário atualiza com contrato e preserva sem contrato';
+end $$;

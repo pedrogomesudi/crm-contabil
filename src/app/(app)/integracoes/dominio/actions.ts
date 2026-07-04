@@ -143,6 +143,6 @@ export async function aplicarImportacao(importacaoId: string): Promise<EstadoApl
     return { erro: indisponivel ? "Prévia já aplicada ou expirada. Gere novamente." : "Falha ao aplicar a importação." };
   }
   revalidatePath("/clientes");
-  const gravados = (data as { gravados?: number } | null)?.gravados ?? 0;
-  return { ok: true, gravados };
+  const res = data as { gravados?: number; honorarios?: number } | null;
+  return { ok: true, gravados: res?.gravados ?? 0, honorarios: res?.honorarios ?? 0 };
 }
