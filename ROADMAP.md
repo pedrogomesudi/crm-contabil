@@ -112,6 +112,17 @@ Oito blocos funcionais (fase sugerida entre parênteses):
 > Marco grande: quando chegar a vez, decompor em sub-projetos (começando pelo MVP) com spec e
 > plano próprios, na cadência brainstorm → spec → plano.
 
+**Decomposição em sub-marcos** (cada um = spec + plano + implementação próprios):
+
+- **V6.1 — Fundação financeira** ✅ — cadastros de apoio (contas bancárias, plano de contas,
+  centros de custo, fornecedores, serviços) + extensão financeira do cliente + permissões + RLS +
+  telas CRUD. *(Pró-rata e status financeiro suspenso/encerrado adiados para o V6.2.)*
+- **V6.2 — Motor de recorrência** ⬜ — contratos, geração idempotente de mensalidades + 13º,
+  títulos a receber, **pró-rata (RF-013)**.
+- **V6.3 — Baixas, estornos e contas a pagar** ⬜.
+- **V6.4 — Régua de cobrança** ⬜ (casa com a V7).
+- **V6.5 — Relatórios e dashboard** ⬜ — fluxo de caixa, aging, inadimplência, MRR, churn.
+
 ## V7 — Integração com WhatsApp ⬜
 
 Integração do CRM com o **WhatsApp** para relacionamento com clientes: **atendimento**, envio de
