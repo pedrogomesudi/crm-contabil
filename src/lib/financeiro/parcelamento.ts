@@ -2,7 +2,9 @@ export type Parcela = { parcela: number; valor: number; vencimento: string; comp
 
 // Soma `meses` a uma data YYYY-MM-DD, mantendo o dia (clampa ao último dia do mês alvo).
 export function somarMeses(dataISO: string, meses: number): string {
-  const [y, m, d] = dataISO.split("-").map(Number);
+  const y = Number(dataISO.slice(0, 4));
+  const m = Number(dataISO.slice(5, 7));
+  const d = Number(dataISO.slice(8, 10));
   const base = new Date(Date.UTC(y, m - 1 + meses, 1));
   const ano = base.getUTCFullYear();
   const mes = base.getUTCMonth(); // 0-based
