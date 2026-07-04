@@ -673,3 +673,29 @@ do $$ declare s titulo_status; begin
   if s <> 'BAIXADO' then raise exception 'FALHA: status total errado (=%)', s; end if;
   raise notice 'OK: baixas recalculam status (parcial -> total)';
 end $$;
+
+-- ===== V6.2 — RPC gerar_mensalidades =====
+do $$ declare r1 jsonb; r2 jsonb; v numeric; n int; begin
+  reset role;
+  insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario)
+    values ('aaaaaaaa-0000-0000-0000-0000000000d1','PJ','Cli ProRata','55000000000272','Simples') on conflict do nothing;
+  insert into contrato (id, cliente_id, descricao, valor_mensal, dia_vencimento, data_inicio, gera_decimo_terceiro, mes_decimo_terceiro)
+    values ('dddddddd-0000-0000-0000-0000000000d1','aaaaaaaa-0000-0000-0000-0000000000d1','X',3100,10,'2026-07-16',true,7)
+    on conflict do nothing;
+
+  r1 := gerar_mensalidades('2026-07-01');
+  select valor into v from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1' and origem='MENSALIDADE';
+  if v is distinct from 1600.00 then raise exception 'FALHA: pró-rata <> 1600 (=%)', v; end if;
+  select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1' and origem='DECIMO_TERCEIRO';
+  if n <> 1 then raise exception 'FALHA: 13º não gerado (n=%)', n; end if;
+
+  r2 := gerar_mensalidades('2026-07-01');
+  select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1';
+  if n <> 2 then raise exception 'FALHA: geração duplicou (n=%)', n; end if;
+
+  perform encerrar_contrato('dddddddd-0000-0000-0000-0000000000d1', now()::date, 'teste');
+  select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1' and status='CANCELADO';
+  if n < 1 then raise exception 'FALHA: encerramento não cancelou títulos futuros'; end if;
+
+  raise notice 'OK: gerar_mensalidades (pró-rata 1600, 13º, idempotente, encerramento cancela)';
+end $$;
