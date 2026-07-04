@@ -8,6 +8,7 @@ import { required } from "@/lib/env";
 import { decifrar } from "@/lib/nfse/cripto";
 import { carregarCertificado } from "@/lib/nfse/certificado";
 import { montarDps } from "@/lib/nfse/dps";
+import { municipioIbgePorCep } from "@/lib/nfse/municipio";
 import { assinarDps } from "@/lib/nfse/assinatura";
 import { enviarDps, ehErroTransitorio } from "@/lib/nfse/envio";
 import { baixarDanfsePdf } from "@/lib/nfse/danfse";
@@ -137,11 +138,22 @@ export async function emitirNfseCliente(
     simplesNacional: cfg.simples_nacional,
     ambiente,
   };
+  // Resolve o município (IBGE) do tomador pelo CEP para casar com o endereço
+  // nacional na DPS (senão SEFIN dá E0240 p/ clientes de outra cidade). Só
+  // resolve quando há endereço a enviar (cep+logradouro); falha => fallback ao
+  // município do prestador (feito na montagem da DPS).
+  const enderecoTomador = cliente.endereco
+    ? { ...(cliente.endereco as Record<string, string>) }
+    : undefined;
+  if (enderecoTomador?.cep && enderecoTomador?.logradouro && !enderecoTomador.codigo_municipio) {
+    const ibge = await municipioIbgePorCep(enderecoTomador.cep);
+    if (ibge) enderecoTomador.codigo_municipio = ibge;
+  }
   const tomador: Tomador = {
     documento,
     razaoSocial: cliente.razao_social,
     email: cliente.email ?? undefined,
-    endereco: (cliente.endereco as Record<string, string> | null) ?? undefined,
+    endereco: enderecoTomador,
   };
 
   // Número da DPS por sequência dedicada (monotônico, sem reuso — evita E0014).

@@ -66,6 +66,19 @@ describe("montarDps", () => {
     expect(xml).toContain("<xLgr>RUA X</xLgr>");
   });
 
+  it("cMun do tomador: usa o do prestador quando o endereço não tem código", () => {
+    const { xml } = montarDps(dados);
+    expect(xml).toContain("<cMun>3170206</cMun>"); // fallback = prestador
+  });
+
+  it("cMun do tomador: usa o código do próprio endereço quando presente (evita E0240)", () => {
+    const { xml } = montarDps({
+      ...dados,
+      tomador: { ...dados.tomador, endereco: { ...dados.tomador.endereco, codigo_municipio: "3505708" } },
+    });
+    expect(xml).toContain("<cMun>3505708</cMun>"); // município do tomador (Barueri), não o do prestador
+  });
+
   it("usa tpAmb=1 em produção", () => {
     const { xml } = montarDps({ ...dados, config: { ...dados.config, ambiente: "producao" } });
     expect(xml).toContain("<tpAmb>1</tpAmb>");
