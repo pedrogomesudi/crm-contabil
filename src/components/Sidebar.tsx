@@ -62,12 +62,14 @@ export function Sidebar({ papel, nome }: { papel: Papel; nome: string }) {
 
       {/* Drawer mobile */}
       {aberto && (
-        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setAberto(false)}>
-          <div className="absolute inset-0 bg-black/40" />
-          <aside
-            className="absolute left-0 top-0 flex h-full w-64 flex-col gap-4 bg-tinta p-4"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-40 md:hidden">
+          <button
+            type="button"
+            aria-label="Fechar menu"
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setAberto(false)}
+          />
+          <aside className="absolute left-0 top-0 flex h-full w-64 flex-col gap-4 bg-tinta p-4">
             <LogoSaldo variante="escuro" tamanho={28} />
             <p className="truncate font-mono text-xs text-mono-muted">{nome}</p>
             {nav}
