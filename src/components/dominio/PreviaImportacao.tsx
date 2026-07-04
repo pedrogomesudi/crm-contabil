@@ -53,7 +53,8 @@ export function PreviaImportacao({ resumo }: { resumo: ResumoPrevia }) {
       if (r.erro) setMsg(r.erro);
       else {
         setFeito(true);
-        setMsg(`Importação aplicada: ${r.gravados} cliente(s) gravado(s).`);
+        const hon = r.honorarios ? ` · ${r.honorarios} honorário(s) atualizado(s)` : "";
+        setMsg(`Importação aplicada: ${r.gravados} cliente(s) novo(s) criado(s)${hon}.`);
       }
     });
 
@@ -80,6 +81,12 @@ export function PreviaImportacao({ resumo }: { resumo: ResumoPrevia }) {
         <Card rotulo="Pendências" n={resumo.pendencias} cor="border-purple-200 bg-purple-50" />
       </div>
 
+      <p className="rounded border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+        ℹ️ Clientes já cadastrados <strong>não têm o cadastro alterado</strong> pela importação — só o{" "}
+        <strong>honorário</strong> pode ser trazido/atualizado pelos contratos (e nunca é zerado). Apenas os{" "}
+        <strong>Novos</strong> são criados.
+      </p>
+
       <div className="space-y-2">
         <Secao
           titulo="🟣 Pendências (não serão gravadas)"
@@ -92,14 +99,14 @@ export function PreviaImportacao({ resumo }: { resumo: ResumoPrevia }) {
           )}
         />
         <Secao
-          titulo="🟡 Atualizados"
+          titulo="🟡 Já cadastrados — Domínio tem dados diferentes (cadastro NÃO será alterado)"
           itens={atualizados}
           render={(i) => (
             <>
               <span className="font-medium">{i.razao_social}</span>
               <span className="block text-xs text-gray-600">
                 {Object.entries(i.diff)
-                  .map(([campo, [antigo, novo]]) => `${LABEL_CAMPO[campo] ?? campo}: ${fmt(antigo)} → ${fmt(novo)}`)
+                  .map(([campo, [antigo, novo]]) => `${LABEL_CAMPO[campo] ?? campo}: mantém "${fmt(antigo)}" (Domínio traz "${fmt(novo)}")`)
                   .join(" · ")}
               </span>
             </>
@@ -126,7 +133,7 @@ export function PreviaImportacao({ resumo }: { resumo: ResumoPrevia }) {
           disabled={pend}
           className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          {pend ? "Aplicando…" : `Aplicar (${resumo.novos + resumo.atualizados} registros)`}
+          {pend ? "Aplicando…" : `Aplicar (${resumo.novos} novo(s) + honorários)`}
         </button>
       )}
       {msg && (

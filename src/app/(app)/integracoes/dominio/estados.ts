@@ -17,4 +17,4 @@ export type ResumoPrevia = {
   avisos?: string[];
 };
 export type EstadoPrevia = { erro?: string; resumo?: ResumoPrevia };
-export type EstadoAplicar = { erro?: string; ok?: boolean; gravados?: number };
+export type EstadoAplicar = { erro?: string; ok?: boolean; gravados?: number; honorarios?: number };
