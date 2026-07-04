@@ -1,8 +1,9 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { TIPOS_PESSOA, REGIMES } from "@/lib/tipos";
 import { Campo, inputCls } from "@/components/ui/Campo";
+import { consultarCnpjParaFormulario } from "@/app/(app)/clientes/consultaReceita";
 import type { EstadoCliente } from "@/app/(app)/clientes/estados";
 
 export type ClienteDefaults = {
@@ -42,6 +43,59 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
   const nomeContadorAtual =
     contadores.find((ct) => ct.id === c.contador_id)?.nome ?? "— sem atribuição —";
 
+  // Campos controlados: os que a busca na Receita preenche.
+  const [tipoPessoa, setTipoPessoa] = useState(c.tipo_pessoa ?? "");
+  const [cpfCnpj, setCpfCnpj] = useState(c.cpf_cnpj ?? "");
+  const [f, setF] = useState({
+    razao_social: c.razao_social ?? "",
+    nome_fantasia: c.nome_fantasia ?? "",
+    logradouro: end.logradouro ?? "",
+    numero: end.numero ?? "",
+    complemento: end.complemento ?? "",
+    bairro: end.bairro ?? "",
+    cidade: end.cidade ?? "",
+    uf: end.uf ?? "",
+    cep: end.cep ?? "",
+  });
+  const set = (k: keyof typeof f) => (e: ChangeEvent<HTMLInputElement>) =>
+    setF((s) => ({ ...s, [k]: e.target.value }));
+  const ehCnpj = tipoPessoa === "PJ" || tipoPessoa === "MEI";
+
+  const [buscando, setBuscando] = useState(false);
+  const [msgBusca, setMsgBusca] = useState<{ ok: boolean; texto: string } | null>(null);
+
+  async function buscarReceita() {
+    const doc = cpfCnpj.replace(/\D/g, "");
+    if (doc.length !== 14) {
+      setMsgBusca({ ok: false, texto: "Informe um CNPJ com 14 dígitos." });
+      return;
+    }
+    setBuscando(true);
+    setMsgBusca(null);
+    const r = await consultarCnpjParaFormulario(doc);
+    setBuscando(false);
+    if (r.erro || !r.ok) {
+      setMsgBusca({ ok: false, texto: r.erro ?? "Não foi possível consultar." });
+      return;
+    }
+    const e = r.endereco ?? {};
+    setF((s) => ({
+      razao_social: r.razaoSocial ?? s.razao_social,
+      nome_fantasia: r.nomeFantasia ?? s.nome_fantasia,
+      logradouro: e.logradouro ?? s.logradouro,
+      numero: e.numero ?? s.numero,
+      complemento: e.complemento ?? s.complemento,
+      bairro: e.bairro ?? s.bairro,
+      cidade: e.cidade ?? s.cidade,
+      uf: e.uf ?? s.uf,
+      cep: e.cep ?? s.cep,
+    }));
+    setMsgBusca({
+      ok: true,
+      texto: `Dados da Receita preenchidos${r.situacao ? ` · situação ${r.situacao}` : ""}. Revise e salve.`,
+    });
+  }
+
   return (
     <form action={formAction} className="max-w-2xl space-y-6">
       {/* concorrência otimista: o servidor confere contra o valor atual */}
@@ -54,7 +108,8 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
           <select
             name="tipo_pessoa"
             required
-            defaultValue={c.tipo_pessoa ?? ""}
+            value={tipoPessoa}
+            onChange={(e) => setTipoPessoa(e.target.value)}
             className={inputCls}
           >
             <option value="" disabled>
@@ -67,19 +122,41 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
             ))}
           </select>
         </Campo>
+        <Campo label="CPF / CNPJ *">
+          <div className="flex gap-2">
+            <input
+              name="cpf_cnpj"
+              required
+              value={cpfCnpj}
+              onChange={(e) => setCpfCnpj(e.target.value)}
+              className={inputCls}
+            />
+            {ehCnpj && (
+              <button
+                type="button"
+                onClick={buscarReceita}
+                disabled={buscando}
+                className="shrink-0 rounded border border-slate-300 px-3 text-sm hover:bg-slate-50 disabled:opacity-60"
+              >
+                {buscando ? "Buscando…" : "Buscar na Receita"}
+              </button>
+            )}
+          </div>
+          {msgBusca && (
+            <p className={`mt-1 text-xs ${msgBusca.ok ? "text-green-700" : "text-red-600"}`}>{msgBusca.texto}</p>
+          )}
+        </Campo>
         <Campo label="Razão social / Nome *">
           <input
             name="razao_social"
             required
-            defaultValue={c.razao_social ?? ""}
+            value={f.razao_social}
+            onChange={set("razao_social")}
             className={inputCls}
           />
         </Campo>
         <Campo label="Nome fantasia">
-          <input name="nome_fantasia" defaultValue={c.nome_fantasia ?? ""} className={inputCls} />
-        </Campo>
-        <Campo label="CPF / CNPJ *">
-          <input name="cpf_cnpj" required defaultValue={c.cpf_cnpj ?? ""} className={inputCls} />
+          <input name="nome_fantasia" value={f.nome_fantasia} onChange={set("nome_fantasia")} className={inputCls} />
         </Campo>
         <Campo label="Regime tributário *">
           <select
@@ -135,28 +212,32 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
         </Campo>
         <div className="grid grid-cols-2 gap-3">
           <Campo label="Logradouro">
-            <input name="logradouro" defaultValue={end.logradouro ?? ""} className={inputCls} />
+            <input name="logradouro" value={f.logradouro} onChange={set("logradouro")} className={inputCls} />
           </Campo>
           <Campo label="Número">
-            <input name="numero" defaultValue={end.numero ?? ""} className={inputCls} />
+            <input name="numero" value={f.numero} onChange={set("numero")} className={inputCls} />
+          </Campo>
+          <Campo label="Complemento">
+            <input name="complemento" value={f.complemento} onChange={set("complemento")} className={inputCls} />
           </Campo>
           <Campo label="Bairro">
-            <input name="bairro" defaultValue={end.bairro ?? ""} className={inputCls} />
+            <input name="bairro" value={f.bairro} onChange={set("bairro")} className={inputCls} />
           </Campo>
           <Campo label="Cidade">
-            <input name="cidade" defaultValue={end.cidade ?? ""} className={inputCls} />
+            <input name="cidade" value={f.cidade} onChange={set("cidade")} className={inputCls} />
           </Campo>
           <Campo label="UF">
             <input
               name="uf"
               maxLength={2}
-              defaultValue={end.uf ?? ""}
+              value={f.uf}
+              onChange={set("uf")}
               style={{ textTransform: "uppercase" }}
               className={inputCls}
             />
           </Campo>
           <Campo label="CEP">
-            <input name="cep" defaultValue={end.cep ?? ""} className={inputCls} />
+            <input name="cep" value={f.cep} onChange={set("cep")} className={inputCls} />
           </Campo>
         </div>
       </fieldset>

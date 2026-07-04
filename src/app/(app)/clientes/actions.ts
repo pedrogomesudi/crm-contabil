@@ -22,7 +22,7 @@ function limparVazios(d: Record<string, unknown>): Record<string, unknown> {
 
 // Monta o endereco (jsonb) a partir dos campos planos do form (normalizado).
 function montarEndereco(formData: FormData): Record<string, string> | null {
-  const campos = ["logradouro", "numero", "bairro", "cidade", "uf", "cep"];
+  const campos = ["logradouro", "numero", "complemento", "bairro", "cidade", "uf", "cep"];
   const e: Record<string, string> = {};
   let temAlgum = false;
   for (const c of campos) {

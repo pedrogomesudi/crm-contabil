@@ -14,6 +14,7 @@ export type EnderecoReceita = {
 };
 export type DadosReceita = {
   razaoSocial: string | null;
+  nomeFantasia: string | null;
   situacao: string | null;
   endereco: EnderecoReceita;
 };
@@ -45,6 +46,7 @@ export function mapearReceita(d: Record<string, unknown>): DadosReceita {
   if (cep) endereco.cep = cep;
   return {
     razaoSocial: limpar(d.razao_social) ?? null,
+    nomeFantasia: limpar(d.nome_fantasia) ?? null,
     situacao: limpar(d.descricao_situacao_cadastral) ?? null,
     endereco,
   };
@@ -67,6 +69,7 @@ export function mapearReceitaWs(d: Record<string, unknown>): DadosReceita {
   if (cep) endereco.cep = cep;
   return {
     razaoSocial: limpar(d.nome) ?? null,
+    nomeFantasia: limpar(d.fantasia) ?? null,
     situacao: limpar(d.situacao) ?? null,
     endereco,
   };
@@ -77,6 +80,7 @@ export function mapearReceitaWs(d: Record<string, unknown>): DadosReceita {
 export function mesclarDados(primario: DadosReceita, secundario: DadosReceita): DadosReceita {
   return {
     razaoSocial: primario.razaoSocial ?? secundario.razaoSocial,
+    nomeFantasia: primario.nomeFantasia ?? secundario.nomeFantasia,
     situacao: primario.situacao ?? secundario.situacao,
     endereco: { ...secundario.endereco, ...primario.endereco },
   };
