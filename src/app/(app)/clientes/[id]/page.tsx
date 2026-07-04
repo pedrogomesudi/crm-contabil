@@ -11,6 +11,8 @@ import { EmissaoClienteSection } from "@/components/nfse/EmissaoClienteSection";
 import { GerarContrato } from "@/components/contrato/GerarContrato";
 import { AcoesExclusaoCliente } from "@/components/clientes/AcoesExclusaoCliente";
 import { BotaoAtualizarReceita } from "@/components/clientes/BotaoAtualizarReceita";
+import { ContratosSection } from "@/components/financeiro/ContratosSection";
+import { listarContratos } from "./contratos";
 import { atualizarCliente } from "../actions";
 
 export const metadata = { title: "Cliente" };
@@ -67,6 +69,8 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
     }
   }
 
+  const contratos = mostrarHonorario ? await listarContratos(id) : [];
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold text-slate-900">{cliente.razao_social}</h1>
@@ -91,6 +95,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
       {mostrarHonorario && (
         <HonorarioForm clienteId={id} valorAtual={valorHonorario} extensao={extensaoFinanceira} />
       )}
+      {mostrarHonorario && <ContratosSection clienteId={id} contratos={contratos} />}
       {mostrarHonorario && (
         <GerarContrato
           clienteId={id}

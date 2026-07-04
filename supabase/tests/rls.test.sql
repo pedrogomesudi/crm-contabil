@@ -596,3 +596,106 @@ begin
 
   raise notice 'OK: import não altera existentes; honorário atualiza com contrato e preserva sem contrato';
 end $$;
+
+-- ===== V6.2 — RLS de contrato/titulo/baixa =====
+reset role;
+insert into contrato (id, cliente_id, descricao, valor_mensal, dia_vencimento, data_inicio)
+  values ('dddddddd-0000-0000-0000-000000000001','aaaaaaaa-0000-0000-0000-000000000001','Contábil',500,10,'2026-01-01')
+  on conflict do nothing;
+insert into titulo (id, cliente_id, contrato_id, origem, valor, competencia, vencimento)
+  values ('eeeeeeee-0000-0000-0000-000000000001','aaaaaaaa-0000-0000-0000-000000000001','dddddddd-0000-0000-0000-000000000001','MENSALIDADE',500,'2026-07-01','2026-07-10')
+  on conflict do nothing;
+
+-- ASSERT R1: contador vê o contrato/título do SEU cliente
+do $$ declare n int; begin
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  select count(*) into n from contrato where cliente_id='aaaaaaaa-0000-0000-0000-000000000001';
+  if n <> 1 then raise exception 'FALHA: contador não viu o contrato do seu cliente (n=%)', n; end if;
+  select count(*) into n from titulo where cliente_id='aaaaaaaa-0000-0000-0000-000000000001';
+  if n <> 1 then raise exception 'FALHA: contador não viu o título do seu cliente (n=%)', n; end if;
+  raise notice 'OK: contador vê contrato/título do próprio cliente';
+end $$;
+
+-- ASSERT R2: contador NÃO escreve título
+do $$ declare ok boolean := false; begin
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  begin
+    insert into titulo (cliente_id, origem, valor, competencia, vencimento)
+      values ('aaaaaaaa-0000-0000-0000-000000000001','MENSALIDADE',9,'2026-08-01','2026-08-10');
+  exception when others then ok := true; end;
+  if not ok then raise exception 'FALHA: contador conseguiu inserir título'; end if;
+  raise notice 'OK: contador não escreve título';
+end $$;
+
+-- ASSERT R3: assistente NÃO vê nada financeiro
+do $$ declare n int; begin
+  perform _simular('00000000-0000-0000-0000-000000000002');
+  select count(*) into n from contrato; if n <> 0 then raise exception 'FALHA: assistente viu contrato'; end if;
+  select count(*) into n from titulo;   if n <> 0 then raise exception 'FALHA: assistente viu titulo'; end if;
+  raise notice 'OK: assistente não vê contrato/titulo';
+end $$;
+
+-- ASSERT R4: financeiro gerencia (registra baixa)
+do $$ begin
+  reset role;
+  insert into conta_bancaria (id, nome, tipo) values ('bbbbbbbb-0000-0000-0000-0000000000f1','Conta Rec','CORRENTE') on conflict do nothing;
+  perform _simular('00000000-0000-0000-0000-000000000004');
+  insert into baixa (titulo_id, data_recebimento, valor_recebido, conta_bancaria_id, forma_pagamento)
+    values ('eeeeeeee-0000-0000-0000-000000000001','2026-07-10',500,'bbbbbbbb-0000-0000-0000-0000000000f1','PIX');
+  raise notice 'OK: financeiro registra baixa';
+end $$;
+
+-- ===== V6.2 — triggers de sync e status =====
+do $$ declare v numeric; begin
+  reset role;
+  insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario)
+    values ('aaaaaaaa-0000-0000-0000-0000000000c1','PJ','Cliente Sync','55000000000191','Simples') on conflict do nothing;
+  insert into contrato (cliente_id, descricao, valor_mensal, dia_vencimento, data_inicio)
+    values ('aaaaaaaa-0000-0000-0000-0000000000c1','A',300,10,'2026-01-01'),
+           ('aaaaaaaa-0000-0000-0000-0000000000c1','B',200,10,'2026-01-01');
+  select honorario_mensal into v from clientes_financeiro where cliente_id='aaaaaaaa-0000-0000-0000-0000000000c1';
+  if v is distinct from 500 then raise exception 'FALHA: sync honorário <> 500 (=%)', v; end if;
+  raise notice 'OK: contrato sincroniza honorário (soma=500)';
+end $$;
+
+do $$ declare s titulo_status; begin
+  reset role;
+  insert into titulo (id, cliente_id, contrato_id, origem, valor, competencia, vencimento)
+    values ('eeeeeeee-0000-0000-0000-0000000000c1','aaaaaaaa-0000-0000-0000-0000000000c1',null,'MENSALIDADE',100,'2026-07-01','2026-07-10')
+    on conflict do nothing;
+  insert into baixa (titulo_id, data_recebimento, valor_recebido, conta_bancaria_id, forma_pagamento)
+    values ('eeeeeeee-0000-0000-0000-0000000000c1','2026-07-05',40,'bbbbbbbb-0000-0000-0000-0000000000f1','PIX');
+  select status into s from titulo where id='eeeeeeee-0000-0000-0000-0000000000c1';
+  if s <> 'BAIXADO_PARCIAL' then raise exception 'FALHA: status parcial errado (=%)', s; end if;
+  insert into baixa (titulo_id, data_recebimento, valor_recebido, conta_bancaria_id, forma_pagamento)
+    values ('eeeeeeee-0000-0000-0000-0000000000c1','2026-07-06',60,'bbbbbbbb-0000-0000-0000-0000000000f1','PIX');
+  select status into s from titulo where id='eeeeeeee-0000-0000-0000-0000000000c1';
+  if s <> 'BAIXADO' then raise exception 'FALHA: status total errado (=%)', s; end if;
+  raise notice 'OK: baixas recalculam status (parcial -> total)';
+end $$;
+
+-- ===== V6.2 — RPC gerar_mensalidades =====
+do $$ declare r1 jsonb; r2 jsonb; v numeric; n int; begin
+  reset role;
+  insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario)
+    values ('aaaaaaaa-0000-0000-0000-0000000000d1','PJ','Cli ProRata','55000000000272','Simples') on conflict do nothing;
+  insert into contrato (id, cliente_id, descricao, valor_mensal, dia_vencimento, data_inicio, gera_decimo_terceiro, mes_decimo_terceiro)
+    values ('dddddddd-0000-0000-0000-0000000000d1','aaaaaaaa-0000-0000-0000-0000000000d1','X',3100,10,'2026-07-16',true,7)
+    on conflict do nothing;
+
+  r1 := gerar_mensalidades('2026-07-01');
+  select valor into v from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1' and origem='MENSALIDADE';
+  if v is distinct from 1600.00 then raise exception 'FALHA: pró-rata <> 1600 (=%)', v; end if;
+  select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1' and origem='DECIMO_TERCEIRO';
+  if n <> 1 then raise exception 'FALHA: 13º não gerado (n=%)', n; end if;
+
+  r2 := gerar_mensalidades('2026-07-01');
+  select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1';
+  if n <> 2 then raise exception 'FALHA: geração duplicou (n=%)', n; end if;
+
+  perform encerrar_contrato('dddddddd-0000-0000-0000-0000000000d1', now()::date, 'teste');
+  select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1' and status='CANCELADO';
+  if n < 1 then raise exception 'FALHA: encerramento não cancelou títulos futuros'; end if;
+
+  raise notice 'OK: gerar_mensalidades (pró-rata 1600, 13º, idempotente, encerramento cancela)';
+end $$;

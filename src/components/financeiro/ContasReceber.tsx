@@ -1,0 +1,158 @@
+"use client";
+import { useState, useTransition } from "react";
+import {
+  listarTitulos,
+  gerarMensalidades,
+  registrarBaixa,
+  desfazerBaixa,
+  setAutomacao,
+  type TituloView,
+} from "@/app/(app)/financeiro/contas-a-receber/actions";
+import { saldoTitulo, ehVencido, LABEL_STATUS } from "@/lib/financeiro/titulos";
+import { formatarMoeda, formatarData } from "@/lib/format";
+
+export function ContasReceber({
+  contas,
+  automacaoInicial,
+}: {
+  contas: { id: string; nome: string }[];
+  automacaoInicial: boolean;
+}) {
+  const [mes, setMes] = useState("");
+  const [titulos, setTitulos] = useState<TituloView[]>([]);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [auto, setAuto] = useState(automacaoInicial);
+  const [baixando, setBaixando] = useState<string | null>(null);
+  const [pend, start] = useTransition();
+  const competencia = mes ? `${mes}-01` : "";
+
+  const carregar = () =>
+    start(async () => {
+      if (competencia) setTitulos(await listarTitulos(competencia));
+    });
+  const gerar = () =>
+    start(async () => {
+      const r = await gerarMensalidades(competencia);
+      setMsg(r.erro ?? `Geradas ${r.gerados}, puladas ${r.pulados}.`);
+      if (!r.erro) setTitulos(await listarTitulos(competencia));
+    });
+
+  return (
+    <div className="space-y-4 text-sm">
+      <div className="flex flex-wrap items-end gap-2">
+        <label>
+          Competência
+          <input type="month" value={mes} onChange={(e) => setMes(e.target.value)} className="ml-2 rounded border border-slate-300 px-2 py-1" />
+        </label>
+        <button onClick={carregar} disabled={!competencia || pend} className="rounded border border-slate-300 px-3 py-1 disabled:opacity-60">
+          Carregar
+        </button>
+        <button onClick={gerar} disabled={!competencia || pend} className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-60">
+          Gerar mensalidades do mês
+        </button>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={auto}
+            onChange={(e) => {
+              setAuto(e.target.checked);
+              start(() => setAutomacao(e.target.checked));
+            }}
+          />
+          Gerar automaticamente todo mês
+        </label>
+      </div>
+      {msg && <p className="text-slate-700">{msg}</p>}
+
+      {titulos.length > 0 && (
+        <div className="overflow-auto rounded border border-slate-200">
+          <table className="w-full">
+            <thead className="bg-slate-100 text-left">
+              <tr>
+                <th className="p-2">Cliente</th>
+                <th className="p-2">Origem</th>
+                <th className="p-2">Vencimento</th>
+                <th className="p-2">Valor</th>
+                <th className="p-2">Saldo</th>
+                <th className="p-2">Status</th>
+                <th className="p-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {titulos.map((t) => {
+                const saldo = saldoTitulo(t.valor, t.somaBaixado);
+                const status = ehVencido(t.vencimento, t.status, saldo) ? "VENCIDO" : t.status;
+                return (
+                  <tr key={t.id} className="border-t border-slate-100">
+                    <td className="p-2">{t.cliente}</td>
+                    <td className="p-2">{t.origem === "DECIMO_TERCEIRO" ? "13º" : "Mensalidade"}</td>
+                    <td className="p-2">{formatarData(t.vencimento)}</td>
+                    <td className="p-2">{formatarMoeda(t.valor)}</td>
+                    <td className="p-2">{formatarMoeda(saldo)}</td>
+                    <td className="p-2">{LABEL_STATUS[status] ?? status}</td>
+                    <td className="p-2 text-right">
+                      {t.somaBaixado > 0 ? (
+                        <button
+                          type="button"
+                          className="text-slate-600 underline"
+                          onClick={() =>
+                            start(async () => {
+                              await desfazerBaixa(t.id);
+                              setTitulos(await listarTitulos(competencia));
+                            })
+                          }
+                        >
+                          Desfazer baixa
+                        </button>
+                      ) : (
+                        <button type="button" className="text-blue-600 underline" onClick={() => setBaixando(t.id)}>
+                          Baixar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {baixando && (
+        <form
+          action={async (fd) => {
+            fd.set("titulo_id", baixando);
+            const r = await registrarBaixa(fd);
+            setMsg(r.erro ?? "Baixa registrada.");
+            if (!r.erro) {
+              setBaixando(null);
+              start(async () => setTitulos(await listarTitulos(competencia)));
+            }
+          }}
+          className="max-w-xl space-y-2 rounded border border-slate-200 p-3"
+        >
+          <p className="text-sm font-medium">Registrar baixa</p>
+          <div className="grid grid-cols-2 gap-2">
+            <input name="valor_recebido" type="number" step="0.01" placeholder="Valor recebido" required className="rounded border border-slate-300 p-2" />
+            <input name="data_recebimento" type="date" required className="rounded border border-slate-300 p-2" />
+            <select name="conta_bancaria_id" required className="rounded border border-slate-300 p-2">
+              <option value="">Conta bancária…</option>
+              {contas.map((c) => (
+                <option key={c.id} value={c.id}>{c.nome}</option>
+              ))}
+            </select>
+            <select name="forma_pagamento" required className="rounded border border-slate-300 p-2">
+              {["PIX", "BOLETO", "CARTAO", "TRANSFERENCIA", "DINHEIRO"].map((f) => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <button type="submit" className="rounded bg-slate-900 px-3 py-2 text-white">Confirmar baixa</button>
+            <button type="button" onClick={() => setBaixando(null)} className="rounded border border-slate-300 px-3 py-2">Cancelar</button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}

@@ -4,6 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 
 const ITENS = [
+  { href: "/financeiro/contas-a-receber", label: "Contas a receber" },
   { href: "/financeiro/cadastros/contas", label: "Contas bancárias" },
   { href: "/financeiro/cadastros/plano-de-contas", label: "Plano de contas" },
   { href: "/financeiro/cadastros/centros-de-custo", label: "Centros de custo" },
