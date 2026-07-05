@@ -32,3 +32,12 @@ export function badgeStatusNfse(status: string): "positivo" | "neutro" | "negati
   if (s.includes("process") || s.includes("pendente") || s.includes("enviada")) return "atencao";
   return "neutro"; // cancelada e desconhecidos
 }
+
+// Papel do usuário → variante de cor do Badge.
+export function badgePapel(papel: string): "ia" | "positivo" | "neutro" | "atencao" {
+  const p = (papel ?? "").toLowerCase();
+  if (p === "admin") return "ia";
+  if (p === "financeiro") return "positivo";
+  if (p === "assistente") return "atencao";
+  return "neutro"; // contador e desconhecidos
+}
