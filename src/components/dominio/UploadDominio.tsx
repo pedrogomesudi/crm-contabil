@@ -29,7 +29,7 @@ export function UploadDominio() {
           {pendente ? "Lendo arquivos…" : "Gerar prévia"}
         </button>
         {estado.erro && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-negativo">
             {estado.erro}
           </p>
         )}

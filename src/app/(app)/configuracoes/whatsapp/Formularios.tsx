@@ -14,20 +14,20 @@ export function FormWhatsapp({ instance, configurado }: { instance: string; conf
       </p>
       <form action={action} className="space-y-3">
         <label className="block text-sm">
-          <span className="text-slate-700">Instance ID</span>
-          <input name="instance" defaultValue={instance} required className="mt-1 w-full rounded border border-slate-300 p-2" />
+          <span className="text-cinza">Instance ID</span>
+          <input name="instance" defaultValue={instance} required className="mt-1 w-full rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde" />
         </label>
         <label className="block text-sm">
-          <span className="text-slate-700">Token da instância {configurado && "(configurado — reenvie para trocar)"}</span>
-          <input name="token" type="password" required className="mt-1 w-full rounded border border-slate-300 p-2" />
+          <span className="text-cinza">Token da instância {configurado && "(configurado — reenvie para trocar)"}</span>
+          <input name="token" type="password" required className="mt-1 w-full rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde" />
         </label>
         <label className="block text-sm">
-          <span className="text-slate-700">Client-Token (segurança da conta)</span>
-          <input name="client_token" type="password" required className="mt-1 w-full rounded border border-slate-300 p-2" />
+          <span className="text-cinza">Client-Token (segurança da conta)</span>
+          <input name="client_token" type="password" required className="mt-1 w-full rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde" />
         </label>
-        {estado.erro && <p className="text-sm text-red-600">{estado.erro}</p>}
-        {estado.ok && <p className="text-sm text-green-700">Salvo.</p>}
-        <button type="submit" disabled={pend} className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60">
+        {estado.erro && <p className="text-sm text-negativo">{estado.erro}</p>}
+        {estado.ok && <p className="text-sm text-verde">Salvo.</p>}
+        <button type="submit" disabled={pend} className="rounded-lg bg-verde px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60">
           {pend ? "Salvando…" : "Salvar"}
         </button>
       </form>
@@ -39,11 +39,11 @@ export function FormWhatsapp({ instance, configurado }: { instance: string; conf
           })
         }
         disabled={pendT}
-        className="rounded border border-slate-300 px-4 py-2 text-sm"
+        className="rounded border border-linha px-4 py-2 text-sm"
       >
         {pendT ? "Testando…" : "Testar conexão"}
       </button>
-      {teste && <p className="text-sm text-slate-700">{teste}</p>}
+      {teste && <p className="text-sm text-cinza">{teste}</p>}
     </div>
   );
 }

@@ -27,12 +27,12 @@ export function ImportarEnderecos() {
         {pend ? "Processando…" : "Atualizar endereços"}
       </button>
       {estado.erro && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-negativo">
           {estado.erro}
         </p>
       )}
       {estado.ok && (
-        <p role="status" className="text-sm text-green-700">
+        <p role="status" className="text-sm text-verde">
           {estado.preenchidos} preenchido(s)
           {estado.atualizados ? ` · ${estado.atualizados} atualizado(s)` : ""}
           {estado.mantidos ? ` · ${estado.mantidos} mantido(s)` : ""}

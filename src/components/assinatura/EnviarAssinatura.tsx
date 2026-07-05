@@ -18,16 +18,16 @@ export function EnviarAssinatura({
   const [aberto, setAberto] = useState(false);
   const [testemunhas, setTestemunhas] = useState(false);
 
-  if (estado.ok) return <span className="text-xs text-green-700">Enviado para assinatura ✓</span>;
+  if (estado.ok) return <span className="text-xs text-verde">Enviado para assinatura ✓</span>;
   if (!aberto)
     return (
-      <button onClick={() => setAberto(true)} className="rounded border px-2 py-1 text-xs text-slate-700">
+      <button onClick={() => setAberto(true)} className="rounded border px-2 py-1 text-xs text-cinza">
         Enviar para assinatura
       </button>
     );
 
   return (
-    <form action={formAction} className="mt-2 space-y-2 rounded border border-slate-200 p-3 text-sm">
+    <form action={formAction} className="mt-2 space-y-2 rounded border border-linha p-3 text-sm">
       <p className="font-medium">Cliente (CONTRATANTE)</p>
       <input
         name="contratante_nome"
@@ -71,7 +71,7 @@ export function EnviarAssinatura({
         </div>
       )}
       {estado.erro && (
-        <p role="alert" className="text-red-600">
+        <p role="alert" className="text-negativo">
           {estado.erro}
         </p>
       )}
@@ -79,7 +79,7 @@ export function EnviarAssinatura({
         <button
           type="submit"
           disabled={pending}
-          className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-60"
+          className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
         >
           {pending ? "Enviando..." : "Enviar"}
         </button>

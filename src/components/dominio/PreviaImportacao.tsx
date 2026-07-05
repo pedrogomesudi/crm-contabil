@@ -69,13 +69,13 @@ export function PreviaImportacao({ resumo }: { resumo: ResumoPrevia }) {
         <p
           key={i}
           role="alert"
-          className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800"
+          className="rounded border border-red-300 bg-negativo/10 px-3 py-2 text-sm text-red-800"
         >
           ⚠️ {a}
         </p>
       ))}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Card rotulo="Novos" n={resumo.novos} cor="border-green-200 bg-green-50" />
+        <Card rotulo="Novos" n={resumo.novos} cor="border-green-200 bg-verde/10" />
         <Card rotulo="Atualizados" n={resumo.atualizados} cor="border-yellow-200 bg-yellow-50" />
         <Card rotulo="Inalterados" n={resumo.inalterados} cor="border-gray-200 bg-gray-50" />
         <Card rotulo="Pendências" n={resumo.pendencias} cor="border-purple-200 bg-purple-50" />

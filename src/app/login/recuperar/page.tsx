@@ -21,7 +21,7 @@ export default function RecuperarPage() {
           required
         />
         {estado.mensagem && (
-          <p role="status" aria-live="polite" className="text-sm text-slate-600">
+          <p role="status" aria-live="polite" className="text-sm text-cinza">
             {estado.mensagem}
           </p>
         )}
@@ -29,11 +29,11 @@ export default function RecuperarPage() {
           type="submit"
           disabled={pending}
           aria-busy={pending}
-          className="w-full rounded bg-slate-900 py-2 text-white disabled:opacity-60"
+          className="w-full rounded-lg bg-verde py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
         >
           {pending ? "Enviando..." : "Enviar instruções"}
         </button>
-        <Link href="/login" className="block text-center text-sm text-slate-600">
+        <Link href="/login" className="block text-center text-sm text-cinza">
           Voltar ao login
         </Link>
       </form>
