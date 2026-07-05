@@ -39,7 +39,7 @@ export function LoginForm({ aviso }: { aviso?: string }) {
           aria-invalid={estado.erro ? true : undefined}
         />
         {estado.erro && (
-          <p id="login-erro" role="alert" className="text-sm text-red-600">
+          <p id="login-erro" role="alert" className="text-sm text-negativo">
             {estado.erro}
           </p>
         )}
@@ -47,11 +47,11 @@ export function LoginForm({ aviso }: { aviso?: string }) {
           type="submit"
           disabled={pending}
           aria-busy={pending}
-          className="w-full rounded bg-slate-900 py-2 text-white disabled:opacity-60"
+          className="w-full rounded-lg bg-verde py-2 text-sm font-medium text-white transition hover:brightness-105 disabled:opacity-60"
         >
           {pending ? "Entrando..." : "Entrar"}
         </button>
-        <Link href="/login/recuperar" className="block text-center text-sm text-slate-600">
+        <Link href="/login/recuperar" className="block text-center text-sm text-cinza hover:text-verde">
           Esqueci minha senha
         </Link>
       </form>
