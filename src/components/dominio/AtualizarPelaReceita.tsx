@@ -87,7 +87,7 @@ export function AtualizarPelaReceita() {
           <button
             onClick={executar}
             disabled={executando || marcados === 0}
-            className="rounded bg-blue-600 px-3 py-1 text-white disabled:opacity-60"
+            className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
           >
             {executando ? `Atualizando ${prog.feitas}/${prog.total}…` : `Atualizar ${marcados} selecionado(s)`}
           </button>

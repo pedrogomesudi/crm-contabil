@@ -81,7 +81,7 @@ export function PreviaImportacao({ resumo }: { resumo: ResumoPrevia }) {
         <Card rotulo="Pendências" n={resumo.pendencias} cor="border-purple-200 bg-purple-50" />
       </div>
 
-      <p className="rounded border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+      <p className="rounded-lg border border-violeta/30 bg-violeta/10 px-3 py-2 text-xs text-violeta">
         ℹ️ Clientes já cadastrados <strong>não têm o cadastro alterado</strong> pela importação — só o{" "}
         <strong>honorário</strong> pode ser trazido/atualizado pelos contratos (e nunca é zerado). Apenas os{" "}
         <strong>Novos</strong> são criados.

@@ -24,7 +24,7 @@ export function UploadDominio() {
         <button
           type="submit"
           disabled={pendente}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-lg bg-verde px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-50"
         >
           {pendente ? "Lendo arquivos…" : "Gerar prévia"}
         </button>
