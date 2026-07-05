@@ -41,13 +41,13 @@ export default async function UsuariosPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-slate-900">Usuários</h1>
+      <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Usuários</h1>
 
       {feedback && (
         <p
           role={ehErro ? "alert" : "status"}
           className={`rounded px-3 py-2 text-sm ${
-            ehErro ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"
+            ehErro ? "bg-negativo/10 text-negativo" : "bg-verde/10 text-verde"
           }`}
         >
           {feedback}
@@ -57,14 +57,14 @@ export default async function UsuariosPage({
       <ConviteForm />
 
       {error ? (
-        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-negativo">
           Não foi possível carregar os usuários.
         </p>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-hidden rounded-lg border border-linha bg-white">
           <table className="w-full text-sm">
             <caption className="sr-only">Lista de usuários do escritório</caption>
-            <thead className="bg-slate-100 text-left text-slate-700">
+            <thead className="bg-creme text-left text-cinza">
               <tr>
                 <th className="p-2 font-medium">Nome</th>
                 <th className="p-2 font-medium">E-mail</th>
@@ -77,19 +77,19 @@ export default async function UsuariosPage({
               {usuarios?.map((u) => {
                 const ehProprio = u.id === perfil.id;
                 return (
-                  <tr key={u.id} className="border-t border-slate-100 align-top">
-                    <td className="p-2 text-slate-900">{u.nome}</td>
-                    <td className="p-2 text-slate-700">{u.email}</td>
+                  <tr key={u.id} className="border-t border-linha/70 align-top">
+                    <td className="p-2 text-texto">{u.nome}</td>
+                    <td className="p-2 text-cinza">{u.email}</td>
                     <td className="p-2">
                       {ehProprio ? (
-                        <span className="text-slate-500">{u.papel} (você)</span>
+                        <span className="text-cinza-claro">{u.papel} (você)</span>
                       ) : (
                         <form action={alterarPapel.bind(null, u.id)} className="flex gap-1">
                           <select
                             name="papel"
                             defaultValue={u.papel}
                             aria-label={`Papel de ${u.nome}`}
-                            className="rounded border border-slate-300 px-2 py-1 text-slate-900"
+                            className="rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto focus:border-verde"
                           >
                             {PAPEIS.map((p) => (
                               <option key={p} value={p}>
@@ -98,7 +98,7 @@ export default async function UsuariosPage({
                             ))}
                           </select>
                           <BotaoAcao
-                            className="rounded border border-slate-300 px-2 text-slate-700"
+                            className="rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme"
                             rotulo={`Salvar papel de ${u.nome}`}
                             confirmar={
                               u.papel === "admin"
@@ -113,12 +113,12 @@ export default async function UsuariosPage({
                     </td>
                     <td className="p-2">
                       {ehProprio ? (
-                        <span className="text-slate-500">{u.ativo ? "ativo" : "inativo"}</span>
+                        <span className="text-cinza-claro">{u.ativo ? "ativo" : "inativo"}</span>
                       ) : (
                         <form action={definirAtivo.bind(null, u.id)}>
                           <BotaoAcao
                             className={`rounded px-2 py-1 ${
-                              u.ativo ? "bg-slate-100 text-slate-700" : "bg-green-600 text-white"
+                              u.ativo ? "bg-creme text-cinza" : "bg-verde text-white"
                             }`}
                             rotulo={`${u.ativo ? "Desativar" : "Ativar"} ${u.nome}`}
                             confirmar={
@@ -134,11 +134,11 @@ export default async function UsuariosPage({
                     </td>
                     <td className="p-2">
                       {ehProprio ? (
-                        <span className="text-slate-400">—</span>
+                        <span className="text-cinza-claro">—</span>
                       ) : (
                         <form action={reenviarAcesso.bind(null, u.id)}>
                           <BotaoAcao
-                            className="rounded border border-slate-300 px-2 py-1 text-slate-700"
+                            className="rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme"
                             rotulo={`Reenviar acesso para ${u.nome}`}
                             confirmar={`Reenviar o link de acesso para ${u.email}?`}
                           >

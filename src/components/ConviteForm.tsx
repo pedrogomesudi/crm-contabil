@@ -16,9 +16,9 @@ export function ConviteForm() {
     <form
       ref={formRef}
       action={action}
-      className="space-y-3 rounded-lg border border-slate-200 bg-white p-4"
+      className="space-y-3 rounded-lg border border-linha bg-white p-4"
     >
-      <h2 className="text-sm font-semibold text-slate-900">Convidar usuário</h2>
+      <h2 className="text-sm font-semibold text-texto">Convidar usuário</h2>
       <div className="grid gap-3 sm:grid-cols-3">
         <Campo label="Nome">
           <input name="nome" required className={inputCls} />
@@ -38,12 +38,12 @@ export function ConviteForm() {
       </div>
 
       {estado.erro && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-negativo">
           {estado.erro}
         </p>
       )}
       {estado.ok && (
-        <p role="status" className="rounded bg-green-50 p-3 text-sm text-green-800">
+        <p role="status" className="rounded bg-verde/10 p-3 text-sm text-verde">
           Convite enviado por e-mail. O usuário define a senha pelo link recebido.
         </p>
       )}
@@ -52,7 +52,7 @@ export function ConviteForm() {
         type="submit"
         disabled={pending}
         aria-busy={pending}
-        className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60"
+        className="rounded-lg bg-verde px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
       >
         {pending ? "Convidando..." : "Convidar"}
       </button>
