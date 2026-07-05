@@ -10,6 +10,8 @@ import {
 import { estornarBaixaDoTitulo } from "@/app/(app)/financeiro/contas-a-pagar/actions";
 import { cobrarViaWhatsapp } from "@/app/(app)/financeiro/contas-a-receber/whatsapp";
 import { saldoTitulo, ehVencido, LABEL_STATUS } from "@/lib/financeiro/titulos";
+import { Badge } from "@/components/ui/Badge";
+import { badgeStatusTitulo } from "@/lib/ui/apresentacao";
 import { formatarMoeda, formatarData } from "@/lib/format";
 
 export function ContasReceber({
@@ -43,12 +45,12 @@ export function ContasReceber({
       <div className="flex flex-wrap items-end gap-2">
         <label>
           Competência
-          <input type="month" value={mes} onChange={(e) => setMes(e.target.value)} className="ml-2 rounded border border-slate-300 px-2 py-1" />
+          <input type="month" value={mes} onChange={(e) => setMes(e.target.value)} className="ml-2 rounded border border-linha px-2 py-1" />
         </label>
-        <button onClick={carregar} disabled={!competencia || pend} className="rounded border border-slate-300 px-3 py-1 disabled:opacity-60">
+        <button onClick={carregar} disabled={!competencia || pend} className="rounded border border-linha px-3 py-1 disabled:opacity-60">
           Carregar
         </button>
-        <button onClick={gerar} disabled={!competencia || pend} className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-60">
+        <button onClick={gerar} disabled={!competencia || pend} className="rounded-lg bg-verde px-3 py-1 font-medium text-white hover:brightness-105 disabled:opacity-60">
           Gerar mensalidades do mês
         </button>
         <label className="flex items-center gap-2">
@@ -63,12 +65,12 @@ export function ContasReceber({
           Gerar automaticamente todo mês
         </label>
       </div>
-      {msg && <p className="text-slate-700">{msg}</p>}
+      {msg && <p className="text-cinza">{msg}</p>}
 
       {titulos.length > 0 && (
-        <div className="overflow-auto rounded border border-slate-200">
+        <div className="overflow-auto rounded border border-linha">
           <table className="w-full">
-            <thead className="bg-slate-100 text-left">
+            <thead className="bg-creme text-left">
               <tr>
                 <th className="p-2">Cliente</th>
                 <th className="p-2">Origem</th>
@@ -84,18 +86,18 @@ export function ContasReceber({
                 const saldo = saldoTitulo(t.valor, t.somaBaixado);
                 const status = ehVencido(t.vencimento, t.status, saldo) ? "VENCIDO" : t.status;
                 return (
-                  <tr key={t.id} className="border-t border-slate-100">
+                  <tr key={t.id} className="border-t border-linha/70">
                     <td className="p-2">{t.cliente}</td>
                     <td className="p-2">{t.origem === "DECIMO_TERCEIRO" ? "13º" : "Mensalidade"}</td>
                     <td className="p-2">{formatarData(t.vencimento)}</td>
                     <td className="p-2">{formatarMoeda(t.valor)}</td>
                     <td className="p-2">{formatarMoeda(saldo)}</td>
-                    <td className="p-2">{LABEL_STATUS[status] ?? status}</td>
+                    <td className="p-2"><Badge variante={badgeStatusTitulo(status)}>{LABEL_STATUS[status] ?? status}</Badge></td>
                     <td className="p-2 text-right">
                       {t.somaBaixado > 0 ? (
                         <button
                           type="button"
-                          className="text-slate-600 underline"
+                          className="text-cinza underline"
                           onClick={() =>
                             start(async () => {
                               const motivo = prompt("Justificativa do estorno?") ?? "";
@@ -115,7 +117,7 @@ export function ContasReceber({
                       {t.temTelefone && saldo > 0 && (
                         <button
                           type="button"
-                          className="ml-2 text-green-700 underline"
+                          className="ml-2 text-verde underline"
                           onClick={() =>
                             start(async () => {
                               const r = await cobrarViaWhatsapp(t.id);
@@ -146,27 +148,27 @@ export function ContasReceber({
               start(async () => setTitulos(await listarTitulos(competencia)));
             }
           }}
-          className="max-w-xl space-y-2 rounded border border-slate-200 p-3"
+          className="max-w-xl space-y-2 rounded border border-linha p-3"
         >
           <p className="text-sm font-medium">Registrar baixa</p>
           <div className="grid grid-cols-2 gap-2">
-            <input name="valor_recebido" type="number" step="0.01" placeholder="Valor recebido" required className="rounded border border-slate-300 p-2" />
-            <input name="data_recebimento" type="date" required className="rounded border border-slate-300 p-2" />
-            <select name="conta_bancaria_id" required className="rounded border border-slate-300 p-2">
+            <input name="valor_recebido" type="number" step="0.01" placeholder="Valor recebido" required className="rounded border border-linha p-2" />
+            <input name="data_recebimento" type="date" required className="rounded border border-linha p-2" />
+            <select name="conta_bancaria_id" required className="rounded border border-linha p-2">
               <option value="">Conta bancária…</option>
               {contas.map((c) => (
                 <option key={c.id} value={c.id}>{c.nome}</option>
               ))}
             </select>
-            <select name="forma_pagamento" required className="rounded border border-slate-300 p-2">
+            <select name="forma_pagamento" required className="rounded border border-linha p-2">
               {["PIX", "BOLETO", "CARTAO", "TRANSFERENCIA", "DINHEIRO"].map((f) => (
                 <option key={f} value={f}>{f}</option>
               ))}
             </select>
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="rounded bg-slate-900 px-3 py-2 text-white">Confirmar baixa</button>
-            <button type="button" onClick={() => setBaixando(null)} className="rounded border border-slate-300 px-3 py-2">Cancelar</button>
+            <button type="submit" className="rounded-lg bg-verde px-3 py-2 text-sm font-medium text-white hover:brightness-105">Confirmar baixa</button>
+            <button type="button" onClick={() => setBaixando(null)} className="rounded border border-linha px-3 py-2">Cancelar</button>
           </div>
         </form>
       )}

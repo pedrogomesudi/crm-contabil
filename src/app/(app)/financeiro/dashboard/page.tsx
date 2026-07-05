@@ -12,7 +12,7 @@ export default async function DashboardFinanceiroPage() {
   const dados = await carregarDashboard(`${mes}-01`);
   return (
     <main className="mx-auto max-w-4xl space-y-4 p-4">
-      <h1 className="text-lg font-semibold text-slate-900">Dashboard financeiro</h1>
+      <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Dashboard financeiro</h1>
       {dados ? (
         <DashboardFinanceiro mesInicial={mes} dadosIniciais={dados} />
       ) : (

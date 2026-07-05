@@ -158,7 +158,8 @@ Rebrand como **SALDO** (`seusaldo.ai`) a partir do Brand Kit: identidade visual,
   - **V8.2a — Auth + Clientes** ✅ — guia de linguagem (`docs/design/saldo-ui.md`), primitivos ampliados
     (Campo/Input/Select/Textarea/Painel/Chip/Toolbar/EmptyState/Iniciais), lista/ficha/formulários de
     clientes e telas de login recomponentizadas.
-  - **V8.2b — Financeiro** ⬜ (dashboard, contas a pagar/receber, régua, cadastros/CRUD).
+  - **V8.2b — Financeiro** ✅ — dashboard (StatCards + barras), contas a receber/pagar (tabelas + badges
+    de status), régua, CadastroCrud genérico e hubs. Helper `badgeStatusTitulo`.
   - **V8.2c — NFS-e** ⬜ (lote, emissão, config, componentes).
   - **V8.2d — Atendimento + Integrações + resto** ⬜ (inbox, Domínio, documentos/assinatura, usuários).
 

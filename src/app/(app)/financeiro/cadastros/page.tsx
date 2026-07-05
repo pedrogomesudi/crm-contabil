@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const ITENS = [
   { href: "/financeiro/dashboard", label: "Dashboard financeiro" },
@@ -19,16 +20,19 @@ export default async function CadastrosHubPage() {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeGerenciarFinanceiro(perfil.papel)) redirect("/");
   return (
-    <main className="mx-auto max-w-3xl space-y-4 p-4">
-      <h1 className="text-lg font-semibold text-slate-900">Cadastros financeiros</h1>
-      <ul className="grid gap-2 sm:grid-cols-2">
+    <main className="mx-auto max-w-3xl space-y-5 p-4">
+      <PageHeader titulo="Financeiro" subtitulo="Painéis, movimentações e cadastros do escritório" />
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {ITENS.map((i) => (
           <li key={i.href}>
             <Link
               href={i.href}
-              className="block rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50"
+              className="flex items-center justify-between rounded-2xl border border-linha bg-white p-4 transition hover:border-cinza-claro hover:shadow-sm"
             >
-              {i.label}
+              <span className="font-medium text-texto">{i.label}</span>
+              <svg className="text-cinza-claro" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="m9 6 6 6-6 6" />
+              </svg>
             </Link>
           </li>
         ))}

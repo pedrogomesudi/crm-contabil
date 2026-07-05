@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { iniciais, badgeRegime } from "@/lib/ui/apresentacao";
+import { iniciais, badgeRegime, badgeStatusTitulo } from "@/lib/ui/apresentacao";
 
 describe("iniciais", () => {
   it("2 iniciais de nomes compostos; 1 palavra → 2 letras; vazio → ?", () => {
@@ -17,5 +17,16 @@ describe("badgeRegime", () => {
     expect(badgeRegime("Lucro Real")).toBe("neutro");
     expect(badgeRegime("MEI")).toBe("atencao");
     expect(badgeRegime(null)).toBe("neutro");
+  });
+});
+
+describe("badgeStatusTitulo", () => {
+  it("mapeia o status do título para a variante do Badge", () => {
+    expect(badgeStatusTitulo("BAIXADO")).toBe("positivo");
+    expect(badgeStatusTitulo("BAIXADO_PARCIAL")).toBe("atencao");
+    expect(badgeStatusTitulo("VENCIDO")).toBe("negativo");
+    expect(badgeStatusTitulo("ABERTO")).toBe("neutro");
+    expect(badgeStatusTitulo("CANCELADO")).toBe("neutro");
+    expect(badgeStatusTitulo("qualquer")).toBe("neutro");
   });
 });
