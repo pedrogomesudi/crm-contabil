@@ -57,7 +57,7 @@ export default async function UsuariosPage({
       <ConviteForm />
 
       {error ? (
-        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-negativo">
+        <p role="alert" className="rounded-lg bg-negativo/10 px-3 py-2 text-sm text-negativo">
           Não foi possível carregar os usuários.
         </p>
       ) : (
