@@ -64,10 +64,10 @@ export function BaixarNotasZip() {
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-slate-200 p-4 text-sm">
+    <div className="space-y-3 rounded-lg border border-linha p-4 text-sm">
       <div>
         <h2 className="text-sm font-semibold">Baixar notas do mês (ZIP)</h2>
-        <p className="text-xs text-slate-600">
+        <p className="text-xs text-cinza">
           Baixa todas as NFS-e autorizadas da competência escolhida — <strong>PDF (DANFSe) e XML</strong> de cada nota,
           nomeados pela razão social do cliente. O download roda uma a uma, no navegador.
         </p>
@@ -79,13 +79,13 @@ export function BaixarNotasZip() {
             type="month"
             value={mes}
             onChange={(e) => setMes(e.target.value)}
-            className="ml-2 rounded border border-slate-300 px-2 py-1"
+            className="ml-2 rounded border border-linha px-2 py-1"
           />
         </label>
         <button
           onClick={contar}
           disabled={!competencia || carregando || baixando}
-          className="rounded border border-slate-300 px-3 py-1 disabled:opacity-60"
+          className="rounded border border-linha px-3 py-1 disabled:opacity-60"
         >
           {carregando ? "Verificando…" : "Verificar"}
         </button>
@@ -93,7 +93,7 @@ export function BaixarNotasZip() {
           <button
             onClick={baixar}
             disabled={total === 0}
-            className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-60"
+            className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
           >
             Baixar {total} nota(s) (PDF + XML)
           </button>
@@ -103,13 +103,13 @@ export function BaixarNotasZip() {
             <span>
               Baixando {prog.feitas}/{prog.total}… (✓ {prog.ok} · ✗ {prog.falha})
             </span>
-            <button onClick={() => (pararRef.current = true)} className="rounded border border-slate-300 px-3 py-1">
+            <button onClick={() => (pararRef.current = true)} className="rounded border border-linha px-3 py-1">
               Parar
             </button>
           </>
         )}
       </div>
-      {total === 0 && !baixando && <p className="text-slate-500">Nenhuma nota autorizada nessa competência.</p>}
+      {total === 0 && !baixando && <p className="text-cinza-claro">Nenhuma nota autorizada nessa competência.</p>}
     </div>
   );
 }

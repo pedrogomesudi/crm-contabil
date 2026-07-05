@@ -11,17 +11,17 @@ export function CancelarNfse({ nfseId }: { nfseId: string }) {
 
   if (!aberto)
     return (
-      <button onClick={() => setAberto(true)} className="rounded border px-2 py-0.5 text-xs text-red-700">
+      <button onClick={() => setAberto(true)} className="rounded border px-2 py-0.5 text-xs text-negativo">
         Cancelar
       </button>
     );
 
   return (
-    <div className="mt-1 w-64 space-y-1 rounded border border-slate-200 p-2 text-xs">
+    <div className="mt-1 w-64 space-y-1 rounded border border-linha p-2 text-xs">
       <select
         value={motivo}
         onChange={(e) => setMotivo(e.target.value as "1" | "2" | "9")}
-        className="w-full rounded border border-slate-300 px-1 py-0.5"
+        className="w-full rounded border border-linha px-1 py-0.5"
       >
         <option value="1">1 - Erro na emissão</option>
         <option value="2">2 - Serviço não prestado</option>
@@ -32,10 +32,10 @@ export function CancelarNfse({ nfseId }: { nfseId: string }) {
         onChange={(e) => setJustificativa(e.target.value)}
         placeholder="Justificativa (mín. 15 caracteres)"
         rows={2}
-        className="w-full rounded border border-slate-300 px-1 py-0.5"
+        className="w-full rounded border border-linha px-1 py-0.5"
       />
       {erro && (
-        <p role="alert" className="text-red-600">
+        <p role="alert" className="text-negativo">
           {erro}
         </p>
       )}

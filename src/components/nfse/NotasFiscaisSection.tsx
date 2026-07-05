@@ -5,6 +5,8 @@ import type { Papel } from "@/lib/tipos";
 import { EmitirNfse } from "./EmitirNfse";
 import { BaixarNfse } from "./BaixarNfse";
 import { CancelarNfse } from "./CancelarNfse";
+import { Badge } from "@/components/ui/Badge";
+import { badgeStatusNfse } from "@/lib/ui/apresentacao";
 
 const ROTULO_STATUS: Record<string, string> = {
   processando: "Processando",
@@ -35,20 +37,20 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
   const ambiente = cfg?.ambiente ?? "homologacao";
 
   return (
-    <section className="max-w-4xl space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-      <h2 className="text-sm font-semibold text-slate-900">Notas fiscais (NFS-e)</h2>
+    <section className="max-w-4xl space-y-3 rounded-lg border border-linha bg-white p-4">
+      <h2 className="text-sm font-semibold text-texto">Notas fiscais (NFS-e)</h2>
 
       {honorario > 0 ? (
         <EmitirNfse clienteId={clienteId} honorario={honorario} ambiente={ambiente} />
       ) : (
-        <p className="text-sm text-slate-500">Defina o honorário do cliente para emitir NFS-e.</p>
+        <p className="text-sm text-cinza-claro">Defina o honorário do cliente para emitir NFS-e.</p>
       )}
 
       {notas && notas.length > 0 ? (
-        <div className="overflow-x-auto rounded border border-slate-200">
+        <div className="overflow-x-auto rounded border border-linha">
           <table className="w-full text-sm">
             <caption className="sr-only">Notas fiscais do cliente</caption>
-            <thead className="bg-slate-100 text-left text-slate-700">
+            <thead className="bg-creme text-left text-cinza">
               <tr>
                 <th className="p-2 font-medium">Competência</th>
                 <th className="p-2 font-medium">Número</th>
@@ -59,24 +61,24 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
             </thead>
             <tbody>
               {notas.map((n) => (
-                <tr key={n.id} className="border-t border-slate-100 align-top">
-                  <td className="p-2 text-slate-900">{formatarData(n.competencia)}</td>
-                  <td className="p-2 text-slate-700">{n.numero ?? "—"}</td>
-                  <td className="p-2 text-slate-700">R$ {Number(n.valor).toFixed(2)}</td>
-                  <td className="p-2 text-slate-700">
-                    {ROTULO_STATUS[n.status] ?? n.status}
+                <tr key={n.id} className="border-t border-linha/70 align-top">
+                  <td className="p-2 text-texto">{formatarData(n.competencia)}</td>
+                  <td className="p-2 font-mono text-xs text-cinza">{n.numero ?? "—"}</td>
+                  <td className="p-2 font-mono text-xs tabular-nums text-texto">R$ {Number(n.valor).toFixed(2)}</td>
+                  <td className="p-2">
+                    <Badge variante={badgeStatusNfse(n.status)}>{ROTULO_STATUS[n.status] ?? n.status}</Badge>
                     {n.ambiente === "homologacao" && (
                       <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
                         homologação
                       </span>
                     )}
                     {n.avulsa && (
-                      <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-700">
+                      <span className="ml-1 rounded bg-creme px-1.5 py-0.5 text-xs text-cinza">
                         avulsa
                       </span>
                     )}
                     {n.status === "rejeitada" && Array.isArray(n.mensagens) && (
-                      <span className="block text-xs text-red-600">
+                      <span className="block text-xs text-negativo">
                         {(n.mensagens as { descricao?: string }[]).map((m) => m.descricao).join("; ")}
                       </span>
                     )}
@@ -95,7 +97,7 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
           </table>
         </div>
       ) : (
-        <p className="text-sm text-slate-500">Nenhuma NFS-e emitida.</p>
+        <p className="text-sm text-cinza-claro">Nenhuma NFS-e emitida.</p>
       )}
     </section>
   );

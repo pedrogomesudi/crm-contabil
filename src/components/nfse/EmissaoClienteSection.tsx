@@ -41,12 +41,12 @@ export async function EmissaoClienteSection({ clienteId, papel }: { clienteId: s
   const podeEmitir = configCompleta && certValido;
 
   return (
-    <section className="max-w-4xl space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-      <h2 className="text-sm font-semibold text-slate-900">Emissão de NFS-e (cliente como emitente)</h2>
+    <section className="max-w-4xl space-y-3 rounded-lg border border-linha bg-white p-4">
+      <h2 className="text-sm font-semibold text-texto">Emissão de NFS-e (cliente como emitente)</h2>
 
       {podeConfigurarNfse(papel) && (
-        <details className="rounded border border-slate-200 p-2">
-          <summary className="cursor-pointer text-sm text-slate-700">Configuração do emitente</summary>
+        <details className="rounded border border-linha p-2">
+          <summary className="cursor-pointer text-sm text-cinza">Configuração do emitente</summary>
           <div className="mt-2">
             {/* key por atualizado_em: após salvar, remonta o form para os campos
                 (incl. o <select> não-controlado) refletirem o valor persistido. */}
@@ -63,7 +63,7 @@ export async function EmissaoClienteSection({ clienteId, papel }: { clienteId: s
       {podeEmitir ? (
         <EmitirNfseCliente clienteId={clienteId} ambiente={ambiente} />
       ) : (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-cinza-claro">
           {podeConfigurarNfse(papel)
             ? "Configure os dados fiscais e envie um certificado A1 válido para emitir."
             : "Emissão indisponível: emitente sem configuração fiscal ou certificado válido."}
@@ -71,10 +71,10 @@ export async function EmissaoClienteSection({ clienteId, papel }: { clienteId: s
       )}
 
       {notas && notas.length > 0 ? (
-        <div className="overflow-x-auto rounded border border-slate-200">
+        <div className="overflow-x-auto rounded border border-linha">
           <table className="w-full text-sm">
             <caption className="sr-only">NFS-e emitidas pelo cliente</caption>
-            <thead className="bg-slate-100 text-left text-slate-700">
+            <thead className="bg-creme text-left text-cinza">
               <tr>
                 <th className="p-2 font-medium">Competência</th>
                 <th className="p-2 font-medium">Tomador</th>
@@ -86,12 +86,12 @@ export async function EmissaoClienteSection({ clienteId, papel }: { clienteId: s
             </thead>
             <tbody>
               {notas.map((n) => (
-                <tr key={n.id} className="border-t border-slate-100 align-top">
-                  <td className="p-2 text-slate-900">{formatarData(n.competencia)}</td>
-                  <td className="p-2 text-slate-700">{n.tomador_razao_social ?? "—"}</td>
-                  <td className="p-2 text-slate-700">{n.numero ?? "—"}</td>
-                  <td className="p-2 text-slate-700">R$ {Number(n.valor).toFixed(2)}</td>
-                  <td className="p-2 text-slate-700">
+                <tr key={n.id} className="border-t border-linha/70 align-top">
+                  <td className="p-2 text-texto">{formatarData(n.competencia)}</td>
+                  <td className="p-2 text-cinza">{n.tomador_razao_social ?? "—"}</td>
+                  <td className="p-2 text-cinza">{n.numero ?? "—"}</td>
+                  <td className="p-2 text-cinza">R$ {Number(n.valor).toFixed(2)}</td>
+                  <td className="p-2 text-cinza">
                     {ROTULO[n.status] ?? n.status}
                     {n.ambiente === "homologacao" && (
                       <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
@@ -99,7 +99,7 @@ export async function EmissaoClienteSection({ clienteId, papel }: { clienteId: s
                       </span>
                     )}
                     {n.status === "rejeitada" && Array.isArray(n.mensagens) && (
-                      <span className="block text-xs text-red-600">
+                      <span className="block text-xs text-negativo">
                         {(n.mensagens as { descricao?: string }[]).map((m) => m.descricao).join("; ")}
                       </span>
                     )}
@@ -118,7 +118,7 @@ export async function EmissaoClienteSection({ clienteId, papel }: { clienteId: s
           </table>
         </div>
       ) : (
-        <p className="text-sm text-slate-500">Nenhuma NFS-e emitida por este cliente.</p>
+        <p className="text-sm text-cinza-claro">Nenhuma NFS-e emitida por este cliente.</p>
       )}
     </section>
   );

@@ -15,16 +15,16 @@ export function EmitirNfse({
   const [aberto, setAberto] = useState(false);
   const [mes, setMes] = useState("");
 
-  if (estado.ok) return <span className="text-xs text-green-700">NFS-e emitida ✓</span>;
+  if (estado.ok) return <span className="text-xs text-verde">NFS-e emitida ✓</span>;
   if (!aberto)
     return (
-      <button onClick={() => setAberto(true)} className="rounded border px-2 py-1 text-xs text-slate-700">
+      <button onClick={() => setAberto(true)} className="rounded border px-2 py-1 text-xs text-cinza">
         Emitir NFS-e
       </button>
     );
 
   return (
-    <form action={action} className="mt-2 space-y-2 rounded border border-slate-200 p-3 text-sm">
+    <form action={action} className="mt-2 space-y-2 rounded border border-linha p-3 text-sm">
       {ambiente === "homologacao" && (
         <p className="rounded bg-amber-50 px-2 py-1 text-amber-800">Homologação — sem validade jurídica.</p>
       )}
@@ -37,7 +37,7 @@ export function EmitirNfse({
           min="0"
           defaultValue={honorario.toFixed(2)}
           required
-          className="ml-2 w-32 rounded border border-slate-300 px-2 py-1"
+          className="ml-2 w-32 rounded border border-linha px-2 py-1"
         />
       </label>
       <label className="block">
@@ -45,7 +45,7 @@ export function EmitirNfse({
         <input
           name="descricao"
           placeholder="Honorarios"
-          className="ml-2 w-64 rounded border border-slate-300 px-2 py-1"
+          className="ml-2 w-64 rounded border border-linha px-2 py-1"
         />
       </label>
       <label className="flex items-center gap-2">
@@ -59,12 +59,12 @@ export function EmitirNfse({
           required
           value={mes}
           onChange={(e) => setMes(e.target.value)}
-          className="ml-2 rounded border border-slate-300 px-2 py-1"
+          className="ml-2 rounded border border-linha px-2 py-1"
         />
       </label>
       <input type="hidden" name="competencia" value={mes ? `${mes}-01` : ""} />
       {estado.erro && (
-        <p role="alert" className="text-red-600">
+        <p role="alert" className="text-negativo">
           {estado.erro}
         </p>
       )}
@@ -72,7 +72,7 @@ export function EmitirNfse({
         <button
           type="submit"
           disabled={pend}
-          className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-60"
+          className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
         >
           {pend ? "Emitindo..." : "Emitir"}
         </button>
