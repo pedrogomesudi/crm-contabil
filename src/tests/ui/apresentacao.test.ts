@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { iniciais, badgeRegime, badgeStatusTitulo, badgeStatusNfse } from "@/lib/ui/apresentacao";
+import { iniciais, badgeRegime, badgeStatusTitulo, badgeStatusNfse, badgePapel } from "@/lib/ui/apresentacao";
 
 describe("iniciais", () => {
   it("2 iniciais de nomes compostos; 1 palavra → 2 letras; vazio → ?", () => {
@@ -41,5 +41,15 @@ describe("badgeStatusNfse", () => {
     expect(badgeStatusNfse("processando")).toBe("atencao");
     expect(badgeStatusNfse("pendente")).toBe("atencao");
     expect(badgeStatusNfse("qualquer")).toBe("neutro");
+  });
+});
+
+describe("badgePapel", () => {
+  it("mapeia o papel para a variante do Badge", () => {
+    expect(badgePapel("admin")).toBe("ia");
+    expect(badgePapel("financeiro")).toBe("positivo");
+    expect(badgePapel("contador")).toBe("neutro");
+    expect(badgePapel("assistente")).toBe("atencao");
+    expect(badgePapel("qualquer")).toBe("neutro");
   });
 });

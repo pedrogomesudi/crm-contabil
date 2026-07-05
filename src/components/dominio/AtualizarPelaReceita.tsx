@@ -79,7 +79,7 @@ export function AtualizarPelaReceita() {
         <button
           onClick={carregar}
           disabled={carregando || executando}
-          className="rounded border border-slate-300 px-3 py-1 disabled:opacity-60"
+          className="rounded border border-linha px-3 py-1 disabled:opacity-60"
         >
           {carregando ? "Carregando…" : "Carregar clientes (CNPJ)"}
         </button>
@@ -87,13 +87,13 @@ export function AtualizarPelaReceita() {
           <button
             onClick={executar}
             disabled={executando || marcados === 0}
-            className="rounded bg-blue-600 px-3 py-1 text-white disabled:opacity-60"
+            className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
           >
             {executando ? `Atualizando ${prog.feitas}/${prog.total}…` : `Atualizar ${marcados} selecionado(s)`}
           </button>
         )}
         {executando && (
-          <button onClick={() => (pararRef.current = true)} className="rounded border border-slate-300 px-3 py-1">
+          <button onClick={() => (pararRef.current = true)} className="rounded border border-linha px-3 py-1">
             Parar
           </button>
         )}
@@ -105,9 +105,9 @@ export function AtualizarPelaReceita() {
       </div>
 
       {linhas.length > 0 && (
-        <div className="max-h-96 overflow-auto rounded border border-slate-200">
+        <div className="max-h-96 overflow-auto rounded border border-linha">
           <table className="w-full">
-            <thead className="bg-slate-100 text-left">
+            <thead className="bg-creme text-left">
               <tr>
                 <th className="p-2">
                   <input
@@ -124,7 +124,7 @@ export function AtualizarPelaReceita() {
             </thead>
             <tbody>
               {linhas.map((l) => (
-                <tr key={l.cpf_cnpj} className="border-t border-slate-100">
+                <tr key={l.cpf_cnpj} className="border-t border-linha/70">
                   <td className="p-2">
                     <input
                       type="checkbox"
@@ -136,9 +136,9 @@ export function AtualizarPelaReceita() {
                   </td>
                   <td className="p-2">{l.razao_social}</td>
                   <td className="p-2">
-                    {l.status === "processando" && <span className="text-slate-500">consultando…</span>}
-                    {l.status === "ok" && <span className="text-green-700">✓ {l.detalhe}</span>}
-                    {l.status === "erro" && <span className="text-red-600">✗ {l.detalhe}</span>}
+                    {l.status === "processando" && <span className="text-cinza-claro">consultando…</span>}
+                    {l.status === "ok" && <span className="text-verde">✓ {l.detalhe}</span>}
+                    {l.status === "erro" && <span className="text-negativo">✗ {l.detalhe}</span>}
                   </td>
                 </tr>
               ))}

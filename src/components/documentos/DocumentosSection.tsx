@@ -43,20 +43,20 @@ export async function DocumentosSection({
   const ehAdmin = papel === "admin";
 
   return (
-    <section className="max-w-2xl space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-      <h2 className="text-sm font-semibold text-slate-900">Documentos</h2>
+    <section className="max-w-2xl space-y-3 rounded-lg border border-linha bg-white p-4">
+      <h2 className="text-sm font-semibold text-texto">Documentos</h2>
 
       {podeGerenciar && <UploadDocumento clienteId={clienteId} />}
 
       {error ? (
-        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded bg-negativo/10 px-3 py-2 text-sm text-negativo">
           Não foi possível carregar os documentos.
         </p>
       ) : documentos && documentos.length > 0 ? (
-        <div className="overflow-hidden rounded border border-slate-200">
+        <div className="overflow-hidden rounded border border-linha">
           <table className="w-full text-sm">
             <caption className="sr-only">Documentos do cliente</caption>
-            <thead className="bg-slate-100 text-left text-slate-700">
+            <thead className="bg-creme text-left text-cinza">
               <tr>
                 <th className="p-2 font-medium">Nome</th>
                 <th className="p-2 font-medium">Tipo</th>
@@ -66,10 +66,10 @@ export async function DocumentosSection({
             </thead>
             <tbody>
               {documentos.map((d) => (
-                <tr key={d.id} className="border-t border-slate-100 align-top">
-                  <td className="p-2 text-slate-900">{d.nome}</td>
-                  <td className="p-2 text-slate-700">{d.tipo ?? "—"}</td>
-                  <td className="p-2 text-slate-700">
+                <tr key={d.id} className="border-t border-linha/70 align-top">
+                  <td className="p-2 text-texto">{d.nome}</td>
+                  <td className="p-2 text-cinza">{d.tipo ?? "—"}</td>
+                  <td className="p-2 text-cinza">
                     <time dateTime={d.enviado_em}>{formatarData(d.enviado_em)}</time>
                   </td>
                   <td className="p-2">
@@ -112,7 +112,7 @@ export async function DocumentosSection({
           </table>
         </div>
       ) : (
-        <p className="text-sm text-slate-500">Nenhum documento anexado.</p>
+        <p className="text-sm text-cinza-claro">Nenhum documento anexado.</p>
       )}
     </section>
   );

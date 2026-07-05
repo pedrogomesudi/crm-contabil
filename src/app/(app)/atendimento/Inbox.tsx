@@ -44,38 +44,38 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
 
   return (
     <div className="grid h-[70vh] grid-cols-[18rem_1fr] gap-3 text-sm">
-      <aside className="overflow-auto rounded border border-slate-200">
-        <div className="flex items-center justify-between border-b border-slate-100 p-2">
+      <aside className="overflow-auto rounded-2xl border border-linha bg-white">
+        <div className="flex items-center justify-between border-b border-linha/70 p-2">
           <span className="font-semibold">Conversas</span>
-          <button onClick={recarregarLista} disabled={pend} className="text-xs text-slate-500 underline">atualizar</button>
+          <button onClick={recarregarLista} disabled={pend} className="text-xs text-cinza-claro underline">atualizar</button>
         </div>
         {conversas.map((c) => (
           <button
             key={c.telefone}
             onClick={() => abrir(c.telefone)}
-            className={`block w-full border-b border-slate-100 p-2 text-left ${ativa === c.telefone ? "bg-slate-100" : ""}`}
+            className={`block w-full border-b border-linha/70 p-2 text-left ${ativa === c.telefone ? "bg-creme" : ""}`}
           >
             <div className="flex items-center justify-between">
               <span className="font-medium">{c.cliente ?? c.telefone}</span>
-              {c.nao_lidas > 0 && <span className="rounded-full bg-green-600 px-2 text-xs text-white">{c.nao_lidas}</span>}
+              {c.nao_lidas > 0 && <span className="rounded-full bg-verde px-2 text-xs font-medium text-white">{c.nao_lidas}</span>}
             </div>
-            <div className="truncate text-xs text-slate-500">{c.ultima}</div>
+            <div className="truncate text-xs text-cinza-claro">{c.ultima}</div>
           </button>
         ))}
-        {conversas.length === 0 && <p className="p-2 text-slate-400">Nenhuma conversa.</p>}
+        {conversas.length === 0 && <p className="p-2 text-cinza-claro">Nenhuma conversa.</p>}
       </aside>
 
-      <section className="flex flex-col rounded border border-slate-200">
+      <section className="flex flex-col rounded-2xl border border-linha bg-white">
         {ativa ? (
           <>
             <div className="flex-1 space-y-2 overflow-auto p-3">
               {msgs.map((m, i) => (
-                <div key={i} className={`max-w-[70%] rounded px-3 py-1 ${m.direcao === "OUT" ? "ml-auto bg-green-100" : "bg-slate-100"}`}>
+                <div key={i} className={`max-w-[70%] rounded-2xl px-3 py-2 ${m.direcao === "OUT" ? "ml-auto bg-verde/15 text-texto" : "bg-creme text-texto"}`}>
                   {m.texto}
                 </div>
               ))}
             </div>
-            <div className="flex gap-2 border-t border-slate-100 p-2">
+            <div className="flex gap-2 border-t border-linha/70 p-2">
               <input
                 value={texto}
                 onChange={(e) => setTexto(e.target.value)}
@@ -83,13 +83,13 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
                   if (e.key === "Enter") enviar();
                 }}
                 placeholder="Responder…"
-                className="flex-1 rounded border border-slate-300 p-2"
+                className="flex-1 rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde"
               />
-              <button onClick={enviar} disabled={pend} className="rounded bg-slate-900 px-4 text-white disabled:opacity-60">Enviar</button>
+              <button onClick={enviar} disabled={pend} className="rounded-lg bg-verde px-4 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60">Enviar</button>
             </div>
           </>
         ) : (
-          <p className="m-auto text-slate-400">Selecione uma conversa.</p>
+          <p className="m-auto text-cinza-claro">Selecione uma conversa.</p>
         )}
       </section>
     </div>

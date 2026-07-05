@@ -11,7 +11,7 @@ export function StatusAssinatura({ status, signatarios }: { status: string; sign
   return (
     <div className="text-xs">
       <span className="font-medium">{rotulo}</span>
-      <ul className="mt-1 text-slate-600">
+      <ul className="mt-1 text-cinza">
         {signatarios.map((s) => (
           <li key={s.nome + s.papel}>
             {s.papel}: {s.nome} — {s.status}

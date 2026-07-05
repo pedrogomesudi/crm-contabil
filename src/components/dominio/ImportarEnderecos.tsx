@@ -22,17 +22,17 @@ export function ImportarEnderecos() {
       <button
         type="submit"
         disabled={pend}
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        className="rounded-lg bg-verde px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-50"
       >
         {pend ? "Processando…" : "Atualizar endereços"}
       </button>
       {estado.erro && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-negativo">
           {estado.erro}
         </p>
       )}
       {estado.ok && (
-        <p role="status" className="text-sm text-green-700">
+        <p role="status" className="text-sm text-verde">
           {estado.preenchidos} preenchido(s)
           {estado.atualizados ? ` · ${estado.atualizados} atualizado(s)` : ""}
           {estado.mantidos ? ` · ${estado.mantidos} mantido(s)` : ""}

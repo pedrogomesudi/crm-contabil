@@ -10,7 +10,7 @@ export default async function AtendimentoPage() {
   const conversas = await listarConversas();
   return (
     <main className="mx-auto max-w-5xl space-y-4 p-4">
-      <h1 className="text-lg font-semibold text-slate-900">Atendimento</h1>
+      <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Atendimento</h1>
       <Inbox inicial={conversas} />
     </main>
   );

@@ -69,7 +69,7 @@ export default async function Dashboard() {
       />
 
       {erroResumo ? (
-        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded bg-negativo/10 px-3 py-2 text-sm text-negativo">
           Não foi possível carregar o resumo. Tente novamente.
         </p>
       ) : total === 0 ? (

@@ -17,7 +17,7 @@ export function UploadDocumento({ clienteId }: { clienteId: string }) {
     <form
       ref={formRef}
       action={formAction}
-      className="space-y-3 rounded border border-slate-200 bg-slate-50 p-3"
+      className="space-y-3 rounded border border-linha bg-creme p-3"
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <Campo label="Arquivo (PDF, PNG ou JPG, até 10 MB)">
@@ -40,12 +40,12 @@ export function UploadDocumento({ clienteId }: { clienteId: string }) {
         </Campo>
       </div>
       {estado.erro && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-negativo">
           {estado.erro}
         </p>
       )}
       {estado.ok && (
-        <p role="status" className="text-sm text-green-700">
+        <p role="status" className="text-sm text-verde">
           Documento anexado.
         </p>
       )}
@@ -53,7 +53,7 @@ export function UploadDocumento({ clienteId }: { clienteId: string }) {
         type="submit"
         disabled={pending}
         aria-busy={pending}
-        className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60"
+        className="rounded-lg bg-verde px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
       >
         {pending ? "Enviando..." : "Anexar documento"}
       </button>

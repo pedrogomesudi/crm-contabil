@@ -10,6 +10,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **V8.2d — Rollout SALDO final (fecha a V8):** identidade SALDO nos 19 arquivos restantes —
+  **atendimento** (inbox de chat com balões saída-verde/entrada-neutro + badge de não-lidas),
+  **usuários** (badge de papel via `badgePapel`), **integração Domínio** (uploads/prévias/Receita),
+  **documentos**, **assinatura/contrato**, **config WhatsApp** e sobras; `CardResumo` legado removido.
+  **Gate final atingido: zero resíduo de estilo antigo em `src`** — toda a plataforma na identidade
+  SALDO. Só apresentação; actions/RLS/uploads/Clicksign inalterados.
 - **V8.2c — Rollout SALDO (NFS-e):** identidade SALDO nas 13 telas de NFS-e — lista de notas (badge de
   status via `badgeStatusNfse`, número/valor em mono), emissão (avulsa e por honorário), emissão em
   lote e configuração do emitente/certificado. Só apresentação; mTLS/SEFIN/actions/RLS inalterados e a

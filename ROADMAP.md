@@ -147,14 +147,14 @@ Integração do CRM com o **WhatsApp** para relacionamento com clientes: **atend
 
 > Opt-in/opt-out (LGPD) a tratar na V7.2 (régua). Número dedicado do escritório (risco do não-oficial).
 
-## V8 — Layout e estética 🚧
+## V8 — Layout e estética ✅
 
 Rebrand como **SALDO** (`seusaldo.ai`) a partir do Brand Kit: identidade visual, design system, responsividade.
 
 - **V8.1 — Fundação SALDO** ✅ — tokens/fontes (Tailwind `@theme` + `next/font`), `LogoSaldo` + favicon,
   primitivos (`src/components/ui/`: Card/Botao/Badge/PageHeader/StatCard), sidebar com drawer mobile,
   shell creme e dashboard reestilizado — responsivo. Sem migration.
-- **V8.2 — Rollout** 🚧 — aplicar o design system às demais telas.
+- **V8.2 — Rollout** ✅ — design system aplicado a toda a plataforma (gate: zero resíduo de estilo antigo).
   - **V8.2a — Auth + Clientes** ✅ — guia de linguagem (`docs/design/saldo-ui.md`), primitivos ampliados
     (Campo/Input/Select/Textarea/Painel/Chip/Toolbar/EmptyState/Iniciais), lista/ficha/formulários de
     clientes e telas de login recomponentizadas.
@@ -162,7 +162,8 @@ Rebrand como **SALDO** (`seusaldo.ai`) a partir do Brand Kit: identidade visual,
     de status), régua, CadastroCrud genérico e hubs. Helper `badgeStatusTitulo`.
   - **V8.2c — NFS-e** ✅ — lista de notas (badge de status), emissão (avulsa/honorário), lote e config
     do emitente/certificado. Helper `badgeStatusNfse`. Emissão avulsa preservada.
-  - **V8.2d — Atendimento + Integrações + resto** ⬜ (inbox, Domínio, documentos/assinatura, usuários).
+  - **V8.2d — Atendimento + Integrações + resto** ✅ — inbox (chat), usuários (badge de papel), Domínio,
+    documentos, assinatura, config WhatsApp. `badgePapel`; `CardResumo` legado removido. **Rollout 100% completo.**
 
 ## V9 — Modo whitelabel ⬜
 

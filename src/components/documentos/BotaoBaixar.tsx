@@ -32,12 +32,12 @@ export function BotaoBaixar({ documentoId, nome }: { documentoId: string; nome: 
         onClick={baixar}
         disabled={pending}
         aria-label={`Baixar ${nome}`}
-        className="rounded border border-slate-300 px-2 py-1 text-slate-700 disabled:opacity-60"
+        className="rounded border border-linha px-2 py-1 text-cinza disabled:opacity-60"
       >
         {pending ? "Gerando..." : "Baixar"}
       </button>
       {erro && (
-        <span role="alert" className="text-xs text-red-600">
+        <span role="alert" className="text-xs text-negativo">
           {erro}
         </span>
       )}
