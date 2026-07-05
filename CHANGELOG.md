@@ -10,6 +10,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **V8.2b — Rollout SALDO (Financeiro):** identidade SALDO aplicada às 10 telas/componentes do módulo
+  financeiro — dashboard (StatCards + barras recoloridas verde/violeta, valores em mono), contas a
+  receber/pagar (tabelas com **badges de status** e valores mono), régua de cobrança, `CadastroCrud`
+  genérico (cobre as 5 telas de cadastro) e hubs/headers. Novo helper `badgeStatusTitulo` (status do
+  título → cor). Só apresentação; cálculos/actions/RLS inalterados. Próximas fatias: V8.2c (NFS-e),
+  V8.2d (atendimento/integrações/resto).
 - **V8.2a — Rollout SALDO (Auth + Clientes):** recomponentização profunda (estilo Apple) das áreas de
   **autenticação** e **clientes**. Guia de linguagem (`docs/design/saldo-ui.md`) + **primitivos ampliados**
   (`Campo`/`Input`/`Select`/`Textarea`, `Painel`, `Chip`, `Toolbar`, `EmptyState`, `Iniciais`) e helpers
