@@ -15,7 +15,7 @@ export default async function ContasPagarPage() {
   ]);
   return (
     <main className="mx-auto max-w-4xl space-y-4 p-4">
-      <h1 className="text-lg font-semibold text-slate-900">Contas a pagar</h1>
+      <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Contas a pagar</h1>
       <ContasPagar contas={contas.data ?? []} fornecedores={fornecedores.data ?? []} categorias={categorias.data ?? []} />
     </main>
   );

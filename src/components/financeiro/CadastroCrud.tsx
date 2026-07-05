@@ -1,6 +1,11 @@
 "use client";
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Painel } from "@/components/ui/Painel";
+import { Botao } from "@/components/ui/Botao";
+import { Campo, inputCls } from "@/components/ui/Campo";
+import { Badge } from "@/components/ui/Badge";
 
 export type CampoDesc = {
   nome: string;
@@ -32,23 +37,27 @@ export function CadastroCrud({
 
   return (
     <main className="mx-auto max-w-3xl space-y-6 p-4">
-      <h1 className="text-lg font-semibold text-slate-900">{titulo}</h1>
+      <PageHeader
+        titulo={titulo}
+        acoes={
+          <Link href={voltarHref}>
+            <Botao variante="secundario">Voltar</Botao>
+          </Link>
+        }
+      />
 
-      <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-slate-900">
-          {editando ? "Editar" : "Novo"}
-        </h2>
+      <div className="space-y-3 rounded-2xl border border-linha bg-white p-5">
+        <h2 className="font-display text-sm font-semibold text-texto">{editando ? "Editar" : "Novo"}</h2>
         <form action={action} className="space-y-3">
           {editando && <input type="hidden" name="id" value={editando.id} />}
           {campos.map((c) => (
-            <label key={c.nome} className="block text-sm">
-              <span className="text-slate-700">{c.label}</span>
+            <Campo key={c.nome} label={c.label}>
               {c.tipo === "select" ? (
                 <select
                   name={c.nome}
                   required={c.obrigatorio}
                   defaultValue={String(editando?.[c.nome] ?? "")}
-                  className="mt-1 w-full rounded border border-slate-300 p-2"
+                  className={inputCls}
                 >
                   <option value="">—</option>
                   {c.opcoes?.map((o) => (
@@ -62,7 +71,7 @@ export function CadastroCrud({
                   name={c.nome}
                   required={c.obrigatorio}
                   defaultValue={String(editando?.[c.nome] ?? "")}
-                  className="mt-1 w-full rounded border border-slate-300 p-2"
+                  className={inputCls}
                 />
               ) : (
                 <input
@@ -71,77 +80,58 @@ export function CadastroCrud({
                   step={c.tipo === "numero" ? "0.01" : undefined}
                   required={c.obrigatorio}
                   defaultValue={String(editando?.[c.nome] ?? "")}
-                  className="mt-1 w-full rounded border border-slate-300 p-2"
+                  className={inputCls}
                 />
               )}
-            </label>
+            </Campo>
           ))}
-          {estado.erro && <p className="text-sm text-red-600">{estado.erro}</p>}
-          {estado.ok && <p className="text-sm text-green-700">Salvo.</p>}
+          {estado.erro && <p className="text-sm text-negativo">{estado.erro}</p>}
+          {estado.ok && <p className="text-sm text-verde">Salvo.</p>}
           <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={pending}
-              className="rounded bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-50"
-            >
+            <Botao type="submit" disabled={pending} variante="primario">
               {pending ? "Salvando…" : "Salvar"}
-            </button>
+            </Botao>
             {editando && (
-              <button
-                type="button"
-                onClick={() => setEditando(null)}
-                className="rounded border border-slate-300 px-3 py-2 text-sm"
-              >
+              <Botao type="button" variante="secundario" onClick={() => setEditando(null)}>
                 Cancelar
-              </button>
+              </Botao>
             )}
-            <Link
-              href={voltarHref}
-              className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-            >
-              Voltar
-            </Link>
           </div>
         </form>
-      </section>
+      </div>
 
-      <section className="rounded-lg border border-slate-200 bg-white">
+      <Painel>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-slate-500">
+            <tr className="border-b border-linha bg-creme/60 text-left">
               {campos.map((c) => (
-                <th key={c.nome} className="p-2 font-medium">
+                <th key={c.nome} className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
                   {c.label}
                 </th>
               ))}
-              <th className="p-2 font-medium">Status</th>
-              <th className="p-2" />
+              <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">Status</th>
+              <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody>
             {itens.map((it) => (
-              <tr
-                key={it.id}
-                className={`border-b border-slate-100 ${it.ativa ? "" : "opacity-50"}`}
-              >
+              <tr key={it.id} className={`border-b border-linha/70 last:border-0 ${it.ativa ? "" : "opacity-60"}`}>
                 {campos.map((c) => (
-                  <td key={c.nome} className="p-2">
+                  <td key={c.nome} className="px-4 py-3 text-texto">
                     {String(it[c.nome] ?? "")}
                   </td>
                 ))}
-                <td className="p-2">{it.ativa ? "Ativo" : "Inativo"}</td>
-                <td className="p-2 text-right">
-                  <button
-                    type="button"
-                    onClick={() => setEditando(it)}
-                    className="mr-2 text-slate-600 underline"
-                  >
+                <td className="px-4 py-3">
+                  <Badge variante={it.ativa ? "positivo" : "neutro"}>{it.ativa ? "Ativo" : "Inativo"}</Badge>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <button type="button" onClick={() => setEditando(it)} className="mr-3 text-cinza hover:text-verde">
                     Editar
                   </button>
                   <form action={alternarAtiva} className="inline">
                     <input type="hidden" name="id" value={it.id} />
                     <input type="hidden" name="ativa" value={it.ativa ? "false" : "true"} />
-                    <button type="submit" className="text-slate-600 underline">
+                    <button type="submit" className="text-cinza hover:text-verde">
                       {it.ativa ? "Inativar" : "Reativar"}
                     </button>
                   </form>
@@ -150,14 +140,14 @@ export function CadastroCrud({
             ))}
             {itens.length === 0 && (
               <tr>
-                <td colSpan={campos.length + 2} className="p-4 text-center text-slate-400">
+                <td colSpan={campos.length + 2} className="px-4 py-8 text-center text-cinza-claro">
                   Nenhum registro.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
-      </section>
+      </Painel>
     </main>
   );
 }

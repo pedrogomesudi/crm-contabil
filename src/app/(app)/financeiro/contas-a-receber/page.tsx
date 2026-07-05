@@ -17,7 +17,7 @@ export default async function ContasReceberPage() {
   const automacao = await lerAutomacao();
   return (
     <main className="mx-auto max-w-4xl space-y-4 p-4">
-      <h1 className="text-lg font-semibold text-slate-900">Contas a receber</h1>
+      <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Contas a receber</h1>
       <ContasReceber contas={contas ?? []} automacaoInicial={automacao} />
     </main>
   );
