@@ -3,6 +3,13 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente, podeVerHonorario } from "@/lib/clientes/permissoes";
 import { normalizarFiltro, aplicarFiltroStatus } from "@/lib/clientes/filtroStatus";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Botao } from "@/components/ui/Botao";
+import { Painel } from "@/components/ui/Painel";
+import { Badge } from "@/components/ui/Badge";
+import { Iniciais } from "@/components/ui/Iniciais";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { badgeRegime } from "@/lib/ui/apresentacao";
 
 export const metadata = { title: "Clientes" };
 
@@ -46,114 +53,153 @@ export default async function ClientesPage({
   const { data: clientes, error } = await query;
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Clientes</h1>
-        <div className="flex gap-2">
-          {podeVerHonorario(perfil?.papel) && (
-            <Link
-              href="/nfse/lote"
-              className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700"
-            >
-              Emitir NFS-e em lote
-            </Link>
-          )}
-          {podeCriar && (
-            <Link href="/clientes/novo" className="rounded bg-slate-900 px-3 py-2 text-sm text-white">
-              + Novo cliente
-            </Link>
-          )}
-        </div>
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        titulo="Clientes"
+        subtitulo={clientes ? `${clientes.length}${clientes.length === LIMITE ? "+" : ""} na carteira` : undefined}
+        acoes={
+          <>
+            {podeVerHonorario(perfil?.papel) && (
+              <Link href="/nfse/lote">
+                <Botao variante="secundario">Emitir NFS-e em lote</Botao>
+              </Link>
+            )}
+            {podeCriar && (
+              <Link href="/clientes/novo">
+                <Botao variante="primario">
+                  <span aria-hidden="true">+ </span>Novo cliente
+                </Botao>
+              </Link>
+            )}
+          </>
+        }
+      />
 
       {ok && (
-        <p role="status" className="mb-3 rounded bg-green-50 px-3 py-2 text-sm text-green-700">
+        <p role="status" className="rounded-lg bg-verde/10 px-3 py-2 text-sm text-verde">
           Cliente salvo com sucesso.
         </p>
       )}
 
-      <form className="mb-4 flex flex-wrap gap-2">
-        <input
-          name="q"
-          defaultValue={q}
-          placeholder="Buscar por nome ou CPF/CNPJ"
-          aria-label="Buscar"
-          maxLength={100}
-          className="rounded border border-slate-300 px-3 py-2 text-sm text-slate-900"
-        />
+      <form className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[240px] flex-1">
+          <svg
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-cinza-claro"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.2-3.2" />
+          </svg>
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="Buscar por nome ou CPF/CNPJ"
+            aria-label="Buscar"
+            maxLength={100}
+            className="w-full rounded-xl border border-linha bg-white py-2.5 pl-9 pr-3 text-sm text-texto placeholder:text-cinza-claro focus:border-verde"
+          />
+        </div>
         <select
           name="status"
           defaultValue={status ?? ""}
           aria-label="Filtrar por status"
-          className="rounded border border-slate-300 px-2 text-sm text-slate-900"
+          className="rounded-xl border border-linha bg-white px-3 py-2.5 text-sm text-texto focus:border-verde"
         >
           <option value="">Ativos e inativos</option>
           <option value="ativo">Ativos</option>
           <option value="inativo">Inativos</option>
           <option value="excluido">Excluídos</option>
         </select>
-        <button className="rounded border border-slate-300 px-3 text-sm text-slate-700">
+        <Botao variante="secundario" className="py-2.5">
           Filtrar
-        </button>
+        </Botao>
       </form>
 
       {error ? (
-        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-lg bg-negativo/10 px-3 py-2 text-sm text-negativo">
           Não foi possível carregar os clientes. Tente novamente.
         </p>
       ) : (
-        <>
-          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-            <table className="w-full text-sm">
-              <caption className="sr-only">Lista de clientes</caption>
-              <thead className="bg-slate-100 text-left text-slate-700">
-                <tr>
-                  <th className="p-2 font-medium">Nome</th>
-                  <th className="p-2 font-medium">CPF/CNPJ</th>
-                  <th className="p-2 font-medium">Tipo</th>
-                  <th className="p-2 font-medium">Regime</th>
-                  <th className="p-2 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clientes?.map((cl) => (
-                  <tr key={cl.id} className="border-t border-slate-100">
-                    <td className="p-2">
-                      <Link href={`/clientes/${cl.id}`} className="text-slate-900 underline">
-                        {cl.razao_social}
-                      </Link>
-                    </td>
-                    <td className="p-2 text-slate-700">{cl.cpf_cnpj}</td>
-                    <td className="p-2 text-slate-700">{cl.tipo_pessoa}</td>
-                    <td className="p-2 text-slate-700">{cl.regime_tributario}</td>
-                    <td className="p-2">
-                      <span className={cl.status === "ativo" ? "text-green-700" : "text-slate-600"}>
-                        {cl.status}
+        <Painel>
+          <table className="w-full text-sm">
+            <caption className="sr-only">Lista de clientes</caption>
+            <thead>
+              <tr className="border-b border-linha bg-creme/60 text-left">
+                <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">Cliente</th>
+                <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">Regime</th>
+                <th className="px-4 py-3 text-right font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">Situação</th>
+                <th className="w-10" />
+              </tr>
+            </thead>
+            <tbody>
+              {clientes?.map((cl) => (
+                <tr key={cl.id} className="border-b border-linha/70 transition last:border-0 hover:bg-creme">
+                  <td className="px-4 py-3">
+                    <Link href={`/clientes/${cl.id}`} className="flex items-center gap-3">
+                      <Iniciais nome={cl.razao_social} />
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium text-texto">{cl.razao_social}</span>
+                        <span className="block font-mono text-xs text-cinza-claro">{cl.cpf_cnpj}</span>
                       </span>
-                      {cl.excluido_em && (
-                        <span className="ml-1 rounded bg-slate-200 px-1.5 py-0.5 text-xs text-slate-700">
-                          excluído
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {!clientes?.length && (
-                  <tr>
-                    <td colSpan={5} className="p-4 text-center text-slate-500">
-                      Nenhum cliente encontrado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3">
+                    {cl.regime_tributario ? (
+                      <Badge variante={badgeRegime(cl.regime_tributario)}>{cl.regime_tributario}</Badge>
+                    ) : (
+                      <span className="text-cinza-claro">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <span className="inline-flex items-center gap-1.5 text-sm text-cinza">
+                      <span className={`h-1.5 w-1.5 rounded-full ${cl.status === "ativo" ? "bg-verde" : "bg-cinza-claro"}`} />
+                      {cl.status === "ativo" ? "Ativo" : "Inativo"}
+                    </span>
+                    {cl.excluido_em && (
+                      <span className="ml-2 rounded-full bg-negativo/10 px-2 py-0.5 text-xs text-negativo">excluído</span>
+                    )}
+                  </td>
+                  <td className="px-2 py-3 text-right">
+                    <Link href={`/clientes/${cl.id}`} aria-label={`Abrir ${cl.razao_social}`} className="text-cinza-claro">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="m9 6 6 6-6 6" />
+                      </svg>
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+              {!clientes?.length && (
+                <tr>
+                  <td colSpan={4}>
+                    <EmptyState
+                      titulo="Nenhum cliente encontrado"
+                      descricao="Ajuste a busca ou cadastre um novo cliente."
+                      acao={
+                        podeCriar ? (
+                          <Link href="/clientes/novo">
+                            <Botao variante="primario">
+                              <span aria-hidden="true">+ </span>Novo cliente
+                            </Botao>
+                          </Link>
+                        ) : undefined
+                      }
+                    />
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
           {clientes?.length === LIMITE && (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="border-t border-linha bg-creme/60 px-4 py-2.5 text-xs text-cinza-claro">
               Mostrando os primeiros {LIMITE}. Refine a busca para ver mais.
             </p>
           )}
-        </>
+        </Painel>
       )}
     </div>
   );

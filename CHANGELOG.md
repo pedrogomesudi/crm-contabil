@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **V8.2a — Rollout SALDO (Auth + Clientes):** recomponentização profunda (estilo Apple) das áreas de
+  **autenticação** e **clientes**. Guia de linguagem (`docs/design/saldo-ui.md`) + **primitivos ampliados**
+  (`Campo`/`Input`/`Select`/`Textarea`, `Painel`, `Chip`, `Toolbar`, `EmptyState`, `Iniciais`) e helpers
+  puros (`iniciais`, `badgeRegime`). **Lista de clientes** repaginada (toolbar de busca, tabela com
+  iniciais, CNPJ em mono, badges de regime e pills de situação), **ficha** e **formulários** re-skinnados,
+  **login/recuperação/404** com a identidade SALDO. Lógica/permissões/RLS inalteradas. Próximas fatias:
+  V8.2b (financeiro), V8.2c (NFS-e), V8.2d (atendimento/integrações/resto).
 - **V8.1 — Fundação do Design System SALDO:** rebrand visual do CRM como **SALDO** (`seusaldo.ai`).
   Tokens de cor/tipografia no Tailwind 4 `@theme` (verde `#0FA968`, tinta, violeta, creme…) + fontes
   **self-hosted** (Space Grotesk / IBM Plex Sans / IBM Plex Mono via `next/font`). Componente

@@ -30,11 +30,11 @@ export function BotaoAtualizarReceita({ cpfCnpj }: { cpfCnpj: string }) {
         type="button"
         onClick={atualizar}
         disabled={pend}
-        className="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
+        className="rounded-lg border border-linha px-3 py-2 text-sm hover:bg-creme disabled:opacity-60"
       >
         {pend ? "Consultando Receita…" : "Atualizar pela Receita Federal"}
       </button>
-      {msg && <span className={`text-sm ${msg.ok ? "text-green-700" : "text-red-600"}`}>{msg.texto}</span>}
+      {msg && <span className={`text-sm ${msg.ok ? "text-verde" : "text-negativo"}`}>{msg.texto}</span>}
     </div>
   );
 }

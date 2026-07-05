@@ -13,7 +13,7 @@ export function CampoTexto({ id, label, ...props }: Props) {
       <input
         id={id}
         {...props}
-        className="w-full rounded border border-slate-300 px-3 py-2 text-slate-900"
+        className="w-full rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto placeholder:text-cinza-claro focus:border-verde"
       />
     </div>
   );

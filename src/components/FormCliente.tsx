@@ -102,8 +102,8 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
       {modo === "editar" && c.atualizado_em && (
         <input type="hidden" name="atualizado_em" defaultValue={c.atualizado_em} />
       )}
-      <fieldset className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-        <legend className="px-1 text-sm font-semibold text-slate-900">Cadastrais e fiscais</legend>
+      <fieldset className="space-y-3 rounded-lg border border-linha bg-white p-4">
+        <legend className="px-1 text-sm font-semibold text-texto">Cadastrais e fiscais</legend>
         <Campo label="Tipo de pessoa *">
           <select
             name="tipo_pessoa"
@@ -136,14 +136,14 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
                 type="button"
                 onClick={buscarReceita}
                 disabled={buscando}
-                className="shrink-0 rounded border border-slate-300 px-3 text-sm hover:bg-slate-50 disabled:opacity-60"
+                className="shrink-0 rounded-lg border border-linha px-3 text-sm hover:bg-creme disabled:opacity-60"
               >
                 {buscando ? "Buscando…" : "Buscar na Receita"}
               </button>
             )}
           </div>
           {msgBusca && (
-            <p className={`mt-1 text-xs ${msgBusca.ok ? "text-green-700" : "text-red-600"}`}>{msgBusca.texto}</p>
+            <p className={`mt-1 text-xs ${msgBusca.ok ? "text-verde" : "text-negativo"}`}>{msgBusca.texto}</p>
           )}
         </Campo>
         <Campo label="Razão social / Nome *">
@@ -193,8 +193,8 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
         </div>
       </fieldset>
 
-      <fieldset className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-        <legend className="px-1 text-sm font-semibold text-slate-900">Contato</legend>
+      <fieldset className="space-y-3 rounded-lg border border-linha bg-white p-4">
+        <legend className="px-1 text-sm font-semibold text-texto">Contato</legend>
         <div className="grid grid-cols-2 gap-3">
           <Campo label="E-mail">
             <input name="email" type="email" defaultValue={c.email ?? ""} className={inputCls} />
@@ -242,8 +242,8 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
         </div>
       </fieldset>
 
-      <fieldset className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-        <legend className="px-1 text-sm font-semibold text-slate-900">
+      <fieldset className="space-y-3 rounded-lg border border-linha bg-white p-4">
+        <legend className="px-1 text-sm font-semibold text-texto">
           Representante legal (contrato)
         </legend>
         <div className="grid grid-cols-2 gap-3">
@@ -281,8 +281,8 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
         </div>
       </fieldset>
 
-      <fieldset className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-        <legend className="px-1 text-sm font-semibold text-slate-900">Gestão interna</legend>
+      <fieldset className="space-y-3 rounded-lg border border-linha bg-white p-4">
+        <legend className="px-1 text-sm font-semibold text-texto">Gestão interna</legend>
         <Campo label="Contador responsável">
           {contadorEditavel ? (
             <select name="contador_id" defaultValue={c.contador_id ?? ""} className={inputCls}>
@@ -295,7 +295,7 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
             </select>
           ) : (
             // Não editável: o trigger congela contador_id p/ não-admin. Mostra read-only.
-            <p className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">
+            <p className="rounded border border-linha bg-creme px-3 py-2 text-cinza">
               {nomeContadorAtual}
             </p>
           )}
@@ -330,7 +330,7 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
       </fieldset>
 
       {estado.erro && (
-        <div role="alert" className="text-sm text-red-600">
+        <div role="alert" className="text-sm text-negativo">
           {estado.erro}
           {estado.reativarId && (
             <>
@@ -348,11 +348,11 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
           type="submit"
           disabled={pending}
           aria-busy={pending}
-          className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60"
+          className="rounded-lg bg-verde px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
         >
           {pending ? "Salvando..." : modo === "novo" ? "Cadastrar" : "Salvar"}
         </button>
-        <Link href="/clientes" className="rounded border px-4 py-2 text-sm text-slate-700">
+        <Link href="/clientes" className="rounded-lg border border-linha px-4 py-2 text-sm text-cinza hover:bg-creme">
           Cancelar
         </Link>
       </div>
