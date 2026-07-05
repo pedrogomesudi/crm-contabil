@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { iniciais, badgeRegime, badgeStatusTitulo } from "@/lib/ui/apresentacao";
+import { iniciais, badgeRegime, badgeStatusTitulo, badgeStatusNfse } from "@/lib/ui/apresentacao";
 
 describe("iniciais", () => {
   it("2 iniciais de nomes compostos; 1 palavra → 2 letras; vazio → ?", () => {
@@ -28,5 +28,18 @@ describe("badgeStatusTitulo", () => {
     expect(badgeStatusTitulo("ABERTO")).toBe("neutro");
     expect(badgeStatusTitulo("CANCELADO")).toBe("neutro");
     expect(badgeStatusTitulo("qualquer")).toBe("neutro");
+  });
+});
+
+describe("badgeStatusNfse", () => {
+  it("mapeia o status da nota para a variante do Badge (case-insensitive)", () => {
+    expect(badgeStatusNfse("autorizada")).toBe("positivo");
+    expect(badgeStatusNfse("AUTORIZADA")).toBe("positivo");
+    expect(badgeStatusNfse("cancelada")).toBe("neutro");
+    expect(badgeStatusNfse("rejeitada")).toBe("negativo");
+    expect(badgeStatusNfse("erro")).toBe("negativo");
+    expect(badgeStatusNfse("processando")).toBe("atencao");
+    expect(badgeStatusNfse("pendente")).toBe("atencao");
+    expect(badgeStatusNfse("qualquer")).toBe("neutro");
   });
 });
