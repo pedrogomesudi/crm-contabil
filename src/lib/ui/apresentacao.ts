@@ -14,3 +14,12 @@ export function badgeRegime(regime: string | null): "positivo" | "ia" | "neutro"
   if (r.includes("mei")) return "atencao";
   return "neutro";
 }
+
+// Status do título → variante de cor do Badge.
+export function badgeStatusTitulo(status: string): "positivo" | "atencao" | "negativo" | "neutro" {
+  const s = (status ?? "").toUpperCase();
+  if (s === "BAIXADO") return "positivo";
+  if (s === "BAIXADO_PARCIAL") return "atencao";
+  if (s === "VENCIDO") return "negativo";
+  return "neutro";
+}
