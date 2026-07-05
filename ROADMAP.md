@@ -160,7 +160,8 @@ Rebrand como **SALDO** (`seusaldo.ai`) a partir do Brand Kit: identidade visual,
     clientes e telas de login recomponentizadas.
   - **V8.2b — Financeiro** ✅ — dashboard (StatCards + barras), contas a receber/pagar (tabelas + badges
     de status), régua, CadastroCrud genérico e hubs. Helper `badgeStatusTitulo`.
-  - **V8.2c — NFS-e** ⬜ (lote, emissão, config, componentes).
+  - **V8.2c — NFS-e** ✅ — lista de notas (badge de status), emissão (avulsa/honorário), lote e config
+    do emitente/certificado. Helper `badgeStatusNfse`. Emissão avulsa preservada.
   - **V8.2d — Atendimento + Integrações + resto** ⬜ (inbox, Domínio, documentos/assinatura, usuários).
 
 ## V9 — Modo whitelabel ⬜

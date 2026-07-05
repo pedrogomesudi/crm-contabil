@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **V8.2c — Rollout SALDO (NFS-e):** identidade SALDO nas 13 telas de NFS-e — lista de notas (badge de
+  status via `badgeStatusNfse`, número/valor em mono), emissão (avulsa e por honorário), emissão em
+  lote e configuração do emitente/certificado. Só apresentação; mTLS/SEFIN/actions/RLS inalterados e a
+  **emissão avulsa preservada**. Próxima fatia: V8.2d (atendimento/integrações/documentos/assinatura/usuários).
 - **V8.2b — Rollout SALDO (Financeiro):** identidade SALDO aplicada às 10 telas/componentes do módulo
   financeiro — dashboard (StatCards + barras recoloridas verde/violeta, valores em mono), contas a
   receber/pagar (tabelas com **badges de status** e valores mono), régua de cobrança, `CadastroCrud`
