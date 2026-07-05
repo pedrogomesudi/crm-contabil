@@ -154,8 +154,13 @@ Rebrand como **SALDO** (`seusaldo.ai`) a partir do Brand Kit: identidade visual,
 - **V8.1 — Fundação SALDO** ✅ — tokens/fontes (Tailwind `@theme` + `next/font`), `LogoSaldo` + favicon,
   primitivos (`src/components/ui/`: Card/Botao/Badge/PageHeader/StatCard), sidebar com drawer mobile,
   shell creme e dashboard reestilizado — responsivo. Sem migration.
-- **V8.2 — Rollout** ⬜ — aplicar o design system às demais telas (clientes, financeiro, NFS-e,
-  atendimento, integrações, usuários) + varredura de consistência.
+- **V8.2 — Rollout** 🚧 — aplicar o design system às demais telas.
+  - **V8.2a — Auth + Clientes** ✅ — guia de linguagem (`docs/design/saldo-ui.md`), primitivos ampliados
+    (Campo/Input/Select/Textarea/Painel/Chip/Toolbar/EmptyState/Iniciais), lista/ficha/formulários de
+    clientes e telas de login recomponentizadas.
+  - **V8.2b — Financeiro** ⬜ (dashboard, contas a pagar/receber, régua, cadastros/CRUD).
+  - **V8.2c — NFS-e** ⬜ (lote, emissão, config, componentes).
+  - **V8.2d — Atendimento + Integrações + resto** ⬜ (inbox, Domínio, documentos/assinatura, usuários).
 
 ## V9 — Modo whitelabel ⬜
 
