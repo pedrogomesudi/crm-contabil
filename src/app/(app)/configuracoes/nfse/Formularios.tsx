@@ -1,8 +1,7 @@
 "use client";
 import { useActionState } from "react";
 import { salvarConfig, salvarCertificado, type EstadoConfig } from "./actions";
-
-const inputCls = "w-full rounded border border-slate-300 px-2 py-1";
+import { inputCls } from "@/components/ui/Campo";
 
 export function FormConfig({ inicial }: { inicial: Record<string, string | boolean> }) {
   const [estado, action, pend] = useActionState<EstadoConfig, FormData>(salvarConfig, {});
@@ -82,12 +81,12 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
         </label>
       </div>
       {estado.erro && (
-        <p role="alert" className="text-red-600">
+        <p role="alert" className="text-negativo">
           {estado.erro}
         </p>
       )}
-      {estado.ok && <p className="text-green-700">Configuração salva ✓</p>}
-      <button disabled={pend} className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-60">
+      {estado.ok && <p className="text-verde">Configuração salva ✓</p>}
+      <button disabled={pend} className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60">
         {pend ? "Salvando..." : "Salvar configuração"}
       </button>
     </form>
@@ -107,12 +106,12 @@ export function FormCertificado() {
         <input name="senha" type="password" required className={inputCls} />
       </label>
       {estado.erro && (
-        <p role="alert" className="text-red-600">
+        <p role="alert" className="text-negativo">
           {estado.erro}
         </p>
       )}
-      {estado.ok && <p className="text-green-700">Certificado salvo ✓</p>}
-      <button disabled={pend} className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-60">
+      {estado.ok && <p className="text-verde">Certificado salvo ✓</p>}
+      <button disabled={pend} className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60">
         {pend ? "Enviando..." : "Salvar certificado"}
       </button>
     </form>

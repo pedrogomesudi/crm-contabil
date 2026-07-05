@@ -105,13 +105,13 @@ export function LoteNfse() {
             type="month"
             value={mes}
             onChange={(e) => setMes(e.target.value)}
-            className="ml-2 rounded border border-slate-300 px-2 py-1"
+            className="ml-2 rounded border border-linha px-2 py-1"
           />
         </label>
         <button
           onClick={carregar}
           disabled={!competencia || carregando}
-          className="rounded border border-slate-300 px-3 py-1 disabled:opacity-60"
+          className="rounded border border-linha px-3 py-1 disabled:opacity-60"
         >
           {carregando ? "Carregando…" : "Carregar clientes"}
         </button>
@@ -122,9 +122,9 @@ export function LoteNfse() {
           <p>
             <strong>{selecionados.length}</strong> nota(s) selecionada(s) · total R$ {totalValor.toFixed(2)}
           </p>
-          <div className="max-h-96 overflow-auto rounded border border-slate-200">
+          <div className="max-h-96 overflow-auto rounded border border-linha">
             <table className="w-full">
-              <thead className="bg-slate-100 text-left">
+              <thead className="bg-creme text-left">
                 <tr>
                   <th className="p-2">
                     <input
@@ -142,7 +142,7 @@ export function LoteNfse() {
               </thead>
               <tbody>
                 {linhas.map((l) => (
-                  <tr key={l.clienteId} className="border-t border-slate-100">
+                  <tr key={l.clienteId} className="border-t border-linha/70">
                     <td className="p-2">
                       <input
                         type="checkbox"
@@ -175,12 +175,12 @@ export function LoteNfse() {
             <button
               onClick={executar}
               disabled={executando || selecionados.length === 0}
-              className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-60"
+              className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
             >
               {executando ? `Emitindo ${prog.feitas}/${prog.total}…` : `Emitir ${selecionados.length} nota(s)`}
             </button>
             {executando && (
-              <button onClick={() => (pararRef.current = true)} className="rounded border border-slate-300 px-3 py-1">
+              <button onClick={() => (pararRef.current = true)} className="rounded border border-linha px-3 py-1">
                 Parar
               </button>
             )}
@@ -190,7 +190,7 @@ export function LoteNfse() {
               </span>
             )}
             {prog.feitas > 0 && !executando && (
-              <button onClick={baixarRelatorio} className="rounded border border-slate-300 px-3 py-1">
+              <button onClick={baixarRelatorio} className="rounded border border-linha px-3 py-1">
                 Baixar relatório (CSV)
               </button>
             )}

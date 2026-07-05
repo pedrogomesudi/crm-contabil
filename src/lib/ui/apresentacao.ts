@@ -23,3 +23,12 @@ export function badgeStatusTitulo(status: string): "positivo" | "atencao" | "neg
   if (s === "VENCIDO") return "negativo";
   return "neutro";
 }
+
+// Status da NFS-e → variante de cor do Badge.
+export function badgeStatusNfse(status: string): "positivo" | "neutro" | "negativo" | "atencao" {
+  const s = (status ?? "").toLowerCase();
+  if (s.includes("autorizada")) return "positivo";
+  if (s.includes("rejeit") || s.includes("erro") || s.includes("falha")) return "negativo";
+  if (s.includes("process") || s.includes("pendente") || s.includes("enviada")) return "atencao";
+  return "neutro"; // cancelada e desconhecidos
+}

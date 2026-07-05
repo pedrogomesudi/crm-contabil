@@ -32,22 +32,22 @@ export default async function ConfigNfsePage() {
 
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-4">
-      <h1 className="text-lg font-semibold text-slate-900">Configuração da NFS-e</h1>
+      <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Configuração da NFS-e</h1>
 
-      <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-slate-900">Dados fiscais do emitente</h2>
+      <section className="space-y-3 rounded-lg border border-linha bg-white p-4">
+        <h2 className="text-sm font-semibold text-texto">Dados fiscais do emitente</h2>
         <FormConfig inicial={inicial} />
       </section>
 
-      <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-slate-900">Certificado digital A1</h2>
+      <section className="space-y-3 rounded-lg border border-linha bg-white p-4">
+        <h2 className="text-sm font-semibold text-texto">Certificado digital A1</h2>
         {cert?.validade ? (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-cinza">
             Atual: <strong>{cert.nome_arquivo}</strong> — válido até{" "}
             <time dateTime={cert.validade}>{formatarData(cert.validade)}</time>
           </p>
         ) : (
-          <p className="text-sm text-slate-500">Nenhum certificado cadastrado.</p>
+          <p className="text-sm text-cinza-claro">Nenhum certificado cadastrado.</p>
         )}
         <FormCertificado />
       </section>

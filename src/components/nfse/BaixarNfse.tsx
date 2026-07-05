@@ -57,7 +57,7 @@ export function BaixarNfse({ nfseId, numero, chave }: { nfseId: string; numero: 
       >
         portal
       </a>
-      {erro && <span className="text-xs text-red-600">{erro}</span>}
+      {erro && <span className="text-xs text-negativo">{erro}</span>}
     </div>
   );
 }
