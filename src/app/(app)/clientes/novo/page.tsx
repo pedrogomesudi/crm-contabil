@@ -19,7 +19,7 @@ export default async function NovoClientePage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-semibold text-slate-900">Novo cliente</h1>
+      <h1 className="mb-4 font-display text-2xl font-bold tracking-tight text-texto">Novo cliente</h1>
       <FormCliente
         action={criarCliente}
         contadores={contadores}

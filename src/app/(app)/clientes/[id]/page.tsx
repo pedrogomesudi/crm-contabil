@@ -76,7 +76,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-slate-900">{cliente.razao_social}</h1>
+      <h1 className="font-display text-2xl font-bold tracking-tight text-texto">{cliente.razao_social}</h1>
       {podeExcluirCliente(papel) && (
         <AcoesExclusaoCliente
           clienteId={id}
@@ -100,7 +100,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
       )}
       {mostrarHonorario && <ContratosSection clienteId={id} contratos={contratos} />}
       {mostrarHonorario && (
-        <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <section className="rounded-lg border border-linha bg-white p-4">
           <OptOutCobranca clienteId={id} ativo={optOutCobranca} />
         </section>
       )}

@@ -37,7 +37,7 @@ export function AcoesExclusaoCliente({
             {pend ? "Restaurando…" : "Restaurar"}
           </button>
           {erro && (
-            <p role="alert" className="text-xs text-red-600">
+            <p role="alert" className="text-xs text-negativo">
               {erro}
             </p>
           )}
@@ -48,17 +48,17 @@ export function AcoesExclusaoCliente({
 
   // Cliente ativo: botão Excluir com confirmação inline (sem window.confirm).
   return (
-    <div className="rounded border border-slate-200 p-3 text-sm">
+    <div className="rounded border border-linha p-3 text-sm">
       {!confirmando ? (
         <button
           onClick={() => setConfirmando(true)}
-          className="rounded border border-red-300 px-3 py-1 text-red-700"
+          className="rounded border border-negativo/40 px-3 py-1 text-negativo"
         >
           Excluir cliente
         </button>
       ) : (
         <div className="space-y-2">
-          <p className="text-slate-700">
+          <p className="text-cinza">
             Excluir este cliente? O histórico é preservado e um administrador pode restaurá-lo.
           </p>
           <div className="flex gap-2">
@@ -72,16 +72,16 @@ export function AcoesExclusaoCliente({
                   else router.refresh();
                 })
               }
-              className="rounded bg-red-700 px-3 py-1 text-white disabled:opacity-60"
+              className="rounded bg-negativo px-3 py-1 text-white disabled:opacity-60"
             >
               {pend ? "Excluindo…" : "Confirmar exclusão"}
             </button>
-            <button onClick={() => setConfirmando(false)} className="rounded border px-3 py-1">
+            <button onClick={() => setConfirmando(false)} className="rounded-lg border border-linha px-3 py-1">
               Voltar
             </button>
           </div>
           {erro && (
-            <p role="alert" className="text-xs text-red-600">
+            <p role="alert" className="text-xs text-negativo">
               {erro}
             </p>
           )}
