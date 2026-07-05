@@ -147,11 +147,15 @@ Integração do CRM com o **WhatsApp** para relacionamento com clientes: **atend
 
 > Opt-in/opt-out (LGPD) a tratar na V7.2 (régua). Número dedicado do escritório (risco do não-oficial).
 
-## V8 — Layout e estética ⬜
+## V8 — Layout e estética 🚧
 
-Refinamento visual e de experiência da plataforma (identidade visual, design system, responsividade).
+Rebrand como **SALDO** (`seusaldo.ai`) a partir do Brand Kit: identidade visual, design system, responsividade.
 
-> A definir: direção de design (ver skill `frontend-design`).
+- **V8.1 — Fundação SALDO** ✅ — tokens/fontes (Tailwind `@theme` + `next/font`), `LogoSaldo` + favicon,
+  primitivos (`src/components/ui/`: Card/Botao/Badge/PageHeader/StatCard), sidebar com drawer mobile,
+  shell creme e dashboard reestilizado — responsivo. Sem migration.
+- **V8.2 — Rollout** ⬜ — aplicar o design system às demais telas (clientes, financeiro, NFS-e,
+  atendimento, integrações, usuários) + varredura de consistência.
 
 ## V9 — Modo whitelabel ⬜
 

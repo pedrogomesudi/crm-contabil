@@ -1,24 +1,46 @@
 @import "tailwindcss";
 
-/* App é light-only: a UI usa paleta slate fixa. Não declaramos dark mode para
-   não inverter o contraste (cards bg-white / texto slate-900 não têm variante dark). */
-@theme inline {
-  --font-sans: var(--font-geist-sans);
+/* Design system SALDO — light-only (a marca é clara). Tokens do Brand Kit. */
+@theme {
+  --color-verde: #0fa968;
+  --color-verde-claro: #3cd98a;
+  --color-tinta: #0e1512;
+  --color-tinta-2: #111b16;
+  --color-texto: #101614;
+  --color-violeta: #7c5cff;
+  --color-creme: #f7f6f2;
+  --color-cinza: #5a6163;
+  --color-cinza-claro: #8c938e;
+  --color-linha: #e7e4dc;
+  --color-negativo: #c0503f;
+  --color-borda-escura: #232a27;
+  --color-mono-muted: #78827c;
+  --color-texto-claro: #b4bcb6;
+
+  --font-display: var(--font-space-grotesk), sans-serif;
+  --font-sans: var(--font-plex-sans), Arial, Helvetica, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 body {
-  background: #ffffff;
-  color: #0f172a; /* slate-900 */
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  background: var(--color-creme);
+  color: var(--color-texto);
+  font-family: var(--font-sans);
 }
 
-/* Foco visível global (WCAG 2.4.7) — vale para links, botões e campos. */
+::selection {
+  background: var(--color-verde);
+  color: #fff;
+}
+
+/* Foco visível (WCAG 2.4.7) — verde da marca. */
 :focus-visible {
-  outline: 2px solid #2563eb; /* blue-600 */
+  outline: 2px solid var(--color-verde);
   outline-offset: 2px;
   border-radius: 4px;
 }
-/* Sobre fundos escuros (Sidebar slate-900), o foco precisa de cor clara. */
-.bg-slate-900 :focus-visible {
+/* Sobre superfícies escuras (sidebar tinta), foco claro. */
+.bg-tinta :focus-visible,
+.bg-tinta-2 :focus-visible {
   outline-color: #ffffff;
 }

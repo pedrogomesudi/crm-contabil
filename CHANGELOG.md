@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **V8.1 — Fundação do Design System SALDO:** rebrand visual do CRM como **SALDO** (`seusaldo.ai`).
+  Tokens de cor/tipografia no Tailwind 4 `@theme` (verde `#0FA968`, tinta, violeta, creme…) + fontes
+  **self-hosted** (Space Grotesk / IBM Plex Sans / IBM Plex Mono via `next/font`). Componente
+  **`LogoSaldo`** (SVG, 4 variantes) + **favicon** SALDO. Primitivos reutilizáveis em `src/components/ui/`
+  (**Card, Botao, Badge, PageHeader, StatCard**). **Sidebar** escura com item ativo verde e **menu
+  recolhível (drawer) no mobile**; shell com fundo creme; **dashboard** reestilizado (StatCards, números
+  em Space Grotesk) — tudo **responsivo**. Sem migration. O rollout às demais telas é a V8.2.
 - **V7.3 — Atendimento / Inbox WhatsApp (fecha a V7):** caixa de entrada bidirecional. `whatsapp_mensagem`
   vira **bidirecional** (`direcao` IN/OUT, `lida`, `z_message_id`) — a conversa é **derivada por telefone**,
   então a thread já nasce **unificada** (recebidas + respostas + cobranças/régua). **Webhook**
