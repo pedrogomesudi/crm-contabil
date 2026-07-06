@@ -32,6 +32,46 @@ export async function baixarXmlNfse(nfseId: string): Promise<{ erro?: string; co
 }
 
 // Baixa o DANFSe (PDF) da Sefin (ADN) usando a chave + o certificado (mTLS).
+// Cache do DANFSe no storage (bucket `documentos`, prefixo danfse/) — a nota
+// autorizada é imutável, então o PDF é buscado do ADN uma vez e reusado.
+function caminhoDanfse(chave: string): string {
+  return `danfse/${chave}.pdf`;
+}
+async function lerDanfseStorage(
+  admin: ReturnType<typeof createAdminSupabase>,
+  chave: string,
+): Promise<Buffer | null> {
+  const { data } = await admin.storage.from("documentos").download(caminhoDanfse(chave));
+  if (!data) return null;
+  return Buffer.from(await data.arrayBuffer());
+}
+async function guardarDanfseStorage(
+  admin: ReturnType<typeof createAdminSupabase>,
+  chave: string,
+  pdf: Buffer,
+): Promise<void> {
+  await admin.storage
+    .from("documentos")
+    .upload(caminhoDanfse(chave), pdf, { contentType: "application/pdf", upsert: true })
+    .catch(() => {});
+}
+
+// Busca o DANFSe do ADN reusando um certificado já aberto (usado no pré-carregamento
+// da emissão). Best-effort: em falha, apenas não cacheia (baixa sob demanda depois).
+async function prefetchDanfse(
+  admin: ReturnType<typeof createAdminSupabase>,
+  chave: string,
+  cert: { pfx: Buffer; senha: string },
+  ambiente: "homologacao" | "producao",
+): Promise<void> {
+  try {
+    const pdf = await baixarDanfsePdf(chave, cert, ambiente);
+    if (pdf) await guardarDanfseStorage(admin, chave, pdf);
+  } catch {
+    /* best-effort */
+  }
+}
+
 export async function baixarDanfseNfse(nfseId: string): Promise<{ erro?: string; pdfBase64?: string; chave?: string }> {
   const perfil = await getPerfilAtual();
   if (!perfil?.ativo || !podeVerHonorario(perfil.papel)) return { erro: "Sem permissão." };
@@ -42,9 +82,13 @@ export async function baixarDanfseNfse(nfseId: string): Promise<{ erro?: string;
     .eq("id", nfseId)
     .maybeSingle();
   if (!nota?.chave_acesso) return { erro: "Nota sem chave de acesso." };
-  // A nota já foi confirmada acessível ao usuário; o certificado é admin-RLS,
-  // então carregamos via service_role apenas para o mTLS.
   const admin = createAdminSupabase();
+
+  // 1) Cache: se o PDF já está no storage, entrega na hora (sem tocar o ADN).
+  const cache = await lerDanfseStorage(admin, nota.chave_acesso);
+  if (cache) return { pdfBase64: cache.toString("base64") };
+
+  // 2) Miss: busca no ADN (mTLS), guarda no storage e entrega.
   const certRow = await carregarCertRowDaNota(admin, nota.emitente, nota.cliente_id);
   if (!certRow) return { erro: "Certificado não cadastrado." };
   const chaveKey = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
@@ -59,6 +103,7 @@ export async function baixarDanfseNfse(nfseId: string): Promise<{ erro?: string;
   const ambiente: "homologacao" | "producao" = nota.ambiente === "producao" ? "producao" : "homologacao";
   const pdf = await baixarDanfsePdf(nota.chave_acesso, { pfx: cert.pfx, senha: cert.senha }, ambiente);
   if (!pdf) return { erro: "DANFSe indisponível no momento.", chave: nota.chave_acesso };
+  await guardarDanfseStorage(admin, nota.chave_acesso, pdf);
   return { pdfBase64: pdf.toString("base64") };
 }
 
@@ -199,6 +244,11 @@ export async function emitirNfseCliente(
     avulsa,
     autorizada_em: resultado.autorizada ? new Date().toISOString() : null,
   });
+  // Pré-carrega o DANFSe no storage (uma nota por vez, gentil com o ADN) — os
+  // downloads em lote passam a vir do cache. Best-effort: não afeta a emissão.
+  if (resultado.autorizada && resultado.chaveAcesso) {
+    await prefetchDanfse(createAdminSupabase(), resultado.chaveAcesso, { pfx: cert.pfx, senha: cert.senha }, ambiente);
+  }
   return resultado.autorizada
     ? { status: "autorizada", chave: resultado.chaveAcesso, numero: resultado.numero }
     : { status: "rejeitada", motivo: resultado.mensagens?.join("; ") };

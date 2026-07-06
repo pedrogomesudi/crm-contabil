@@ -56,31 +56,41 @@ export function BaixarNotasZip() {
     const notas = notasAlvo ?? (await listarNotasAutorizadasPorCompetencia(competencia));
     setProg({ feitas: 0, total: notas.length, ok: 0, falha: 0 });
     const zip = new PizZip();
+    // Nomes calculados aqui (sequencial, determinístico) para evitar corrida na dedup.
     const usados = new Set<string>();
+    const fila = notas.map((nota) => ({ nota, nome: nomeArquivoUnico(nota.razaoSocial, usados) }));
     const falhou: NotaParaDownload[] = [];
     let adicionadas = 0;
-    for (const nota of notas) {
-      if (pararRef.current) break;
-      const nome = nomeArquivoUnico(nota.razaoSocial, usados);
-      let ok = false;
-      if (formato === "pdf") {
-        const pdf = await baixarPdfComRetry(nota.nfseId);
-        if (pdf) {
-          zip.file(`${nome}.pdf`, pdf, { base64: true });
-          ok = true;
+
+    // Pool de concorrência: rápido quando vem do cache; o retry cobre eventual ADN.
+    let proximo = 0;
+    const CONCORRENCIA = 4;
+    async function worker() {
+      while (!pararRef.current) {
+        const i = proximo++;
+        if (i >= fila.length) return;
+        const { nota, nome } = fila[i]!;
+        let ok = false;
+        if (formato === "pdf") {
+          const pdf = await baixarPdfComRetry(nota.nfseId);
+          if (pdf) {
+            zip.file(`${nome}.pdf`, pdf, { base64: true });
+            ok = true;
+          }
+        } else {
+          const xml = await baixarXmlNfse(nota.nfseId);
+          if (xml.conteudo) {
+            zip.file(`${nome}.xml`, xml.conteudo);
+            ok = true;
+          }
         }
-      } else {
-        const xml = await baixarXmlNfse(nota.nfseId);
-        if (xml.conteudo) {
-          zip.file(`${nome}.xml`, xml.conteudo);
-          ok = true;
-        }
+        if (ok) adicionadas++;
+        else falhou.push(nota);
+        setProg((p) => ({ feitas: p.feitas + 1, total: p.total, ok: p.ok + (ok ? 1 : 0), falha: p.falha + (ok ? 0 : 1) }));
       }
-      if (ok) adicionadas++;
-      else falhou.push(nota);
-      setProg((p) => ({ feitas: p.feitas + 1, total: p.total, ok: p.ok + (ok ? 1 : 0), falha: p.falha + (ok ? 0 : 1) }));
-      if (formato === "pdf") await sleep(400); // gentil com o ADN (evita 429)
     }
+    await Promise.all(Array.from({ length: CONCORRENCIA }, worker));
+
     if (adicionadas > 0) {
       const blob = zip.generate({ type: "blob", compression: "DEFLATE" });
       const url = URL.createObjectURL(blob);
@@ -102,9 +112,9 @@ export function BaixarNotasZip() {
       <div>
         <h2 className="font-display text-sm font-semibold text-texto">Baixar notas do mês (ZIP)</h2>
         <p className="text-xs text-cinza">
-          Baixa as NFS-e autorizadas da competência, nomeadas pela razão social do cliente. O <strong>PDF (DANFSe)</strong>{" "}
-          e o <strong>XML</strong> têm botões separados — o PDF vem do ADN nacional (com retentativa automática); o XML,
-          do banco.
+          Baixa as NFS-e autorizadas da competência, nomeadas pela razão social do cliente. <strong>PDF (DANFSe)</strong>{" "}
+          e <strong>XML</strong> em botões separados. Os PDFs ficam em cache — a 1ª baixa do mês busca no ADN nacional
+          (com retentativa); as seguintes são instantâneas.
         </p>
       </div>
 
