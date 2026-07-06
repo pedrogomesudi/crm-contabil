@@ -8,6 +8,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Corrigido
+
+- **NFS-e — download em lote:** botões **separados** para baixar todas em **PDF** e todas em **XML**;
+  **cache do DANFSe** no storage (bucket `documentos`, `danfse/{chave}.pdf`) com **pré-carregamento na
+  emissão** — o ADN nacional (que retornava 502/429 em lote) passa a ser tocado 1×/nota, e as baixas
+  seguintes vêm do storage (instantâneas, sem erro), em **paralelo**. Botão "Rebaixar só as que faltaram"
+  reprocessa apenas as falhas.
+
 ### Adicionado
 
 - **V8.2d — Rollout SALDO final (fecha a V8):** identidade SALDO nos 19 arquivos restantes —

@@ -10,9 +10,34 @@ import { montarDps } from "@/lib/nfse/dps";
 import { assinarDps } from "@/lib/nfse/assinatura";
 import { enviarDps, ehErroTransitorio } from "@/lib/nfse/envio";
 import { emitenteParaConfig } from "@/lib/nfse/emitente";
+import { consultarCnpj } from "@/lib/receita/brasilapi";
+import { municipioIbgePorCep } from "@/lib/nfse/municipio";
 import type { Tomador } from "@/lib/nfse/tipos";
 
 export type EstadoEmitente = { erro?: string; ok?: boolean };
+
+export type DadosTomadorReceita = {
+  ok?: boolean;
+  erro?: string;
+  razaoSocial?: string | null;
+  endereco?: { logradouro?: string; numero?: string; bairro?: string; cidade?: string; uf?: string; cep?: string };
+  codigoMunicipio?: string | null;
+};
+
+// Consulta o CNPJ do TOMADOR na Receita (BrasilAPI + fallback ReceitaWS) e resolve
+// o código do município (IBGE) pelo CEP, para preencher o formulário de emissão.
+// Read-only, gate = quem pode emitir (podeVerHonorario).
+export async function consultarCnpjTomador(cnpj: string): Promise<DadosTomadorReceita> {
+  const perfil = await getPerfilAtual();
+  if (!perfil?.ativo || !podeVerHonorario(perfil.papel)) return { erro: "Sem permissão." };
+  const doc = String(cnpj ?? "").replace(/\D/g, "");
+  if (doc.length !== 14) return { erro: "Informe um CNPJ com 14 dígitos." };
+  const r = await consultarCnpj(doc);
+  if (r.erro || !r.dados) return { erro: r.erro ?? "Sem dados na Receita." };
+  const cep = r.dados.endereco.cep;
+  const codigoMunicipio = cep ? await municipioIbgePorCep(cep) : null;
+  return { ok: true, razaoSocial: r.dados.razaoSocial, endereco: r.dados.endereco, codigoMunicipio };
+}
 
 async function exigirAdmin(): Promise<boolean> {
   const perfil = await getPerfilAtual();
