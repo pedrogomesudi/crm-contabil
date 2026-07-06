@@ -5,6 +5,7 @@ import {
   listarNotasAutorizadasPorCompetencia,
   baixarDanfseNfse,
   baixarXmlNfse,
+  type NotaParaDownload,
 } from "@/app/(app)/clientes/[id]/nfse";
 import { nomeArquivoUnico } from "@/lib/nfse/nomeArquivo";
 import { Botao } from "@/components/ui/Botao";
@@ -12,10 +13,10 @@ import { Botao } from "@/components/ui/Botao";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 type Formato = "pdf" | "xml";
 
-// O DANFSe é baixado ao vivo do ADN nacional (mTLS) e falha de forma intermitente
-// em lotes grandes → tenta até 4 vezes com espera crescente antes de desistir.
+// O DANFSe vem ao vivo do ADN nacional, que retorna 502 esporádico e 429 (limite
+// de taxa). Retry paciente: 5 tentativas com espera crescente até ~18s por nota.
 async function baixarPdfComRetry(nfseId: string): Promise<string | null> {
-  const esperas = [0, 500, 1500, 3000]; // 1ª imediata + 3 retentativas
+  const esperas = [0, 1000, 2500, 5000, 10000];
   for (const espera of esperas) {
     if (espera > 0) await sleep(espera);
     const r = await baixarDanfseNfse(nfseId);
@@ -30,7 +31,8 @@ export function BaixarNotasZip() {
   const [carregando, setCarregando] = useState(false);
   const [baixando, setBaixando] = useState<Formato | null>(null);
   const [prog, setProg] = useState({ feitas: 0, total: 0, ok: 0, falha: 0 });
-  const [falhas, setFalhas] = useState<string[]>([]);
+  const [falhas, setFalhas] = useState<NotaParaDownload[]>([]);
+  const ultimoFormato = useRef<Formato>("pdf");
   const pararRef = useRef(false);
   const competencia = mes ? `${mes}-01` : "";
 
@@ -44,16 +46,18 @@ export function BaixarNotasZip() {
     setCarregando(false);
   }
 
-  async function baixar(formato: Formato) {
+  // notasAlvo: se informado, reprocessa só essas; senão, todas da competência.
+  async function baixar(formato: Formato, notasAlvo?: NotaParaDownload[]) {
     if (!competencia) return;
     setBaixando(formato);
+    ultimoFormato.current = formato;
     setFalhas([]);
     pararRef.current = false;
-    const notas = await listarNotasAutorizadasPorCompetencia(competencia);
+    const notas = notasAlvo ?? (await listarNotasAutorizadasPorCompetencia(competencia));
     setProg({ feitas: 0, total: notas.length, ok: 0, falha: 0 });
     const zip = new PizZip();
     const usados = new Set<string>();
-    const falhou: string[] = [];
+    const falhou: NotaParaDownload[] = [];
     let adicionadas = 0;
     for (const nota of notas) {
       if (pararRef.current) break;
@@ -73,16 +77,17 @@ export function BaixarNotasZip() {
         }
       }
       if (ok) adicionadas++;
-      else falhou.push(nota.razaoSocial);
+      else falhou.push(nota);
       setProg((p) => ({ feitas: p.feitas + 1, total: p.total, ok: p.ok + (ok ? 1 : 0), falha: p.falha + (ok ? 0 : 1) }));
-      if (formato === "pdf") await sleep(150); // gentil com o ADN entre notas
+      if (formato === "pdf") await sleep(400); // gentil com o ADN (evita 429)
     }
     if (adicionadas > 0) {
       const blob = zip.generate({ type: "blob", compression: "DEFLATE" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `nfse-${formato}-${competencia.slice(0, 7)}.zip`;
+      const sufixo = notasAlvo ? "-reprocesso" : "";
+      a.download = `nfse-${formato}-${competencia.slice(0, 7)}${sufixo}.zip`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -144,16 +149,19 @@ export function BaixarNotasZip() {
 
       {total === 0 && !baixando && <p className="text-cinza-claro">Nenhuma nota autorizada nessa competência.</p>}
 
-      {falhas.length > 0 && (
-        <div className="rounded-lg border border-negativo/30 bg-negativo/10 px-3 py-2 text-xs text-negativo">
+      {falhas.length > 0 && !baixando && (
+        <div className="space-y-2 rounded-lg border border-negativo/30 bg-negativo/10 px-3 py-2 text-xs text-negativo">
           <p className="font-medium">
-            {falhas.length} nota(s) não baixaram (o restante já foi para o ZIP). Tente de novo para reprocessar só estas:
+            {falhas.length} nota(s) não baixaram (o restante já foi para o ZIP) — o ADN nacional recusou (502/429).
           </p>
-          <ul className="mt-1 list-disc pl-4">
-            {falhas.map((r, i) => (
-              <li key={i}>{r}</li>
+          <ul className="list-disc pl-4">
+            {falhas.map((n) => (
+              <li key={n.nfseId}>{n.razaoSocial}</li>
             ))}
           </ul>
+          <Botao variante="primario" onClick={() => baixar(ultimoFormato.current, falhas)}>
+            Rebaixar só estas {falhas.length}
+          </Botao>
         </div>
       )}
     </div>
