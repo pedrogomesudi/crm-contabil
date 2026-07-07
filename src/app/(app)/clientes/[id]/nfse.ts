@@ -12,6 +12,7 @@ import { municipioIbgePorCep } from "@/lib/nfse/municipio";
 import { assinarDps } from "@/lib/nfse/assinatura";
 import { enviarDps, ehErroTransitorio } from "@/lib/nfse/envio";
 import { baixarDanfsePdf } from "@/lib/nfse/danfse";
+import { obterDanfsePdf, guardarDanfseStorage, carregarCertRowDaNota } from "@/lib/nfse/danfse-cache";
 import { montarEventoCancelamento, assinarEvento, enviarCancelamento } from "@/lib/nfse/cancelamento";
 import { classificarSituacao } from "@/lib/nfse/lote";
 import type { ConfigFiscal, Tomador, ResultadoCliente, ClienteLote } from "@/lib/nfse/tipos";
@@ -32,30 +33,6 @@ export async function baixarXmlNfse(nfseId: string): Promise<{ erro?: string; co
 }
 
 // Baixa o DANFSe (PDF) da Sefin (ADN) usando a chave + o certificado (mTLS).
-// Cache do DANFSe no storage (bucket `documentos`, prefixo danfse/) — a nota
-// autorizada é imutável, então o PDF é buscado do ADN uma vez e reusado.
-function caminhoDanfse(chave: string): string {
-  return `danfse/${chave}.pdf`;
-}
-async function lerDanfseStorage(
-  admin: ReturnType<typeof createAdminSupabase>,
-  chave: string,
-): Promise<Buffer | null> {
-  const { data } = await admin.storage.from("documentos").download(caminhoDanfse(chave));
-  if (!data) return null;
-  return Buffer.from(await data.arrayBuffer());
-}
-async function guardarDanfseStorage(
-  admin: ReturnType<typeof createAdminSupabase>,
-  chave: string,
-  pdf: Buffer,
-): Promise<void> {
-  await admin.storage
-    .from("documentos")
-    .upload(caminhoDanfse(chave), pdf, { contentType: "application/pdf", upsert: true })
-    .catch(() => {});
-}
-
 // Busca o DANFSe do ADN reusando um certificado já aberto (usado no pré-carregamento
 // da emissão). Best-effort: em falha, apenas não cacheia (baixa sob demanda depois).
 async function prefetchDanfse(
@@ -83,28 +60,12 @@ export async function baixarDanfseNfse(nfseId: string): Promise<{ erro?: string;
     .maybeSingle();
   if (!nota?.chave_acesso) return { erro: "Nota sem chave de acesso." };
   const admin = createAdminSupabase();
-
-  // 1) Cache: se o PDF já está no storage, entrega na hora (sem tocar o ADN).
-  const cache = await lerDanfseStorage(admin, nota.chave_acesso);
-  if (cache) return { pdfBase64: cache.toString("base64") };
-
-  // 2) Miss: busca no ADN (mTLS), guarda no storage e entrega.
-  const certRow = await carregarCertRowDaNota(admin, nota.emitente, nota.cliente_id);
-  if (!certRow) return { erro: "Certificado não cadastrado." };
-  const chaveKey = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
-  let cert;
-  try {
-    const pfx = decifrar(certRow.pfx_cifrado, chaveKey);
-    const senha = decifrar(certRow.senha_cifrada, chaveKey).toString("utf8");
-    cert = carregarCertificado(pfx, senha);
-  } catch {
-    return { erro: "Falha ao abrir o certificado." };
-  }
-  const ambiente: "homologacao" | "producao" = nota.ambiente === "producao" ? "producao" : "homologacao";
-  const pdf = await baixarDanfsePdf(nota.chave_acesso, { pfx: cert.pfx, senha: cert.senha }, ambiente);
-  if (!pdf) return { erro: "DANFSe indisponível no momento.", chave: nota.chave_acesso };
-  await guardarDanfseStorage(admin, nota.chave_acesso, pdf);
-  return { pdfBase64: pdf.toString("base64") };
+  return obterDanfsePdf(admin, {
+    chave_acesso: nota.chave_acesso as string,
+    ambiente: nota.ambiente as string | null,
+    emitente: nota.emitente as string,
+    cliente_id: nota.cliente_id as string,
+  });
 }
 
 // Emite a NFS-e de um cliente numa competência. Retorno estruturado, usado tanto
@@ -399,29 +360,6 @@ export async function emitirNfse(clienteId: string, _prev: EstadoNfse, formData:
   revalidatePath(`/clientes/${clienteId}`);
   if (r.status === "autorizada") return { ok: true };
   return { erro: r.motivo ?? "Não foi possível emitir." };
-}
-
-// Retorna a linha (pfx_cifrado, senha_cifrada) do certificado que emitiu a nota:
-// do cliente-emitente (V5-B) ou do escritório (V5-A). Usa client admin (RLS admin).
-async function carregarCertRowDaNota(
-  admin: ReturnType<typeof createAdminSupabase>,
-  emitente: string,
-  clienteId: string,
-): Promise<{ pfx_cifrado: string; senha_cifrada: string } | null> {
-  if (emitente === "cliente") {
-    const { data } = await admin
-      .from("nfse_certificado_cliente")
-      .select("pfx_cifrado, senha_cifrada")
-      .eq("cliente_id", clienteId)
-      .maybeSingle();
-    return data ?? null;
-  }
-  const { data } = await admin
-    .from("nfse_certificado")
-    .select("pfx_cifrado, senha_cifrada")
-    .eq("id", 1)
-    .maybeSingle();
-  return data ?? null;
 }
 
 export type NotaParaDownload = { nfseId: string; razaoSocial: string; numero: string | null };
