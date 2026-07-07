@@ -13,6 +13,7 @@ import {
   definirStatus,
   atribuirAtendente,
   listarAtendentes,
+  listarClientesParaConversa,
   type DadosContato,
 } from "./actions";
 import {
@@ -40,6 +41,8 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
   const [conversas, setConversas] = useState<Conversa[]>(inicial);
   const [aba, setAba] = useState<FiltroAba>("abertas");
   const [atendentes, setAtendentes] = useState<{ id: string; nome: string }[]>([]);
+  const [clientesConv, setClientesConv] = useState<{ razaoSocial: string; contato: string | null; telefone: string }[]>([]);
+  const [buscaCliente, setBuscaCliente] = useState("");
   const [busca, setBusca] = useState("");
   const [ativa, setAtiva] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<MsgConversa[]>([]);
@@ -60,9 +63,17 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
   const cont = contadores(conversas);
   const visiveis = filtrarConversas(conversas, aba, busca);
   const convAtiva = conversas.find((c) => c.telefone === ativa) ?? null;
+  const clientesFiltrados = buscaCliente.trim()
+    ? clientesConv
+        .filter((c) => `${c.razaoSocial.toLowerCase()} ${c.telefone}`.includes(buscaCliente.trim().toLowerCase()))
+        .slice(0, 8)
+    : [];
 
   useEffect(() => {
-    start(async () => setAtendentes(await listarAtendentes()));
+    start(async () => {
+      setAtendentes(await listarAtendentes());
+      setClientesConv(await listarClientesParaConversa());
+    });
   }, []);
 
   const recarregar = useCallback(() => start(async () => setConversas(await listarConversas())), []);
@@ -222,6 +233,30 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
         {nova && (
           <div className="mx-4 mb-2 space-y-2 rounded-lg border border-linha bg-creme p-3 text-sm">
             <input
+              value={buscaCliente}
+              onChange={(e) => setBuscaCliente(e.target.value)}
+              placeholder="Buscar cliente cadastrado…"
+              className="w-full rounded-lg border border-linha bg-white px-3 py-2 focus:border-verde"
+            />
+            {clientesFiltrados.length > 0 && (
+              <div className="max-h-40 overflow-y-auto rounded-lg border border-linha bg-white">
+                {clientesFiltrados.map((cl) => (
+                  <button
+                    key={cl.telefone + cl.razaoSocial}
+                    type="button"
+                    onClick={() => {
+                      setNovoTel(cl.telefone);
+                      setBuscaCliente("");
+                    }}
+                    className="block w-full px-3 py-2 text-left hover:bg-creme"
+                  >
+                    <span className="font-medium text-texto">{cl.razaoSocial}</span>{" "}
+                    <span className="font-mono text-[11px] text-cinza-claro">{cl.telefone}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <input
               value={novoTel}
               onChange={(e) => setNovoTel(e.target.value)}
               placeholder="Telefone com DDD"
@@ -242,7 +277,13 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
               >
                 Iniciar
               </button>
-              <button onClick={() => setNova(false)} className="rounded-lg border border-linha px-3 py-1.5">
+              <button
+                onClick={() => {
+                  setNova(false);
+                  setBuscaCliente("");
+                }}
+                className="rounded-lg border border-linha px-3 py-1.5"
+              >
                 Cancelar
               </button>
             </div>
@@ -302,6 +343,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
                   <span className="truncate text-sm font-semibold text-texto">{c.cliente ?? c.telefone}</span>
                   <span className="shrink-0 font-mono text-[11px] text-cinza-claro">{horaMsg(c.ultima_em)}</span>
                 </div>
+                {c.contato && <p className="truncate text-xs text-cinza-claro">{c.contato}</p>}
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-xs text-cinza-claro">
                     {c.status !== "aberta" && (
@@ -350,10 +392,11 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
           <>
             <div className="flex items-center gap-3 border-b border-linha bg-white px-5 py-3">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-verde/10 text-xs font-semibold text-verde">
-                {iniciais(contato?.razaoSocial ?? ativa)}
+                {iniciais(convAtiva?.cliente ?? ativa)}
               </span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-texto">{contato?.razaoSocial ?? ativa}</p>
+                <p className="truncate text-sm font-semibold text-texto">{convAtiva?.cliente ?? ativa}</p>
+                {convAtiva?.contato && <p className="truncate text-xs text-cinza-claro">{convAtiva.contato}</p>}
                 <p className="font-mono text-[11px] text-cinza-claro">{ativa}</p>
               </div>
               <div className="ml-auto flex items-center gap-2">
