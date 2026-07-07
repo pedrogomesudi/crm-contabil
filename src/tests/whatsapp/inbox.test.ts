@@ -9,6 +9,7 @@ import {
   separadorDia,
   filtrarConversas,
   contadores,
+  mapaClientesPorTelefone,
   type MsgConversa,
   type Conversa,
 } from "@/lib/whatsapp/inbox";
@@ -16,6 +17,7 @@ import {
 const conv = (over: Partial<Conversa>): Conversa => ({
   telefone: "5534999990000",
   cliente: null,
+  contato: null,
   ultima: "oi",
   ultima_em: "2026-07-06T12:00:00.000Z",
   nao_lidas: 0,
@@ -213,15 +215,32 @@ describe("extensaoPorMime", () => {
 
 describe("agruparConversas meta", () => {
   const msgs: MsgConversa[] = [
-    { id: "1", telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z", status: "RECEBIDO", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
+    { id: "1", telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z", status: "RECEBIDO", cliente: "DA MENSAGEM", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
   ];
-  it("sem meta → defaults (aberta, sem atendente, não favorita)", () => {
+  it("sem meta → cliente vem da mensagem; contato null; defaults", () => {
     const [c] = agruparConversas(msgs);
-    expect(c).toMatchObject({ favorita: false, status: "aberta", atendenteId: null, atendenteNome: null });
+    expect(c).toMatchObject({ cliente: "DA MENSAGEM", contato: null, favorita: false, status: "aberta", atendenteId: null, atendenteNome: null });
   });
-  it("com meta → sobrepõe favorita/status/atendente", () => {
-    const meta = new Map([["111", { favorita: true, status: "pendente" as const, atendenteId: "u1", atendenteNome: "Pedro" }]]);
+  it("com meta → sobrepõe cliente/contato/favorita/status/atendente", () => {
+    const meta = new Map([["111", { cliente: "DO CADASTRO", contato: "Breno", favorita: true, status: "pendente" as const, atendenteId: "u1", atendenteNome: "Pedro" }]]);
     const [c] = agruparConversas(msgs, meta);
-    expect(c).toMatchObject({ favorita: true, status: "pendente", atendenteId: "u1", atendenteNome: "Pedro" });
+    expect(c).toMatchObject({ cliente: "DO CADASTRO", contato: "Breno", favorita: true, status: "pendente", atendenteId: "u1", atendenteNome: "Pedro" });
+  });
+});
+
+describe("mapaClientesPorTelefone", () => {
+  it("mapeia por telefone normalizado com razão social + contato", () => {
+    const m = mapaClientesPorTelefone([{ razao_social: "ACME", responsavel_nome: "Ana", telefone: "(34) 99999-0000" }]);
+    expect([...m.entries()]).toEqual([["5534999990000", { razaoSocial: "ACME", contato: "Ana" }]]);
+  });
+  it("ignora telefone vazio", () => {
+    expect(mapaClientesPorTelefone([{ razao_social: "X", responsavel_nome: null, telefone: null }]).size).toBe(0);
+  });
+  it("descarta telefone ambíguo (2 clientes)", () => {
+    const m = mapaClientesPorTelefone([
+      { razao_social: "A", responsavel_nome: null, telefone: "5534999990000" },
+      { razao_social: "B", responsavel_nome: null, telefone: "34 99999-0000" },
+    ]);
+    expect(m.size).toBe(0);
   });
 });
