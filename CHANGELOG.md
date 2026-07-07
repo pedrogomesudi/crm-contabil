@@ -10,6 +10,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Corrigido
 
+- **Datas — fuso horário:** `formatarData` mostrava o **dia anterior** para colunas `date` puras
+  (ex.: vencimento/competência `2026-07-10` → "09/07") porque convertia UTC→São Paulo. Agora datas puras
+  (`YYYY-MM-DD`) são formatadas direto, sem deslocamento; timestamps seguem convertendo para o fuso.
 - **Cobrança — marcadores da mensagem:** o template da nota agora reconhece os marcadores de forma
   tolerante (ignora maiúscula/acento/espaço/pontuação): `{NOME}` (contato), `{EMPRESA}`, `{COMPETÊNCIA}`,
   `{VALOR}`, `{VENCIMENTO}`, `{CHAVE PIX}`, `{RAZÃO SOCIAL}` (favorecido), `{CNPJ}`, `{BANCO}`, `{AG}`,

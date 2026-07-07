@@ -2,8 +2,12 @@ import { describe, it, expect } from "vitest";
 import { parseValorBR, formatarData } from "@/lib/format";
 
 describe("formatarData", () => {
-  it("formata ISO para dd/mm/aaaa", () =>
+  it("formata ISO (timestamp) para dd/mm/aaaa", () =>
     expect(formatarData("2026-06-22T12:00:00Z")).toBe("22/06/2026"));
+  it("data pura (YYYY-MM-DD) não desloca por fuso", () => {
+    expect(formatarData("2026-07-10")).toBe("10/07/2026");
+    expect(formatarData("2026-07-01")).toBe("01/07/2026");
+  });
   it("null => —", () => expect(formatarData(null)).toBe("—"));
   it("inválida => —", () => expect(formatarData("xyz")).toBe("—"));
 });
