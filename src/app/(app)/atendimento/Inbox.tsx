@@ -9,6 +9,7 @@ import {
   marcarTodasLidas,
   dadosContato,
   iniciarConversa,
+  enviarMidia,
   type DadosContato,
 } from "./actions";
 import {
@@ -43,6 +44,10 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
   const [novoTel, setNovoTel] = useState("");
   const [novoTexto, setNovoTexto] = useState("");
   const [erroNova, setErroNova] = useState<string | null>(null);
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [enviandoMidia, setEnviandoMidia] = useState(false);
+  const [erroMidia, setErroMidia] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [pend, start] = useTransition();
   const fimRef = useRef<HTMLDivElement>(null);
 
@@ -83,6 +88,27 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
         setTexto("");
         setMsgs(await abrirConversa(ativa));
       }
+    });
+
+  const enviarAnexo = () =>
+    start(async () => {
+      if (!ativa || !arquivo) return;
+      setEnviandoMidia(true);
+      setErroMidia(null);
+      const fd = new FormData();
+      fd.set("telefone", ativa);
+      fd.set("arquivo", arquivo);
+      fd.set("legenda", texto);
+      const r = await enviarMidia(fd);
+      setEnviandoMidia(false);
+      if (r.erro) {
+        setErroMidia(r.erro);
+        return;
+      }
+      setArquivo(null);
+      setTexto("");
+      if (fileRef.current) fileRef.current.value = "";
+      setMsgs(await abrirConversa(ativa));
     });
 
   const toggleFavorita = (c: Conversa) =>
@@ -309,7 +335,8 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
                           : "rounded-bl-md border border-linha bg-white text-texto"
                       }`}
                     >
-                      {m.texto}
+                      <Midia msg={m} />
+                      {m.texto && <span className={m.midiaPath ? "mt-1 block" : ""}>{m.texto}</span>}
                       <span className="mt-0.5 flex items-center justify-end gap-1 font-mono text-[10px] text-cinza-claro">
                         {horaMsg(m.criado_em)}
                         <Check marca={marcaEntrega(m.status, m.direcao)} />
@@ -320,23 +347,64 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
               })}
               <div ref={fimRef} />
             </div>
-            <div className="flex gap-2 border-t border-linha bg-white px-4 py-3">
-              <input
-                value={texto}
-                onChange={(e) => setTexto(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") enviar();
-                }}
-                placeholder="Responder…"
-                className="flex-1 rounded-xl border border-linha bg-creme px-4 py-2.5 text-sm focus:border-verde"
-              />
-              <button
-                onClick={enviar}
-                disabled={pend}
-                className="rounded-xl bg-verde px-5 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
-              >
-                Enviar
-              </button>
+            <div className="border-t border-linha bg-white px-4 py-3">
+              {arquivo && (
+                <div className="mb-2 flex items-center gap-2 rounded-lg border border-linha bg-creme px-3 py-2 text-xs">
+                  <span aria-hidden>📎</span>
+                  <span className="flex-1 truncate">{arquivo.name}</span>
+                  <button
+                    onClick={enviarAnexo}
+                    disabled={enviandoMidia}
+                    className="rounded-lg bg-verde px-3 py-1 font-medium text-white disabled:opacity-60"
+                  >
+                    {enviandoMidia ? "Enviando…" : "Enviar arquivo"}
+                  </button>
+                  <button onClick={() => setArquivo(null)} className="rounded-lg border border-linha px-2 py-1">
+                    ✕
+                  </button>
+                </div>
+              )}
+              {erroMidia && <p className="mb-2 text-xs text-negativo">{erroMidia}</p>}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  aria-label="Anexar arquivo"
+                  onClick={() => fileRef.current?.click()}
+                  className="rounded-xl border border-linha px-3 text-cinza hover:bg-creme"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21.4 11.05 12.25 20.2a5 5 0 0 1-7.07-7.07l9.19-9.19a3 3 0 0 1 4.24 4.24l-9.2 9.19a1 1 0 0 1-1.41-1.41l8.48-8.49" />
+                  </svg>
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  hidden
+                  accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                  onChange={(e) => {
+                    setErroMidia(null);
+                    setArquivo(e.target.files?.[0] ?? null);
+                  }}
+                />
+                <input
+                  value={texto}
+                  onChange={(e) => setTexto(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter") return;
+                    if (arquivo) enviarAnexo();
+                    else enviar();
+                  }}
+                  placeholder={arquivo ? "Legenda (opcional)…" : "Responder…"}
+                  className="flex-1 rounded-xl border border-linha bg-creme px-4 py-2.5 text-sm focus:border-verde"
+                />
+                <button
+                  onClick={enviar}
+                  disabled={pend}
+                  className="rounded-xl bg-verde px-5 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
+                >
+                  Enviar
+                </button>
+              </div>
             </div>
           </>
         ) : (
@@ -394,6 +462,34 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
         )}
       </aside>
     </div>
+  );
+}
+
+function Midia({ msg }: { msg: MsgConversa }) {
+  if (!msg.midiaTipo || !msg.midiaPath) return null;
+  const src = `/api/atendimento/midia/${msg.id}`;
+  if (msg.midiaTipo === "image") {
+    return (
+      <a href={src} target="_blank" rel="noreferrer" className="block">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={msg.midiaNome ?? "imagem"} className="max-h-64 rounded-lg" />
+      </a>
+    );
+  }
+  if (msg.midiaTipo === "audio") {
+    // Áudio de voz do WhatsApp não tem legendas; a regra de caption não se aplica.
+    // eslint-disable-next-line jsx-a11y/media-has-caption
+    return <audio controls src={src} className="max-w-full" />;
+  }
+  return (
+    <a
+      href={src}
+      download={msg.midiaNome ?? "arquivo"}
+      className="flex items-center gap-2 rounded-lg border border-linha bg-white px-3 py-2 text-texto"
+    >
+      <span aria-hidden>📎</span>
+      <span className="truncate">{msg.midiaNome ?? "arquivo"}</span>
+    </a>
   );
 }
 
