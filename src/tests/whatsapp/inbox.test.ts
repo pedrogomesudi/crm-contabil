@@ -20,6 +20,9 @@ const conv = (over: Partial<Conversa>): Conversa => ({
   ultima_em: "2026-07-06T12:00:00.000Z",
   nao_lidas: 0,
   favorita: false,
+  status: "aberta",
+  atendenteId: null,
+  atendenteNome: null,
   ...over,
 });
 
@@ -79,35 +82,37 @@ describe("separadorDia", () => {
 
 describe("filtrarConversas", () => {
   const convs = [
-    conv({ telefone: "111", cliente: "Moura Purcell", nao_lidas: 2, favorita: true }),
-    conv({ telefone: "5534988887777", cliente: null, nao_lidas: 0, favorita: false }),
-    conv({ telefone: "333", cliente: "Jessica", nao_lidas: 1, favorita: false }),
+    conv({ telefone: "111", cliente: "Moura Purcell", status: "aberta", favorita: true }),
+    conv({ telefone: "222", cliente: null, status: "pendente" }),
+    conv({ telefone: "333", cliente: "Jessica", status: "finalizada" }),
+    conv({ telefone: "444", cliente: "Aberta2", status: "aberta" }),
   ];
-  it("aba todas sem busca → todas", () => {
-    expect(filtrarConversas(convs, "todas", "").length).toBe(3);
+  it("aba abertas", () => {
+    expect(filtrarConversas(convs, "abertas", "").map((c) => c.telefone)).toEqual(["111", "444"]);
   });
-  it("aba nao_lidas → só com nao_lidas>0", () => {
-    expect(filtrarConversas(convs, "nao_lidas", "").map((c) => c.telefone)).toEqual(["111", "333"]);
+  it("aba pendentes", () => {
+    expect(filtrarConversas(convs, "pendentes", "").map((c) => c.telefone)).toEqual(["222"]);
   });
-  it("aba favoritos → só favoritas", () => {
+  it("aba finalizadas", () => {
+    expect(filtrarConversas(convs, "finalizadas", "").map((c) => c.telefone)).toEqual(["333"]);
+  });
+  it("aba favoritos (independe do status)", () => {
     expect(filtrarConversas(convs, "favoritos", "").map((c) => c.telefone)).toEqual(["111"]);
   });
-  it("busca por nome (case-insensitive)", () => {
-    expect(filtrarConversas(convs, "todas", "moura").map((c) => c.telefone)).toEqual(["111"]);
-  });
-  it("busca por telefone", () => {
-    expect(filtrarConversas(convs, "todas", "8888").map((c) => c.telefone)).toEqual(["5534988887777"]);
+  it("busca aplicada dentro da aba", () => {
+    expect(filtrarConversas(convs, "abertas", "moura").map((c) => c.telefone)).toEqual(["111"]);
   });
 });
 
 describe("contadores", () => {
-  it("conta por conversa (não por mensagem)", () => {
+  it("conta por status + favoritos", () => {
     const convs = [
-      conv({ nao_lidas: 3, favorita: true }),
-      conv({ nao_lidas: 0, favorita: false }),
-      conv({ nao_lidas: 1, favorita: false }),
+      conv({ status: "aberta", favorita: true }),
+      conv({ status: "aberta" }),
+      conv({ status: "pendente" }),
+      conv({ status: "finalizada" }),
     ];
-    expect(contadores(convs)).toEqual({ todas: 3, nao_lidas: 2, favoritos: 1 });
+    expect(contadores(convs)).toEqual({ abertas: 2, pendentes: 1, finalizadas: 1, favoritos: 1 });
   });
 });
 
@@ -206,18 +211,17 @@ describe("extensaoPorMime", () => {
   });
 });
 
-describe("agruparConversas favoritos", () => {
-  it("marca favorita quando o telefone está no set", () => {
-    const msgs: MsgConversa[] = [
-      { id: "x", telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z", status: "RECEBIDO", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
-    ];
-    const [c] = agruparConversas(msgs, new Set(["111"]));
-    expect(c!.favorita).toBe(true);
+describe("agruparConversas meta", () => {
+  const msgs: MsgConversa[] = [
+    { id: "1", telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z", status: "RECEBIDO", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
+  ];
+  it("sem meta → defaults (aberta, sem atendente, não favorita)", () => {
+    const [c] = agruparConversas(msgs);
+    expect(c).toMatchObject({ favorita: false, status: "aberta", atendenteId: null, atendenteNome: null });
   });
-  it("default sem favoritos → favorita false", () => {
-    const msgs: MsgConversa[] = [
-      { id: "x", telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z", status: "RECEBIDO", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
-    ];
-    expect(agruparConversas(msgs)[0]!.favorita).toBe(false);
+  it("com meta → sobrepõe favorita/status/atendente", () => {
+    const meta = new Map([["111", { favorita: true, status: "pendente" as const, atendenteId: "u1", atendenteNome: "Pedro" }]]);
+    const [c] = agruparConversas(msgs, meta);
+    expect(c).toMatchObject({ favorita: true, status: "pendente", atendenteId: "u1", atendenteNome: "Pedro" });
   });
 });
