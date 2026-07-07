@@ -1,3 +1,5 @@
+import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
+
 export type MsgConversa = {
   id: string;
   telefone: string;
@@ -17,6 +19,7 @@ export type StatusConversa = "aberta" | "pendente" | "finalizada";
 export type Conversa = {
   telefone: string;
   cliente: string | null;
+  contato: string | null;
   ultima: string;
   ultima_em: string;
   nao_lidas: number;
@@ -31,6 +34,8 @@ export type ConversaMeta = {
   status?: StatusConversa;
   atendenteId?: string | null;
   atendenteNome?: string | null;
+  cliente?: string | null;
+  contato?: string | null;
 };
 
 export type FiltroAba = "abertas" | "pendentes" | "finalizadas" | "favoritos";
@@ -165,7 +170,8 @@ export function agruparConversas(msgs: MsgConversa[], meta: Map<string, Conversa
     const md = meta.get(telefone);
     convs.push({
       telefone,
-      cliente,
+      cliente: md?.cliente ?? cliente,
+      contato: md?.contato ?? null,
       ultima: ultima.texto,
       ultima_em: ultima.criado_em,
       nao_lidas: arr.filter((m) => m.direcao === "IN" && !m.lida).length,
@@ -223,4 +229,20 @@ export function contadores(convs: Conversa[]): { abertas: number; pendentes: num
     finalizadas: convs.filter((c) => c.status === "finalizada").length,
     favoritos: convs.filter((c) => c.favorita).length,
   };
+}
+
+// Mapa telefone-normalizado → { razaoSocial, contato }. Só telefones com UM único cliente.
+export function mapaClientesPorTelefone(
+  clientes: { razao_social: string; responsavel_nome: string | null; telefone: string | null }[],
+): Map<string, { razaoSocial: string; contato: string | null }> {
+  const contagem = new Map<string, number>();
+  const mapa = new Map<string, { razaoSocial: string; contato: string | null }>();
+  for (const c of clientes) {
+    const tel = normalizarTelefone(c.telefone ?? "");
+    if (!tel) continue;
+    contagem.set(tel, (contagem.get(tel) ?? 0) + 1);
+    mapa.set(tel, { razaoSocial: c.razao_social, contato: c.responsavel_nome ?? null });
+  }
+  for (const [tel, n] of contagem) if (n > 1) mapa.delete(tel);
+  return mapa;
 }

@@ -17,7 +17,7 @@ import { Inbox } from "@/app/(app)/atendimento/Inbox";
 import type { Conversa } from "@/lib/whatsapp/inbox";
 
 const convs: Conversa[] = [
-  { telefone: "111", cliente: "Moura Purcell", ultima: "oi", ultima_em: "2026-07-06T10:00:00Z", nao_lidas: 2, favorita: true, status: "aberta", atendenteId: null, atendenteNome: null },
+  { telefone: "111", cliente: "Moura Purcell", contato: "Breno", ultima: "oi", ultima_em: "2026-07-06T10:00:00Z", nao_lidas: 2, favorita: true, status: "aberta", atendenteId: null, atendenteNome: null },
 ];
 
 describe("Inbox", () => {

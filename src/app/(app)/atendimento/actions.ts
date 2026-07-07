@@ -9,6 +9,7 @@ import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import {
   agruparConversas,
   extensaoPorMime,
+  mapaClientesPorTelefone,
   type Conversa,
   type MsgConversa,
   type ConversaMeta,
@@ -63,13 +64,25 @@ export async function listarConversas(): Promise<Conversa[]> {
     .order("criado_em", { ascending: false })
     .limit(500);
   const admin = createAdminSupabase();
+  const { data: clientes } = await admin.from("clientes").select("razao_social, responsavel_nome, telefone");
+  const mapaCli = mapaClientesPorTelefone(
+    (clientes ?? []).map((c) => ({
+      razao_social: c.razao_social as string,
+      responsavel_nome: (c.responsavel_nome as string | null) ?? null,
+      telefone: (c.telefone as string | null) ?? null,
+    })),
+  );
   const { data: convRows } = await admin.from("conversa").select("telefone, favorita, status, atendente_id");
   const { data: usuarios } = await admin.from("usuarios").select("id, nome");
   const nomePorId = new Map((usuarios ?? []).map((u) => [u.id as string, u.nome as string]));
   const meta = new Map<string, ConversaMeta>();
+  for (const [tel, info] of mapaCli) meta.set(tel, { cliente: info.razaoSocial, contato: info.contato });
   for (const r of convRows ?? []) {
+    const tel = r.telefone as string;
     const atendenteId = (r.atendente_id as string | null) ?? null;
-    meta.set(r.telefone as string, {
+    const anterior = meta.get(tel) ?? {};
+    meta.set(tel, {
+      ...anterior,
       favorita: r.favorita as boolean,
       status: ((r.status as string) ?? "aberta") as StatusConversa,
       atendenteId,
@@ -305,4 +318,16 @@ export async function enviarMidia(formData: FormData): Promise<{ ok?: boolean; e
   });
   if (r.ok) await assumirConversa(admin, telefone, perfil.id).catch(() => {});
   return r.ok ? { ok: true } : { erro: r.erro ?? "Falha no envio." };
+}
+
+export async function listarClientesParaConversa(): Promise<{ razaoSocial: string; contato: string | null; telefone: string }[]> {
+  if (!(await gate())) return [];
+  const admin = createAdminSupabase();
+  const { data } = await admin.from("clientes").select("razao_social, responsavel_nome, telefone").order("razao_social");
+  const out: { razaoSocial: string; contato: string | null; telefone: string }[] = [];
+  for (const c of data ?? []) {
+    const tel = normalizarTelefone((c.telefone as string | null) ?? "");
+    if (tel) out.push({ razaoSocial: c.razao_social as string, contato: (c.responsavel_nome as string | null) ?? null, telefone: tel });
+  }
+  return out;
 }
