@@ -401,7 +401,8 @@ function Check({ marca }: { marca: MarcaEntrega | null }) {
   if (!marca) return null;
   if (marca === "erro") return <span className="text-negativo">!</span>;
   const duplo = marca === "entregue" || marca === "lido";
-  const cor = marca === "lido" ? "text-verde" : "text-cinza-claro";
+  // Lido = azul (padrão WhatsApp); enviado/entregue = cinza.
+  const cor = marca === "lido" ? "text-[#2f80ed]" : "text-cinza-claro";
   return <span className={cor}>{duplo ? "✓✓" : "✓"}</span>;
 }
 
