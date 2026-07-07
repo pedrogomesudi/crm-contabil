@@ -16,22 +16,32 @@ async function gate() {
 function mapMsgs(rows: unknown[]): MsgConversa[] {
   return (rows ?? []).map((row) => {
     const m = row as {
+      id: string;
       telefone: string;
       texto: string;
       direcao: "IN" | "OUT";
       lida: boolean;
       criado_em: string;
       status?: string;
+      midia_tipo?: string | null;
+      midia_path?: string | null;
+      midia_nome?: string | null;
+      midia_mime?: string | null;
       clientes?: { razao_social?: string } | { razao_social?: string }[] | null;
     };
     const cl = Array.isArray(m.clientes) ? m.clientes[0] : m.clientes;
     return {
+      id: m.id,
       telefone: m.telefone,
       texto: m.texto,
       direcao: m.direcao,
       lida: m.lida,
       criado_em: m.criado_em,
       status: m.status ?? "",
+      midiaTipo: m.midia_tipo ?? null,
+      midiaPath: m.midia_path ?? null,
+      midiaNome: m.midia_nome ?? null,
+      midiaMime: m.midia_mime ?? null,
       cliente: (cl as { razao_social?: string } | null)?.razao_social ?? null,
     };
   });
@@ -42,7 +52,7 @@ export async function listarConversas(): Promise<Conversa[]> {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("whatsapp_mensagem")
-    .select("telefone, texto, direcao, lida, criado_em, status, clientes(razao_social)")
+    .select("id, telefone, texto, direcao, lida, criado_em, status, midia_tipo, midia_path, midia_nome, midia_mime, clientes(razao_social)")
     .order("criado_em", { ascending: false })
     .limit(500);
   const { data: favs } = await supabase.from("conversa").select("telefone").eq("favorita", true);
@@ -56,7 +66,7 @@ export async function abrirConversa(telefone: string): Promise<MsgConversa[]> {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("whatsapp_mensagem")
-    .select("telefone, texto, direcao, lida, criado_em, status, clientes(razao_social)")
+    .select("id, telefone, texto, direcao, lida, criado_em, status, midia_tipo, midia_path, midia_nome, midia_mime, clientes(razao_social)")
     .eq("telefone", telefone)
     .order("criado_em", { ascending: true });
   // marca entradas como lidas (RLS garante que só as visíveis ao usuário são afetadas)
