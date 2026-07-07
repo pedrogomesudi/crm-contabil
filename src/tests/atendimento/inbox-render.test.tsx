@@ -17,14 +17,14 @@ import { Inbox } from "@/app/(app)/atendimento/Inbox";
 import type { Conversa } from "@/lib/whatsapp/inbox";
 
 const convs: Conversa[] = [
-  { telefone: "111", cliente: "Moura Purcell", ultima: "oi", ultima_em: "2026-07-06T10:00:00Z", nao_lidas: 2, favorita: true },
+  { telefone: "111", cliente: "Moura Purcell", ultima: "oi", ultima_em: "2026-07-06T10:00:00Z", nao_lidas: 2, favorita: true, status: "aberta", atendenteId: null, atendenteNome: null },
 ];
 
 describe("Inbox", () => {
   it("renderiza a lista e as abas sem lançar", () => {
     const html = renderToStaticMarkup(<Inbox inicial={convs} />);
     expect(html).toContain("Atendimento");
-    expect(html).toContain("Todas");
+    expect(html).toContain("Abertas");
     expect(html).toContain("Moura Purcell");
   });
   it("renderiza vazio sem lançar", () => {

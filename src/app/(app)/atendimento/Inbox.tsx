@@ -10,6 +10,9 @@ import {
   dadosContato,
   iniciarConversa,
   enviarMidia,
+  definirStatus,
+  atribuirAtendente,
+  listarAtendentes,
   type DadosContato,
 } from "./actions";
 import {
@@ -22,18 +25,21 @@ import {
   type MsgConversa,
   type FiltroAba,
   type MarcaEntrega,
+  type StatusConversa,
 } from "@/lib/whatsapp/inbox";
 import { iniciais } from "@/lib/ui/apresentacao";
 
 const ABAS: { id: FiltroAba; label: string }[] = [
-  { id: "todas", label: "Todas" },
-  { id: "nao_lidas", label: "Não lidas" },
+  { id: "abertas", label: "Abertas" },
+  { id: "pendentes", label: "Pendentes" },
+  { id: "finalizadas", label: "Finalizadas" },
   { id: "favoritos", label: "Favoritos" },
 ];
 
 export function Inbox({ inicial }: { inicial: Conversa[] }) {
   const [conversas, setConversas] = useState<Conversa[]>(inicial);
-  const [aba, setAba] = useState<FiltroAba>("todas");
+  const [aba, setAba] = useState<FiltroAba>("abertas");
+  const [atendentes, setAtendentes] = useState<{ id: string; nome: string }[]>([]);
   const [busca, setBusca] = useState("");
   const [ativa, setAtiva] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<MsgConversa[]>([]);
@@ -53,6 +59,11 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
 
   const cont = contadores(conversas);
   const visiveis = filtrarConversas(conversas, aba, busca);
+  const convAtiva = conversas.find((c) => c.telefone === ativa) ?? null;
+
+  useEffect(() => {
+    start(async () => setAtendentes(await listarAtendentes()));
+  }, []);
 
   const recarregar = useCallback(() => start(async () => setConversas(await listarConversas())), []);
 
@@ -95,6 +106,23 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
         setTexto("");
         setMsgs(await abrirConversa(ativa));
       }
+    });
+
+  const mudarStatus = (status: StatusConversa) =>
+    start(async () => {
+      if (!ativa) return;
+      setConversas((cs) => cs.map((c) => (c.telefone === ativa ? { ...c, status } : c)));
+      await definirStatus(ativa, status);
+      setConversas(await listarConversas());
+    });
+
+  const mudarAtendente = (valor: string) =>
+    start(async () => {
+      if (!ativa) return;
+      const atendenteId = valor || null;
+      setConversas((cs) => cs.map((c) => (c.telefone === ativa ? { ...c, atendenteId } : c)));
+      await atribuirAtendente(ativa, atendenteId);
+      setConversas(await listarConversas());
     });
 
   const enviarAnexo = () =>
@@ -232,7 +260,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
 
         <div className="flex gap-1.5 overflow-x-auto px-4 pb-2 text-sm">
           {ABAS.map((a) => {
-            const n = a.id === "nao_lidas" ? cont.nao_lidas : a.id === "favoritos" ? cont.favoritos : cont.todas;
+            const n = cont[a.id];
             const ativo = aba === a.id;
             return (
               <button
@@ -275,7 +303,15 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
                   <span className="shrink-0 font-mono text-[11px] text-cinza-claro">{horaMsg(c.ultima_em)}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-xs text-cinza-claro">{c.ultima}</span>
+                  <span className="truncate text-xs text-cinza-claro">
+                    {c.status !== "aberta" && (
+                      <span className="mr-1 rounded bg-linha px-1 py-0.5 text-[10px] text-cinza">
+                        {c.status === "pendente" ? "pendente" : "finalizada"}
+                      </span>
+                    )}
+                    {c.atendenteNome ? `${c.atendenteNome.split(" ")[0]} · ` : ""}
+                    {c.ultima}
+                  </span>
                   {c.nao_lidas > 0 && (
                     <span className="grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-full bg-verde px-1 text-[11px] font-semibold text-white">
                       {c.nao_lidas}
@@ -319,6 +355,31 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-texto">{contato?.razaoSocial ?? ativa}</p>
                 <p className="font-mono text-[11px] text-cinza-claro">{ativa}</p>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <select
+                  aria-label="Status da conversa"
+                  value={convAtiva?.status ?? "aberta"}
+                  onChange={(e) => mudarStatus(e.target.value as StatusConversa)}
+                  className="rounded-lg border border-linha bg-white px-2 py-1 text-xs text-texto focus:border-verde"
+                >
+                  <option value="aberta">Aberta</option>
+                  <option value="pendente">Pendente</option>
+                  <option value="finalizada">Finalizada</option>
+                </select>
+                <select
+                  aria-label="Atendente"
+                  value={convAtiva?.atendenteId ?? ""}
+                  onChange={(e) => mudarAtendente(e.target.value)}
+                  className="max-w-[10rem] rounded-lg border border-linha bg-white px-2 py-1 text-xs text-texto focus:border-verde"
+                >
+                  <option value="">Não atribuído</option>
+                  {atendentes.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.nome}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
