@@ -96,3 +96,8 @@ export function vencimentoBR(competencia: string, dia: number | null): string {
   if (!m) return "";
   return `${String(dia).padStart(2, "0")}/${m[2]}/${m[1]}`;
 }
+
+// Valor em reais SEM o "R$" (ex.: 300 → "300,00", 1234.5 → "1.234,50").
+export function valorBR(valor: number): string {
+  return valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}

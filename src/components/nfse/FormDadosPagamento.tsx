@@ -49,7 +49,7 @@ export function FormDadosPagamento({ inicial }: { inicial: Dados }) {
         <textarea name="mensagem_template" rows={8} defaultValue={inicial?.mensagem_template ?? ""} className={cls} required />
         <span className="mt-1 block text-xs text-cinza-claro">
           Marcadores (ignora maiúscula/acento): <code>{"{NOME}"}</code> (contato) · <code>{"{EMPRESA}"}</code> ·{" "}
-          <code>{"{COMPETÊNCIA}"}</code> · <code>{"{VALOR}"}</code> · <code>{"{VENCIMENTO}"}</code> ·{" "}
+          <code>{"{COMPETÊNCIA}"}</code> · <code>{"{VALOR}"}</code> (sem R$, ex.: 300,00) · <code>{"{VENCIMENTO}"}</code> ·{" "}
           <code>{"{CHAVE PIX}"}</code> · <code>{"{RAZÃO SOCIAL}"}</code> (favorecido) · <code>{"{CNPJ}"}</code> ·{" "}
           <code>{"{BANCO}"}</code> · <code>{"{AG}"}</code> · <code>{"{CONTA}"}</code> · <code>{"{PAGAMENTO}"}</code> (bloco PIX+TED pronto).
         </span>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { linhasPagamento, competenciaBR, preSelecionadas, montarMensagemNota, vencimentoBR } from "@/lib/whatsapp/notas-envio";
+import { linhasPagamento, competenciaBR, preSelecionadas, montarMensagemNota, vencimentoBR, valorBR } from "@/lib/whatsapp/notas-envio";
 
 describe("linhasPagamento", () => {
   it("PIX + TED completo", () => {
@@ -73,5 +73,14 @@ describe("vencimentoBR", () => {
   });
   it("sem dia (null) → vazio", () => {
     expect(vencimentoBR("2026-07-01", null)).toBe("");
+  });
+});
+
+describe("valorBR", () => {
+  it("formata sem R$", () => {
+    expect(valorBR(300)).toBe("300,00");
+  });
+  it("milhar com separador", () => {
+    expect(valorBR(1234.5)).toBe("1.234,50");
   });
 });
