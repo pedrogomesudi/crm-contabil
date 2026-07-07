@@ -82,6 +82,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
     });
     if (error && !String(error.message).includes("duplicate")) console.error("webhook zapi midia:", error.message);
     if (!path) console.log("zapi midia payload:", JSON.stringify(payload).slice(0, 400));
+    await admin.from("conversa").update({ status: "aberta" }).eq("telefone", tel).eq("status", "finalizada");
     return NextResponse.json({ ok: true });
   }
 
@@ -97,5 +98,6 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
   if (error && !String(error.message).includes("duplicate")) {
     console.error("webhook zapi:", error.message);
   }
+  await admin.from("conversa").update({ status: "aberta" }).eq("telefone", tel).eq("status", "finalizada");
   return NextResponse.json({ ok: true });
 }
