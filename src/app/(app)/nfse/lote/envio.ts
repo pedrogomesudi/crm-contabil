@@ -59,14 +59,8 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
   const tel = normalizarTelefone(cl?.telefone ?? "");
   if (!tel) return { status: "pulado", motivo: "Cliente sem telefone.", razaoSocial };
 
-  const { data: ja } = await admin
-    .from("whatsapp_mensagem")
-    .select("id")
-    .eq("nfse_id", nfseId)
-    .eq("status", "ENVIADO")
-    .limit(1)
-    .maybeSingle();
-  if (ja) return { status: "pulado", motivo: "Já enviada.", razaoSocial };
+  // Sem bloqueio de reenvio: a seleção do usuário é a intenção. O selo "já enviada" e a
+  // pré-seleção (só pendentes) na UI evitam reenvio acidental.
 
   const chave = process.env.WHATSAPP_CRIPTO_KEY;
   const { data: cfg } = await admin
