@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { linhasPagamento, competenciaBR, preSelecionadas, montarMensagemNota } from "@/lib/whatsapp/notas-envio";
+import { linhasPagamento, competenciaBR, preSelecionadas, montarMensagemNota, vencimentoBR } from "@/lib/whatsapp/notas-envio";
 
 describe("linhasPagamento", () => {
   it("PIX + TED completo", () => {
@@ -61,5 +61,17 @@ describe("montarMensagemNota", () => {
   });
   it("marcador desconhecido → vazio", () => {
     expect(montarMensagemNota("a{FOOBAR}b", vars)).toBe("ab");
+  });
+});
+
+describe("vencimentoBR", () => {
+  it("dia do cadastro + mês da competência → DD/MM/YYYY", () => {
+    expect(vencimentoBR("2026-07-01", 15)).toBe("15/07/2026");
+  });
+  it("dia com 1 dígito → zero-pad", () => {
+    expect(vencimentoBR("2026-07-01", 5)).toBe("05/07/2026");
+  });
+  it("sem dia (null) → vazio", () => {
+    expect(vencimentoBR("2026-07-01", null)).toBe("");
   });
 });

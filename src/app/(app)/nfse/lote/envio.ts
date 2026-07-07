@@ -5,9 +5,9 @@ import { podeVerHonorario } from "@/lib/clientes/permissoes";
 import { decifrar } from "@/lib/nfse/cripto";
 import { enviarMidiaZapi } from "@/lib/whatsapp/zapi";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
-import { linhasPagamento, competenciaBR, montarMensagemNota } from "@/lib/whatsapp/notas-envio";
+import { linhasPagamento, competenciaBR, montarMensagemNota, vencimentoBR } from "@/lib/whatsapp/notas-envio";
 import { obterDanfsePdf, caminhoDanfse } from "@/lib/nfse/danfse-cache";
-import { formatarMoeda, formatarData } from "@/lib/format";
+import { formatarMoeda } from "@/lib/format";
 import { listarNotasAutorizadasPorCompetencia } from "@/app/(app)/clientes/[id]/nfse";
 
 async function gate() {
@@ -40,12 +40,17 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
   const admin = createAdminSupabase();
   const { data: nota } = await admin
     .from("nfse")
-    .select("id, cliente_id, valor, competencia, chave_acesso, ambiente, emitente, clientes(razao_social, responsavel_nome, telefone, clientes_financeiro(cobranca_whatsapp))")
+    .select("id, cliente_id, valor, competencia, chave_acesso, ambiente, emitente, clientes(razao_social, responsavel_nome, telefone, clientes_financeiro(cobranca_whatsapp, dia_vencimento))")
     .eq("id", nfseId)
     .maybeSingle();
   const cl = nota
     ? ((Array.isArray(nota.clientes) ? nota.clientes[0] : nota.clientes) as
-        | { razao_social?: string; responsavel_nome?: string | null; telefone?: string; clientes_financeiro?: { cobranca_whatsapp?: boolean } | { cobranca_whatsapp?: boolean }[] }
+        | {
+            razao_social?: string;
+            responsavel_nome?: string | null;
+            telefone?: string;
+            clientes_financeiro?: { cobranca_whatsapp?: boolean; dia_vencimento?: number | null } | { cobranca_whatsapp?: boolean; dia_vencimento?: number | null }[];
+          }
         | null)
     : null;
   const razaoSocial = cl?.razao_social ?? "";
@@ -95,17 +100,8 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
   });
   if (!pdfR.pdfBase64) return { status: "erro", motivo: pdfR.erro ?? "DANFSe indisponível.", razaoSocial };
 
-  // Vencimento do honorário do mês (título contas a receber do cliente+competência).
-  const { data: tit } = await admin
-    .from("titulo")
-    .select("vencimento")
-    .eq("cliente_id", nota.cliente_id)
-    .eq("competencia", nota.competencia)
-    .eq("tipo", "RECEBER")
-    .order("vencimento")
-    .limit(1)
-    .maybeSingle();
-  const vencimento = tit?.vencimento ? formatarData(tit.vencimento as string) : "";
+  // Vencimento = dia_vencimento do cadastro aplicado ao mês da competência (fonte que o usuário edita).
+  const vencimento = vencimentoBR(String(nota.competencia), (fin?.dia_vencimento as number | null) ?? null);
 
   const pagamento = linhasPagamento({
     pixChave: dados?.pix_chave,

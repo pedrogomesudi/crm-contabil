@@ -88,3 +88,11 @@ export function montarMensagemNota(template: string, vars: VarsNota): string {
     return campo ? vars[campo] : "";
   });
 }
+
+// Vencimento a partir do dia_vencimento do cadastro + o mês/ano da competência → "DD/MM/YYYY".
+export function vencimentoBR(competencia: string, dia: number | null): string {
+  if (!dia) return "";
+  const m = /^(\d{4})-(\d{2})/.exec(competencia);
+  if (!m) return "";
+  return `${String(dia).padStart(2, "0")}/${m[2]}/${m[1]}`;
+}
