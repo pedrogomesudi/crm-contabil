@@ -31,6 +31,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - **Atendimento — status e atendente (Fatia C):** cada conversa tem estado (aberta/pendente/finalizada)
   e responsável; abas por status; quem responde assume a conversa; receber ou responder reabre uma
   conversa finalizada.
+- **Cobrança — envio de notas + PIX/TED (WhatsApp):** na tela de NFS-e em lote, botão "Enviar notas +
+  cobrança do mês" dispara, por cliente, a NFS-e (PDF) + a mensagem com dados de pagamento (PIX/TED),
+  com progresso e reenvio das falhas; não reenvia quem já recebeu e respeita o opt-out de cobrança.
+  Dados bancários configuráveis em Configurações → Dados de pagamento.
 
 - **V8.2d — Rollout SALDO final (fecha a V8):** identidade SALDO nos 19 arquivos restantes —
   **atendimento** (inbox de chat com balões saída-verde/entrada-neutro + badge de não-lidas),
