@@ -3,6 +3,7 @@ import {
   extrairMensagemZapi,
   extrairStatusZapi,
   marcaEntrega,
+  extensaoPorMime,
   agruparConversas,
   horaMsg,
   separadorDia,
@@ -25,13 +26,13 @@ const conv = (over: Partial<Conversa>): Conversa => ({
 describe("extrairMensagemZapi", () => {
   it("mensagem de texto recebida → objeto", () => {
     const r = extrairMensagemZapi({ phone: "5534999998888", fromMe: false, messageId: "M1", text: { message: "olá" } });
-    expect(r).toEqual({ telefone: "5534999998888", texto: "olá", zId: "M1" });
+    expect(r).toEqual({ telefone: "5534999998888", texto: "olá", zId: "M1", midia: null });
   });
   it("aceita o campo message direto", () => {
     expect(extrairMensagemZapi({ phone: "553400", messageId: "M2", message: "oi" })?.texto).toBe("oi");
   });
-  it("mídia sem texto → marcador", () => {
-    expect(extrairMensagemZapi({ phone: "553400", messageId: "M3", image: { url: "x" } })?.texto).toBe("[mídia não suportada]");
+  it("mídia não suportada (vídeo) → marcador", () => {
+    expect(extrairMensagemZapi({ phone: "553400", messageId: "M3", video: { url: "x" } })?.texto).toBe("[mídia não suportada]");
   });
   it("fromMe (nossa saída) → null", () => {
     expect(extrairMensagemZapi({ phone: "553400", messageId: "M4", fromMe: true, text: { message: "eco" } })).toBeNull();
@@ -45,9 +46,9 @@ describe("extrairMensagemZapi", () => {
 describe("agruparConversas", () => {
   it("agrupa por telefone, conta não-lidas, ordena por recência", () => {
     const msgs: MsgConversa[] = [
-      { telefone: "551", texto: "a1", direcao: "IN", lida: false, criado_em: "2026-07-01T10:00:00Z", cliente: "ACME", status: "RECEBIDO" },
-      { telefone: "551", texto: "a2", direcao: "OUT", lida: true, criado_em: "2026-07-01T11:00:00Z", cliente: "ACME", status: "ENVIADO" },
-      { telefone: "552", texto: "b1", direcao: "IN", lida: false, criado_em: "2026-07-02T09:00:00Z", cliente: null, status: "RECEBIDO" },
+      { id: "1", telefone: "551", texto: "a1", direcao: "IN", lida: false, criado_em: "2026-07-01T10:00:00Z", cliente: "ACME", status: "RECEBIDO", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
+      { id: "2", telefone: "551", texto: "a2", direcao: "OUT", lida: true, criado_em: "2026-07-01T11:00:00Z", cliente: "ACME", status: "ENVIADO", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
+      { id: "3", telefone: "552", texto: "b1", direcao: "IN", lida: false, criado_em: "2026-07-02T09:00:00Z", cliente: null, status: "RECEBIDO", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
     ];
     const convs = agruparConversas(msgs);
     expect(convs.map((c) => c.telefone)).toEqual(["552", "551"]); // 552 mais recente
@@ -156,17 +157,66 @@ describe("marcaEntrega", () => {
   });
 });
 
+describe("extrairMensagemZapi mídia", () => {
+  it("imagem → midia image com url/mime/caption", () => {
+    const r = extrairMensagemZapi({
+      phone: "553400",
+      messageId: "M1",
+      image: { imageUrl: "https://z-api.io/x.jpg", mimeType: "image/jpeg", caption: "olha" },
+    });
+    expect(r).toEqual({
+      telefone: "553400",
+      zId: "M1",
+      texto: "olha",
+      midia: { tipo: "image", url: "https://z-api.io/x.jpg", mime: "image/jpeg", nome: null, caption: "olha" },
+    });
+  });
+  it("áudio → midia audio, texto vazio", () => {
+    const r = extrairMensagemZapi({ phone: "553400", messageId: "M2", audio: { audioUrl: "https://z/a.ogg", mimeType: "audio/ogg" } });
+    expect(r?.midia).toEqual({ tipo: "audio", url: "https://z/a.ogg", mime: "audio/ogg", nome: null, caption: "" });
+  });
+  it("documento → midia document com nome", () => {
+    const r = extrairMensagemZapi({
+      phone: "553400",
+      messageId: "M3",
+      document: { documentUrl: "https://z/d.pdf", mimeType: "application/pdf", fileName: "nota.pdf" },
+    });
+    expect(r?.midia).toEqual({ tipo: "document", url: "https://z/d.pdf", mime: "application/pdf", nome: "nota.pdf", caption: "" });
+  });
+  it("mídia sem url → marcador, midia null", () => {
+    const r = extrairMensagemZapi({ phone: "553400", messageId: "M4", image: { caption: "x" } });
+    expect(r).toEqual({ telefone: "553400", texto: "[mídia não suportada]", zId: "M4", midia: null });
+  });
+  it("texto → midia null", () => {
+    const r = extrairMensagemZapi({ phone: "553400", messageId: "M5", text: { message: "oi" } });
+    expect(r).toEqual({ telefone: "553400", texto: "oi", zId: "M5", midia: null });
+  });
+});
+
+describe("extensaoPorMime", () => {
+  it("mapeia subtipos comuns", () => {
+    expect(extensaoPorMime("image/png")).toBe("png");
+    expect(extensaoPorMime("image/jpeg")).toBe("jpg");
+    expect(extensaoPorMime("application/pdf")).toBe("pdf");
+    expect(extensaoPorMime("audio/ogg; codecs=opus")).toBe("ogg");
+    expect(extensaoPorMime("image/svg+xml")).toBe("svg");
+  });
+  it("sem subtipo → bin", () => {
+    expect(extensaoPorMime("")).toBe("bin");
+  });
+});
+
 describe("agruparConversas favoritos", () => {
   it("marca favorita quando o telefone está no set", () => {
     const msgs: MsgConversa[] = [
-      { telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z", status: "RECEBIDO" },
+      { id: "x", telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z", status: "RECEBIDO", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
     ];
     const [c] = agruparConversas(msgs, new Set(["111"]));
     expect(c!.favorita).toBe(true);
   });
   it("default sem favoritos → favorita false", () => {
     const msgs: MsgConversa[] = [
-      { telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z", status: "RECEBIDO" },
+      { id: "x", telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z", status: "RECEBIDO", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
     ];
     expect(agruparConversas(msgs)[0]!.favorita).toBe(false);
   });

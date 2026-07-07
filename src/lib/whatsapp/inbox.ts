@@ -1,4 +1,5 @@
 export type MsgConversa = {
+  id: string;
   telefone: string;
   texto: string;
   direcao: "IN" | "OUT";
@@ -6,6 +7,10 @@ export type MsgConversa = {
   criado_em: string;
   cliente?: string | null;
   status: string;
+  midiaTipo: string | null;
+  midiaPath: string | null;
+  midiaNome: string | null;
+  midiaMime: string | null;
 };
 export type Conversa = {
   telefone: string;
@@ -20,22 +25,71 @@ export type FiltroAba = "todas" | "nao_lidas" | "favoritos";
 
 const CHAVES_MIDIA = ["image", "audio", "video", "document", "sticker", "contact", "location"];
 
-// Extrai uma mensagem RECEBIDA do payload do Z-API. null para eventos que não são mensagem recebida.
-export function extrairMensagemZapi(payload: unknown): { telefone: string; texto: string; zId: string } | null {
+export type MidiaRecebida = {
+  tipo: "image" | "audio" | "document";
+  url: string;
+  mime: string;
+  nome: string | null;
+  caption: string;
+};
+
+// Extrai uma mensagem RECEBIDA do payload do Z-API. `midia` != null para image/audio/document.
+export function extrairMensagemZapi(
+  payload: unknown,
+): { telefone: string; texto: string; zId: string; midia: MidiaRecebida | null } | null {
   const p = (payload ?? {}) as Record<string, unknown>;
   if (p.fromMe === true) return null; // eco das nossas próprias saídas
   const telefone = typeof p.phone === "string" ? p.phone : "";
   const zId = typeof p.messageId === "string" ? p.messageId : "";
   if (!telefone || !zId) return null;
   const textoDireto =
-    (p.text as { message?: string } | undefined)?.message ??
-    (typeof p.message === "string" ? p.message : undefined);
+    (p.text as { message?: string } | undefined)?.message ?? (typeof p.message === "string" ? p.message : undefined);
   if (typeof textoDireto === "string" && textoDireto.length > 0) {
-    return { telefone, texto: textoDireto, zId };
+    return { telefone, texto: textoDireto, zId, midia: null };
+  }
+  const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
+  const img = p.image as Record<string, unknown> | undefined;
+  if (img) {
+    const url = str(img.imageUrl) ?? str(img.url);
+    const caption = str(img.caption) ?? "";
+    if (url) return { telefone, zId, texto: caption, midia: { tipo: "image", url, mime: str(img.mimeType) ?? "image/jpeg", nome: null, caption } };
+  }
+  const aud = p.audio as Record<string, unknown> | undefined;
+  if (aud) {
+    const url = str(aud.audioUrl) ?? str(aud.url);
+    if (url) return { telefone, zId, texto: "", midia: { tipo: "audio", url, mime: str(aud.mimeType) ?? "audio/ogg", nome: null, caption: "" } };
+  }
+  const doc = p.document as Record<string, unknown> | undefined;
+  if (doc) {
+    const url = str(doc.documentUrl) ?? str(doc.url);
+    const caption = str(doc.caption) ?? "";
+    if (url)
+      return {
+        telefone,
+        zId,
+        texto: caption,
+        midia: {
+          tipo: "document",
+          url,
+          mime: str(doc.mimeType) ?? "application/octet-stream",
+          nome: str(doc.fileName) ?? str(doc.title) ?? "arquivo",
+          caption,
+        },
+      };
   }
   const temMidia = CHAVES_MIDIA.some((k) => p[k] != null);
-  if (temMidia) return { telefone, texto: "[mídia não suportada]", zId };
+  if (temMidia) return { telefone, texto: "[mídia não suportada]", zId, midia: null };
   return null; // status/ack/sem conteúdo
+}
+
+// "image/png" → "png"; "image/jpeg" → "jpg"; "application/pdf" → "pdf"; "audio/ogg; codecs=opus" → "ogg".
+export function extensaoPorMime(mime: string): string {
+  const sub = (mime || "").split("/")[1]?.split(";")[0]?.trim().toLowerCase() ?? "";
+  if (!sub) return "bin";
+  if (sub === "jpeg") return "jpg";
+  if (sub === "svg+xml") return "svg";
+  const san = sub.replace(/[^a-z0-9]/g, "");
+  return san || "bin";
 }
 
 export type StatusEntrega = "ENVIADO" | "ENTREGUE" | "LIDO";

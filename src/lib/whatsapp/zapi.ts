@@ -1,3 +1,5 @@
+import { extensaoPorMime } from "@/lib/whatsapp/inbox";
+
 export type ZapiConfig = { instance: string; token: string; clientToken: string };
 
 const BASE = "https://api.z-api.io";
@@ -31,6 +33,49 @@ export async function enviarTexto(
   texto: string,
 ): Promise<{ ok: boolean; erro?: string; resposta?: unknown }> {
   const req = montarEnvio(cfg, telefone, texto);
+  try {
+    return await comTimeout(async (signal) => {
+      const res = await fetch(req.url, { method: "POST", headers: req.headers, body: req.body, signal });
+      const corpo = await res.json().catch(() => null);
+      if (!res.ok) return { ok: false, erro: `Z-API HTTP ${res.status}`, resposta: corpo };
+      return { ok: true, resposta: corpo };
+    });
+  } catch (e) {
+    return { ok: false, erro: e instanceof Error && e.name === "AbortError" ? "Tempo esgotado." : "Erro de rede." };
+  }
+}
+
+export type MidiaEnvio = { tipo: "image" | "document"; base64: string; mime: string; nome: string; caption: string };
+
+// Monta a requisição de envio de mídia (puro, testável). image → /send-image; document → /send-document/{ext}.
+export function montarEnvioMidia(
+  cfg: ZapiConfig,
+  telefone: string,
+  midia: MidiaEnvio,
+): { url: string; headers: Record<string, string>; body: string } {
+  const headers = { "Content-Type": "application/json", "Client-Token": cfg.clientToken };
+  const dataUri = `data:${midia.mime};base64,${midia.base64}`;
+  const base = `${BASE}/instances/${cfg.instance}/token/${cfg.token}`;
+  if (midia.tipo === "image") {
+    return {
+      url: `${base}/send-image`,
+      headers,
+      body: JSON.stringify({ phone: telefone, image: dataUri, caption: midia.caption }),
+    };
+  }
+  return {
+    url: `${base}/send-document/${extensaoPorMime(midia.mime)}`,
+    headers,
+    body: JSON.stringify({ phone: telefone, document: dataUri, fileName: midia.nome, caption: midia.caption }),
+  };
+}
+
+export async function enviarMidiaZapi(
+  cfg: ZapiConfig,
+  telefone: string,
+  midia: MidiaEnvio,
+): Promise<{ ok: boolean; erro?: string; resposta?: unknown }> {
+  const req = montarEnvioMidia(cfg, telefone, midia);
   try {
     return await comTimeout(async (signal) => {
       const res = await fetch(req.url, { method: "POST", headers: req.headers, body: req.body, signal });

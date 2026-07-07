@@ -4,9 +4,9 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeAtender, podeVerHonorario } from "@/lib/clientes/permissoes";
 import { decifrar } from "@/lib/nfse/cripto";
-import { enviarTexto } from "@/lib/whatsapp/zapi";
+import { enviarTexto, enviarMidiaZapi } from "@/lib/whatsapp/zapi";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
-import { agruparConversas, type Conversa, type MsgConversa } from "@/lib/whatsapp/inbox";
+import { agruparConversas, extensaoPorMime, type Conversa, type MsgConversa } from "@/lib/whatsapp/inbox";
 
 async function gate() {
   const p = await getPerfilAtual();
@@ -16,22 +16,32 @@ async function gate() {
 function mapMsgs(rows: unknown[]): MsgConversa[] {
   return (rows ?? []).map((row) => {
     const m = row as {
+      id: string;
       telefone: string;
       texto: string;
       direcao: "IN" | "OUT";
       lida: boolean;
       criado_em: string;
       status?: string;
+      midia_tipo?: string | null;
+      midia_path?: string | null;
+      midia_nome?: string | null;
+      midia_mime?: string | null;
       clientes?: { razao_social?: string } | { razao_social?: string }[] | null;
     };
     const cl = Array.isArray(m.clientes) ? m.clientes[0] : m.clientes;
     return {
+      id: m.id,
       telefone: m.telefone,
       texto: m.texto,
       direcao: m.direcao,
       lida: m.lida,
       criado_em: m.criado_em,
       status: m.status ?? "",
+      midiaTipo: m.midia_tipo ?? null,
+      midiaPath: m.midia_path ?? null,
+      midiaNome: m.midia_nome ?? null,
+      midiaMime: m.midia_mime ?? null,
       cliente: (cl as { razao_social?: string } | null)?.razao_social ?? null,
     };
   });
@@ -42,7 +52,7 @@ export async function listarConversas(): Promise<Conversa[]> {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("whatsapp_mensagem")
-    .select("telefone, texto, direcao, lida, criado_em, status, clientes(razao_social)")
+    .select("id, telefone, texto, direcao, lida, criado_em, status, midia_tipo, midia_path, midia_nome, midia_mime, clientes(razao_social)")
     .order("criado_em", { ascending: false })
     .limit(500);
   const { data: favs } = await supabase.from("conversa").select("telefone").eq("favorita", true);
@@ -56,7 +66,7 @@ export async function abrirConversa(telefone: string): Promise<MsgConversa[]> {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("whatsapp_mensagem")
-    .select("telefone, texto, direcao, lida, criado_em, status, clientes(razao_social)")
+    .select("id, telefone, texto, direcao, lida, criado_em, status, midia_tipo, midia_path, midia_nome, midia_mime, clientes(razao_social)")
     .eq("telefone", telefone)
     .order("criado_em", { ascending: true });
   // marca entradas como lidas (RLS garante que só as visíveis ao usuário são afetadas)
@@ -183,4 +193,60 @@ export async function iniciarConversa(
   const t = normalizarTelefone(telefone);
   if (!t) return { erro: "Telefone inválido." };
   return responder(t, texto);
+}
+
+export async function enviarMidia(formData: FormData): Promise<{ ok?: boolean; erro?: string }> {
+  const perfil = await gate();
+  if (!perfil) return { erro: "Sem permissão." };
+  const telefone = String(formData.get("telefone") ?? "");
+  const legenda = String(formData.get("legenda") ?? "").trim();
+  const arquivo = formData.get("arquivo");
+  if (!(arquivo instanceof File) || arquivo.size === 0) return { erro: "Selecione um arquivo." };
+  if (arquivo.size > 10 * 1024 * 1024) return { erro: "Arquivo acima de 10 MB." };
+  const mime = arquivo.type || "application/octet-stream";
+  if (mime.startsWith("video/") || mime.startsWith("audio/")) return { erro: "Tipo não suportado no envio." };
+  const tipo: "image" | "document" = mime.startsWith("image/") ? "image" : "document";
+
+  const chave = process.env.WHATSAPP_CRIPTO_KEY;
+  const admin = createAdminSupabase();
+  const { data: cfg } = await admin
+    .from("whatsapp_config")
+    .select("instance, token_cifrado, client_token_cifrado")
+    .eq("id", 1)
+    .maybeSingle();
+  if (!chave || !cfg?.instance || !cfg.token_cifrado || !cfg.client_token_cifrado) return { erro: "WhatsApp não configurado." };
+  const zapi = {
+    instance: cfg.instance,
+    token: decifrar(cfg.token_cifrado, chave).toString("utf8"),
+    clientToken: decifrar(cfg.client_token_cifrado, chave).toString("utf8"),
+  };
+
+  const buf = Buffer.from(await arquivo.arrayBuffer());
+  const nome = arquivo.name || "arquivo";
+  const r = await enviarMidiaZapi(zapi, telefone, { tipo, base64: buf.toString("base64"), mime, nome, caption: legenda });
+
+  // guarda cópia no storage para a thread renderizar do nosso domínio
+  const path = `atendimento/out/${crypto.randomUUID()}.${extensaoPorMime(mime)}`;
+  await admin.storage.from("documentos").upload(path, buf, { contentType: mime, upsert: false });
+
+  const { data: cli } = await admin.from("clientes").select("id, telefone");
+  const casados = (cli ?? []).filter((c) => normalizarTelefone((c.telefone as string) ?? "") === telefone);
+  const clienteId = casados.length === 1 ? (casados[0]!.id as string) : null;
+  const resp = (r.resposta ?? {}) as { messageId?: string; id?: string };
+  await admin.from("whatsapp_mensagem").insert({
+    cliente_id: clienteId,
+    telefone,
+    texto: legenda,
+    status: r.ok ? "ENVIADO" : "ERRO",
+    direcao: "OUT",
+    lida: true,
+    resposta: (r.resposta ?? r.erro) as object,
+    criado_por: perfil.id,
+    z_message_id: r.ok ? (resp.messageId ?? resp.id ?? null) : null,
+    midia_tipo: tipo,
+    midia_path: path,
+    midia_nome: nome,
+    midia_mime: mime,
+  });
+  return r.ok ? { ok: true } : { erro: r.erro ?? "Falha no envio." };
 }
