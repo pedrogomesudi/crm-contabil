@@ -5,9 +5,8 @@ import { podeVerHonorario } from "@/lib/clientes/permissoes";
 import { decifrar } from "@/lib/nfse/cripto";
 import { enviarMidiaZapi } from "@/lib/whatsapp/zapi";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
-import { linhasPagamento, competenciaBR, montarMensagemNota, vencimentoBR } from "@/lib/whatsapp/notas-envio";
+import { linhasPagamento, competenciaBR, montarMensagemNota, vencimentoBR, valorBR } from "@/lib/whatsapp/notas-envio";
 import { obterDanfsePdf, caminhoDanfse } from "@/lib/nfse/danfse-cache";
-import { formatarMoeda } from "@/lib/format";
 import { listarNotasAutorizadasPorCompetencia } from "@/app/(app)/clientes/[id]/nfse";
 
 async function gate() {
@@ -90,7 +89,7 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
     .maybeSingle();
   const template =
     dados?.mensagem_template ??
-    "Olá {nome}! Segue a sua NFS-e — honorário de {valor}, competência {competencia}.\n\n{pagamento}";
+    "Olá {nome}! Segue a sua NFS-e — honorário de R$ {valor}, competência {competencia}.\n\n{pagamento}";
 
   const pdfR = await obterDanfsePdf(admin, {
     chave_acesso: nota.chave_acesso as string,
@@ -115,7 +114,7 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
     nome: (cl?.responsavel_nome as string | null) || razaoSocial,
     empresa: razaoSocial,
     competencia: competenciaBR(String(nota.competencia)),
-    valor: formatarMoeda(Number(nota.valor)),
+    valor: valorBR(Number(nota.valor)),
     vencimento,
     pix: dados?.pix_chave ?? "",
     favorecido: dados?.titular ?? "",
