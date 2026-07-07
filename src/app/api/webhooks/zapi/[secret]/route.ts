@@ -3,6 +3,8 @@ import { timingSafeEqual } from "node:crypto";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { extrairMensagemZapi, extrairStatusZapi } from "@/lib/whatsapp/inbox";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
+import { decifrar } from "@/lib/nfse/cripto";
+import { baixarEStorearMidia } from "@/lib/whatsapp/midia-storage";
 
 function segredoOk(recebido: string): boolean {
   const esperado = process.env.ZAPI_WEBHOOK_SECRET;
@@ -49,6 +51,40 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
   const clienteId = casados.length === 1 ? (casados[0]!.id as string) : null;
 
   // dedup pelo unique (z_message_id); ignora violação
+  if (msg.midia) {
+    // Client-Token best-effort (algumas URLs do Z-API exigem o header).
+    let clientToken: string | null = null;
+    const chave = process.env.WHATSAPP_CRIPTO_KEY;
+    if (chave) {
+      const { data: cfg } = await admin.from("whatsapp_config").select("client_token_cifrado").eq("id", 1).maybeSingle();
+      if (cfg?.client_token_cifrado) {
+        try {
+          clientToken = decifrar(cfg.client_token_cifrado, chave).toString("utf8");
+        } catch {
+          clientToken = null;
+        }
+      }
+    }
+    const path = await baixarEStorearMidia(admin, msg.midia.url, msg.midia.mime, clientToken);
+    const marcador = `[${msg.midia.tipo}${msg.midia.nome ? ": " + msg.midia.nome : ""}]`;
+    const { error } = await admin.from("whatsapp_mensagem").insert({
+      cliente_id: clienteId,
+      telefone: tel,
+      texto: path ? msg.midia.caption : marcador,
+      status: "RECEBIDO",
+      direcao: "IN",
+      lida: false,
+      z_message_id: msg.zId,
+      midia_tipo: path ? msg.midia.tipo : null,
+      midia_path: path,
+      midia_nome: msg.midia.nome,
+      midia_mime: msg.midia.mime,
+    });
+    if (error && !String(error.message).includes("duplicate")) console.error("webhook zapi midia:", error.message);
+    if (!path) console.log("zapi midia payload:", JSON.stringify(payload).slice(0, 400));
+    return NextResponse.json({ ok: true });
+  }
+
   const { error } = await admin.from("whatsapp_mensagem").insert({
     cliente_id: clienteId,
     telefone: tel,
