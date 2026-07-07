@@ -28,6 +28,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   storage, com proteção anti-SSRF e teto de tamanho) e envia imagem/PDF por anexo no composer; imagens
   viram miniatura, áudio vira player e documento vira chip com download. A rota que serve a mídia força
   download de tipos não seguros (anti-XSS).
+- **Atendimento — status e atendente (Fatia C):** cada conversa tem estado (aberta/pendente/finalizada)
+  e responsável; abas por status; quem responde assume a conversa; receber ou responder reabre uma
+  conversa finalizada.
 
 - **V8.2d — Rollout SALDO final (fecha a V8):** identidade SALDO nos 19 arquivos restantes —
   **atendimento** (inbox de chat com balões saída-verde/entrada-neutro + badge de não-lidas),
