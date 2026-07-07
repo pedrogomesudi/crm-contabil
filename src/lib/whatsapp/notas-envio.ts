@@ -31,3 +31,60 @@ export function competenciaBR(dataIso: string): string {
 export function preSelecionadas(notas: { nfseId: string; jaEnviada: boolean }[]): Set<string> {
   return new Set(notas.filter((n) => !n.jaEnviada).map((n) => n.nfseId));
 }
+
+export type VarsNota = {
+  nome: string;
+  empresa: string;
+  competencia: string;
+  valor: string;
+  vencimento: string;
+  pix: string;
+  favorecido: string;
+  cnpj: string;
+  banco: string;
+  agencia: string;
+  conta: string;
+  pagamento: string;
+};
+
+const ALIAS_NOTA: Record<string, keyof VarsNota> = {
+  NOME: "nome",
+  CONTATO: "nome",
+  EMPRESA: "empresa",
+  CLIENTE: "empresa",
+  COMPETENCIA: "competencia",
+  MES: "competencia",
+  MESANO: "competencia",
+  VALOR: "valor",
+  DATA: "vencimento",
+  VENCIMENTO: "vencimento",
+  PIX: "pix",
+  CHAVEPIX: "pix",
+  RAZAOSOCIAL: "favorecido",
+  FAVORECIDO: "favorecido",
+  TITULAR: "favorecido",
+  CNPJ: "cnpj",
+  DOCUMENTO: "cnpj",
+  BANCO: "banco",
+  AG: "agencia",
+  AGENCIA: "agencia",
+  CONTA: "conta",
+  CC: "conta",
+  PAGAMENTO: "pagamento",
+};
+
+function normalizarChave(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+}
+
+// Substitui marcadores {...} do template da nota. Ignora maiúscula/acento/espaço/pontuação; desconhecido → "".
+export function montarMensagemNota(template: string, vars: VarsNota): string {
+  return template.replace(/\{([^}]+)\}/g, (_orig, nome: string) => {
+    const campo = ALIAS_NOTA[normalizarChave(nome)];
+    return campo ? vars[campo] : "";
+  });
+}

@@ -10,6 +10,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Corrigido
 
+- **Cobrança — marcadores da mensagem:** o template da nota agora reconhece os marcadores de forma
+  tolerante (ignora maiúscula/acento/espaço/pontuação): `{NOME}` (contato), `{EMPRESA}`, `{COMPETÊNCIA}`,
+  `{VALOR}`, `{VENCIMENTO}`, `{CHAVE PIX}`, `{RAZÃO SOCIAL}` (favorecido), `{CNPJ}`, `{BANCO}`, `{AG}`,
+  `{CONTA}`, `{PAGAMENTO}`. Antes só batia nomes minúsculos exatos e quebrava com acento/espaço, saindo
+  literais/vazios. O vencimento vem do honorário do mês.
 - **NFS-e — download em lote:** botões **separados** para baixar todas em **PDF** e todas em **XML**;
   **cache do DANFSe** no storage (bucket `documentos`, `danfse/{chave}.pdf`) com **pré-carregamento na
   emissão** — o ADN nacional (que retornava 502/429 em lote) passa a ser tocado 1×/nota, e as baixas
