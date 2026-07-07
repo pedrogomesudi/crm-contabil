@@ -34,10 +34,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - **Atendimento — nome do cliente:** a conversa mostra a razão social (empresa) + o responsável (contato)
   do cadastro no lugar do telefone, casando pelo número; a "nova conversa" permite buscar um cliente
   cadastrado (além de digitar um número avulso).
-- **Cobrança — envio de notas + PIX/TED (WhatsApp):** na tela de NFS-e em lote, botão "Enviar notas +
-  cobrança do mês" dispara, por cliente, a NFS-e (PDF) + a mensagem com dados de pagamento (PIX/TED),
-  com progresso e reenvio das falhas; não reenvia quem já recebeu e respeita o opt-out de cobrança.
-  Dados bancários configuráveis em Configurações → Dados de pagamento.
+- **Cobrança — envio de notas + PIX/TED (WhatsApp):** na tela de NFS-e em lote, o painel lista as NFS-e
+  autorizadas com seleção por caixas (selo "já enviada", pré-marcando só as pendentes) e busca; envia às
+  selecionadas a NFS-e (PDF) + a mensagem com dados de pagamento (PIX/TED), com progresso e reenvio das
+  falhas; não reenvia quem já recebeu e respeita o opt-out. Dados bancários em Configurações → Dados de
+  pagamento.
 
 - **V8.2d — Rollout SALDO final (fecha a V8):** identidade SALDO nos 19 arquivos restantes —
   **atendimento** (inbox de chat com balões saída-verde/entrada-neutro + badge de não-lidas),
