@@ -15,10 +15,21 @@ async function gate() {
   return p?.ativo && podeVerHonorario(p.papel) ? p : null;
 }
 
-export async function listarNotasParaEnvio(competencia: string): Promise<{ nfseId: string; razaoSocial: string }[]> {
+export async function listarNotasParaEnvio(
+  competencia: string,
+): Promise<{ nfseId: string; razaoSocial: string; jaEnviada: boolean }[]> {
   if (!(await gate())) return [];
   const notas = await listarNotasAutorizadasPorCompetencia(competencia);
-  return notas.map((n) => ({ nfseId: n.nfseId, razaoSocial: n.razaoSocial }));
+  if (notas.length === 0) return [];
+  const admin = createAdminSupabase();
+  const ids = notas.map((n) => n.nfseId);
+  const { data: enviadasRows } = await admin
+    .from("whatsapp_mensagem")
+    .select("nfse_id")
+    .eq("status", "ENVIADO")
+    .in("nfse_id", ids);
+  const enviadas = new Set((enviadasRows ?? []).map((r) => r.nfse_id as string));
+  return notas.map((n) => ({ nfseId: n.nfseId, razaoSocial: n.razaoSocial, jaEnviada: enviadas.has(n.nfseId) }));
 }
 
 export type ResultadoEnvioNota = { status: "ok" | "pulado" | "erro"; motivo?: string; razaoSocial: string };

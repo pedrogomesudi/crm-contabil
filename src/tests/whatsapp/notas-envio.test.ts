@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { linhasPagamento, competenciaBR } from "@/lib/whatsapp/notas-envio";
+import { linhasPagamento, competenciaBR, preSelecionadas } from "@/lib/whatsapp/notas-envio";
 
 describe("linhasPagamento", () => {
   it("PIX + TED completo", () => {
@@ -24,5 +24,22 @@ describe("competenciaBR", () => {
   });
   it("valor inesperado → devolve como veio", () => {
     expect(competenciaBR("abc")).toBe("abc");
+  });
+});
+
+describe("preSelecionadas", () => {
+  it("marca só as pendentes (jaEnviada false)", () => {
+    const s = preSelecionadas([
+      { nfseId: "a", jaEnviada: false },
+      { nfseId: "b", jaEnviada: true },
+      { nfseId: "c", jaEnviada: false },
+    ]);
+    expect([...s].sort()).toEqual(["a", "c"]);
+  });
+  it("todas enviadas → vazio", () => {
+    expect(preSelecionadas([{ nfseId: "a", jaEnviada: true }]).size).toBe(0);
+  });
+  it("nenhuma enviada → todas", () => {
+    expect(preSelecionadas([{ nfseId: "a", jaEnviada: false }, { nfseId: "b", jaEnviada: false }]).size).toBe(2);
   });
 });

@@ -26,3 +26,8 @@ export function competenciaBR(dataIso: string): string {
   const m = /^(\d{4})-(\d{2})/.exec(dataIso);
   return m ? `${m[2]}/${m[1]}` : dataIso;
 }
+
+// nfseIds das notas ainda não enviadas (para pré-marcar na seleção).
+export function preSelecionadas(notas: { nfseId: string; jaEnviada: boolean }[]): Set<string> {
+  return new Set(notas.filter((n) => !n.jaEnviada).map((n) => n.nfseId));
+}
