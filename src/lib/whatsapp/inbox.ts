@@ -12,6 +12,8 @@ export type MsgConversa = {
   midiaNome: string | null;
   midiaMime: string | null;
 };
+export type StatusConversa = "aberta" | "pendente" | "finalizada";
+
 export type Conversa = {
   telefone: string;
   cliente: string | null;
@@ -19,9 +21,19 @@ export type Conversa = {
   ultima_em: string;
   nao_lidas: number;
   favorita: boolean;
+  status: StatusConversa;
+  atendenteId: string | null;
+  atendenteNome: string | null;
 };
 
-export type FiltroAba = "todas" | "nao_lidas" | "favoritos";
+export type ConversaMeta = {
+  favorita?: boolean;
+  status?: StatusConversa;
+  atendenteId?: string | null;
+  atendenteNome?: string | null;
+};
+
+export type FiltroAba = "abertas" | "pendentes" | "finalizadas" | "favoritos";
 
 const CHAVES_MIDIA = ["image", "audio", "video", "document", "sticker", "contact", "location"];
 
@@ -137,8 +149,8 @@ export function marcaEntrega(status: string, direcao: "IN" | "OUT"): MarcaEntreg
   }
 }
 
-// Agrupa mensagens por telefone → conversas, mais recente primeiro. `favoritos` marca a estrela.
-export function agruparConversas(msgs: MsgConversa[], favoritos: Set<string> = new Set()): Conversa[] {
+// Agrupa mensagens por telefone → conversas, mais recente primeiro. `meta` sobrepõe por telefone.
+export function agruparConversas(msgs: MsgConversa[], meta: Map<string, ConversaMeta> = new Map()): Conversa[] {
   const porTel = new Map<string, MsgConversa[]>();
   for (const m of msgs) {
     const arr = porTel.get(m.telefone) ?? [];
@@ -150,13 +162,17 @@ export function agruparConversas(msgs: MsgConversa[], favoritos: Set<string> = n
     const ordenadas = [...arr].sort((a, b) => a.criado_em.localeCompare(b.criado_em));
     const ultima = ordenadas[ordenadas.length - 1]!;
     const cliente = ordenadas.find((m) => m.cliente)?.cliente ?? null;
+    const md = meta.get(telefone);
     convs.push({
       telefone,
       cliente,
       ultima: ultima.texto,
       ultima_em: ultima.criado_em,
       nao_lidas: arr.filter((m) => m.direcao === "IN" && !m.lida).length,
-      favorita: favoritos.has(telefone),
+      favorita: md?.favorita ?? false,
+      status: md?.status ?? "aberta",
+      atendenteId: md?.atendenteId ?? null,
+      atendenteNome: md?.atendenteNome ?? null,
     });
   }
   return convs.sort((a, b) => b.ultima_em.localeCompare(a.ultima_em));
@@ -181,12 +197,16 @@ export function separadorDia(iso: string, hojeIso: string): string {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 }
 
-// Filtra por aba + busca (nome do cliente OU telefone), mantendo a ordem de agruparConversas.
+// Filtra por aba (status/favoritos) + busca (nome do cliente OU telefone), mantendo a ordem.
 export function filtrarConversas(convs: Conversa[], aba: FiltroAba, busca: string): Conversa[] {
   const termo = busca.trim().toLowerCase();
   return convs.filter((c) => {
-    if (aba === "nao_lidas" && c.nao_lidas === 0) return false;
-    if (aba === "favoritos" && !c.favorita) return false;
+    if (aba === "favoritos") {
+      if (!c.favorita) return false;
+    } else if (c.status !== aba.slice(0, -1)) {
+      // "abertas"→"aberta", "pendentes"→"pendente", "finalizadas"→"finalizada"
+      return false;
+    }
     if (termo) {
       const alvo = `${(c.cliente ?? "").toLowerCase()} ${c.telefone}`;
       if (!alvo.includes(termo)) return false;
@@ -195,11 +215,12 @@ export function filtrarConversas(convs: Conversa[], aba: FiltroAba, busca: strin
   });
 }
 
-// Contadores para os badges das abas (por CONVERSA, não por mensagem).
-export function contadores(convs: Conversa[]): { todas: number; nao_lidas: number; favoritos: number } {
+// Contadores para as abas.
+export function contadores(convs: Conversa[]): { abertas: number; pendentes: number; finalizadas: number; favoritos: number } {
   return {
-    todas: convs.length,
-    nao_lidas: convs.filter((c) => c.nao_lidas > 0).length,
+    abertas: convs.filter((c) => c.status === "aberta").length,
+    pendentes: convs.filter((c) => c.status === "pendente").length,
+    finalizadas: convs.filter((c) => c.status === "finalizada").length,
     favoritos: convs.filter((c) => c.favorita).length,
   };
 }

@@ -6,7 +6,14 @@ import { podeAtender, podeVerHonorario } from "@/lib/clientes/permissoes";
 import { decifrar } from "@/lib/nfse/cripto";
 import { enviarTexto, enviarMidiaZapi } from "@/lib/whatsapp/zapi";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
-import { agruparConversas, extensaoPorMime, type Conversa, type MsgConversa } from "@/lib/whatsapp/inbox";
+import {
+  agruparConversas,
+  extensaoPorMime,
+  type Conversa,
+  type MsgConversa,
+  type ConversaMeta,
+  type StatusConversa,
+} from "@/lib/whatsapp/inbox";
 
 async function gate() {
   const p = await getPerfilAtual();
@@ -55,9 +62,21 @@ export async function listarConversas(): Promise<Conversa[]> {
     .select("id, telefone, texto, direcao, lida, criado_em, status, midia_tipo, midia_path, midia_nome, midia_mime, clientes(razao_social)")
     .order("criado_em", { ascending: false })
     .limit(500);
-  const { data: favs } = await supabase.from("conversa").select("telefone").eq("favorita", true);
-  const favoritos = new Set((favs ?? []).map((f) => f.telefone as string));
-  return agruparConversas(mapMsgs(data ?? []), favoritos);
+  const admin = createAdminSupabase();
+  const { data: convRows } = await admin.from("conversa").select("telefone, favorita, status, atendente_id");
+  const { data: usuarios } = await admin.from("usuarios").select("id, nome");
+  const nomePorId = new Map((usuarios ?? []).map((u) => [u.id as string, u.nome as string]));
+  const meta = new Map<string, ConversaMeta>();
+  for (const r of convRows ?? []) {
+    const atendenteId = (r.atendente_id as string | null) ?? null;
+    meta.set(r.telefone as string, {
+      favorita: r.favorita as boolean,
+      status: ((r.status as string) ?? "aberta") as StatusConversa,
+      atendenteId,
+      atendenteNome: atendenteId ? (nomePorId.get(atendenteId) ?? null) : null,
+    });
+  }
+  return agruparConversas(mapMsgs(data ?? []), meta);
 }
 
 export async function abrirConversa(telefone: string): Promise<MsgConversa[]> {
@@ -116,6 +135,7 @@ export async function responder(telefone: string, texto: string): Promise<{ ok?:
     // colisão improvável de messageId: grava a mensagem sem o id (perde só o rastreio dela)
     await admin.from("whatsapp_mensagem").insert({ ...linha, z_message_id: null });
   }
+  if (r.ok) await assumirConversa(admin, telefone, perfil.id).catch(() => {});
   return r.ok ? { ok: true } : { erro: r.erro ?? "Falha no envio." };
 }
 
@@ -195,6 +215,41 @@ export async function iniciarConversa(
   return responder(t, texto);
 }
 
+export async function listarAtendentes(): Promise<{ id: string; nome: string }[]> {
+  if (!(await gate())) return [];
+  const admin = createAdminSupabase();
+  const { data } = await admin
+    .from("usuarios")
+    .select("id, nome")
+    .in("papel", ["admin", "financeiro", "contador"])
+    .eq("ativo", true)
+    .order("nome");
+  return (data ?? []).map((u) => ({ id: u.id as string, nome: u.nome as string }));
+}
+
+export async function definirStatus(telefone: string, status: StatusConversa): Promise<{ ok?: boolean; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("conversa").upsert({ telefone, status }, { onConflict: "telefone" });
+  return error ? { erro: "Falha ao mudar o status." } : { ok: true };
+}
+
+export async function atribuirAtendente(telefone: string, atendenteId: string | null): Promise<{ ok?: boolean; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("conversa").upsert({ telefone, atendente_id: atendenteId }, { onConflict: "telefone" });
+  return error ? { erro: "Falha ao atribuir." } : { ok: true };
+}
+
+// Auto-assumir + reabrir: quem responde assume se estava sem atendente; finalizada volta a aberta.
+async function assumirConversa(admin: ReturnType<typeof createAdminSupabase>, telefone: string, atendenteId: string) {
+  const { data: row } = await admin.from("conversa").select("status, atendente_id").eq("telefone", telefone).maybeSingle();
+  const novoAtendente = (row?.atendente_id as string | null) ?? atendenteId;
+  const statusAtual = (row?.status as string | undefined) ?? "aberta";
+  const novoStatus = statusAtual === "finalizada" ? "aberta" : statusAtual;
+  await admin.from("conversa").upsert({ telefone, atendente_id: novoAtendente, status: novoStatus }, { onConflict: "telefone" });
+}
+
 export async function enviarMidia(formData: FormData): Promise<{ ok?: boolean; erro?: string }> {
   const perfil = await gate();
   if (!perfil) return { erro: "Sem permissão." };
@@ -248,5 +303,6 @@ export async function enviarMidia(formData: FormData): Promise<{ ok?: boolean; e
     midia_nome: nome,
     midia_mime: mime,
   });
+  if (r.ok) await assumirConversa(admin, telefone, perfil.id).catch(() => {});
   return r.ok ? { ok: true } : { erro: r.erro ?? "Falha no envio." };
 }
