@@ -7,6 +7,11 @@ export function soDigitos(v: unknown): string {
 // independentemente do timezone do servidor). Retorna "—" para data inválida.
 export function formatarData(iso: string | null | undefined): string {
   if (!iso) return "—";
+  // Data pura (YYYY-MM-DD): formata os componentes direto, SEM conversão de fuso —
+  // `new Date("2026-07-10")` seria UTC 00:00 e cairia no dia anterior em America/Sao_Paulo (UTC-3).
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  // Timestamp: converte para o fuso de São Paulo.
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
