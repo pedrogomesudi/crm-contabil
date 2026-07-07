@@ -18,6 +18,7 @@ export function Sidebar({ papel, nome }: { papel: Papel; nome: string }) {
     ...(podeGerenciarFinanceiro(papel) ? [{ href: "/financeiro/cadastros", label: "Financeiro" }] : []),
     ...(["admin", "assistente"].includes(papel) ? [{ href: "/integracoes/dominio", label: "Integração Domínio" }] : []),
     ...(papel === "admin" ? [{ href: "/usuarios", label: "Usuários" }] : []),
+    ...(papel === "admin" ? [{ href: "/configuracoes", label: "Configurações" }] : []),
   ];
   const ehAtivo = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
 
