@@ -64,14 +64,21 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
       setConversas(await listarConversas());
     });
 
-  // polling ~15s
+  // Lista de conversas: poll lento (15s) — contadores/prévia não precisam ser instantâneos.
   useEffect(() => {
     const id = setInterval(() => {
-      start(async () => {
-        setConversas(await listarConversas());
-        if (ativa) setMsgs(await abrirConversa(ativa));
-      });
+      start(async () => setConversas(await listarConversas()));
     }, 15000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Thread aberta: poll rápido (4s) — o entregue/lido (que chega quase instantâneo do Z-API)
+  // aparece logo, sem "pular" a fase de entregue.
+  useEffect(() => {
+    if (!ativa) return;
+    const id = setInterval(() => {
+      start(async () => setMsgs(await abrirConversa(ativa)));
+    }, 4000);
     return () => clearInterval(id);
   }, [ativa]);
 
