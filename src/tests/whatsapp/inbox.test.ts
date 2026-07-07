@@ -1,5 +1,24 @@
 import { describe, it, expect } from "vitest";
-import { extrairMensagemZapi, agruparConversas, type MsgConversa } from "@/lib/whatsapp/inbox";
+import {
+  extrairMensagemZapi,
+  agruparConversas,
+  horaMsg,
+  separadorDia,
+  filtrarConversas,
+  contadores,
+  type MsgConversa,
+  type Conversa,
+} from "@/lib/whatsapp/inbox";
+
+const conv = (over: Partial<Conversa>): Conversa => ({
+  telefone: "5534999990000",
+  cliente: null,
+  ultima: "oi",
+  ultima_em: "2026-07-06T12:00:00.000Z",
+  nao_lidas: 0,
+  favorita: false,
+  ...over,
+});
 
 describe("extrairMensagemZapi", () => {
   it("mensagem de texto recebida → objeto", () => {
@@ -32,5 +51,75 @@ describe("agruparConversas", () => {
     expect(convs.map((c) => c.telefone)).toEqual(["552", "551"]); // 552 mais recente
     const c551 = convs.find((c) => c.telefone === "551")!;
     expect(c551).toMatchObject({ cliente: "ACME", ultima: "a2", nao_lidas: 1 });
+  });
+});
+
+describe("horaMsg", () => {
+  it("formata HH:MM 24h com zero-pad", () => {
+    const d = new Date(2026, 6, 6, 0, 9, 0);
+    expect(horaMsg(d.toISOString())).toBe("00:09");
+  });
+});
+
+describe("separadorDia", () => {
+  const hoje = new Date(2026, 6, 6, 10, 0, 0).toISOString();
+  it("mesma data → hoje", () => {
+    expect(separadorDia(new Date(2026, 6, 6, 8, 0).toISOString(), hoje)).toBe("hoje");
+  });
+  it("um dia antes → ontem", () => {
+    expect(separadorDia(new Date(2026, 6, 5, 23, 0).toISOString(), hoje)).toBe("ontem");
+  });
+  it("mais antigo → dd/mm/aaaa", () => {
+    expect(separadorDia(new Date(2026, 6, 1, 8, 0).toISOString(), hoje)).toBe("01/07/2026");
+  });
+});
+
+describe("filtrarConversas", () => {
+  const convs = [
+    conv({ telefone: "111", cliente: "Moura Purcell", nao_lidas: 2, favorita: true }),
+    conv({ telefone: "5534988887777", cliente: null, nao_lidas: 0, favorita: false }),
+    conv({ telefone: "333", cliente: "Jessica", nao_lidas: 1, favorita: false }),
+  ];
+  it("aba todas sem busca → todas", () => {
+    expect(filtrarConversas(convs, "todas", "").length).toBe(3);
+  });
+  it("aba nao_lidas → só com nao_lidas>0", () => {
+    expect(filtrarConversas(convs, "nao_lidas", "").map((c) => c.telefone)).toEqual(["111", "333"]);
+  });
+  it("aba favoritos → só favoritas", () => {
+    expect(filtrarConversas(convs, "favoritos", "").map((c) => c.telefone)).toEqual(["111"]);
+  });
+  it("busca por nome (case-insensitive)", () => {
+    expect(filtrarConversas(convs, "todas", "moura").map((c) => c.telefone)).toEqual(["111"]);
+  });
+  it("busca por telefone", () => {
+    expect(filtrarConversas(convs, "todas", "8888").map((c) => c.telefone)).toEqual(["5534988887777"]);
+  });
+});
+
+describe("contadores", () => {
+  it("conta por conversa (não por mensagem)", () => {
+    const convs = [
+      conv({ nao_lidas: 3, favorita: true }),
+      conv({ nao_lidas: 0, favorita: false }),
+      conv({ nao_lidas: 1, favorita: false }),
+    ];
+    expect(contadores(convs)).toEqual({ todas: 3, nao_lidas: 2, favoritos: 1 });
+  });
+});
+
+describe("agruparConversas favoritos", () => {
+  it("marca favorita quando o telefone está no set", () => {
+    const msgs: MsgConversa[] = [
+      { telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z" },
+    ];
+    const [c] = agruparConversas(msgs, new Set(["111"]));
+    expect(c!.favorita).toBe(true);
+  });
+  it("default sem favoritos → favorita false", () => {
+    const msgs: MsgConversa[] = [
+      { telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z" },
+    ];
+    expect(agruparConversas(msgs)[0]!.favorita).toBe(false);
   });
 });
