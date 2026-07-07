@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   extrairMensagemZapi,
+  extrairStatusZapi,
+  marcaEntrega,
   agruparConversas,
   horaMsg,
   separadorDia,
@@ -43,9 +45,9 @@ describe("extrairMensagemZapi", () => {
 describe("agruparConversas", () => {
   it("agrupa por telefone, conta não-lidas, ordena por recência", () => {
     const msgs: MsgConversa[] = [
-      { telefone: "551", texto: "a1", direcao: "IN", lida: false, criado_em: "2026-07-01T10:00:00Z", cliente: "ACME" },
-      { telefone: "551", texto: "a2", direcao: "OUT", lida: true, criado_em: "2026-07-01T11:00:00Z", cliente: "ACME" },
-      { telefone: "552", texto: "b1", direcao: "IN", lida: false, criado_em: "2026-07-02T09:00:00Z", cliente: null },
+      { telefone: "551", texto: "a1", direcao: "IN", lida: false, criado_em: "2026-07-01T10:00:00Z", cliente: "ACME", status: "RECEBIDO" },
+      { telefone: "551", texto: "a2", direcao: "OUT", lida: true, criado_em: "2026-07-01T11:00:00Z", cliente: "ACME", status: "ENVIADO" },
+      { telefone: "552", texto: "b1", direcao: "IN", lida: false, criado_em: "2026-07-02T09:00:00Z", cliente: null, status: "RECEBIDO" },
     ];
     const convs = agruparConversas(msgs);
     expect(convs.map((c) => c.telefone)).toEqual(["552", "551"]); // 552 mais recente
@@ -108,17 +110,63 @@ describe("contadores", () => {
   });
 });
 
+describe("extrairStatusZapi", () => {
+  it("SENT → ENVIADO com id via messageId", () => {
+    expect(extrairStatusZapi({ status: "SENT", messageId: "M1", phone: "553400" })).toEqual({
+      status: "ENVIADO",
+      ids: ["M1"],
+    });
+  });
+  it("RECEIVED → ENTREGUE com ids[]", () => {
+    expect(extrairStatusZapi({ status: "RECEIVED", ids: ["A", "B"] })).toEqual({
+      status: "ENTREGUE",
+      ids: ["A", "B"],
+    });
+  });
+  it("READ e PLAYED → LIDO", () => {
+    expect(extrairStatusZapi({ status: "READ", ids: ["A"] })?.status).toBe("LIDO");
+    expect(extrairStatusZapi({ status: "PLAYED", ids: ["A"] })?.status).toBe("LIDO");
+  });
+  it("id único via campo id", () => {
+    expect(extrairStatusZapi({ status: "READ", id: "Z9" })).toEqual({ status: "LIDO", ids: ["Z9"] });
+  });
+  it("status desconhecido → null", () => {
+    expect(extrairStatusZapi({ status: "TYPING", ids: ["A"] })).toBeNull();
+  });
+  it("sem status → null", () => {
+    expect(extrairStatusZapi({ ids: ["A"] })).toBeNull();
+  });
+  it("sem ids → null", () => {
+    expect(extrairStatusZapi({ status: "READ" })).toBeNull();
+  });
+});
+
+describe("marcaEntrega", () => {
+  it("IN → null", () => {
+    expect(marcaEntrega("LIDO", "IN")).toBeNull();
+  });
+  it("mapeia cada status OUT", () => {
+    expect(marcaEntrega("ENVIADO", "OUT")).toBe("enviado");
+    expect(marcaEntrega("ENTREGUE", "OUT")).toBe("entregue");
+    expect(marcaEntrega("LIDO", "OUT")).toBe("lido");
+    expect(marcaEntrega("ERRO", "OUT")).toBe("erro");
+  });
+  it("status irreconhecível → null", () => {
+    expect(marcaEntrega("RECEBIDO", "OUT")).toBeNull();
+  });
+});
+
 describe("agruparConversas favoritos", () => {
   it("marca favorita quando o telefone está no set", () => {
     const msgs: MsgConversa[] = [
-      { telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z" },
+      { telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z", status: "RECEBIDO" },
     ];
     const [c] = agruparConversas(msgs, new Set(["111"]));
     expect(c!.favorita).toBe(true);
   });
   it("default sem favoritos → favorita false", () => {
     const msgs: MsgConversa[] = [
-      { telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z" },
+      { telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z", status: "RECEBIDO" },
     ];
     expect(agruparConversas(msgs)[0]!.favorita).toBe(false);
   });

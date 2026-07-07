@@ -21,6 +21,7 @@ function mapMsgs(rows: unknown[]): MsgConversa[] {
       direcao: "IN" | "OUT";
       lida: boolean;
       criado_em: string;
+      status?: string;
       clientes?: { razao_social?: string } | { razao_social?: string }[] | null;
     };
     const cl = Array.isArray(m.clientes) ? m.clientes[0] : m.clientes;
@@ -30,6 +31,7 @@ function mapMsgs(rows: unknown[]): MsgConversa[] {
       direcao: m.direcao,
       lida: m.lida,
       criado_em: m.criado_em,
+      status: m.status ?? "",
       cliente: (cl as { razao_social?: string } | null)?.razao_social ?? null,
     };
   });

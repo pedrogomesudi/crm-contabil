@@ -5,6 +5,7 @@ export type MsgConversa = {
   lida: boolean;
   criado_em: string;
   cliente?: string | null;
+  status: string;
 };
 export type Conversa = {
   telefone: string;
@@ -35,6 +36,51 @@ export function extrairMensagemZapi(payload: unknown): { telefone: string; texto
   const temMidia = CHAVES_MIDIA.some((k) => p[k] != null);
   if (temMidia) return { telefone, texto: "[mídia não suportada]", zId };
   return null; // status/ack/sem conteúdo
+}
+
+export type StatusEntrega = "ENVIADO" | "ENTREGUE" | "LIDO";
+
+// Extrai um evento de status do payload do Z-API. null se não for evento de status reconhecível.
+export function extrairStatusZapi(payload: unknown): { status: StatusEntrega; ids: string[] } | null {
+  const p = (payload ?? {}) as Record<string, unknown>;
+  const bruto = typeof p.status === "string" ? p.status.toUpperCase() : "";
+  if (!bruto) return null;
+  const mapa: Record<string, StatusEntrega> = {
+    SENT: "ENVIADO",
+    RECEIVED: "ENTREGUE",
+    DELIVERED: "ENTREGUE",
+    DELIVERY_ACK: "ENTREGUE",
+    READ: "LIDO",
+    PLAYED: "LIDO",
+    READ_SELF: "LIDO",
+  };
+  const status = mapa[bruto];
+  if (!status) return null;
+  const ids: string[] = [];
+  if (Array.isArray(p.ids)) for (const x of p.ids) if (typeof x === "string" && x) ids.push(x);
+  if (typeof p.messageId === "string" && p.messageId) ids.push(p.messageId);
+  if (typeof p.id === "string" && p.id) ids.push(p.id);
+  const unicos = [...new Set(ids)];
+  return unicos.length ? { status, ids: unicos } : null;
+}
+
+export type MarcaEntrega = "enviado" | "entregue" | "lido" | "erro";
+
+// Ícone de entrega para a UI. Só para OUT; null para IN/sem status.
+export function marcaEntrega(status: string, direcao: "IN" | "OUT"): MarcaEntrega | null {
+  if (direcao !== "OUT") return null;
+  switch (status) {
+    case "ERRO":
+      return "erro";
+    case "LIDO":
+      return "lido";
+    case "ENTREGUE":
+      return "entregue";
+    case "ENVIADO":
+      return "enviado";
+    default:
+      return null;
+  }
 }
 
 // Agrupa mensagens por telefone → conversas, mais recente primeiro. `favoritos` marca a estrela.
