@@ -8,10 +8,10 @@ export default async function AtendimentoPage() {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeAtender(perfil.papel)) redirect("/");
   const conversas = await listarConversas();
+  // Cancela o padding do <main> e preenche a viewport. Offset do topo mobile ajustado no dev-server.
   return (
-    <main className="mx-auto max-w-5xl space-y-4 p-4">
-      <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Atendimento</h1>
+    <div className="-m-4 h-[calc(100dvh-3.5rem)] md:-m-6 md:h-screen">
       <Inbox inicial={conversas} />
-    </main>
+    </div>
   );
 }

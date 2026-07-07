@@ -6,7 +6,16 @@ export type MsgConversa = {
   criado_em: string;
   cliente?: string | null;
 };
-export type Conversa = { telefone: string; cliente: string | null; ultima: string; ultima_em: string; nao_lidas: number };
+export type Conversa = {
+  telefone: string;
+  cliente: string | null;
+  ultima: string;
+  ultima_em: string;
+  nao_lidas: number;
+  favorita: boolean;
+};
+
+export type FiltroAba = "todas" | "nao_lidas" | "favoritos";
 
 const CHAVES_MIDIA = ["image", "audio", "video", "document", "sticker", "contact", "location"];
 
@@ -28,8 +37,8 @@ export function extrairMensagemZapi(payload: unknown): { telefone: string; texto
   return null; // status/ack/sem conteúdo
 }
 
-// Agrupa mensagens por telefone → conversas, ordenadas da mais recente para a mais antiga.
-export function agruparConversas(msgs: MsgConversa[]): Conversa[] {
+// Agrupa mensagens por telefone → conversas, mais recente primeiro. `favoritos` marca a estrela.
+export function agruparConversas(msgs: MsgConversa[], favoritos: Set<string> = new Set()): Conversa[] {
   const porTel = new Map<string, MsgConversa[]>();
   for (const m of msgs) {
     const arr = porTel.get(m.telefone) ?? [];
@@ -47,7 +56,50 @@ export function agruparConversas(msgs: MsgConversa[]): Conversa[] {
       ultima: ultima.texto,
       ultima_em: ultima.criado_em,
       nao_lidas: arr.filter((m) => m.direcao === "IN" && !m.lida).length,
+      favorita: favoritos.has(telefone),
     });
   }
   return convs.sort((a, b) => b.ultima_em.localeCompare(a.ultima_em));
+}
+
+// "HH:MM" 24h da data local.
+export function horaMsg(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+// "hoje" / "ontem" / "dd/mm/aaaa" comparando as datas locais.
+export function separadorDia(iso: string, hojeIso: string): string {
+  const ymd = (x: Date) =>
+    `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+  const d = new Date(iso);
+  const hoje = new Date(hojeIso);
+  const ontem = new Date(hoje);
+  ontem.setDate(hoje.getDate() - 1);
+  if (ymd(d) === ymd(hoje)) return "hoje";
+  if (ymd(d) === ymd(ontem)) return "ontem";
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+}
+
+// Filtra por aba + busca (nome do cliente OU telefone), mantendo a ordem de agruparConversas.
+export function filtrarConversas(convs: Conversa[], aba: FiltroAba, busca: string): Conversa[] {
+  const termo = busca.trim().toLowerCase();
+  return convs.filter((c) => {
+    if (aba === "nao_lidas" && c.nao_lidas === 0) return false;
+    if (aba === "favoritos" && !c.favorita) return false;
+    if (termo) {
+      const alvo = `${(c.cliente ?? "").toLowerCase()} ${c.telefone}`;
+      if (!alvo.includes(termo)) return false;
+    }
+    return true;
+  });
+}
+
+// Contadores para os badges das abas (por CONVERSA, não por mensagem).
+export function contadores(convs: Conversa[]): { todas: number; nao_lidas: number; favoritos: number } {
+  return {
+    todas: convs.length,
+    nao_lidas: convs.filter((c) => c.nao_lidas > 0).length,
+    favoritos: convs.filter((c) => c.favorita).length,
+  };
 }

@@ -2,7 +2,7 @@
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
-import { podeAtender } from "@/lib/clientes/permissoes";
+import { podeAtender, podeVerHonorario } from "@/lib/clientes/permissoes";
 import { decifrar } from "@/lib/nfse/cripto";
 import { enviarTexto } from "@/lib/whatsapp/zapi";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
@@ -43,7 +43,9 @@ export async function listarConversas(): Promise<Conversa[]> {
     .select("telefone, texto, direcao, lida, criado_em, clientes(razao_social)")
     .order("criado_em", { ascending: false })
     .limit(500);
-  return agruparConversas(mapMsgs(data ?? []));
+  const { data: favs } = await supabase.from("conversa").select("telefone").eq("favorita", true);
+  const favoritos = new Set((favs ?? []).map((f) => f.telefone as string));
+  return agruparConversas(mapMsgs(data ?? []), favoritos);
 }
 
 export async function abrirConversa(telefone: string): Promise<MsgConversa[]> {
@@ -94,4 +96,80 @@ export async function responder(telefone: string, texto: string): Promise<{ ok?:
     criado_por: perfil.id,
   });
   return r.ok ? { ok: true } : { erro: r.erro ?? "Falha no envio." };
+}
+
+export async function favoritarConversa(
+  telefone: string,
+  favorita: boolean,
+): Promise<{ ok?: boolean; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("conversa").upsert({ telefone, favorita }, { onConflict: "telefone" });
+  return error ? { erro: "Falha ao favoritar." } : { ok: true };
+}
+
+export async function marcarTodasLidas(): Promise<{ ok?: boolean }> {
+  if (!(await gate())) return {};
+  const supabase = await createServerSupabase();
+  await supabase.from("whatsapp_mensagem").update({ lida: true }).eq("direcao", "IN").eq("lida", false);
+  return { ok: true };
+}
+
+export type DadosContato = {
+  telefone: string;
+  clienteId: string | null;
+  razaoSocial: string | null;
+  regime: string | null;
+  cnpjCpf: string | null;
+  honorario: number | null;
+  situacao: string | null;
+};
+
+export async function dadosContato(telefone: string): Promise<DadosContato> {
+  const vazio: DadosContato = {
+    telefone,
+    clienteId: null,
+    razaoSocial: null,
+    regime: null,
+    cnpjCpf: null,
+    honorario: null,
+    situacao: null,
+  };
+  const perfil = await gate();
+  if (!perfil) return vazio;
+  // Resolve o cliente casado pelo telefone (mesma lógica de responder: casa se houver exatamente um).
+  const admin = createAdminSupabase();
+  const { data: cli } = await admin
+    .from("clientes")
+    .select("id, telefone, razao_social, cpf_cnpj, regime_tributario, status");
+  const casados = (cli ?? []).filter((c) => normalizarTelefone((c.telefone as string) ?? "") === telefone);
+  if (casados.length !== 1) return vazio;
+  const c = casados[0]!;
+  let honorario: number | null = null;
+  if (podeVerHonorario(perfil.papel)) {
+    const { data: fin } = await admin
+      .from("clientes_financeiro")
+      .select("honorario_mensal")
+      .eq("cliente_id", c.id)
+      .maybeSingle();
+    honorario = (fin?.honorario_mensal as number | null) ?? null;
+  }
+  return {
+    telefone,
+    clienteId: c.id as string,
+    razaoSocial: c.razao_social as string,
+    regime: c.regime_tributario as string,
+    cnpjCpf: c.cpf_cnpj as string,
+    honorario,
+    situacao: c.status as string,
+  };
+}
+
+export async function iniciarConversa(
+  telefone: string,
+  texto: string,
+): Promise<{ ok?: boolean; erro?: string }> {
+  const t = normalizarTelefone(telefone);
+  if (!t) return { erro: "Telefone inválido." };
+  return responder(t, texto);
 }
