@@ -21,24 +21,28 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
   const payload = await req.json().catch(() => null);
   const msg = extrairMensagemZapi(payload);
   if (!msg) {
+    // [DEBUG status-entrega] loga TODO evento que não é mensagem (status, ack, etc.).
+    console.log("[DBG] payload:", JSON.stringify(payload).slice(0, 600));
     const ev = extrairStatusZapi(payload);
     if (ev) {
       // Só AVANÇA o estado (nunca rebaixa; tolera ordem invertida via lista de anteriores).
       const anteriores = ev.status === "ENTREGUE" ? ["ENVIADO"] : ev.status === "LIDO" ? ["ENVIADO", "ENTREGUE"] : [];
+      let matched = 0;
       if (anteriores.length) {
         const admin = createAdminSupabase();
-        await admin
+        const { data: upd } = await admin
           .from("whatsapp_mensagem")
           .update({ status: ev.status })
           .in("z_message_id", ev.ids)
           .eq("direcao", "OUT")
-          .in("status", anteriores);
+          .in("status", anteriores)
+          .select("id");
+        matched = upd?.length ?? 0;
       }
+      console.log("[DBG] status reconhecido:", ev.status, "ids:", ev.ids, "linhas atualizadas:", matched);
       return NextResponse.json({ ok: true, status: ev.status });
     }
-    // Instrumentação temporária: captura payloads de status desconhecidos p/ calibrar o parser.
-    const p = (payload ?? {}) as Record<string, unknown>;
-    if (p.status) console.log("zapi status payload:", JSON.stringify(payload).slice(0, 400));
+    console.log("[DBG] status NAO reconhecido pelo parser");
     return NextResponse.json({ ok: true, ignored: true });
   }
 
