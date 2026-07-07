@@ -16,9 +16,11 @@ import {
   contadores,
   horaMsg,
   separadorDia,
+  marcaEntrega,
   type Conversa,
   type MsgConversa,
   type FiltroAba,
+  type MarcaEntrega,
 } from "@/lib/whatsapp/inbox";
 import { iniciais } from "@/lib/ui/apresentacao";
 
@@ -308,8 +310,9 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
                       }`}
                     >
                       {m.texto}
-                      <span className="mt-0.5 block text-right font-mono text-[10px] text-cinza-claro">
+                      <span className="mt-0.5 flex items-center justify-end gap-1 font-mono text-[10px] text-cinza-claro">
                         {horaMsg(m.criado_em)}
+                        <Check marca={marcaEntrega(m.status, m.direcao)} />
                       </span>
                     </div>
                   </div>
@@ -392,6 +395,14 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
       </aside>
     </div>
   );
+}
+
+function Check({ marca }: { marca: MarcaEntrega | null }) {
+  if (!marca) return null;
+  if (marca === "erro") return <span className="text-negativo">!</span>;
+  const duplo = marca === "entregue" || marca === "lido";
+  const cor = marca === "lido" ? "text-verde" : "text-cinza-claro";
+  return <span className={cor}>{duplo ? "✓✓" : "✓"}</span>;
 }
 
 function Linha({ rotulo, valor, mono }: { rotulo: string; valor: string | null; mono?: boolean }) {

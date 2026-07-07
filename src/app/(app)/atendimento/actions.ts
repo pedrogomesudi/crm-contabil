@@ -42,7 +42,7 @@ export async function listarConversas(): Promise<Conversa[]> {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("whatsapp_mensagem")
-    .select("telefone, texto, direcao, lida, criado_em, clientes(razao_social)")
+    .select("telefone, texto, direcao, lida, criado_em, status, clientes(razao_social)")
     .order("criado_em", { ascending: false })
     .limit(500);
   const { data: favs } = await supabase.from("conversa").select("telefone").eq("favorita", true);
@@ -56,7 +56,7 @@ export async function abrirConversa(telefone: string): Promise<MsgConversa[]> {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("whatsapp_mensagem")
-    .select("telefone, texto, direcao, lida, criado_em, clientes(razao_social)")
+    .select("telefone, texto, direcao, lida, criado_em, status, clientes(razao_social)")
     .eq("telefone", telefone)
     .order("criado_em", { ascending: true });
   // marca entradas como lidas (RLS garante que só as visíveis ao usuário são afetadas)
@@ -87,16 +87,25 @@ export async function responder(telefone: string, texto: string): Promise<{ ok?:
   const { data: cli } = await admin.from("clientes").select("id, telefone");
   const casados = (cli ?? []).filter((c) => normalizarTelefone((c.telefone as string) ?? "") === telefone);
   const clienteId = casados.length === 1 ? (casados[0]!.id as string) : null;
-  await admin.from("whatsapp_mensagem").insert({
+  // Guarda o messageId do Z-API para casar os eventos de status (entregue/lido).
+  const resp = (r.resposta ?? {}) as { messageId?: string; id?: string; zaapId?: string };
+  const zId = r.ok ? (resp.messageId ?? resp.id ?? null) : null;
+  const linha = {
     cliente_id: clienteId ?? null,
     telefone,
     texto: t,
     status: r.ok ? "ENVIADO" : "ERRO",
-    direcao: "OUT",
+    direcao: "OUT" as const,
     lida: true,
     resposta: (r.resposta ?? r.erro) as object,
     criado_por: perfil.id,
-  });
+    z_message_id: zId,
+  };
+  const { error: insErr } = await admin.from("whatsapp_mensagem").insert(linha);
+  if (insErr && String(insErr.message).includes("duplicate")) {
+    // colisão improvável de messageId: grava a mensagem sem o id (perde só o rastreio dela)
+    await admin.from("whatsapp_mensagem").insert({ ...linha, z_message_id: null });
+  }
   return r.ok ? { ok: true } : { erro: r.erro ?? "Falha no envio." };
 }
 
