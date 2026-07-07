@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { createAdminSupabase } from "@/lib/supabase/admin";
-import { extrairMensagemZapi } from "@/lib/whatsapp/inbox";
+import { extrairMensagemZapi, extrairStatusZapi } from "@/lib/whatsapp/inbox";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
 
 function segredoOk(recebido: string): boolean {
@@ -18,7 +18,27 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
 
   const payload = await req.json().catch(() => null);
   const msg = extrairMensagemZapi(payload);
-  if (!msg) return NextResponse.json({ ok: true, ignored: true });
+  if (!msg) {
+    const ev = extrairStatusZapi(payload);
+    if (ev) {
+      // Só AVANÇA o estado (nunca rebaixa; tolera ordem invertida via lista de anteriores).
+      const anteriores = ev.status === "ENTREGUE" ? ["ENVIADO"] : ev.status === "LIDO" ? ["ENVIADO", "ENTREGUE"] : [];
+      if (anteriores.length) {
+        const admin = createAdminSupabase();
+        await admin
+          .from("whatsapp_mensagem")
+          .update({ status: ev.status })
+          .in("z_message_id", ev.ids)
+          .eq("direcao", "OUT")
+          .in("status", anteriores);
+      }
+      return NextResponse.json({ ok: true, status: ev.status });
+    }
+    // Instrumentação temporária: captura payloads de status desconhecidos p/ calibrar o parser.
+    const p = (payload ?? {}) as Record<string, unknown>;
+    if (p.status) console.log("zapi status payload:", JSON.stringify(payload).slice(0, 400));
+    return NextResponse.json({ ok: true, ignored: true });
+  }
 
   const tel = normalizarTelefone(msg.telefone) ?? msg.telefone.replace(/\D/g, "");
   const admin = createAdminSupabase();

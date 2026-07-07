@@ -22,6 +22,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   chat estilo WhatsApp (separador por dia + horário), lista com busca, abas Todas/Não lidas/Favoritos,
   favoritar conversa, nova conversa e menu "marcar todas como lidas"; painel do contato com o cliente
   casado pelo telefone (regime, CNPJ, honorário, situação) e atalho para a ficha.
+- **Atendimento — recibos de entrega/leitura:** cada mensagem enviada mostra `✓` (enviada), `✓✓`
+  (entregue) e `✓✓` em verde (lida), via eventos de status do Z-API casados pelo `messageId`.
 
 - **V8.2d — Rollout SALDO final (fecha a V8):** identidade SALDO nos 19 arquivos restantes —
   **atendimento** (inbox de chat com balões saída-verde/entrada-neutro + badge de não-lidas),
