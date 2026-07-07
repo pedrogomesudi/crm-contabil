@@ -23,7 +23,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   favoritar conversa, nova conversa e menu "marcar todas como lidas"; painel do contato com o cliente
   casado pelo telefone (regime, CNPJ, honorário, situação) e atalho para a ficha.
 - **Atendimento — recibos de entrega/leitura:** cada mensagem enviada mostra `✓` (enviada), `✓✓`
-  (entregue) e `✓✓` em verde (lida), via eventos de status do Z-API casados pelo `messageId`.
+  (entregue) e `✓✓` em azul (lida), via eventos de status do Z-API casados pelo `messageId`.
+- **Atendimento — mídia (Fatia B):** recebe imagem/áudio/documento do cliente (baixados e guardados no
+  storage, com proteção anti-SSRF e teto de tamanho) e envia imagem/PDF por anexo no composer; imagens
+  viram miniatura, áudio vira player e documento vira chip com download. A rota que serve a mídia força
+  download de tipos não seguros (anti-XSS).
 
 - **V8.2d — Rollout SALDO final (fecha a V8):** identidade SALDO nos 19 arquivos restantes —
   **atendimento** (inbox de chat com balões saída-verde/entrada-neutro + badge de não-lidas),
