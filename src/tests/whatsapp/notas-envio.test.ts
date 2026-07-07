@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { linhasPagamento, competenciaBR, preSelecionadas } from "@/lib/whatsapp/notas-envio";
+import { linhasPagamento, competenciaBR, preSelecionadas, montarMensagemNota } from "@/lib/whatsapp/notas-envio";
 
 describe("linhasPagamento", () => {
   it("PIX + TED completo", () => {
@@ -41,5 +41,25 @@ describe("preSelecionadas", () => {
   });
   it("nenhuma enviada → todas", () => {
     expect(preSelecionadas([{ nfseId: "a", jaEnviada: false }, { nfseId: "b", jaEnviada: false }]).size).toBe(2);
+  });
+});
+
+describe("montarMensagemNota", () => {
+  const vars = {
+    nome: "Breno", empresa: "DGX LTDA", competencia: "07/2026", valor: "R$ 300,00", vencimento: "10/07/2026",
+    pix: "530@pix", favorecido: "ELEVARE", cnpj: "53.627/0001-46", banco: "0260", agencia: "0001", conta: "552-4",
+    pagamento: "PIX: 530@pix",
+  };
+  it("ignora maiúscula/acento/espaço/pontuação nos marcadores", () => {
+    const t = "Olá {NOME}! Ref {COMPETÊNCIA}, R$ {VALOR}, venc {DATA}. PIX: {CHAVE PIX} Fav: {RAZÃO SOCIAL} CNPJ: {CNPJ} {BANCO} {AG} {C/C}";
+    expect(montarMensagemNota(t, vars)).toBe(
+      "Olá Breno! Ref 07/2026, R$ R$ 300,00, venc 10/07/2026. PIX: 530@pix Fav: ELEVARE CNPJ: 53.627/0001-46 0260 0001 552-4",
+    );
+  });
+  it("aceita nomes minúsculos e {pagamento}", () => {
+    expect(montarMensagemNota("{empresa} — {pagamento}", vars)).toBe("DGX LTDA — PIX: 530@pix");
+  });
+  it("marcador desconhecido → vazio", () => {
+    expect(montarMensagemNota("a{FOOBAR}b", vars)).toBe("ab");
   });
 });
