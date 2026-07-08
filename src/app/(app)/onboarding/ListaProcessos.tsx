@@ -23,7 +23,7 @@ export function ListaProcessos({ itens, hoje }: { itens: ResumoProcesso[]; hoje:
             return (
               <tr key={o.processoId} className="border-b border-linha/60">
                 <td className="px-3 py-2">
-                  <Link href={`/clientes/${o.clienteId}`} className="text-texto underline decoration-linha hover:decoration-verde">
+                  <Link href={`/onboarding/${o.clienteId}`} className="text-texto underline decoration-linha hover:decoration-verde">
                     {o.razaoSocial}
                   </Link>
                 </td>
