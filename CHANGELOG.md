@@ -8,6 +8,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Financeiro — Orçamento:** tela para definir o orçado por categoria em cada mês do ano (grade
+  editável Receitas/Despesas × 12 meses, com totais e atalhos "replicar nos 12 meses" e "copiar do ano
+  anterior"). Base do dashboard Orçado × Realizado (próxima etapa).
+
 ### Corrigido
 
 - **Datas — fuso horário:** `formatarData` mostrava o **dia anterior** para colunas `date` puras
