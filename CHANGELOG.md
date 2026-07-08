@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Onboarding × Comercial — gatilho de consultoria:** em qualquer item do processo de onboarding, um botão
+  **"Gerar oportunidade de consultoria"** cria uma oportunidade no funil comercial já ligada ao cliente
+  (serviço "Consultoria: …", etapa Novo). O item passa a mostrar "criada ✓ · ver no funil". Fecha o Ciclo C.
+
 - **Módulo Comercial — funil de oportunidades:** nova área `/comercial` com um quadro de prospects por
   etapa (Novo → Contato feito → Proposta enviada → Negociação), cada coluna somando quantidade e valor.
   Move com ← →, marca **Ganho**/**Perdido** (com motivo) e, ao ganhar, **converte em cliente**

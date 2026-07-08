@@ -7,7 +7,7 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { cifrarSenha, decifrarSenha } from "@/lib/onboarding/credencial";
 import { materializarProcesso, progressoProcesso, motivosBloqueioConclusao, type PerfilCliente, type FlagsProcesso, type StatusItem, type TemplateBloco, type TemplateItem } from "@/lib/onboarding/processo";
 
-export type ItemProcessoView = { id: string; blocoOrdem: number; blocoNome: string; codigo: string | null; titulo: string; descricao: string | null; tipo: "padrao" | "acesso"; responsavelPapel: string | null; responsavelId: string | null; prazo: string | null; status: StatusItem; observacao: string | null; bloqueante: boolean; anexoObrigatorio: boolean; alertaRisco: string | null; ordem: number; acessoUrl: string | null; acessoLogin: string | null; temSenha: boolean; dependeDe: string[]; campoDestino: string | null; valorDestino: string | null; anexoNome: string | null; temAnexo: boolean };
+export type ItemProcessoView = { id: string; blocoOrdem: number; blocoNome: string; codigo: string | null; titulo: string; descricao: string | null; tipo: "padrao" | "acesso"; responsavelPapel: string | null; responsavelId: string | null; prazo: string | null; status: StatusItem; observacao: string | null; bloqueante: boolean; anexoObrigatorio: boolean; alertaRisco: string | null; ordem: number; acessoUrl: string | null; acessoLogin: string | null; temSenha: boolean; dependeDe: string[]; campoDestino: string | null; valorDestino: string | null; anexoNome: string | null; temAnexo: boolean; oportunidadeId: string | null };
 export type ProcessoView = { id: string; perfil: string; dataInicio: string; status: string } | null;
 
 export async function listarProcessoCliente(clienteId: string): Promise<{ processo: ProcessoView; itens: ItemProcessoView[]; progresso: ReturnType<typeof progressoProcesso> } | null> {
@@ -16,8 +16,8 @@ export async function listarProcessoCliente(clienteId: string): Promise<{ proces
   const supabase = await createServerSupabase();
   const { data: proc } = await supabase.from("onboarding_processo").select("id, perfil, data_inicio, status").eq("cliente_id", clienteId).order("criado_em", { ascending: false }).limit(1).maybeSingle();
   if (!proc) return { processo: null, itens: [], progresso: progressoProcesso([]) };
-  const { data } = await supabase.from("onboarding_processo_item").select("id, bloco_ordem, bloco_nome, codigo, titulo, descricao, tipo, responsavel_papel, responsavel_id, prazo, status, observacao, bloqueante, anexo_obrigatorio, alerta_risco, ordem, acesso_url, acesso_login, acesso_senha_cifrada, depende_de, campo_destino, valor_destino, anexo_path, anexo_nome").eq("processo_id", proc.id).order("bloco_ordem").order("ordem");
-  const itens: ItemProcessoView[] = (data ?? []).map((r) => ({ id: r.id as string, blocoOrdem: r.bloco_ordem as number, blocoNome: r.bloco_nome as string, codigo: r.codigo as string | null, titulo: r.titulo as string, descricao: r.descricao as string | null, tipo: r.tipo as "padrao" | "acesso", responsavelPapel: r.responsavel_papel as string | null, responsavelId: (r.responsavel_id as string | null) ?? null, prazo: (r.prazo as string | null) ?? null, status: r.status as StatusItem, observacao: (r.observacao as string | null) ?? null, bloqueante: r.bloqueante as boolean, anexoObrigatorio: r.anexo_obrigatorio as boolean, alertaRisco: r.alerta_risco as string | null, ordem: r.ordem as number, acessoUrl: (r.acesso_url as string | null) ?? null, acessoLogin: (r.acesso_login as string | null) ?? null, temSenha: !!r.acesso_senha_cifrada, dependeDe: (r.depende_de as string[]) ?? [], campoDestino: (r.campo_destino as string | null) ?? null, valorDestino: (r.valor_destino as string | null) ?? null, anexoNome: (r.anexo_nome as string | null) ?? null, temAnexo: !!r.anexo_path }));
+  const { data } = await supabase.from("onboarding_processo_item").select("id, bloco_ordem, bloco_nome, codigo, titulo, descricao, tipo, responsavel_papel, responsavel_id, prazo, status, observacao, bloqueante, anexo_obrigatorio, alerta_risco, ordem, acesso_url, acesso_login, acesso_senha_cifrada, depende_de, campo_destino, valor_destino, anexo_path, anexo_nome, oportunidade_id").eq("processo_id", proc.id).order("bloco_ordem").order("ordem");
+  const itens: ItemProcessoView[] = (data ?? []).map((r) => ({ id: r.id as string, blocoOrdem: r.bloco_ordem as number, blocoNome: r.bloco_nome as string, codigo: r.codigo as string | null, titulo: r.titulo as string, descricao: r.descricao as string | null, tipo: r.tipo as "padrao" | "acesso", responsavelPapel: r.responsavel_papel as string | null, responsavelId: (r.responsavel_id as string | null) ?? null, prazo: (r.prazo as string | null) ?? null, status: r.status as StatusItem, observacao: (r.observacao as string | null) ?? null, bloqueante: r.bloqueante as boolean, anexoObrigatorio: r.anexo_obrigatorio as boolean, alertaRisco: r.alerta_risco as string | null, ordem: r.ordem as number, acessoUrl: (r.acesso_url as string | null) ?? null, acessoLogin: (r.acesso_login as string | null) ?? null, temSenha: !!r.acesso_senha_cifrada, dependeDe: (r.depende_de as string[]) ?? [], campoDestino: (r.campo_destino as string | null) ?? null, valorDestino: (r.valor_destino as string | null) ?? null, anexoNome: (r.anexo_nome as string | null) ?? null, temAnexo: !!r.anexo_path, oportunidadeId: (r.oportunidade_id as string | null) ?? null }));
   const progresso = progressoProcesso(itens.map((i) => ({ status: i.status, prazo: i.prazo, bloqueante: i.bloqueante })));
   return { processo: { id: proc.id as string, perfil: proc.perfil as string, dataInicio: proc.data_inicio as string, status: proc.status as string }, itens, progresso };
 }
@@ -152,6 +152,34 @@ export async function removerAnexoProcessoItem(itemId: string, clienteId: string
   if (item.anexo_path) await admin.storage.from("documentos").remove([item.anexo_path as string]);
   const { error } = await admin.from("onboarding_processo_item").update({ anexo_path: null, anexo_nome: null }).eq("id", itemId);
   if (error) return { erro: "Falha ao remover." };
+  revalidatePath(`/clientes/${clienteId}`);
+  return { ok: true };
+}
+
+export async function gerarOportunidadeConsultoria(itemId: string): Promise<{ ok?: boolean; erro?: string }> {
+  const p = await getPerfilAtual();
+  if (!p?.ativo || !podeCriarCliente(p.papel)) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { data: item } = await supabase.from("onboarding_processo_item").select("id, titulo, alerta_risco, descricao, processo_id, oportunidade_id").eq("id", itemId).maybeSingle();
+  if (!item) return { erro: "Item não encontrado." };
+  if (item.oportunidade_id) return { ok: true };
+  const { data: proc } = await supabase.from("onboarding_processo").select("cliente_id").eq("id", item.processo_id as string).maybeSingle();
+  if (!proc) return { erro: "Processo não encontrado." };
+  const clienteId = proc.cliente_id as string;
+  const { data: cli } = await supabase.from("clientes").select("razao_social").eq("id", clienteId).maybeSingle();
+  const razao = (cli?.razao_social as string) ?? "Cliente";
+  const { data: nova, error } = await supabase.from("oportunidade").insert({
+    prospect_nome: razao,
+    cliente_id: clienteId,
+    servico_interesse: `Consultoria: ${item.titulo as string}`,
+    origem: "Onboarding",
+    responsavel_id: p.id,
+    observacoes: (item.alerta_risco as string | null) ?? (item.descricao as string | null) ?? null,
+    etapa: "novo",
+  }).select("id").single();
+  if (error || !nova) return { erro: "Falha ao gerar oportunidade." };
+  await supabase.from("onboarding_processo_item").update({ oportunidade_id: nova.id as string }).eq("id", itemId);
+  revalidatePath(`/onboarding/${clienteId}`);
   revalidatePath(`/clientes/${clienteId}`);
   return { ok: true };
 }
