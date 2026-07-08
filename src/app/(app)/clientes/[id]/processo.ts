@@ -3,10 +3,11 @@ import { revalidatePath } from "next/cache";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeCriarCliente, podeRevelarCredencial } from "@/lib/clientes/permissoes";
+import { createAdminSupabase } from "@/lib/supabase/admin";
 import { cifrarSenha, decifrarSenha } from "@/lib/onboarding/credencial";
-import { materializarProcesso, progressoProcesso, type PerfilCliente, type FlagsProcesso, type StatusItem, type TemplateBloco, type TemplateItem } from "@/lib/onboarding/processo";
+import { materializarProcesso, progressoProcesso, motivosBloqueioConclusao, type PerfilCliente, type FlagsProcesso, type StatusItem, type TemplateBloco, type TemplateItem } from "@/lib/onboarding/processo";
 
-export type ItemProcessoView = { id: string; blocoOrdem: number; blocoNome: string; codigo: string | null; titulo: string; descricao: string | null; tipo: "padrao" | "acesso"; responsavelPapel: string | null; responsavelId: string | null; prazo: string | null; status: StatusItem; observacao: string | null; bloqueante: boolean; anexoObrigatorio: boolean; alertaRisco: string | null; ordem: number; acessoUrl: string | null; acessoLogin: string | null; temSenha: boolean };
+export type ItemProcessoView = { id: string; blocoOrdem: number; blocoNome: string; codigo: string | null; titulo: string; descricao: string | null; tipo: "padrao" | "acesso"; responsavelPapel: string | null; responsavelId: string | null; prazo: string | null; status: StatusItem; observacao: string | null; bloqueante: boolean; anexoObrigatorio: boolean; alertaRisco: string | null; ordem: number; acessoUrl: string | null; acessoLogin: string | null; temSenha: boolean; dependeDe: string[]; campoDestino: string | null; valorDestino: string | null; anexoNome: string | null; temAnexo: boolean };
 export type ProcessoView = { id: string; perfil: string; dataInicio: string; status: string } | null;
 
 export async function listarProcessoCliente(clienteId: string): Promise<{ processo: ProcessoView; itens: ItemProcessoView[]; progresso: ReturnType<typeof progressoProcesso> } | null> {
@@ -15,8 +16,8 @@ export async function listarProcessoCliente(clienteId: string): Promise<{ proces
   const supabase = await createServerSupabase();
   const { data: proc } = await supabase.from("onboarding_processo").select("id, perfil, data_inicio, status").eq("cliente_id", clienteId).order("criado_em", { ascending: false }).limit(1).maybeSingle();
   if (!proc) return { processo: null, itens: [], progresso: progressoProcesso([]) };
-  const { data } = await supabase.from("onboarding_processo_item").select("id, bloco_ordem, bloco_nome, codigo, titulo, descricao, tipo, responsavel_papel, responsavel_id, prazo, status, observacao, bloqueante, anexo_obrigatorio, alerta_risco, ordem, acesso_url, acesso_login, acesso_senha_cifrada").eq("processo_id", proc.id).order("bloco_ordem").order("ordem");
-  const itens: ItemProcessoView[] = (data ?? []).map((r) => ({ id: r.id as string, blocoOrdem: r.bloco_ordem as number, blocoNome: r.bloco_nome as string, codigo: r.codigo as string | null, titulo: r.titulo as string, descricao: r.descricao as string | null, tipo: r.tipo as "padrao" | "acesso", responsavelPapel: r.responsavel_papel as string | null, responsavelId: (r.responsavel_id as string | null) ?? null, prazo: (r.prazo as string | null) ?? null, status: r.status as StatusItem, observacao: (r.observacao as string | null) ?? null, bloqueante: r.bloqueante as boolean, anexoObrigatorio: r.anexo_obrigatorio as boolean, alertaRisco: r.alerta_risco as string | null, ordem: r.ordem as number, acessoUrl: (r.acesso_url as string | null) ?? null, acessoLogin: (r.acesso_login as string | null) ?? null, temSenha: !!r.acesso_senha_cifrada }));
+  const { data } = await supabase.from("onboarding_processo_item").select("id, bloco_ordem, bloco_nome, codigo, titulo, descricao, tipo, responsavel_papel, responsavel_id, prazo, status, observacao, bloqueante, anexo_obrigatorio, alerta_risco, ordem, acesso_url, acesso_login, acesso_senha_cifrada, depende_de, campo_destino, valor_destino, anexo_path, anexo_nome").eq("processo_id", proc.id).order("bloco_ordem").order("ordem");
+  const itens: ItemProcessoView[] = (data ?? []).map((r) => ({ id: r.id as string, blocoOrdem: r.bloco_ordem as number, blocoNome: r.bloco_nome as string, codigo: r.codigo as string | null, titulo: r.titulo as string, descricao: r.descricao as string | null, tipo: r.tipo as "padrao" | "acesso", responsavelPapel: r.responsavel_papel as string | null, responsavelId: (r.responsavel_id as string | null) ?? null, prazo: (r.prazo as string | null) ?? null, status: r.status as StatusItem, observacao: (r.observacao as string | null) ?? null, bloqueante: r.bloqueante as boolean, anexoObrigatorio: r.anexo_obrigatorio as boolean, alertaRisco: r.alerta_risco as string | null, ordem: r.ordem as number, acessoUrl: (r.acesso_url as string | null) ?? null, acessoLogin: (r.acesso_login as string | null) ?? null, temSenha: !!r.acesso_senha_cifrada, dependeDe: (r.depende_de as string[]) ?? [], campoDestino: (r.campo_destino as string | null) ?? null, valorDestino: (r.valor_destino as string | null) ?? null, anexoNome: (r.anexo_nome as string | null) ?? null, temAnexo: !!r.anexo_path }));
   const progresso = progressoProcesso(itens.map((i) => ({ status: i.status, prazo: i.prazo, bloqueante: i.bloqueante })));
   return { processo: { id: proc.id as string, perfil: proc.perfil as string, dataInicio: proc.data_inicio as string, status: proc.status as string }, itens, progresso };
 }
@@ -49,16 +50,30 @@ export async function iniciarProcesso(clienteId: string, perfil: PerfilCliente, 
   return { ok: true };
 }
 
-export async function salvarProcessoItem(input: { id?: string; processoId: string; clienteId: string; blocoOrdem: number; blocoNome: string; codigo: string | null; titulo: string; tipo: "padrao" | "acesso"; responsavelPapel: string | null; responsavelId: string | null; prazo: string | null; status: StatusItem; observacao: string | null; bloqueante: boolean; acessoUrl: string | null; acessoLogin: string | null; novaSenha?: string | null; ordem: number }): Promise<{ ok?: boolean; erro?: string }> {
+export async function salvarProcessoItem(input: { id?: string; processoId: string; clienteId: string; blocoOrdem: number; blocoNome: string; codigo: string | null; titulo: string; tipo: "padrao" | "acesso"; responsavelPapel: string | null; responsavelId: string | null; prazo: string | null; status: StatusItem; observacao: string | null; bloqueante: boolean; dependeDe: string[]; anexoObrigatorio: boolean; campoDestino: string | null; valorDestino: string | null; acessoUrl: string | null; acessoLogin: string | null; novaSenha?: string | null; ordem: number }): Promise<{ ok?: boolean; erro?: string }> {
   const p = await getPerfilAtual();
   if (!p?.ativo || !podeCriarCliente(p.papel)) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
-  const row: Record<string, unknown> = { processo_id: input.processoId, bloco_ordem: input.blocoOrdem, bloco_nome: input.blocoNome, codigo: input.codigo, titulo: input.titulo, tipo: input.tipo, responsavel_papel: input.responsavelPapel, responsavel_id: input.responsavelId, prazo: input.prazo || null, status: input.status, observacao: input.observacao, bloqueante: input.bloqueante, acesso_url: input.acessoUrl, acesso_login: input.acessoLogin, ordem: input.ordem, atualizado_em: new Date().toISOString(), atualizado_por: p.id };
+  if (input.status === "concluido") {
+    const { data: irmaosRows } = await supabase.from("onboarding_processo_item").select("id, codigo, status").eq("processo_id", input.processoId);
+    const irmaos = (irmaosRows ?? []).filter((r) => r.id !== input.id).map((r) => ({ codigo: r.codigo as string | null, status: r.status as StatusItem }));
+    let temAnexo = false;
+    if (input.id) {
+      const { data: atual } = await supabase.from("onboarding_processo_item").select("anexo_path").eq("id", input.id).maybeSingle();
+      temAnexo = !!atual?.anexo_path;
+    }
+    const motivos = motivosBloqueioConclusao({ dependeDe: input.dependeDe, anexoObrigatorio: input.anexoObrigatorio, temAnexo, campoDestino: input.campoDestino, temValorDestino: !!input.valorDestino }, irmaos);
+    if (motivos.length > 0) return { erro: motivos.join("; ") };
+  }
+  const row: Record<string, unknown> = { processo_id: input.processoId, bloco_ordem: input.blocoOrdem, bloco_nome: input.blocoNome, codigo: input.codigo, titulo: input.titulo, tipo: input.tipo, responsavel_papel: input.responsavelPapel, responsavel_id: input.responsavelId, prazo: input.prazo || null, status: input.status, observacao: input.observacao, bloqueante: input.bloqueante, depende_de: input.dependeDe, campo_destino: input.campoDestino, valor_destino: input.valorDestino, acesso_url: input.acessoUrl, acesso_login: input.acessoLogin, ordem: input.ordem, atualizado_em: new Date().toISOString(), atualizado_por: p.id };
   if (input.novaSenha) {
     try { row.acesso_senha_cifrada = cifrarSenha(input.novaSenha); } catch { return { erro: "Cofre não configurado (ONBOARDING_CRIPTO_KEY)." }; }
   }
   const { error } = input.id ? await supabase.from("onboarding_processo_item").update(row).eq("id", input.id) : await supabase.from("onboarding_processo_item").insert(row);
   if (error) return { erro: "Falha ao salvar." };
+  if (input.status === "concluido" && input.campoDestino === "competencia_inicial" && input.valorDestino) {
+    await supabase.from("clientes").update({ competencia_inicial: `${input.valorDestino}-01` }).eq("id", input.clienteId);
+  }
   revalidatePath(`/clientes/${input.clienteId}`);
   return { ok: true };
 }
@@ -84,4 +99,59 @@ export async function revelarSenha(itemId: string): Promise<{ senha?: string; er
   const { error: logErr } = await supabase.from("onboarding_log_credencial").insert({ item_id: itemId, usuario_id: p.id });
   if (logErr) return { erro: "Não foi possível registrar a auditoria; revelação cancelada." };
   return { senha };
+}
+
+const TIPOS_ANEXO = ["application/pdf", "image/png", "image/jpeg"];
+const MAX_ANEXO = 10 * 1024 * 1024;
+function nomeSeguroAnexo(nome: string): string {
+  return nome.normalize("NFC").replace(/[^\p{L}\p{N}._-]+/gu, "_").replace(/^_+|_+$/g, "").slice(0, 120) || "arquivo";
+}
+
+export async function anexarProcessoItem(itemId: string, clienteId: string, formData: FormData): Promise<{ ok?: boolean; erro?: string }> {
+  const p = await getPerfilAtual();
+  if (!p?.ativo || !podeCriarCliente(p.papel)) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { data: item } = await supabase.from("onboarding_processo_item").select("id, processo_id").eq("id", itemId).maybeSingle();
+  if (!item) return { erro: "Item não encontrado ou sem permissão." };
+  const file = formData.get("arquivo");
+  if (!(file instanceof File) || file.size === 0) return { erro: "Selecione um arquivo." };
+  if (file.size > MAX_ANEXO) return { erro: "Arquivo acima de 10 MB." };
+  if (!TIPOS_ANEXO.includes(file.type)) return { erro: "Tipo não permitido (PDF, PNG ou JPG)." };
+  const caminho = `onboarding/${item.processo_id}/${itemId}/${crypto.randomUUID()}-${nomeSeguroAnexo(file.name)}`;
+  const admin = createAdminSupabase();
+  const up = await admin.storage.from("documentos").upload(caminho, file, { contentType: file.type });
+  if (up.error) return { erro: "Falha no upload." };
+  const { error } = await admin.from("onboarding_processo_item").update({ anexo_path: caminho, anexo_nome: file.name }).eq("id", itemId);
+  if (error) {
+    await admin.storage.from("documentos").remove([caminho]);
+    return { erro: "Falha ao registrar o anexo." };
+  }
+  revalidatePath(`/clientes/${clienteId}`);
+  return { ok: true };
+}
+
+export async function urlAnexoProcessoItem(itemId: string): Promise<{ url?: string; erro?: string }> {
+  const p = await getPerfilAtual();
+  if (!p?.ativo || !podeCriarCliente(p.papel)) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { data: item } = await supabase.from("onboarding_processo_item").select("anexo_path").eq("id", itemId).maybeSingle();
+  if (!item?.anexo_path) return { erro: "Sem anexo." };
+  const admin = createAdminSupabase();
+  const { data: signed, error } = await admin.storage.from("documentos").createSignedUrl(item.anexo_path as string, 60);
+  if (error || !signed?.signedUrl) return { erro: "Não foi possível gerar o link." };
+  return { url: signed.signedUrl };
+}
+
+export async function removerAnexoProcessoItem(itemId: string, clienteId: string): Promise<{ ok?: boolean; erro?: string }> {
+  const p = await getPerfilAtual();
+  if (!p?.ativo || !podeCriarCliente(p.papel)) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { data: item } = await supabase.from("onboarding_processo_item").select("anexo_path").eq("id", itemId).maybeSingle();
+  if (!item) return { erro: "Item não encontrado." };
+  const admin = createAdminSupabase();
+  if (item.anexo_path) await admin.storage.from("documentos").remove([item.anexo_path as string]);
+  const { error } = await admin.from("onboarding_processo_item").update({ anexo_path: null, anexo_nome: null }).eq("id", itemId);
+  if (error) return { erro: "Falha ao remover." };
+  revalidatePath(`/clientes/${clienteId}`);
+  return { ok: true };
 }
