@@ -8,13 +8,13 @@ import { podeAtender, podeCriarCliente } from "@/lib/clientes/permissoes";
 import { sair } from "@/app/login/actions";
 import { LogoSaldo } from "@/components/marca/LogoSaldo";
 
-export function Sidebar({ papel, nome }: { papel: Papel; nome: string }) {
+export function Sidebar({ papel, nome, alertasOnboarding = 0 }: { papel: Papel; nome: string; alertasOnboarding?: number }) {
   const pathname = usePathname();
   const [aberto, setAberto] = useState(false);
-  const itens = [
+  const itens: { href: string; label: string; badge?: number }[] = [
     { href: "/", label: "Início" },
     { href: "/clientes", label: "Clientes" },
-    ...(podeCriarCliente(papel) ? [{ href: "/onboarding", label: "Onboarding" }] : []),
+    ...(podeCriarCliente(papel) ? [{ href: "/onboarding", label: "Onboarding", badge: alertasOnboarding }] : []),
     ...(podeAtender(papel) ? [{ href: "/atendimento", label: "Atendimento" }] : []),
     ...(podeGerenciarFinanceiro(papel) ? [{ href: "/financeiro/cadastros", label: "Financeiro" }] : []),
     ...(["admin", "assistente"].includes(papel) ? [{ href: "/integracoes/dominio", label: "Integração Domínio" }] : []),
@@ -35,7 +35,10 @@ export function Sidebar({ papel, nome }: { papel: Papel; nome: string }) {
             onClick={() => setAberto(false)}
             className={`rounded-lg px-3 py-2 ${ativo ? "bg-verde font-medium text-white" : "text-texto-claro hover:bg-tinta-2"}`}
           >
-            {it.label}
+            <span className="flex items-center justify-between gap-2">
+              {it.label}
+              {it.badge ? <span className="rounded-full bg-negativo px-1.5 text-[10px] font-semibold text-white">{it.badge}</span> : null}
+            </span>
           </Link>
         );
       })}
