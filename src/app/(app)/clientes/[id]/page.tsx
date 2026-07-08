@@ -3,8 +3,9 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { listarContadores, contadorPorId } from "@/lib/clientes/contadores";
 import { podeAtribuirContador, podeVerHonorario, podeExcluirCliente, podeCriarCliente, podeRevelarCredencial } from "@/lib/clientes/permissoes";
-import { OnboardingSection } from "@/components/onboarding/OnboardingSection";
-import { listarOnboardingCliente } from "./onboarding";
+import { ProcessoSection } from "@/components/onboarding/ProcessoSection";
+import { listarProcessoCliente } from "./processo";
+import { sugerirPerfil } from "@/lib/onboarding/processo";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
@@ -77,12 +78,16 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   const contratos = mostrarHonorario ? await listarContratos(id) : [];
 
   const podeOnboarding = podeCriarCliente(papel);
-  const onboarding = podeOnboarding ? await listarOnboardingCliente(id) : null;
+  const proc = podeOnboarding ? await listarProcessoCliente(id) : null;
   let usuariosOnb: { id: string; nome: string }[] = [];
+  let perfilSugerido: "mei" | "simples_sem_func" | "simples_com_func" | "presumido_real" | "pf" = "simples_sem_func";
   if (podeOnboarding) {
-    const { data } = await supabase.from("usuarios").select("id, nome").eq("ativo", true).order("nome");
-    usuariosOnb = (data as { id: string; nome: string }[] | null) ?? [];
+    const { data: us } = await supabase.from("usuarios").select("id, nome").eq("ativo", true).order("nome");
+    usuariosOnb = (us as { id: string; nome: string }[] | null) ?? [];
+    const { data: fin } = await supabase.from("clientes_financeiro").select("qtd_funcionarios").eq("cliente_id", id).maybeSingle();
+    perfilSugerido = sugerirPerfil(String(cliente.tipo_pessoa ?? "PJ"), String(cliente.regime_tributario ?? ""), (fin?.qtd_funcionarios as number | null) ?? null);
   }
+  const hojeOnb = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
   return (
     <div className="space-y-6">
@@ -128,13 +133,16 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
       />
       <NotasFiscaisSection clienteId={id} papel={papel} />
       <EmissaoClienteSection clienteId={id} papel={papel} />
-      {onboarding && (
-        <OnboardingSection
+      {proc && (
+        <ProcessoSection
           clienteId={id}
-          itens={onboarding.itens}
-          progresso={onboarding.progresso}
+          processo={proc.processo}
+          itens={proc.itens}
+          progresso={proc.progresso}
           usuarios={usuariosOnb}
           podeRevelar={podeRevelarCredencial(papel)}
+          perfilSugerido={perfilSugerido}
+          hoje={hojeOnb}
         />
       )}
     </div>
