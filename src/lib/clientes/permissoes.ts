@@ -49,3 +49,13 @@ export function podeConfigurarWhatsapp(papel: Papel | undefined): boolean {
 export function podeAtender(papel: Papel | undefined): boolean {
   return papel === "admin" || papel === "financeiro" || papel === "contador";
 }
+
+// Revelar senha de acesso (cofre): só admin e contador.
+export function podeRevelarCredencial(papel: Papel | undefined): boolean {
+  return papel === "admin" || papel === "contador";
+}
+
+// Editar o checklist-modelo de onboarding: só admin.
+export function podeGerenciarModeloOnboarding(papel: Papel | undefined): boolean {
+  return papel === "admin";
+}
