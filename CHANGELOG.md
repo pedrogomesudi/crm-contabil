@@ -10,6 +10,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Financeiro — Orçado × Realizado:** dashboard comparativo por categoria, com período ajustável
+  (mês/trimestre/semestre/ano) e base competência ou caixa; cartões de resumo (Receitas/Despesas/
+  Resultado com variação), gráfico de barras por categoria, linha de evolução da receita no ano e tabela
+  estilo DRE com variação colorida.
+
 - **Financeiro — Orçamento:** tela para definir o orçado por categoria em cada mês do ano (grade
   editável Receitas/Despesas × 12 meses, com totais e atalhos "replicar nos 12 meses" e "copiar do ano
   anterior"). Base do dashboard Orçado × Realizado (próxima etapa).
