@@ -96,15 +96,6 @@ export async function excluirTemplate(id: string): Promise<{ ok?: boolean; erro?
   return error ? { erro: "Falha ao excluir." } : { ok: true };
 }
 
-export async function listarTemplate(): Promise<TemplateView> {
-  const p = await getPerfilAtual();
-  if (!p?.ativo || !podeCriarCliente(p.papel)) return null;
-  const supabase = await createServerSupabase();
-  const { data: tpl } = await supabase.from("onboarding_template").select("id, slug, nome, descricao, ativo").eq("ativo", true).order("criado_em").limit(1).maybeSingle();
-  if (!tpl) return null;
-  return carregarBlocos(supabase, tpl as { id: string; slug: string; nome: string; descricao: string | null; ativo: boolean });
-}
-
 export async function semearTemplatePadrao(): Promise<{ ok?: boolean; erro?: string }> {
   const p = await getPerfilAtual();
   if (!p?.ativo || !podeGerenciarModeloOnboarding(p.papel)) return { erro: "Sem permissão." };
