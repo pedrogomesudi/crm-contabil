@@ -21,7 +21,7 @@ describe("agruparPorCategoria", () => {
   it("ordem das categorias + ordem interna", () => {
     const g = agruparPorCategoria([item({ categoria: "acesso", ordem: 2 }), item({ categoria: "documento", ordem: 1 }), item({ categoria: "acesso", ordem: 1 })]);
     expect(g.map((x) => x.categoria)).toEqual(["documento", "acesso"]);
-    expect(g[1].itens.map((i) => i.ordem)).toEqual([1, 2]);
+    expect(g[1]!.itens.map((i) => i.ordem)).toEqual([1, 2]);
   });
 });
 
