@@ -17,6 +17,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- **Comercial — Kanban:** no quadro do funil, agora dá para **arrastar os cards** entre as colunas
+  (Novo → Contato feito → Proposta enviada → Negociação); ao soltar, a etapa muda. As setas ← → e os
+  botões Ganho/Perdido continuam (fallback no celular).
+
 - **Onboarding — página própria por cliente:** o onboarding de cada cliente agora abre em uma página
   dedicada (`/onboarding/[cliente]`), acessada pela lista de processos, pelos alertas e por um link no
   cadastro. O cadastro do cliente deixou de exibir a seção completa (ficou mais curto).
