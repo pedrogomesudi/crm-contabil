@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SALDO — Apresentação</title>
+<meta name="description" content="SALDO — CRM para escritórios de contabilidade. Visão de produto.">
+</head>
+<body>
+<style>
+  :root{
+    --verde:#0FA968; --verde-2:#0c8f58; --verde-claro:#3CD98A; --violeta:#7C5CFF;
+    --ground:#F7F6F2; --surface:#FFFFFF; --surface-2:#FBFAF7;
+    --ink:#101614; --muted:#5A6163; --faint:#8C938E; --line:#E7E4DC; --neg:#C0503F;
+    --tinta:#0E1512;
+    --shadow:0 1px 2px rgba(16,22,20,.05), 0 14px 34px -18px rgba(16,22,20,.18);
+    --radius:18px;
+    --disp:"Space Grotesk", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+    --sans:ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono:ui-monospace, "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --ground:#0E1512; --surface:#141C18; --surface-2:#101915;
+    --ink:#EBF1ED; --muted:#9AA39D; --faint:#78827C; --line:#232A27;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 40px -20px rgba(0,0,0,.6);
+  }}
+  :root[data-theme="dark"]{
+    --ground:#0E1512; --surface:#141C18; --surface-2:#101915;
+    --ink:#EBF1ED; --muted:#9AA39D; --faint:#78827C; --line:#232A27;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 40px -20px rgba(0,0,0,.6);
+  }
+  :root[data-theme="light"]{
+    --ground:#F7F6F2; --surface:#FFFFFF; --surface-2:#FBFAF7;
+    --ink:#101614; --muted:#5A6163; --faint:#8C938E; --line:#E7E4DC;
+    --shadow:0 1px 2px rgba(16,22,20,.05), 0 14px 34px -18px rgba(16,22,20,.18);
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  a{color:inherit}
+  h1,h2,h3{font-family:var(--disp);text-wrap:balance;letter-spacing:-.02em;margin:0}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--verde-2)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .eyebrow{color:var(--verde-claro)}}
+  :root[data-theme="dark"] .eyebrow{color:var(--verde-claro)}
+
+  /* top bar */
+  .topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb, var(--ground) 86%, transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .topbar .row{display:flex;align-items:center;gap:12px;height:60px}
+  .mark{display:flex;align-items:center;gap:10px;font-family:var(--disp);font-weight:700;letter-spacing:-.01em;font-size:18px}
+  .coin{width:22px;height:22px;flex:0 0 auto}
+  .tag{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.08em}
+
+  /* hero */
+  .hero{padding:72px 0 40px;position:relative;overflow:hidden}
+  .hero h1{font-size:clamp(34px,6vw,60px);font-weight:700;line-height:1.02;margin-top:14px}
+  .hero .lede{font-size:clamp(17px,2.3vw,21px);color:var(--muted);max-width:62ch;margin-top:20px}
+  .glow{position:absolute;inset:auto -10% 30% auto;width:520px;height:520px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, color-mix(in srgb,var(--verde) 26%,transparent), transparent 62%);
+    filter:blur(10px);pointer-events:none;z-index:-1}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:8px 14px;font-size:13px;box-shadow:var(--shadow)}
+  .chip b{font-family:var(--disp);font-weight:700}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--verde)}
+
+  section{padding:44px 0}
+  .lead2{font-size:clamp(20px,3vw,28px);font-family:var(--disp);font-weight:600;letter-spacing:-.02em;max-width:24ch}
+  .sec-head{max-width:60ch;margin-bottom:26px}
+  .sec-head p{color:var(--muted);margin:.5em 0 0}
+
+  .grid{display:grid;gap:16px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media (max-width:820px){.g3,.g2{grid-template-columns:1fr}}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;
+    box-shadow:var(--shadow);transition:transform .25s ease, border-color .25s ease}
+  .card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--verde) 45%,var(--line))}
+  .card .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--verde) 14%,transparent);color:var(--verde-2);margin-bottom:14px}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .card .ic{color:var(--verde-claro)}}
+  :root[data-theme="dark"] .card .ic{color:var(--verde-claro)}
+  .card h3{font-size:17px;font-weight:700}
+  .card p{color:var(--muted);font-size:14.5px;margin:.5em 0 0}
+
+  /* differentiators band */
+  .band{background:var(--tinta);color:#EBF1ED;border-radius:26px;padding:40px;margin:8px 0}
+  .band .eyebrow{color:var(--verde-claro)}
+  .band h2{color:#fff;font-size:clamp(24px,4vw,34px);margin-top:12px}
+  .band .grid{margin-top:26px}
+  .wedge{border:1px solid #232A27;border-radius:16px;padding:20px;background:#101915}
+  .wedge h3{font-size:16px;color:#fff}
+  .wedge p{color:#9AA39D;font-size:14px;margin:.5em 0 0}
+  .wedge .k{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--verde-claro)}
+
+  /* trust */
+  .trust{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media (max-width:820px){.trust{grid-template-columns:1fr}}
+  .trust .t{border:1px solid var(--line);border-radius:14px;padding:18px;background:var(--surface-2)}
+  .trust .t b{font-family:var(--disp)}
+  .trust .t p{color:var(--muted);font-size:14px;margin:.4em 0 0}
+
+  .roadmap{display:flex;flex-direction:column;gap:2px;border-left:2px solid var(--line);padding-left:22px}
+  .rm{padding:12px 0;position:relative}
+  .rm::before{content:"";position:absolute;left:-27px;top:17px;width:9px;height:9px;border-radius:50%;background:var(--verde)}
+  .rm.soon::before{background:var(--faint)}
+  .rm h3{font-size:16px;font-weight:700}
+  .rm p{color:var(--muted);font-size:14px;margin:.35em 0 0}
+  .rm .when{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.08em}
+
+  footer{border-top:1px solid var(--line);padding:30px 0 50px;color:var(--faint);font-size:13px}
+  footer .mono{font-family:var(--mono)}
+
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease, transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.card{transition:none}}
+</style>
+
+<div class="topbar"><div class="wrap row">
+  <span class="mark">
+    <svg class="coin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="var(--verde)"/><path d="M9 13.5c.4 1.1 1.5 1.8 3 1.8 1.7 0 2.8-.8 2.8-2 0-1.3-1.1-1.7-2.9-2.1-1.6-.4-2.6-.8-2.6-1.9 0-1 .9-1.8 2.5-1.8 1.3 0 2.3.6 2.7 1.6M12 7.5v9" stroke="#0E1512" stroke-width="1.5" stroke-linecap="round"/></svg>
+    SALDO
+  </span>
+  <span class="tag">Sempre no saldo</span>
+</div></div>
+
+<div class="hero"><div class="wrap">
+  <div class="glow"></div>
+  <span class="eyebrow">CRM para escritórios de contabilidade</span>
+  <h1>O sistema operacional do escritório contábil.</h1>
+  <p class="lede">Do primeiro contato à rotina mensal: clientes, onboarding, NFS-e, atendimento por WhatsApp, financeiro e cobrança — em um só lugar, com a legalização que os CRMs genéricos não fazem.</p>
+  <div class="chips">
+    <span class="chip"><span class="dot"></span><b>10</b>&nbsp;módulos integrados</span>
+    <span class="chip"><span class="dot"></span>Em produção &nbsp;<b>app.seusaldo.ai</b></span>
+    <span class="chip"><span class="dot"></span>WhatsApp &nbsp;<b>ativo</b></span>
+    <span class="chip"><span class="dot"></span>Cofre de acessos &nbsp;<b>cifrado</b></span>
+  </div>
+</div></div>
+
+<section><div class="wrap reveal">
+  <p class="lead2">Escritório de contabilidade vive de rotina e de legalização. O SALDO cobre as duas.</p>
+  <p style="color:var(--muted);max-width:60ch;margin-top:16px">Cada área conversa com a outra: a nota emitida vira cobrança no WhatsApp; o honorário do cadastro vira título no financeiro; o cliente novo entra por um checklist com cofre de senhas. Menos planilhas soltas, menos retrabalho, mais controle.</p>
+</div></section>
+
+<section><div class="wrap">
+  <div class="sec-head reveal">
+    <span class="eyebrow">Módulos</span>
+    <h2 style="font-size:clamp(22px,3.4vw,30px);margin-top:10px">Tudo o que o escritório faz, no mesmo lugar</h2>
+  </div>
+  <div class="grid g3 reveal">
+    <div class="card"><div class="ic">◍</div><h3>Clientes</h3><p>Cadastro PJ/PF/MEI com consulta à Receita, contador responsável, honorário e documentos com assinatura eletrônica.</p></div>
+    <div class="card"><div class="ic">✦</div><h3>Onboarding</h3><p>Checklist de entrada configurável e cofre de credenciais (e-CAC, prefeitura) cifrado — só quem pode revela, e fica auditado.</p></div>
+    <div class="card"><div class="ic">◆</div><h3>Atendimento WhatsApp</h3><p>Inbox com o número do escritório: mídia, status de leitura, atendente por conversa e o cliente identificado pelo nome.</p></div>
+    <div class="card"><div class="ic">▤</div><h3>NFS-e</h3><p>Emissão avulsa, em lote e com o cliente como emitente. Download em massa de PDF e XML com cache instantâneo.</p></div>
+    <div class="card"><div class="ic">➤</div><h3>Cobrança automatizada</h3><p>Envia a nota fiscal + os dados de pagamento (PIX/TED) por WhatsApp, em lote, com controle de quem já recebeu.</p></div>
+    <div class="card"><div class="ic">▦</div><h3>Financeiro</h3><p>Contas a pagar e receber, baixas, dashboard, plano de contas — o caixa do escritório sob controle.</p></div>
+    <div class="card"><div class="ic">◇</div><h3>Orçamento</h3><p>Planejamento por categoria e mês, com atalhos para montar o ano inteiro em minutos.</p></div>
+    <div class="card"><div class="ic">◔</div><h3>Orçado × Realizado</h3><p>Comparativo com gráficos e tabela estilo DRE, por período e regime (competência ou caixa).</p></div>
+    <div class="card"><div class="ic">⇄</div><h3>Integração Domínio</h3><p>Importa contratos e dados do sistema contábil, sem redigitar.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap reveal">
+  <div class="band">
+    <span class="eyebrow">Por que o SALDO</span>
+    <h2>O diferencial está no que ninguém mais faz</h2>
+    <div class="grid g2">
+      <div class="wedge"><div class="k">Legalização</div><h3>Onboarding & societário</h3><p>Entrada de cliente estruturada — documentos, procurações, certificados — o coração do escritório, que CRM genérico ignora.</p></div>
+      <div class="wedge"><div class="k">Segurança</div><h3>Cofre de credenciais</h3><p>Senhas de portais guardadas cifradas, reveladas só por admin/contador e sempre auditadas. Fim das planilhas de senha.</p></div>
+      <div class="wedge"><div class="k">Receita</div><h3>Cobrança no WhatsApp</h3><p>A nota vira cobrança automática com PIX na hora — encurta o ciclo de recebimento sem trabalho manual.</p></div>
+      <div class="wedge"><div class="k">Gestão</div><h3>Orçado × Realizado</h3><p>O dono do escritório enxerga desvio por categoria, no regime que quiser, com gráfico e DRE.</p></div>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="sec-head reveal">
+    <span class="eyebrow">Confiança</span>
+    <h2 style="font-size:clamp(22px,3.4vw,30px);margin-top:10px">Feito com dados sensíveis em mente</h2>
+  </div>
+  <div class="trust reveal">
+    <div class="t"><b>Acesso por papel</b><p>Admin, contador, assistente e financeiro — cada um vê só o que lhe cabe. Contador enxerga apenas os seus clientes.</p></div>
+    <div class="t"><b>Criptografia</b><p>Certificados e senhas de portais cifrados (AES-256). Chaves fora do código, definidas uma vez.</p></div>
+    <div class="t"><b>Auditoria</b><p>Acesso a documentos e revelação de senhas ficam registrados — quem viu e quando, sem como forjar.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="sec-head reveal">
+    <span class="eyebrow">Para onde vai</span>
+    <h2 style="font-size:clamp(22px,3.4vw,30px);margin-top:10px">Roadmap</h2>
+  </div>
+  <div class="roadmap reveal">
+    <div class="rm"><span class="when">EM PRODUÇÃO</span><h3>Núcleo completo</h3><p>Clientes, NFS-e, atendimento, financeiro, orçamento, orçado × realizado, cobrança e onboarding com cofre.</p></div>
+    <div class="rm soon"><span class="when">PRÓXIMO</span><h3>Motor de processos de legalização</h3><p>Templates por tipo de serviço, prazos, blocos e acompanhamento por órgão (Junta, Receita, prefeitura).</p></div>
+    <div class="rm soon"><span class="when">PLANEJADO</span><h3>Cobrança recorrente automática</h3><p>Régua de cobrança disparada sozinha, todo dia, sem apertar botão.</p></div>
+    <div class="rm soon"><span class="when">EM ESTUDO</span><h3>Boletos com baixa automática</h3><p>Emissão via banco integrado e conciliação do pagamento sem intervenção.</p></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <span class="mono">SALDO — Sempre no saldo · app.seusaldo.ai</span><br>
+  Documento de apresentação · visão de produto · 2026
+</div></footer>
+
+<script>
+  (function(){
+    var els=document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return;}
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{threshold:.12});
+    els.forEach(function(e){io.observe(e)});
+  })();
+</script>
+</body>
+</html>

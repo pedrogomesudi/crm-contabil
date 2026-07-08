@@ -10,13 +10,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
-- **Onboarding de cliente:** workflow de entrada com checklist configurável (modelo editável em
-  Configurações → Checklist de onboarding). Cada cliente tem uma aba Onboarding com itens agrupados por
-  categoria (documentos, procurações, certificados, acessos, responsáveis), status, responsável, prazo e
-  observação, além de barra de progresso. Itens de "acesso" guardam URL/login e senha cifrada (cofre);
-  revelar a senha é restrito a admin/contador e auditado (fail-closed). Isolamento por cliente na RLS
-  (contador só os seus). Tela global /onboarding lista os clientes em processo com progresso e próximo
-  prazo. Requer a variável ONBOARDING_CRIPTO_KEY.
+- **Onboarding de cliente — motor de processo:** workflow de entrada estruturado em **blocos**, com
+  **prazos relativos** (D+n a partir da data de início), **perfis de cliente** (MEI, Simples com/sem
+  funcionários, Presumido/Real, PF) e **condições** que filtram os itens ao instanciar. Template padrão
+  de transferência de contabilidade (7 blocos, ~36 itens) semeável em Configurações → Template de
+  onboarding, com itens editáveis. A aba do cliente instancia o processo (perfil + condições) e mostra os
+  itens por bloco com prazo, itens **bloqueantes** e **alertas de risco**. Itens de "acesso" guardam
+  URL/login e **senha cifrada** (cofre); revelar é restrito a admin/contador e auditado (fail-closed).
+  RLS com **isolamento por cliente** (contador só os seus). Tela global /onboarding lista os processos
+  com perfil, progresso e atraso. Requer a variável `ONBOARDING_CRIPTO_KEY`.
 
 - **Financeiro — Orçado × Realizado:** dashboard comparativo por categoria, com período ajustável
   (mês/trimestre/semestre/ano) e base competência ou caixa; cartões de resumo (Receitas/Despesas/
