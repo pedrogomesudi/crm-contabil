@@ -15,6 +15,7 @@ export function Sidebar({ papel, nome, alertasOnboarding = 0 }: { papel: Papel; 
     { href: "/", label: "Início" },
     { href: "/clientes", label: "Clientes" },
     ...(podeCriarCliente(papel) ? [{ href: "/onboarding", label: "Onboarding", badge: alertasOnboarding }] : []),
+    ...(podeCriarCliente(papel) ? [{ href: "/comercial", label: "Comercial" }] : []),
     ...(podeAtender(papel) ? [{ href: "/atendimento", label: "Atendimento" }] : []),
     ...(podeGerenciarFinanceiro(papel) ? [{ href: "/financeiro/cadastros", label: "Financeiro" }] : []),
     ...(["admin", "assistente"].includes(papel) ? [{ href: "/integracoes/dominio", label: "Integração Domínio" }] : []),

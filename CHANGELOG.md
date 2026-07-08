@@ -8,6 +8,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Módulo Comercial — funil de oportunidades:** nova área `/comercial` com um quadro de prospects por
+  etapa (Novo → Contato feito → Proposta enviada → Negociação), cada coluna somando quantidade e valor.
+  Move com ← →, marca **Ganho**/**Perdido** (com motivo) e, ao ganhar, **converte em cliente**
+  pré-preenchido que já leva ao onboarding. Item "Comercial" no menu (admin/assistente/contador).
+
 ### Alterado
 
 - **Onboarding — página própria por cliente:** o onboarding de cada cliente agora abre em uma página
