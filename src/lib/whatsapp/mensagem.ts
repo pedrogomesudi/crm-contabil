@@ -7,6 +7,16 @@ export function normalizarTelefone(bruto: string): string | null {
   return null;
 }
 
+// Chave canônica de telefone brasileiro: garante o nono dígito (forma 55+DD+9+8).
+// Assim números com e sem o "9" (que o WhatsApp ora envia, ora omite) casam na mesma conversa.
+export function chaveTelefone(bruto: string): string | null {
+  const t = normalizarTelefone(bruto);
+  if (!t) return null;
+  const resto = t.slice(2); // DDD + número local
+  if (resto.length === 10) return `55${resto.slice(0, 2)}9${resto.slice(2)}`; // 12 díg (sem 9) → insere o 9
+  return t; // 13 díg (já com o 9)
+}
+
 // Substitui {chave} pelo valor; chaves ausentes viram "".
 export function aplicarTemplate(template: string, vars: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");

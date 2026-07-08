@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { extrairMensagemZapi, extrairStatusZapi } from "@/lib/whatsapp/inbox";
-import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
+import { chaveTelefone } from "@/lib/whatsapp/mensagem";
 import { decifrar } from "@/lib/nfse/cripto";
 import { baixarEStorearMidia } from "@/lib/whatsapp/midia-storage";
 
@@ -42,12 +42,12 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
     return NextResponse.json({ ok: true, ignored: true });
   }
 
-  const tel = normalizarTelefone(msg.telefone) ?? msg.telefone.replace(/\D/g, "");
+  const tel = chaveTelefone(msg.telefone) ?? msg.telefone.replace(/\D/g, "");
   const admin = createAdminSupabase();
 
   // resolve cliente por telefone (best-effort): só casa se houver EXATAMENTE um
   const { data: casadosRaw } = await admin.from("clientes").select("id, telefone");
-  const casados = (casadosRaw ?? []).filter((c) => normalizarTelefone((c.telefone as string) ?? "") === tel);
+  const casados = (casadosRaw ?? []).filter((c) => chaveTelefone((c.telefone as string) ?? "") === tel);
   const clienteId = casados.length === 1 ? (casados[0]!.id as string) : null;
 
   // dedup pelo unique (z_message_id); ignora violação
