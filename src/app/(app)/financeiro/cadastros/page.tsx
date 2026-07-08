@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 const ITENS = [
   { href: "/financeiro/dashboard", label: "Dashboard financeiro" },
   { href: "/financeiro/orcamento", label: "Orçamento" },
+  { href: "/financeiro/orcado-realizado", label: "Orçado × Realizado" },
   { href: "/financeiro/contas-a-receber", label: "Contas a receber" },
   { href: "/financeiro/contas-a-pagar", label: "Contas a pagar" },
   { href: "/financeiro/regua-cobranca", label: "Régua de cobrança" },
