@@ -28,10 +28,11 @@ type Prog = { total: number; concluidos: number; bloqueantesPendentes: number; p
 type Usuario = { id: string; nome: string };
 type FormItem = Partial<ItemProcessoView> & { novaSenha?: string };
 
-export function ProcessoSection({ clienteId, processo, itens, progresso, usuarios, podeRevelar, perfilSugerido, hoje }: { clienteId: string; processo: ProcessoView; itens: ItemProcessoView[]; progresso: Prog; usuarios: Usuario[]; podeRevelar: boolean; perfilSugerido: PerfilCliente; hoje: string }) {
+export function ProcessoSection({ clienteId, processo, itens, progresso, usuarios, podeRevelar, perfilSugerido, hoje, templates }: { clienteId: string; processo: ProcessoView; itens: ItemProcessoView[]; progresso: Prog; usuarios: Usuario[]; podeRevelar: boolean; perfilSugerido: PerfilCliente; hoje: string; templates: { id: string; nome: string }[] }) {
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [abrindo, setAbrindo] = useState(false);
+  const [templateId, setTemplateId] = useState<string>(templates[0]?.id ?? "");
   const [perfil, setPerfil] = useState<PerfilCliente>(perfilSugerido);
   const [flags, setFlags] = useState<Record<string, boolean>>({});
   const [dataInicio, setDataInicio] = useState(hoje);
@@ -74,15 +75,29 @@ export function ProcessoSection({ clienteId, processo, itens, progresso, usuario
       <section className="space-y-3 rounded-2xl border border-linha bg-white p-5">
         <h2 className="font-display text-sm font-semibold text-texto">Onboarding</h2>
         {!abrindo ? (
-          <>
-            <p className="text-sm text-cinza">Nenhum processo de entrada iniciado.</p>
-            <Botao variante="primario" disabled={ocupado} onClick={() => setAbrindo(true)}>
-              Iniciar processo
-            </Botao>
-          </>
+          templates.length === 0 ? (
+            <p className="text-sm text-cinza">Cadastre um template ativo em Configurações → Template de onboarding.</p>
+          ) : (
+            <>
+              <p className="text-sm text-cinza">Nenhum processo de entrada iniciado.</p>
+              <Botao variante="primario" disabled={ocupado} onClick={() => setAbrindo(true)}>
+                Iniciar processo
+              </Botao>
+            </>
+          )
         ) : (
           <div className="space-y-3">
             <div className="flex flex-wrap gap-3">
+              <label className="text-xs text-cinza">
+                Template
+                <select value={templateId} onChange={(e) => setTemplateId(e.target.value)} className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm">
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.nome}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label className="text-xs text-cinza">
                 Data de início
                 <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm" />
@@ -111,7 +126,7 @@ export function ProcessoSection({ clienteId, processo, itens, progresso, usuario
               <Botao variante="fantasma" onClick={() => setAbrindo(false)}>
                 Cancelar
               </Botao>
-              <Botao variante="primario" disabled={ocupado} onClick={() => chamar(() => iniciarProcesso(clienteId, perfil, flags, dataInicio))}>
+              <Botao variante="primario" disabled={ocupado || !templateId} onClick={() => chamar(() => iniciarProcesso(clienteId, perfil, flags, dataInicio, templateId))}>
                 Criar processo
               </Botao>
             </div>
