@@ -16,6 +16,7 @@ describe("QuadroComercial", () => {
     expect(html).toContain("Novo");
     expect(html).toContain("Negociação");
     expect(html).toContain("Padaria Sol");
+    expect(html).toContain('draggable="true"');
   });
   it("mostra seção de fechados", () => {
     const html = renderToStaticMarkup(<QuadroComercial oportunidades={ops} usuarios={[]} />);

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ETAPAS_ATIVAS, etapaAdjacente, resumoFunil, rotuloEtapa } from "@/lib/comercial/funil";
+import { ETAPAS_ATIVAS, etapaAdjacente, resumoFunil, rotuloEtapa, type EtapaOportunidade } from "@/lib/comercial/funil";
 import { criarOportunidade, salvarOportunidade, definirEtapa, type OportunidadeView, type OportunidadeInput } from "./actions";
 import { Botao } from "@/components/ui/Botao";
 
@@ -15,6 +15,15 @@ export function QuadroComercial({ oportunidades, usuarios }: { oportunidades: Op
   const [ocupado, setOcupado] = useState(false);
   const [soMinhas, setSoMinhas] = useState(false);
   const [form, setForm] = useState<{ id: string | null; input: OportunidadeInput } | null>(null);
+  const [arrastando, setArrastando] = useState<{ id: string; etapa: EtapaOportunidade } | null>(null);
+  const [sobreColuna, setSobreColuna] = useState<EtapaOportunidade | null>(null);
+
+  function soltarNa(etapa: EtapaOportunidade) {
+    const a = arrastando;
+    setArrastando(null);
+    setSobreColuna(null);
+    if (a && a.etapa !== etapa) void chamar(() => definirEtapa(a.id, etapa));
+  }
 
   const base = soMinhas ? oportunidades.filter((o) => o.meu) : oportunidades;
   const ativas = base.filter((o) => o.etapa !== "ganho" && o.etapa !== "perdido");
@@ -58,13 +67,25 @@ export function QuadroComercial({ oportunidades, usuarios }: { oportunidades: Op
           const doCol = ativas.filter((o) => o.etapa === col.chave);
           const rs = resumo[col.chave]!;
           return (
-            <div key={col.chave} className="min-w-[240px] flex-1 space-y-2">
+            <div
+              key={col.chave}
+              onDragOver={(e) => { e.preventDefault(); setSobreColuna(col.chave); }}
+              onDragLeave={() => setSobreColuna((s) => (s === col.chave ? null : s))}
+              onDrop={(e) => { e.preventDefault(); soltarNa(col.chave); }}
+              className={`min-w-[240px] flex-1 space-y-2 rounded-lg ${sobreColuna === col.chave ? "ring-1 ring-verde" : ""}`}
+            >
               <div className="rounded-lg bg-creme px-2 py-1.5">
                 <div className="font-display text-xs font-semibold uppercase tracking-wide text-texto">{col.rotulo}</div>
                 <div className="text-[11px] text-cinza">{rs.qtd} · {brl(rs.total)}</div>
               </div>
               {doCol.map((o) => (
-                <div key={o.id} className="space-y-1 rounded-lg border border-linha bg-white px-2.5 py-2 text-sm">
+                <div
+                  key={o.id}
+                  draggable
+                  onDragStart={() => setArrastando({ id: o.id, etapa: o.etapa })}
+                  onDragEnd={() => { setArrastando(null); setSobreColuna(null); }}
+                  className="space-y-1 rounded-lg border border-linha bg-white px-2.5 py-2 text-sm cursor-grab"
+                >
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-medium text-texto">{o.prospectNome}</span>
                     <span className="tabular-nums text-cinza">{brl(o.valorEstimado)}</span>
