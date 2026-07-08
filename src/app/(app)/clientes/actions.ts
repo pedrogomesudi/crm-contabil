@@ -67,6 +67,7 @@ function mensagensErro(issues: { message: string }[]): string {
 }
 
 export async function criarCliente(
+  oportunidadeId: string | null,
   _prev: EstadoCliente,
   formData: FormData,
 ): Promise<EstadoCliente> {
@@ -108,7 +109,12 @@ export async function criarCliente(
   if (!data || data.length === 0) {
     return { erro: "Não foi possível salvar o cliente (sem permissão)." };
   }
+  const novoId = data[0]!.id as string;
   revalidatePath("/clientes");
+  if (oportunidadeId) {
+    await supabase.from("oportunidade").update({ cliente_id: novoId, etapa: "ganho", atualizado_em: new Date().toISOString() }).eq("id", oportunidadeId);
+    redirect(`/onboarding/${novoId}`);
+  }
   redirect("/clientes?ok=1");
 }
 
