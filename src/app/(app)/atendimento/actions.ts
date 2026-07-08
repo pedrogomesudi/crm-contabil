@@ -5,7 +5,7 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeAtender, podeVerHonorario } from "@/lib/clientes/permissoes";
 import { decifrar } from "@/lib/nfse/cripto";
 import { enviarTexto, enviarMidiaZapi } from "@/lib/whatsapp/zapi";
-import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
+import { chaveTelefone } from "@/lib/whatsapp/mensagem";
 import {
   agruparConversas,
   extensaoPorMime,
@@ -127,7 +127,7 @@ export async function responder(telefone: string, texto: string): Promise<{ ok?:
   const r = await enviarTexto(zapi, telefone, t);
   // resolve cliente para vincular a saída à mesma thread (best-effort; só se houver exatamente um)
   const { data: cli } = await admin.from("clientes").select("id, telefone");
-  const casados = (cli ?? []).filter((c) => normalizarTelefone((c.telefone as string) ?? "") === telefone);
+  const casados = (cli ?? []).filter((c) => chaveTelefone((c.telefone as string) ?? "") === telefone);
   const clienteId = casados.length === 1 ? (casados[0]!.id as string) : null;
   // Guarda o messageId do Z-API para casar os eventos de status (entregue/lido).
   const resp = (r.resposta ?? {}) as { messageId?: string; id?: string; zaapId?: string };
@@ -196,7 +196,7 @@ export async function dadosContato(telefone: string): Promise<DadosContato> {
   const { data: cli } = await admin
     .from("clientes")
     .select("id, telefone, razao_social, cpf_cnpj, regime_tributario, status");
-  const casados = (cli ?? []).filter((c) => normalizarTelefone((c.telefone as string) ?? "") === telefone);
+  const casados = (cli ?? []).filter((c) => chaveTelefone((c.telefone as string) ?? "") === telefone);
   if (casados.length !== 1) return vazio;
   const c = casados[0]!;
   let honorario: number | null = null;
@@ -223,7 +223,7 @@ export async function iniciarConversa(
   telefone: string,
   texto: string,
 ): Promise<{ ok?: boolean; erro?: string }> {
-  const t = normalizarTelefone(telefone);
+  const t = chaveTelefone(telefone);
   if (!t) return { erro: "Telefone inválido." };
   return responder(t, texto);
 }
@@ -298,7 +298,7 @@ export async function enviarMidia(formData: FormData): Promise<{ ok?: boolean; e
   await admin.storage.from("documentos").upload(path, buf, { contentType: mime, upsert: false });
 
   const { data: cli } = await admin.from("clientes").select("id, telefone");
-  const casados = (cli ?? []).filter((c) => normalizarTelefone((c.telefone as string) ?? "") === telefone);
+  const casados = (cli ?? []).filter((c) => chaveTelefone((c.telefone as string) ?? "") === telefone);
   const clienteId = casados.length === 1 ? (casados[0]!.id as string) : null;
   const resp = (r.resposta ?? {}) as { messageId?: string; id?: string };
   await admin.from("whatsapp_mensagem").insert({
@@ -326,7 +326,7 @@ export async function listarClientesParaConversa(): Promise<{ razaoSocial: strin
   const { data } = await admin.from("clientes").select("razao_social, responsavel_nome, telefone").order("razao_social");
   const out: { razaoSocial: string; contato: string | null; telefone: string }[] = [];
   for (const c of data ?? []) {
-    const tel = normalizarTelefone((c.telefone as string | null) ?? "");
+    const tel = chaveTelefone((c.telefone as string | null) ?? "");
     if (tel) out.push({ razaoSocial: c.razao_social as string, contato: (c.responsavel_nome as string | null) ?? null, telefone: tel });
   }
   return out;

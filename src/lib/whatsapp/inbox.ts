@@ -1,4 +1,4 @@
-import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
+import { chaveTelefone } from "@/lib/whatsapp/mensagem";
 
 export type MsgConversa = {
   id: string;
@@ -158,9 +158,10 @@ export function marcaEntrega(status: string, direcao: "IN" | "OUT"): MarcaEntreg
 export function agruparConversas(msgs: MsgConversa[], meta: Map<string, ConversaMeta> = new Map()): Conversa[] {
   const porTel = new Map<string, MsgConversa[]>();
   for (const m of msgs) {
-    const arr = porTel.get(m.telefone) ?? [];
+    const chave = chaveTelefone(m.telefone) ?? m.telefone;
+    const arr = porTel.get(chave) ?? [];
     arr.push(m);
-    porTel.set(m.telefone, arr);
+    porTel.set(chave, arr);
   }
   const convs: Conversa[] = [];
   for (const [telefone, arr] of porTel) {
@@ -238,7 +239,7 @@ export function mapaClientesPorTelefone(
   const contagem = new Map<string, number>();
   const mapa = new Map<string, { razaoSocial: string; contato: string | null }>();
   for (const c of clientes) {
-    const tel = normalizarTelefone(c.telefone ?? "");
+    const tel = chaveTelefone(c.telefone ?? "");
     if (!tel) continue;
     contagem.set(tel, (contagem.get(tel) ?? 0) + 1);
     mapa.set(tel, { razaoSocial: c.razao_social, contato: c.responsavel_nome ?? null });
