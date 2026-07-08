@@ -10,6 +10,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Onboarding de cliente:** workflow de entrada com checklist configurável (modelo editável em
+  Configurações → Checklist de onboarding). Cada cliente tem uma aba Onboarding com itens agrupados por
+  categoria (documentos, procurações, certificados, acessos, responsáveis), status, responsável, prazo e
+  observação, além de barra de progresso. Itens de "acesso" guardam URL/login e senha cifrada (cofre);
+  revelar a senha é restrito a admin/contador e auditado (fail-closed). Isolamento por cliente na RLS
+  (contador só os seus). Tela global /onboarding lista os clientes em processo com progresso e próximo
+  prazo. Requer a variável ONBOARDING_CRIPTO_KEY.
+
 - **Financeiro — Orçado × Realizado:** dashboard comparativo por categoria, com período ajustável
   (mês/trimestre/semestre/ano) e base competência ou caixa; cartões de resumo (Receitas/Despesas/
   Resultado com variação), gráfico de barras por categoria, linha de evolução da receita no ano e tabela
