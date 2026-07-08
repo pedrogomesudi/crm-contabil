@@ -30,17 +30,17 @@ export async function iniciarProcesso(clienteId: string, perfil: PerfilCliente, 
   const { data: tpl } = await supabase.from("onboarding_template").select("id").eq("ativo", true).order("criado_em").limit(1).maybeSingle();
   if (!tpl) return { erro: "Nenhum template configurado (Configurações → Template de onboarding)." };
   const { data: blocosRows } = await supabase.from("onboarding_bloco").select("id, ordem, nome, prazo_bloco_dias").eq("template_id", tpl.id).order("ordem");
-  const { data: itensRows } = await supabase.from("onboarding_template_item").select("bloco_id, codigo, titulo, descricao, tipo, responsavel_papel, prazo_dias, aplicavel_a, condicao_flags, condicao_modo, bloqueante, anexo_obrigatorio, alerta_risco, ordem").in("bloco_id", (blocosRows ?? []).map((b) => b.id as string)).order("ordem");
+  const { data: itensRows } = await supabase.from("onboarding_template_item").select("bloco_id, codigo, titulo, descricao, tipo, responsavel_papel, prazo_dias, aplicavel_a, condicao_flags, condicao_modo, bloqueante, anexo_obrigatorio, alerta_risco, ordem, depende_de, campo_destino").in("bloco_id", (blocosRows ?? []).map((b) => b.id as string)).order("ordem");
   const blocos: TemplateBloco[] = (blocosRows ?? []).map((b) => ({
     ordem: b.ordem as number,
     nome: b.nome as string,
     prazoBlocoDias: b.prazo_bloco_dias as number | null,
-    itens: (itensRows ?? []).filter((i) => i.bloco_id === b.id).map((i): TemplateItem => ({ codigo: i.codigo as string, titulo: i.titulo as string, descricao: i.descricao as string | null, tipo: i.tipo as "padrao" | "acesso", responsavelPapel: i.responsavel_papel as string | null, prazoDias: i.prazo_dias as number | null, aplicavelA: (i.aplicavel_a as string[]) ?? [], condicaoFlags: (i.condicao_flags as string[]) ?? [], condicaoModo: i.condicao_modo as "any" | "all", bloqueante: i.bloqueante as boolean, anexoObrigatorio: i.anexo_obrigatorio as boolean, alertaRisco: i.alerta_risco as string | null, ordem: i.ordem as number })),
+    itens: (itensRows ?? []).filter((i) => i.bloco_id === b.id).map((i): TemplateItem => ({ codigo: i.codigo as string, titulo: i.titulo as string, descricao: i.descricao as string | null, tipo: i.tipo as "padrao" | "acesso", responsavelPapel: i.responsavel_papel as string | null, prazoDias: i.prazo_dias as number | null, aplicavelA: (i.aplicavel_a as string[]) ?? [], condicaoFlags: (i.condicao_flags as string[]) ?? [], condicaoModo: i.condicao_modo as "any" | "all", bloqueante: i.bloqueante as boolean, anexoObrigatorio: i.anexo_obrigatorio as boolean, alertaRisco: i.alerta_risco as string | null, ordem: i.ordem as number, dependeDe: (i.depende_de as string[]) ?? [], campoDestino: i.campo_destino as string | null })),
   }));
   const seeds = materializarProcesso(blocos, perfil, flags, dataInicio);
   const { data: novo, error: e1 } = await supabase.from("onboarding_processo").insert({ cliente_id: clienteId, template_id: tpl.id, data_inicio: dataInicio, perfil, flags, criado_por: p.id }).select("id").single();
   if (e1 || !novo) return { erro: "Falha ao criar processo." };
-  const linhas = seeds.map((s) => ({ processo_id: novo.id, bloco_ordem: s.blocoOrdem, bloco_nome: s.blocoNome, codigo: s.codigo, titulo: s.titulo, descricao: s.descricao, tipo: s.tipo, responsavel_papel: s.responsavelPapel, prazo: s.prazo, bloqueante: s.bloqueante, anexo_obrigatorio: s.anexoObrigatorio, alerta_risco: s.alertaRisco, ordem: s.ordem }));
+  const linhas = seeds.map((s) => ({ processo_id: novo.id, bloco_ordem: s.blocoOrdem, bloco_nome: s.blocoNome, codigo: s.codigo, titulo: s.titulo, descricao: s.descricao, tipo: s.tipo, responsavel_papel: s.responsavelPapel, prazo: s.prazo, bloqueante: s.bloqueante, anexo_obrigatorio: s.anexoObrigatorio, alerta_risco: s.alertaRisco, ordem: s.ordem, depende_de: s.dependeDe, campo_destino: s.campoDestino }));
   if (linhas.length > 0) {
     const { error: e2 } = await supabase.from("onboarding_processo_item").insert(linhas);
     if (e2) return { erro: "Falha ao materializar itens." };

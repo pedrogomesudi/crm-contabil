@@ -1,9 +1,9 @@
 export type PerfilCliente = "mei" | "simples_sem_func" | "simples_com_func" | "presumido_real" | "pf";
 export type FlagsProcesso = Record<string, boolean>;
 export type StatusItem = "pendente" | "concluido" | "dispensado";
-export type TemplateItem = { codigo: string; titulo: string; descricao: string | null; tipo: "padrao" | "acesso"; responsavelPapel: string | null; prazoDias: number | null; aplicavelA: string[]; condicaoFlags: string[]; condicaoModo: "any" | "all"; bloqueante: boolean; anexoObrigatorio: boolean; alertaRisco: string | null; ordem: number };
+export type TemplateItem = { codigo: string; titulo: string; descricao: string | null; tipo: "padrao" | "acesso"; responsavelPapel: string | null; prazoDias: number | null; aplicavelA: string[]; condicaoFlags: string[]; condicaoModo: "any" | "all"; bloqueante: boolean; anexoObrigatorio: boolean; alertaRisco: string | null; ordem: number; dependeDe: string[]; campoDestino: string | null };
 export type TemplateBloco = { ordem: number; nome: string; prazoBlocoDias: number | null; itens: TemplateItem[] };
-export type ProcessoItemSeed = { blocoOrdem: number; blocoNome: string; codigo: string; titulo: string; descricao: string | null; tipo: "padrao" | "acesso"; responsavelPapel: string | null; prazo: string | null; bloqueante: boolean; anexoObrigatorio: boolean; alertaRisco: string | null; ordem: number };
+export type ProcessoItemSeed = { blocoOrdem: number; blocoNome: string; codigo: string; titulo: string; descricao: string | null; tipo: "padrao" | "acesso"; responsavelPapel: string | null; prazo: string | null; bloqueante: boolean; anexoObrigatorio: boolean; alertaRisco: string | null; ordem: number; dependeDe: string[]; campoDestino: string | null };
 
 export function sugerirPerfil(tipoPessoa: string, regime: string, qtdFuncionarios: number | null): PerfilCliente {
   if (tipoPessoa === "PF") return "pf";
@@ -45,10 +45,27 @@ export function materializarProcesso(blocos: TemplateBloco[], perfil: PerfilClie
         anexoObrigatorio: i.anexoObrigatorio,
         alertaRisco: i.alertaRisco,
         ordem: i.ordem,
+        dependeDe: i.dependeDe,
+        campoDestino: i.campoDestino,
       });
     }
   }
   return out;
+}
+
+export function motivosBloqueioConclusao(
+  item: { dependeDe: string[]; anexoObrigatorio: boolean; temAnexo: boolean; campoDestino: string | null; temValorDestino: boolean },
+  itens: { codigo: string | null; status: StatusItem }[],
+): string[] {
+  const motivos: string[] = [];
+  for (const dep of item.dependeDe) {
+    const irmao = itens.find((i) => i.codigo === dep);
+    const ok = irmao && (irmao.status === "concluido" || irmao.status === "dispensado");
+    if (!ok) motivos.push(`Depende de ${dep}`);
+  }
+  if (item.anexoObrigatorio && !item.temAnexo) motivos.push("Anexo obrigatório pendente");
+  if (item.campoDestino && !item.temValorDestino) motivos.push("Informe o valor (competência inicial)");
+  return motivos;
 }
 
 export function progressoProcesso(itens: { status: StatusItem; prazo: string | null; bloqueante: boolean }[]): { total: number; concluidos: number; bloqueantesPendentes: number; pct: number; concluido: boolean; proximoPrazo: string | null } {

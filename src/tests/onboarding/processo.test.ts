@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { sugerirPerfil, somarDias, itemAplica, materializarProcesso, progressoProcesso, type TemplateBloco } from "@/lib/onboarding/processo";
+import { sugerirPerfil, somarDias, itemAplica, materializarProcesso, progressoProcesso, motivosBloqueioConclusao, type TemplateBloco } from "@/lib/onboarding/processo";
 
 describe("sugerirPerfil", () => {
   it("PF / MEI / Simples s-c func / Presumido", () => {
@@ -40,8 +40,8 @@ describe("itemAplica", () => {
 describe("materializarProcesso", () => {
   const blocos: TemplateBloco[] = [
     { ordem: 1, nome: "Formalização", prazoBlocoDias: 3, itens: [
-      { codigo: "1.1", titulo: "Contrato", descricao: null, tipo: "padrao", responsavelPapel: "admin", prazoDias: 0, aplicavelA: ["*"], condicaoFlags: [], condicaoModo: "all", bloqueante: true, anexoObrigatorio: true, alertaRisco: null, ordem: 1 },
-      { codigo: "1.2", titulo: "Contador anterior", descricao: null, tipo: "padrao", responsavelPapel: "contador", prazoDias: 2, aplicavelA: ["simples_com_func"], condicaoFlags: ["possui_contador_anterior"], condicaoModo: "all", bloqueante: false, anexoObrigatorio: true, alertaRisco: null, ordem: 2 },
+      { codigo: "1.1", titulo: "Contrato", descricao: null, tipo: "padrao", responsavelPapel: "admin", prazoDias: 0, aplicavelA: ["*"], condicaoFlags: [], condicaoModo: "all", bloqueante: true, anexoObrigatorio: true, alertaRisco: null, ordem: 1, dependeDe: [], campoDestino: null },
+      { codigo: "1.2", titulo: "Contador anterior", descricao: null, tipo: "padrao", responsavelPapel: "contador", prazoDias: 2, aplicavelA: ["simples_com_func"], condicaoFlags: ["possui_contador_anterior"], condicaoModo: "all", bloqueante: false, anexoObrigatorio: true, alertaRisco: null, ordem: 2, dependeDe: [], campoDestino: null },
     ] },
   ];
   it("filtra por perfil+condição e calcula prazo absoluto", () => {
@@ -63,5 +63,25 @@ describe("progressoProcesso", () => {
       { status: "pendente", prazo: "2026-07-20", bloqueante: false },
     ]);
     expect(p).toMatchObject({ total: 3, concluidos: 1, bloqueantesPendentes: 1, pct: 33, concluido: false, proximoPrazo: "2026-07-20" });
+  });
+});
+
+describe("motivosBloqueioConclusao", () => {
+  const irmaos = [{ codigo: "4.6", status: "concluido" as const }, { codigo: "2.5", status: "pendente" as const }];
+  const base = { dependeDe: [] as string[], anexoObrigatorio: false, temAnexo: false, campoDestino: null as string | null, temValorDestino: false };
+  it("dependência atendida (concluído) → sem motivo", () => {
+    expect(motivosBloqueioConclusao({ ...base, dependeDe: ["4.6"] }, irmaos)).toEqual([]);
+  });
+  it("dependência pendente → motivo", () => {
+    expect(motivosBloqueioConclusao({ ...base, dependeDe: ["2.5"] }, irmaos)).toEqual(["Depende de 2.5"]);
+  });
+  it("anexo obrigatório sem anexo", () => {
+    expect(motivosBloqueioConclusao({ ...base, anexoObrigatorio: true }, irmaos)).toEqual(["Anexo obrigatório pendente"]);
+  });
+  it("campo_destino sem valor", () => {
+    expect(motivosBloqueioConclusao({ ...base, campoDestino: "competencia_inicial" }, irmaos)).toEqual(["Informe o valor (competência inicial)"]);
+  });
+  it("tudo ok → vazio", () => {
+    expect(motivosBloqueioConclusao({ dependeDe: ["4.6"], anexoObrigatorio: true, temAnexo: true, campoDestino: "competencia_inicial", temValorDestino: true }, irmaos)).toEqual([]);
   });
 });
