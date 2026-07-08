@@ -2,7 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { listarContadores, contadorPorId } from "@/lib/clientes/contadores";
-import { podeAtribuirContador, podeVerHonorario, podeExcluirCliente } from "@/lib/clientes/permissoes";
+import { podeAtribuirContador, podeVerHonorario, podeExcluirCliente, podeCriarCliente, podeRevelarCredencial } from "@/lib/clientes/permissoes";
+import { OnboardingSection } from "@/components/onboarding/OnboardingSection";
+import { listarOnboardingCliente } from "./onboarding";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
@@ -74,6 +76,14 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
 
   const contratos = mostrarHonorario ? await listarContratos(id) : [];
 
+  const podeOnboarding = podeCriarCliente(papel);
+  const onboarding = podeOnboarding ? await listarOnboardingCliente(id) : null;
+  let usuariosOnb: { id: string; nome: string }[] = [];
+  if (podeOnboarding) {
+    const { data } = await supabase.from("usuarios").select("id, nome").eq("ativo", true).order("nome");
+    usuariosOnb = (data as { id: string; nome: string }[] | null) ?? [];
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">{cliente.razao_social}</h1>
@@ -118,6 +128,15 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
       />
       <NotasFiscaisSection clienteId={id} papel={papel} />
       <EmissaoClienteSection clienteId={id} papel={papel} />
+      {onboarding && (
+        <OnboardingSection
+          clienteId={id}
+          itens={onboarding.itens}
+          progresso={onboarding.progresso}
+          usuarios={usuariosOnb}
+          podeRevelar={podeRevelarCredencial(papel)}
+        />
+      )}
     </div>
   );
 }
