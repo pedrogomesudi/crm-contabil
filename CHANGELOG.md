@@ -8,6 +8,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Alterado
+
+- **Onboarding — página própria por cliente:** o onboarding de cada cliente agora abre em uma página
+  dedicada (`/onboarding/[cliente]`), acessada pela lista de processos, pelos alertas e por um link no
+  cadastro. O cadastro do cliente deixou de exibir a seção completa (ficou mais curto).
+
 ### Adicionado
 
 - **Onboarding — alertas de prazo:** tela `/onboarding/alertas` lista os itens do processo vencendo (nos
