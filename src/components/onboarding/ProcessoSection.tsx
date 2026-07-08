@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { iniciarProcesso, salvarProcessoItem, removerProcessoItem, revelarSenha, anexarProcessoItem, urlAnexoProcessoItem, removerAnexoProcessoItem, type ItemProcessoView, type ProcessoView } from "@/app/(app)/clientes/[id]/processo";
+import { iniciarProcesso, salvarProcessoItem, removerProcessoItem, revelarSenha, anexarProcessoItem, urlAnexoProcessoItem, removerAnexoProcessoItem, gerarOportunidadeConsultoria, type ItemProcessoView, type ProcessoView } from "@/app/(app)/clientes/[id]/processo";
 import { motivosBloqueioConclusao, type PerfilCliente, type StatusItem } from "@/lib/onboarding/processo";
 import { Botao } from "@/components/ui/Botao";
 
@@ -231,6 +232,13 @@ export function ProcessoSection({ clienteId, processo, itens, progresso, usuario
                     </div>
                   )}
                   {it.alertaRisco && <p className="mt-1 rounded bg-negativo/10 px-2 py-1 text-xs text-negativo">⚠ {it.alertaRisco}</p>}
+                  <div className="mt-1 text-xs">
+                    {it.oportunidadeId ? (
+                      <span className="text-cinza">Oportunidade de consultoria criada ✓ <Link href="/comercial" className="text-verde underline">ver no funil</Link></span>
+                    ) : (
+                      <button type="button" disabled={ocupado} onClick={() => void chamar(() => gerarOportunidadeConsultoria(it.id))} className="text-violeta underline">Gerar oportunidade de consultoria</button>
+                    )}
+                  </div>
                   {it.tipo === "acesso" && (
                     <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-cinza">
                       {it.acessoUrl && <span>URL: {it.acessoUrl}</span>}

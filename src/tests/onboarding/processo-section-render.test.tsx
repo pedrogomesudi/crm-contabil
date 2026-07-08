@@ -7,8 +7,8 @@ import type { ItemProcessoView } from "@/app/(app)/clientes/[id]/processo";
 
 const prog = { total: 2, concluidos: 1, bloqueantesPendentes: 1, pct: 50, concluido: false, proximoPrazo: "2026-07-20" };
 const itens: ItemProcessoView[] = [
-  { id: "1", blocoOrdem: 1, blocoNome: "Formalização da relação", codigo: "1.1", titulo: "Contrato assinado", descricao: null, tipo: "padrao", responsavelPapel: "admin", responsavelId: null, prazo: "2026-07-01", status: "concluido", observacao: null, bloqueante: true, anexoObrigatorio: true, alertaRisco: null, ordem: 1, acessoUrl: null, acessoLogin: null, temSenha: false, dependeDe: [], campoDestino: null, valorDestino: null, anexoNome: null, temAnexo: true },
-  { id: "2", blocoOrdem: 3, blocoNome: "Acessos", codigo: "3.5", titulo: "Cofre de acessos", descricao: null, tipo: "acesso", responsavelPapel: "assistente", responsavelId: null, prazo: "2026-07-20", status: "pendente", observacao: null, bloqueante: false, anexoObrigatorio: false, alertaRisco: null, ordem: 5, acessoUrl: "https://cav.receita.fazenda.gov.br", acessoLogin: "123", temSenha: true, dependeDe: ["1.1"], campoDestino: null, valorDestino: null, anexoNome: null, temAnexo: false },
+  { id: "1", blocoOrdem: 1, blocoNome: "Formalização da relação", codigo: "1.1", titulo: "Contrato assinado", descricao: null, tipo: "padrao", responsavelPapel: "admin", responsavelId: null, prazo: "2026-07-01", status: "concluido", observacao: null, bloqueante: true, anexoObrigatorio: true, alertaRisco: null, ordem: 1, acessoUrl: null, acessoLogin: null, temSenha: false, dependeDe: [], campoDestino: null, valorDestino: null, anexoNome: null, temAnexo: true, oportunidadeId: "op1" },
+  { id: "2", blocoOrdem: 3, blocoNome: "Acessos", codigo: "3.5", titulo: "Cofre de acessos", descricao: null, tipo: "acesso", responsavelPapel: "assistente", responsavelId: null, prazo: "2026-07-20", status: "pendente", observacao: null, bloqueante: false, anexoObrigatorio: false, alertaRisco: null, ordem: 5, acessoUrl: "https://cav.receita.fazenda.gov.br", acessoLogin: "123", temSenha: true, dependeDe: ["1.1"], campoDestino: null, valorDestino: null, anexoNome: null, temAnexo: false, oportunidadeId: null },
 ];
 
 describe("ProcessoSection", () => {
@@ -20,6 +20,8 @@ describe("ProcessoSection", () => {
     const html = renderToStaticMarkup(<ProcessoSection clienteId="c1" processo={{ id: "p1", perfil: "simples_com_func", dataInicio: "2026-07-01", status: "em_andamento" }} itens={itens} progresso={prog} usuarios={[]} podeRevelar perfilSugerido="simples_com_func" hoje="2026-07-08" templates={[{ id: "t1", nome: "Padrão" }]} />);
     expect(html).toContain("Formalização da relação");
     expect(html).toContain("Contrato assinado");
+    expect(html).toContain("Gerar oportunidade de consultoria");
+    expect(html).toContain("ver no funil");
     expect(html).toContain("50%");
   });
 });
