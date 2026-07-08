@@ -7,6 +7,7 @@ const ITENS = [
   { href: "/configuracoes/whatsapp", label: "WhatsApp (Z-API)", desc: "Credenciais do provedor e teste de conexão." },
   { href: "/configuracoes/nfse", label: "NFS-e (emitente)", desc: "Dados do emitente e certificado digital." },
   { href: "/configuracoes/pagamento", label: "Dados de pagamento (PIX/TED)", desc: "Conta e PIX enviados ao cliente com a NFS-e." },
+  { href: "/configuracoes/onboarding", label: "Checklist de onboarding", desc: "Itens-modelo do onboarding de novos clientes." },
 ];
 
 export default async function ConfiguracoesHubPage() {
