@@ -10,6 +10,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Onboarding — dependências, competência e anexos (Ciclo B):** itens do processo agora respeitam
+  **dependências** (não conclui enquanto os pré-requisitos não estiverem concluídos/dispensados),
+  exigem **anexo** quando obrigatório (upload de PDF/imagem no processo) e gravam a **competência inicial**
+  no cadastro do cliente ao concluir o item da data de corte. O editor de template permite definir os
+  códigos de dependência e o campo de destino por item.
+
 - **Onboarding de cliente — motor de processo:** workflow de entrada estruturado em **blocos**, com
   **prazos relativos** (D+n a partir da data de início), **perfis de cliente** (MEI, Simples com/sem
   funcionários, Presumido/Real, PF) e **condições** que filtram os itens ao instanciar. Template padrão
