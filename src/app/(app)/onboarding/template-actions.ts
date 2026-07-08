@@ -3,7 +3,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeCriarCliente, podeGerenciarModeloOnboarding } from "@/lib/clientes/permissoes";
 import { TEMPLATE_PADRAO } from "@/lib/onboarding/template-seed";
-import { slugify } from "@/lib/onboarding/template-util";
+import { slugify, alvoTroca } from "@/lib/onboarding/template-util";
 
 export type ItemTemplateView = { id: string; blocoId: string; codigo: string; titulo: string; descricao: string | null; tipo: "padrao" | "acesso"; responsavelPapel: string | null; prazoDias: number | null; aplicavelA: string[]; condicaoFlags: string[]; condicaoModo: "any" | "all"; bloqueante: boolean; anexoObrigatorio: boolean; alertaRisco: string | null; ordem: number; dependeDe: string[]; campoDestino: string | null };
 export type BlocoView = { id: string; ordem: number; nome: string; prazoBlocoDias: number | null; itens: ItemTemplateView[] };
@@ -138,4 +138,65 @@ export async function removerTemplateItem(id: string): Promise<{ ok?: boolean; e
   const supabase = await createServerSupabase();
   const { error } = await supabase.from("onboarding_template_item").delete().eq("id", id);
   return error ? { erro: "Falha ao remover." } : { ok: true };
+}
+
+export async function criarBloco(templateId: string, nome: string, prazoBlocoDias: number | null): Promise<{ ok?: boolean; erro?: string }> {
+  const p = await getPerfilAtual();
+  if (!p?.ativo || !podeGerenciarModeloOnboarding(p.papel)) return { erro: "Sem permissão." };
+  if (!nome.trim()) return { erro: "Informe o nome do bloco." };
+  const supabase = await createServerSupabase();
+  const { data: existentes } = await supabase.from("onboarding_bloco").select("ordem").eq("template_id", templateId);
+  const ordem = Math.max(0, ...(existentes ?? []).map((b) => b.ordem as number)) + 1;
+  const { error } = await supabase.from("onboarding_bloco").insert({ template_id: templateId, nome: nome.trim(), prazo_bloco_dias: prazoBlocoDias, ordem, slug: `bloco-${ordem}` });
+  return error ? { erro: "Falha ao criar bloco." } : { ok: true };
+}
+
+export async function salvarBloco(id: string, nome: string, prazoBlocoDias: number | null, ordem: number): Promise<{ ok?: boolean; erro?: string }> {
+  const p = await getPerfilAtual();
+  if (!p?.ativo || !podeGerenciarModeloOnboarding(p.papel)) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("onboarding_bloco").update({ nome: nome.trim(), prazo_bloco_dias: prazoBlocoDias, ordem }).eq("id", id);
+  return error ? { erro: "Falha ao salvar bloco." } : { ok: true };
+}
+
+export async function removerBloco(id: string): Promise<{ ok?: boolean; erro?: string }> {
+  const p = await getPerfilAtual();
+  if (!p?.ativo || !podeGerenciarModeloOnboarding(p.papel)) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("onboarding_bloco").delete().eq("id", id);
+  return error ? { erro: "Falha ao remover bloco." } : { ok: true };
+}
+
+async function trocarOrdem(tabela: "onboarding_bloco" | "onboarding_template_item", aId: string, bId: string) {
+  const supabase = await createServerSupabase();
+  const { data } = await supabase.from(tabela).select("id, ordem").in("id", [aId, bId]);
+  const a = (data ?? []).find((r) => r.id === aId);
+  const b = (data ?? []).find((r) => r.id === bId);
+  if (!a || !b) return;
+  await supabase.from(tabela).update({ ordem: b.ordem }).eq("id", aId);
+  await supabase.from(tabela).update({ ordem: a.ordem }).eq("id", bId);
+}
+
+export async function moverBloco(id: string, direcao: "cima" | "baixo"): Promise<{ ok?: boolean; erro?: string }> {
+  const p = await getPerfilAtual();
+  if (!p?.ativo || !podeGerenciarModeloOnboarding(p.papel)) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { data: bloco } = await supabase.from("onboarding_bloco").select("template_id").eq("id", id).maybeSingle();
+  if (!bloco) return { erro: "Bloco não encontrado." };
+  const { data: irmaos } = await supabase.from("onboarding_bloco").select("id, ordem").eq("template_id", bloco.template_id as string);
+  const alvo = alvoTroca((irmaos ?? []).map((b) => ({ id: b.id as string, ordem: b.ordem as number })), id, direcao);
+  if (alvo) await trocarOrdem("onboarding_bloco", id, alvo);
+  return { ok: true };
+}
+
+export async function moverItem(id: string, direcao: "cima" | "baixo"): Promise<{ ok?: boolean; erro?: string }> {
+  const p = await getPerfilAtual();
+  if (!p?.ativo || !podeGerenciarModeloOnboarding(p.papel)) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { data: item } = await supabase.from("onboarding_template_item").select("bloco_id").eq("id", id).maybeSingle();
+  if (!item) return { erro: "Item não encontrado." };
+  const { data: irmaos } = await supabase.from("onboarding_template_item").select("id, ordem").eq("bloco_id", item.bloco_id as string);
+  const alvo = alvoTroca((irmaos ?? []).map((i) => ({ id: i.id as string, ordem: i.ordem as number })), id, direcao);
+  if (alvo) await trocarOrdem("onboarding_template_item", id, alvo);
+  return { ok: true };
 }
