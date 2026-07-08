@@ -10,6 +10,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Onboarding — alertas de prazo:** tela `/onboarding/alertas` lista os itens do processo vencendo (nos
+  próximos 3 dias) ou vencidos, agrupados por severidade (vence em breve / vencido / crítico), com o
+  responsável e link para o cliente; filtro "só os meus". Um badge no menu mostra a contagem. Respeita o
+  isolamento por cliente (contador vê só os seus).
+
 - **Onboarding — construtor de templates:** Configurações → Template de onboarding vira um gerenciador de
   vários templates (criar, ativar/desativar, excluir) com editor por template — criar/editar/remover e
   **reordenar blocos e itens** (↑↓). Ao iniciar um processo, escolhe-se qual template aplicar.
