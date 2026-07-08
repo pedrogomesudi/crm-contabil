@@ -13,11 +13,11 @@ const itens: ItemProcessoView[] = [
 
 describe("ProcessoSection", () => {
   it("sem processo mostra iniciar", () => {
-    const html = renderToStaticMarkup(<ProcessoSection clienteId="c1" processo={null} itens={[]} progresso={{ total: 0, concluidos: 0, bloqueantesPendentes: 0, pct: 0, concluido: false, proximoPrazo: null }} usuarios={[]} podeRevelar={false} perfilSugerido="simples_sem_func" hoje="2026-07-08" />);
+    const html = renderToStaticMarkup(<ProcessoSection clienteId="c1" processo={null} itens={[]} progresso={{ total: 0, concluidos: 0, bloqueantesPendentes: 0, pct: 0, concluido: false, proximoPrazo: null }} usuarios={[]} podeRevelar={false} perfilSugerido="simples_sem_func" hoje="2026-07-08" templates={[{ id: "t1", nome: "Padrão" }]} />);
     expect(html).toContain("Iniciar processo");
   });
   it("com processo mostra blocos e itens", () => {
-    const html = renderToStaticMarkup(<ProcessoSection clienteId="c1" processo={{ id: "p1", perfil: "simples_com_func", dataInicio: "2026-07-01", status: "em_andamento" }} itens={itens} progresso={prog} usuarios={[]} podeRevelar perfilSugerido="simples_com_func" hoje="2026-07-08" />);
+    const html = renderToStaticMarkup(<ProcessoSection clienteId="c1" processo={{ id: "p1", perfil: "simples_com_func", dataInicio: "2026-07-01", status: "em_andamento" }} itens={itens} progresso={prog} usuarios={[]} podeRevelar perfilSugerido="simples_com_func" hoje="2026-07-08" templates={[{ id: "t1", nome: "Padrão" }]} />);
     expect(html).toContain("Formalização da relação");
     expect(html).toContain("Contrato assinado");
     expect(html).toContain("50%");

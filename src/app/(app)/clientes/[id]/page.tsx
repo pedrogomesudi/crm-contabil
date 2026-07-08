@@ -6,6 +6,7 @@ import { podeAtribuirContador, podeVerHonorario, podeExcluirCliente, podeCriarCl
 import { ProcessoSection } from "@/components/onboarding/ProcessoSection";
 import { listarProcessoCliente } from "./processo";
 import { sugerirPerfil } from "@/lib/onboarding/processo";
+import { listarTemplatesAtivos } from "@/app/(app)/onboarding/template-actions";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
@@ -80,10 +81,12 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   const podeOnboarding = podeCriarCliente(papel);
   const proc = podeOnboarding ? await listarProcessoCliente(id) : null;
   let usuariosOnb: { id: string; nome: string }[] = [];
+  let templatesOnb: { id: string; nome: string }[] = [];
   let perfilSugerido: "mei" | "simples_sem_func" | "simples_com_func" | "presumido_real" | "pf" = "simples_sem_func";
   if (podeOnboarding) {
     const { data: us } = await supabase.from("usuarios").select("id, nome").eq("ativo", true).order("nome");
     usuariosOnb = (us as { id: string; nome: string }[] | null) ?? [];
+    templatesOnb = await listarTemplatesAtivos();
     const { data: fin } = await supabase.from("clientes_financeiro").select("qtd_funcionarios").eq("cliente_id", id).maybeSingle();
     perfilSugerido = sugerirPerfil(String(cliente.tipo_pessoa ?? "PJ"), String(cliente.regime_tributario ?? ""), (fin?.qtd_funcionarios as number | null) ?? null);
   }
@@ -148,6 +151,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
           podeRevelar={podeRevelarCredencial(papel)}
           perfilSugerido={perfilSugerido}
           hoje={hojeOnb}
+          templates={templatesOnb}
         />
       )}
     </div>

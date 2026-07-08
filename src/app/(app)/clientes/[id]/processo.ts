@@ -22,14 +22,14 @@ export async function listarProcessoCliente(clienteId: string): Promise<{ proces
   return { processo: { id: proc.id as string, perfil: proc.perfil as string, dataInicio: proc.data_inicio as string, status: proc.status as string }, itens, progresso };
 }
 
-export async function iniciarProcesso(clienteId: string, perfil: PerfilCliente, flags: FlagsProcesso, dataInicio: string): Promise<{ ok?: boolean; erro?: string }> {
+export async function iniciarProcesso(clienteId: string, perfil: PerfilCliente, flags: FlagsProcesso, dataInicio: string, templateId: string): Promise<{ ok?: boolean; erro?: string }> {
   const p = await getPerfilAtual();
   if (!p?.ativo || !podeCriarCliente(p.papel)) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
   const { count } = await supabase.from("onboarding_processo").select("id", { count: "exact", head: true }).eq("cliente_id", clienteId);
   if ((count ?? 0) > 0) return { ok: true };
-  const { data: tpl } = await supabase.from("onboarding_template").select("id").eq("ativo", true).order("criado_em").limit(1).maybeSingle();
-  if (!tpl) return { erro: "Nenhum template configurado (Configurações → Template de onboarding)." };
+  const { data: tpl } = await supabase.from("onboarding_template").select("id").eq("id", templateId).eq("ativo", true).maybeSingle();
+  if (!tpl) return { erro: "Template inválido ou inativo." };
   const { data: blocosRows } = await supabase.from("onboarding_bloco").select("id, ordem, nome, prazo_bloco_dias").eq("template_id", tpl.id).order("ordem");
   const { data: itensRows } = await supabase.from("onboarding_template_item").select("bloco_id, codigo, titulo, descricao, tipo, responsavel_papel, prazo_dias, aplicavel_a, condicao_flags, condicao_modo, bloqueante, anexo_obrigatorio, alerta_risco, ordem, depende_de, campo_destino").in("bloco_id", (blocosRows ?? []).map((b) => b.id as string)).order("ordem");
   const blocos: TemplateBloco[] = (blocosRows ?? []).map((b) => ({
