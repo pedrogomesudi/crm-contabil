@@ -32,7 +32,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   const { data: cliente } = await supabase
     .from("clientes")
     .select(
-      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em",
+      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial",
     )
     .eq("id", id)
     .maybeSingle();
@@ -92,6 +92,11 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">{cliente.razao_social}</h1>
+      {(cliente as { competencia_inicial: string | null }).competencia_inicial && (
+        <p className="-mt-4 text-sm text-cinza">
+          Competência inicial: {(cliente as { competencia_inicial: string }).competencia_inicial.slice(5, 7)}/{(cliente as { competencia_inicial: string }).competencia_inicial.slice(0, 4)}
+        </p>
+      )}
       {podeExcluirCliente(papel) && (
         <AcoesExclusaoCliente
           clienteId={id}

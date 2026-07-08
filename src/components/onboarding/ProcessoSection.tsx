@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { iniciarProcesso, salvarProcessoItem, removerProcessoItem, revelarSenha, type ItemProcessoView, type ProcessoView } from "@/app/(app)/clientes/[id]/processo";
-import type { PerfilCliente, StatusItem } from "@/lib/onboarding/processo";
+import { iniciarProcesso, salvarProcessoItem, removerProcessoItem, revelarSenha, anexarProcessoItem, urlAnexoProcessoItem, removerAnexoProcessoItem, type ItemProcessoView, type ProcessoView } from "@/app/(app)/clientes/[id]/processo";
+import { motivosBloqueioConclusao, type PerfilCliente, type StatusItem } from "@/lib/onboarding/processo";
 import { Botao } from "@/components/ui/Botao";
 
 const PERFIS: { v: PerfilCliente; l: string }[] = [
@@ -62,11 +62,11 @@ export function ProcessoSection({ clienteId, processo, itens, progresso, usuario
   }
   async function mudarStatus(it: ItemProcessoView, status: StatusItem) {
     if (!processo) return;
-    await chamar(() => salvarProcessoItem({ id: it.id, processoId: processo.id, clienteId, blocoOrdem: it.blocoOrdem, blocoNome: it.blocoNome, codigo: it.codigo, titulo: it.titulo, tipo: it.tipo, responsavelPapel: it.responsavelPapel, responsavelId: it.responsavelId, prazo: it.prazo, status, observacao: it.observacao, bloqueante: it.bloqueante, acessoUrl: it.acessoUrl, acessoLogin: it.acessoLogin, ordem: it.ordem }));
+    await chamar(() => salvarProcessoItem({ id: it.id, processoId: processo.id, clienteId, blocoOrdem: it.blocoOrdem, blocoNome: it.blocoNome, codigo: it.codigo, titulo: it.titulo, tipo: it.tipo, responsavelPapel: it.responsavelPapel, responsavelId: it.responsavelId, prazo: it.prazo, status, observacao: it.observacao, bloqueante: it.bloqueante, dependeDe: it.dependeDe, anexoObrigatorio: it.anexoObrigatorio, campoDestino: it.campoDestino, valorDestino: it.valorDestino, acessoUrl: it.acessoUrl, acessoLogin: it.acessoLogin, ordem: it.ordem }));
   }
   function salvarForm() {
     if (!form || !processo) return;
-    void chamar(() => salvarProcessoItem({ id: form.id, processoId: processo.id, clienteId, blocoOrdem: form.blocoOrdem ?? 99, blocoNome: form.blocoNome ?? "Itens adicionais", codigo: form.codigo ?? null, titulo: form.titulo ?? "", tipo: (form.tipo ?? "padrao") as "padrao" | "acesso", responsavelPapel: form.responsavelPapel ?? null, responsavelId: form.responsavelId ?? null, prazo: form.prazo ?? null, status: (form.status ?? "pendente") as StatusItem, observacao: form.observacao ?? null, bloqueante: form.bloqueante ?? false, acessoUrl: form.acessoUrl ?? null, acessoLogin: form.acessoLogin ?? null, novaSenha: form.novaSenha || null, ordem: form.ordem ?? 0 }));
+    void chamar(() => salvarProcessoItem({ id: form.id, processoId: processo.id, clienteId, blocoOrdem: form.blocoOrdem ?? 99, blocoNome: form.blocoNome ?? "Itens adicionais", codigo: form.codigo ?? null, titulo: form.titulo ?? "", tipo: (form.tipo ?? "padrao") as "padrao" | "acesso", responsavelPapel: form.responsavelPapel ?? null, responsavelId: form.responsavelId ?? null, prazo: form.prazo ?? null, status: (form.status ?? "pendente") as StatusItem, observacao: form.observacao ?? null, bloqueante: form.bloqueante ?? false, dependeDe: form.dependeDe ?? [], anexoObrigatorio: form.anexoObrigatorio ?? false, campoDestino: form.campoDestino ?? null, valorDestino: form.valorDestino ?? null, acessoUrl: form.acessoUrl ?? null, acessoLogin: form.acessoLogin ?? null, novaSenha: form.novaSenha || null, ordem: form.ordem ?? 0 }));
   }
 
   if (!processo) {
@@ -123,6 +123,20 @@ export function ProcessoSection({ clienteId, processo, itens, progresso, usuario
 
   const blocos = Array.from(new Set(itens.map((i) => i.blocoOrdem))).sort((a, b) => a - b);
   const nomeUsuario = (id: string | null) => usuarios.find((u) => u.id === id)?.nome ?? null;
+  const statusIrmaos = itens.map((i) => ({ codigo: i.codigo, status: i.status }));
+  function bloqueios(it: ItemProcessoView): string[] {
+    return motivosBloqueioConclusao({ dependeDe: it.dependeDe, anexoObrigatorio: it.anexoObrigatorio, temAnexo: it.temAnexo, campoDestino: it.campoDestino, temValorDestino: !!it.valorDestino }, statusIrmaos);
+  }
+  async function anexar(it: ItemProcessoView, file: File) {
+    const fd = new FormData();
+    fd.append("arquivo", file);
+    await chamar(() => anexarProcessoItem(it.id, clienteId, fd));
+  }
+  async function baixar(it: ItemProcessoView) {
+    const r = await urlAnexoProcessoItem(it.id);
+    if (r.erro) return alert(r.erro);
+    if (r.url) window.open(r.url, "_blank");
+  }
 
   return (
     <section className="space-y-3 rounded-2xl border border-linha bg-white p-5">
@@ -158,7 +172,7 @@ export function ProcessoSection({ clienteId, processo, itens, progresso, usuario
                     {it.anexoObrigatorio && <span className="text-[10px] text-cinza-claro">anexo</span>}
                     <select value={it.status} disabled={ocupado} onChange={(e) => mudarStatus(it, e.target.value as StatusItem)} className={`ml-auto rounded-full px-2 py-0.5 text-xs ${STATUS_CLS[it.status]}`}>
                       {(["pendente", "concluido", "dispensado"] as StatusItem[]).map((s) => (
-                        <option key={s} value={s}>
+                        <option key={s} value={s} disabled={s === "concluido" && bloqueios(it).length > 0}>
                           {STATUS_LABEL[s]}
                         </option>
                       ))}
@@ -176,6 +190,31 @@ export function ProcessoSection({ clienteId, processo, itens, progresso, usuario
                     {it.prazo && <span className={atrasado ? "font-semibold text-negativo" : ""}>Prazo: {dataBR(it.prazo)}</span>}
                     {it.observacao && <span>Obs.: {it.observacao}</span>}
                   </div>
+                  {bloqueios(it).length > 0 && <p className="mt-1 text-[11px] text-negativo">Para concluir: {bloqueios(it).join(" · ")}</p>}
+                  {it.campoDestino === "competencia_inicial" && (
+                    <div className="mt-1 text-xs text-cinza">
+                      Competência inicial:{" "}
+                      <input type="month" value={it.valorDestino ?? ""} disabled={ocupado}
+                        onChange={(e) => chamar(() => salvarProcessoItem({ id: it.id, processoId: processo.id, clienteId, blocoOrdem: it.blocoOrdem, blocoNome: it.blocoNome, codigo: it.codigo, titulo: it.titulo, tipo: it.tipo, responsavelPapel: it.responsavelPapel, responsavelId: it.responsavelId, prazo: it.prazo, status: it.status, observacao: it.observacao, bloqueante: it.bloqueante, dependeDe: it.dependeDe, anexoObrigatorio: it.anexoObrigatorio, campoDestino: it.campoDestino, valorDestino: e.target.value || null, acessoUrl: it.acessoUrl, acessoLogin: it.acessoLogin, ordem: it.ordem }))}
+                        className="rounded border border-linha px-1.5 py-0.5 text-xs" />
+                    </div>
+                  )}
+                  {(it.anexoObrigatorio || it.temAnexo) && (
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-cinza">
+                      {it.temAnexo ? (
+                        <>
+                          <span>📎 {it.anexoNome}</span>
+                          <button type="button" onClick={() => baixar(it)} className="text-verde underline">baixar</button>
+                          <button type="button" onClick={() => chamar(() => removerAnexoProcessoItem(it.id, clienteId))} className="text-negativo underline">remover</button>
+                        </>
+                      ) : (
+                        <label className="cursor-pointer text-verde underline">
+                          anexar arquivo
+                          <input type="file" accept="application/pdf,image/png,image/jpeg" className="hidden" disabled={ocupado} onChange={(e) => { const f = e.target.files?.[0]; if (f) void anexar(it, f); }} />
+                        </label>
+                      )}
+                    </div>
+                  )}
                   {it.alertaRisco && <p className="mt-1 rounded bg-negativo/10 px-2 py-1 text-xs text-negativo">⚠ {it.alertaRisco}</p>}
                   {it.tipo === "acesso" && (
                     <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-cinza">
@@ -233,6 +272,12 @@ export function ProcessoSection({ clienteId, processo, itens, progresso, usuario
                 <input type="checkbox" checked={form.bloqueante ?? false} onChange={(e) => setForm({ ...form, bloqueante: e.target.checked })} /> Bloqueante
               </label>
             </div>
+            {form.campoDestino === "competencia_inicial" && (
+              <label className="block text-xs text-cinza">
+                Competência inicial
+                <input type="month" value={form.valorDestino ?? ""} onChange={(e) => setForm({ ...form, valorDestino: e.target.value || null })} className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm" />
+              </label>
+            )}
             <label className="block text-xs text-cinza">
               Observação
               <textarea value={form.observacao ?? ""} onChange={(e) => setForm({ ...form, observacao: e.target.value })} rows={2} className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm" />

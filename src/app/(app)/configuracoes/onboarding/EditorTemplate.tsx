@@ -25,7 +25,7 @@ export function EditorTemplate({ template }: { template: TemplateView }) {
   }
   function salvar() {
     if (!form || !form.blocoId) return;
-    void chamar(() => salvarTemplateItem({ id: form.id, blocoId: form.blocoId!, codigo: form.codigo ?? "", titulo: form.titulo ?? "", descricao: form.descricao ?? null, tipo: (form.tipo ?? "padrao") as "padrao" | "acesso", responsavelPapel: form.responsavelPapel ?? null, prazoDias: form.prazoDias ?? null, aplicavelA: form.aplicavelA ?? ["*"], condicaoFlags: form.condicaoFlags ?? [], condicaoModo: (form.condicaoModo ?? "all") as "any" | "all", bloqueante: form.bloqueante ?? false, anexoObrigatorio: form.anexoObrigatorio ?? false, alertaRisco: form.alertaRisco ?? null, ordem: form.ordem ?? 0 }));
+    void chamar(() => salvarTemplateItem({ id: form.id, blocoId: form.blocoId!, codigo: form.codigo ?? "", titulo: form.titulo ?? "", descricao: form.descricao ?? null, tipo: (form.tipo ?? "padrao") as "padrao" | "acesso", responsavelPapel: form.responsavelPapel ?? null, prazoDias: form.prazoDias ?? null, aplicavelA: form.aplicavelA ?? ["*"], condicaoFlags: form.condicaoFlags ?? [], condicaoModo: (form.condicaoModo ?? "all") as "any" | "all", bloqueante: form.bloqueante ?? false, anexoObrigatorio: form.anexoObrigatorio ?? false, alertaRisco: form.alertaRisco ?? null, ordem: form.ordem ?? 0, dependeDe: form.dependeDe ?? [], campoDestino: form.campoDestino ?? null }));
   }
 
   if (!template) {
@@ -140,6 +140,19 @@ export function EditorTemplate({ template }: { template: TemplateView }) {
                 </label>
               ))}
             </fieldset>
+            <div className="flex gap-2">
+              <label className="flex-1 text-xs text-cinza">
+                Depende de (códigos, vírgula)
+                <input value={(form.dependeDe ?? []).join(", ")} onChange={(e) => setForm({ ...form, dependeDe: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })} className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm" placeholder="ex.: 4.6" />
+              </label>
+              <label className="flex-1 text-xs text-cinza">
+                Grava em
+                <select value={form.campoDestino ?? ""} onChange={(e) => setForm({ ...form, campoDestino: e.target.value || null })} className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm">
+                  <option value="">—</option>
+                  <option value="competencia_inicial">Competência inicial</option>
+                </select>
+              </label>
+            </div>
             <div className="flex gap-4 text-xs text-cinza">
               <label className="inline-flex items-center gap-1">
                 <input type="checkbox" checked={form.bloqueante ?? false} onChange={(e) => setForm({ ...form, bloqueante: e.target.checked })} /> Bloqueante

@@ -1,12 +1,12 @@
 import type { TemplateBloco, TemplateItem } from "./processo";
 
-type Opts = Partial<Pick<TemplateItem, "descricao" | "tipo" | "condicaoFlags" | "condicaoModo" | "bloqueante" | "anexoObrigatorio" | "alertaRisco">>;
+type Opts = Partial<Pick<TemplateItem, "descricao" | "tipo" | "condicaoFlags" | "condicaoModo" | "bloqueante" | "anexoObrigatorio" | "alertaRisco" | "dependeDe" | "campoDestino">>;
 const PJ = ["mei", "simples_sem_func", "simples_com_func", "presumido_real"];
 const COM_FUNC = ["simples_com_func", "presumido_real"];
 const NAO_MEI = ["simples_sem_func", "simples_com_func", "presumido_real"];
 
 function it(codigo: string, titulo: string, papel: string | null, prazoDias: number | null, aplicavelA: string[], ordem: number, o: Opts = {}): TemplateItem {
-  return { codigo, titulo, descricao: o.descricao ?? null, tipo: o.tipo ?? "padrao", responsavelPapel: papel, prazoDias, aplicavelA, condicaoFlags: o.condicaoFlags ?? [], condicaoModo: o.condicaoModo ?? "all", bloqueante: o.bloqueante ?? false, anexoObrigatorio: o.anexoObrigatorio ?? false, alertaRisco: o.alertaRisco ?? null, ordem };
+  return { codigo, titulo, descricao: o.descricao ?? null, tipo: o.tipo ?? "padrao", responsavelPapel: papel, prazoDias, aplicavelA, condicaoFlags: o.condicaoFlags ?? [], condicaoModo: o.condicaoModo ?? "all", bloqueante: o.bloqueante ?? false, anexoObrigatorio: o.anexoObrigatorio ?? false, alertaRisco: o.alertaRisco ?? null, ordem, dependeDe: o.dependeDe ?? [], campoDestino: o.campoDestino ?? null };
 }
 
 export const TEMPLATE_PADRAO: { slug: string; nome: string; descricao: string; blocos: TemplateBloco[] } = {
@@ -17,7 +17,7 @@ export const TEMPLATE_PADRAO: { slug: string; nome: string; descricao: string; b
     { ordem: 1, nome: "Formalização da relação", prazoBlocoDias: 3, itens: [
       it("1.1", "Contrato de prestação de serviços contábeis assinado", "admin", 0, ["*"], 1, { bloqueante: true, anexoObrigatorio: true }),
       it("1.2", "Comunicação formal ao contador anterior", "contador", 2, PJ, 2, { condicaoFlags: ["possui_contador_anterior"], anexoObrigatorio: true }),
-      it("1.3", "Definição da data de corte (competência inicial)", "contador", 1, ["*"], 3, { bloqueante: true }),
+      it("1.3", "Definição da data de corte (competência inicial)", "contador", 1, ["*"], 3, { bloqueante: true, campoDestino: "competencia_inicial" }),
       it("1.4", "Cadastro do cliente no CRM com responsáveis internos", "admin", 1, ["*"], 4, { bloqueante: true }),
     ] },
     { ordem: 2, nome: "Dados cadastrais e societários", prazoBlocoDias: 7, itens: [
@@ -53,9 +53,9 @@ export const TEMPLATE_PADRAO: { slug: string; nome: string; descricao: string; b
       it("5.4", "Mapeamento de particularidades fiscais", "contador", 20, COM_FUNC, 4, { condicaoFlags: ["complexidade_alta"] }),
     ] },
     { ordem: 6, nome: "Parametrização interna", prazoBlocoDias: 25, itens: [
-      it("6.1", "Cliente configurado no software contábil", "contador", 22, NAO_MEI, 1, { bloqueante: true }),
-      it("6.2", "Matriz de obrigações ativada e calendário gerado", "contador", 22, ["*"], 2, { bloqueante: true }),
-      it("6.3", "Contrato de honorários lançado no financeiro", "financeiro", 5, ["*"], 3, { bloqueante: true }),
+      it("6.1", "Cliente configurado no software contábil", "contador", 22, NAO_MEI, 1, { bloqueante: true, dependeDe: ["4.6"] }),
+      it("6.2", "Matriz de obrigações ativada e calendário gerado", "contador", 22, ["*"], 2, { bloqueante: true, dependeDe: ["1.3", "2.5"] }),
+      it("6.3", "Contrato de honorários lançado no financeiro", "financeiro", 5, ["*"], 3, { bloqueante: true, dependeDe: ["1.1"] }),
       it("6.4", "Portal do cliente criado e testado", "assistente", 22, ["*"], 4),
     ] },
     { ordem: 7, nome: "Kickoff e comunicação", prazoBlocoDias: 30, itens: [
