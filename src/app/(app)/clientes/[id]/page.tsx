@@ -1,12 +1,9 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { listarContadores, contadorPorId } from "@/lib/clientes/contadores";
-import { podeAtribuirContador, podeVerHonorario, podeExcluirCliente, podeCriarCliente, podeRevelarCredencial } from "@/lib/clientes/permissoes";
-import { ProcessoSection } from "@/components/onboarding/ProcessoSection";
-import { listarProcessoCliente } from "./processo";
-import { sugerirPerfil } from "@/lib/onboarding/processo";
-import { listarTemplatesAtivos } from "@/app/(app)/onboarding/template-actions";
+import { podeAtribuirContador, podeVerHonorario, podeExcluirCliente, podeCriarCliente } from "@/lib/clientes/permissoes";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
@@ -78,20 +75,6 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
 
   const contratos = mostrarHonorario ? await listarContratos(id) : [];
 
-  const podeOnboarding = podeCriarCliente(papel);
-  const proc = podeOnboarding ? await listarProcessoCliente(id) : null;
-  let usuariosOnb: { id: string; nome: string }[] = [];
-  let templatesOnb: { id: string; nome: string }[] = [];
-  let perfilSugerido: "mei" | "simples_sem_func" | "simples_com_func" | "presumido_real" | "pf" = "simples_sem_func";
-  if (podeOnboarding) {
-    const { data: us } = await supabase.from("usuarios").select("id, nome").eq("ativo", true).order("nome");
-    usuariosOnb = (us as { id: string; nome: string }[] | null) ?? [];
-    templatesOnb = await listarTemplatesAtivos();
-    const { data: fin } = await supabase.from("clientes_financeiro").select("qtd_funcionarios").eq("cliente_id", id).maybeSingle();
-    perfilSugerido = sugerirPerfil(String(cliente.tipo_pessoa ?? "PJ"), String(cliente.regime_tributario ?? ""), (fin?.qtd_funcionarios as number | null) ?? null);
-  }
-  const hojeOnb = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
-
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">{cliente.razao_social}</h1>
@@ -99,6 +82,11 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         <p className="-mt-4 text-sm text-cinza">
           Competência inicial: {(cliente as { competencia_inicial: string }).competencia_inicial.slice(5, 7)}/{(cliente as { competencia_inicial: string }).competencia_inicial.slice(0, 4)}
         </p>
+      )}
+      {podeCriarCliente(papel) && (
+        <Link href={`/onboarding/${id}`} className="text-sm text-verde underline">
+          Abrir onboarding
+        </Link>
       )}
       {podeExcluirCliente(papel) && (
         <AcoesExclusaoCliente
@@ -141,19 +129,6 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
       />
       <NotasFiscaisSection clienteId={id} papel={papel} />
       <EmissaoClienteSection clienteId={id} papel={papel} />
-      {proc && (
-        <ProcessoSection
-          clienteId={id}
-          processo={proc.processo}
-          itens={proc.itens}
-          progresso={proc.progresso}
-          usuarios={usuariosOnb}
-          podeRevelar={podeRevelarCredencial(papel)}
-          perfilSugerido={perfilSugerido}
-          hoje={hojeOnb}
-          templates={templatesOnb}
-        />
-      )}
     </div>
   );
 }

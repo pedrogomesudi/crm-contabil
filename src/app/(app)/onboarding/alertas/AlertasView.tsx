@@ -37,7 +37,7 @@ export function AlertasView({ alertas }: { alertas: AlertaView[] }) {
               {doGrupo.map((a) => (
                 <div key={a.itemId} className="rounded-lg border border-linha bg-white px-3 py-2 text-sm">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link href={`/clientes/${a.clienteId}`} className="font-medium text-texto underline decoration-linha hover:decoration-verde">
+                    <Link href={`/onboarding/${a.clienteId}`} className="font-medium text-texto underline decoration-linha hover:decoration-verde">
                       {a.razaoSocial}
                     </Link>
                     {a.bloqueante && <span className="rounded bg-negativo/10 px-1.5 text-[10px] text-negativo">bloqueante</span>}
