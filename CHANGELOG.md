@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Onboarding — construtor de templates:** Configurações → Template de onboarding vira um gerenciador de
+  vários templates (criar, ativar/desativar, excluir) com editor por template — criar/editar/remover e
+  **reordenar blocos e itens** (↑↓). Ao iniciar um processo, escolhe-se qual template aplicar.
+
 - **Onboarding — dependências, competência e anexos (Ciclo B):** itens do processo agora respeitam
   **dependências** (não conclui enquanto os pré-requisitos não estiverem concluídos/dispensados),
   exigem **anexo** quando obrigatório (upload de PDF/imagem no processo) e gravam a **competência inicial**
