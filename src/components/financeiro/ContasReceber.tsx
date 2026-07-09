@@ -9,6 +9,8 @@ import {
 } from "@/app/(app)/financeiro/contas-a-receber/actions";
 import { estornarBaixaDoTitulo } from "@/app/(app)/financeiro/contas-a-pagar/actions";
 import { cobrarViaWhatsapp } from "@/app/(app)/financeiro/contas-a-receber/whatsapp";
+import { listarBoletosDaCompetencia, type BoletoView } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
+import { BoletoTitulo } from "./BoletoTitulo";
 import { saldoTitulo, ehVencido, LABEL_STATUS } from "@/lib/financeiro/titulos";
 import { Badge } from "@/components/ui/Badge";
 import { badgeStatusTitulo } from "@/lib/ui/apresentacao";
@@ -26,18 +28,25 @@ export function ContasReceber({
   const [msg, setMsg] = useState<string | null>(null);
   const [auto, setAuto] = useState(automacaoInicial);
   const [baixando, setBaixando] = useState<string | null>(null);
+  const [boletos, setBoletos] = useState<Record<string, BoletoView>>({});
   const [pend, start] = useTransition();
   const competencia = mes ? `${mes}-01` : "";
 
   const carregar = () =>
     start(async () => {
-      if (competencia) setTitulos(await listarTitulos(competencia));
+      if (competencia) {
+        setTitulos(await listarTitulos(competencia));
+        setBoletos(await listarBoletosDaCompetencia(competencia));
+      }
     });
   const gerar = () =>
     start(async () => {
       const r = await gerarMensalidades(competencia);
       setMsg(r.erro ?? `Geradas ${r.gerados}, puladas ${r.pulados}.`);
-      if (!r.erro) setTitulos(await listarTitulos(competencia));
+      if (!r.erro) {
+        setTitulos(await listarTitulos(competencia));
+        setBoletos(await listarBoletosDaCompetencia(competencia));
+      }
     });
 
   return (
@@ -128,6 +137,9 @@ export function ContasReceber({
                           Cobrar (WhatsApp)
                         </button>
                       )}
+                      <div className="mt-1">
+                        <BoletoTitulo tituloId={t.id} boleto={boletos[t.id] ?? null} onMudou={() => start(async () => setBoletos(await listarBoletosDaCompetencia(competencia)))} />
+                      </div>
                     </td>
                   </tr>
                 );
