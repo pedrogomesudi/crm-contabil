@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Conciliação bancária (Fatia B):** casamento das movimentações com o financeiro — **conciliar** com
+  baixa já lançada ou com título em aberto (cria a baixa), **criar lançamento avulso** (despesa com
+  fornecedor / receita com cliente), **ignorar** e **reabrir**, além do botão **"Conciliar automáticos"**
+  (casa os inequívocos por valor). Conclui a conciliação bancária.
 - **Conciliação bancária (Fatia A):** importação do extrato bancário em **OFX** e **CSV** (com
   mapeamento de colunas) por conta, com **deduplicação** (não reimporta a mesma linha) e prévia; tela
   **Conciliação** (`/financeiro/conciliacao`) com as movimentações por período e totais de crédito/débito.
