@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Obrigações e Compliance (Fatia 3A — escalonamento):** hierarquia de usuários (campo Superior em
+  Usuários) e **escalonamento** das obrigações muito atrasadas do responsável para o líder e o sócio,
+  com limiares configuráveis e liga/desliga (Configurações → Matriz de obrigações); página
+  **Escalonamento** (`/obrigacoes/escalonamento`) e badge no menu com o que subiu para você.
 - **Obrigações e Compliance (Fatia 2):** **baixa de obrigação** com comprovante (anexo PDF/PNG/JPG,
   obrigatório por obrigação via flag na matriz) registrando quem entregou e quando, além de dispensar
   e reabrir; **painel de riscos** (`/obrigacoes/riscos`) com Vencendo hoje / Vencidas / Sem responsável,
