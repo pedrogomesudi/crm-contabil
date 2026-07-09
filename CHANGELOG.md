@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Boletos (fundação):** Configurações → Boletos permite escolher o provedor de emissão (Banco Inter ou
+  Asaas) e guardar as credenciais cifradas. A emissão em si vem nas próximas etapas. Requer a variável
+  `BOLETO_CRIPTO_KEY` para salvar credenciais.
+
 - **Comercial — propostas formais:** cada oportunidade pode ter propostas de honorários (itens com valor e
   recorrência mensal/único, validade, condições). Um documento formatado ("Proposta de Honorários", com
   totais e dados de pagamento) abre para impressão/compartilhamento. Marcar a proposta como Enviada/Aceita
