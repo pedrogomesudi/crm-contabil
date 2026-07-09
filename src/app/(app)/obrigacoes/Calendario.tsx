@@ -41,6 +41,16 @@ export function Calendario({ ano: anoIni, mes: mesIni, instancias: iniList, pode
 
   const q = busca.trim().toLowerCase();
   const filtradas = lista.filter((r) => (!q || r.clienteNome.toLowerCase().includes(q) || r.obrigacaoNome.toLowerCase().includes(q)) && (!status || r.status === status) && (!soMeus || r.meu));
+  const plural = (n: number, s: string) => `${n} ${s}${n === 1 ? "" : "s"}`;
+  const cont = { pendente: 0, entregue: 0, dispensada: 0 } as Record<string, number>;
+  for (const r of filtradas) cont[r.status] = (cont[r.status] ?? 0) + 1;
+  const resumoStatus = [
+    cont.pendente ? plural(cont.pendente, "pendente") : null,
+    cont.entregue ? plural(cont.entregue, "entregue") : null,
+    cont.dispensada ? plural(cont.dispensada, "dispensada") : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const inp = "rounded-lg border border-linha px-2 py-1 text-sm";
 
   return (
@@ -68,6 +78,11 @@ export function Calendario({ ano: anoIni, mes: mesIni, instancias: iniList, pode
         <a href="/obrigacoes/escalonamento" className="rounded-lg border border-linha px-3 py-1.5 text-sm">Escalonamento</a>
         {podeGerar && <button type="button" onClick={gerar} className="rounded-lg bg-verde px-3 py-1.5 text-sm font-medium text-white">Gerar competência</button>}
       </div>
+
+      <p className="text-sm text-cinza">
+        <strong className="text-texto">{filtradas.length} {filtradas.length === 1 ? "obrigação" : "obrigações"}</strong>
+        {resumoStatus && <span> · {resumoStatus}</span>}
+      </p>
 
       <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
         <table className="min-w-full text-sm">
