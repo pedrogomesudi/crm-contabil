@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Onboarding — ligar/desligar notificações de prazo:** em Configurações → Template de onboarding, o admin
+  pode desativar os alertas de prazo (o badge no menu e a tela de alertas somem para todos). Vêm ligados
+  por padrão.
+
 - **Financeiro — DRE:** novo relatório de Demonstração de Resultado em `/financeiro/relatorios/dre`
   (também no hub `/financeiro/relatorios`, com link no dashboard). Receitas − despesas por categoria e
   grupo (operacional/não), com resultado operacional e líquido, por período (mês/trimestre/semestre/ano) e
