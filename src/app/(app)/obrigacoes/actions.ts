@@ -111,6 +111,9 @@ export async function contarRiscos(): Promise<number> {
   const perfil = await gate();
   if (!perfil) return 0;
   const supabase = await createServerSupabase();
+  // Notificação de riscos desligada em Configurações › Obrigações => sem badge.
+  const { data: cfg } = await supabase.from("obrigacao_config").select("riscos_badge_ativo").eq("id", 1).maybeSingle();
+  if (cfg?.riscos_badge_ativo === false) return 0;
   const { data } = await supabase.from("obrigacao_instancia").select("vencimento_interno, clientes!inner(id)").eq("status", "pendente").is("entregue_em", null).eq("clientes.status", "ativo");
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
   return (data ?? []).filter((r) => classificarRisco(r.vencimento_interno as string, hoje) !== "no_prazo").length;
