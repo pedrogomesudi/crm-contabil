@@ -11,6 +11,7 @@ const ITENS = [
   { href: "/financeiro/contas-a-receber", label: "Contas a receber" },
   { href: "/financeiro/contas-a-pagar", label: "Contas a pagar" },
   { href: "/financeiro/regua-cobranca", label: "Régua de cobrança" },
+  { href: "/financeiro/conciliacao", label: "Conciliação bancária" },
   { href: "/financeiro/cadastros/contas", label: "Contas bancárias" },
   { href: "/financeiro/cadastros/plano-de-contas", label: "Plano de contas" },
   { href: "/financeiro/cadastros/centros-de-custo", label: "Centros de custo" },
