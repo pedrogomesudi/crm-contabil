@@ -8,6 +8,7 @@ export type DadosEmissao = {
   pagadorEmail: string | null;
   descricao: string;
   seuNumero: string;
+  pagadorEndereco?: { cep: string; logradouro: string; numero: string; bairro: string; cidade: string; uf: string } | null;
 };
 
 export type BoletoEmitido = {
