@@ -3,6 +3,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { gerarInstancias } from "@/lib/obrigacoes/motor";
+import { mesesAte } from "@/lib/obrigacoes/retroativo";
 import { montarPainel, classificarRisco, type PainelRiscos, type ItemRisco } from "@/lib/obrigacoes/risco";
 
 export type InstanciaView = { id: string; clienteNome: string; obrigacaoNome: string; obrigacaoCodigo: string; periodicidade: string; competencia: string; vencimentoLegal: string; vencimentoInterno: string; status: string; responsavelNome: string | null; meu: boolean; entregueEm: string | null; entreguePorNome: string | null; temComprovante: boolean; comprovanteObrigatorio: boolean };
@@ -23,6 +24,21 @@ export async function gerarCompetenciaCliente(clienteId: string, ano: number, me
   if (!(await gate())) return null;
   const supabase = await createServerSupabase();
   return gerarInstancias(supabase, ano, mes, clienteId);
+}
+
+export async function gerarRetroativo(anoIni: number, mesIni: number, clienteId?: string): Promise<{ meses: number; candidatas: number } | null> {
+  if (!(await gate())) return null;
+  const supabase = await createServerSupabase();
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const anoAtual = Number(hoje.slice(0, 4));
+  const mesAtual = Number(hoje.slice(5, 7));
+  const meses = mesesAte(anoIni, mesIni, anoAtual, mesAtual);
+  let candidatas = 0;
+  for (const { ano, mes } of meses) {
+    const r = await gerarInstancias(supabase, ano, mes, clienteId);
+    candidatas += r.candidatas;
+  }
+  return { meses: meses.length, candidatas };
 }
 
 function um<T>(v: T | T[] | null | undefined): T | null {
