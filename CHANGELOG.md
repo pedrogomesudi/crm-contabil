@@ -10,6 +10,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Comercial — propostas formais:** cada oportunidade pode ter propostas de honorários (itens com valor e
+  recorrência mensal/único, validade, condições). Um documento formatado ("Proposta de Honorários", com
+  totais e dados de pagamento) abre para impressão/compartilhamento. Marcar a proposta como Enviada/Aceita
+  move a oportunidade no funil (Proposta/Ganho).
+
 - **Comercial — métricas do funil:** tela `/comercial/metricas` com o pipeline atual (total e por etapa) e
   os fechamentos por período (mês/trimestre/semestre/ano, navegável): ganhos, perdidos, **taxa de
   conversão**, desempenho por responsável e motivos de perda. Link "Métricas" no quadro.
