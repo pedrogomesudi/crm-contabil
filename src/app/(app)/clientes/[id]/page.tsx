@@ -14,6 +14,9 @@ import { AcoesExclusaoCliente } from "@/components/clientes/AcoesExclusaoCliente
 import { BotaoAtualizarReceita } from "@/components/clientes/BotaoAtualizarReceita";
 import { ContratosSection } from "@/components/financeiro/ContratosSection";
 import { OptOutCobranca } from "@/components/clientes/OptOutCobranca";
+import { ObrigacoesCliente } from "./ObrigacoesCliente";
+import { listarInstancias } from "@/app/(app)/obrigacoes/actions";
+import { podeGerenciarMatriz } from "@/lib/obrigacoes/permissoes";
 import { listarContratos } from "./contratos";
 import { atualizarCliente } from "../actions";
 
@@ -75,6 +78,11 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
 
   const contratos = mostrarHonorario ? await listarContratos(id) : [];
 
+  const hojeObrigacoes = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const anoObrigacoes = Number(hojeObrigacoes.slice(0, 4));
+  const mesObrigacoes = Number(hojeObrigacoes.slice(5, 7));
+  const obrigacoesDoMes = podeCriarCliente(papel) ? await listarInstancias(anoObrigacoes, mesObrigacoes, { clienteId: id }) : [];
+
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">{cliente.razao_social}</h1>
@@ -129,6 +137,15 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
       />
       <NotasFiscaisSection clienteId={id} papel={papel} />
       <EmissaoClienteSection clienteId={id} papel={papel} />
+      {podeCriarCliente(papel) && (
+        <ObrigacoesCliente
+          clienteId={id}
+          ano={anoObrigacoes}
+          mes={mesObrigacoes}
+          instancias={obrigacoesDoMes}
+          podeGerar={podeGerenciarMatriz(papel)}
+        />
+      )}
     </div>
   );
 }

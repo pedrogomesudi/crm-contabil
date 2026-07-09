@@ -10,6 +10,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Obrigações e Compliance (Fatia 1):** matriz de obrigações parametrizável (Configurações → Matriz de
+  obrigações, admin) com critérios de incidência (perfil/regime, flags, UF, CNAE) e regras de prazo
+  (dia útil + feriados nacionais, prazo interno); **geração automática do calendário** por cliente e
+  competência (mensal/trimestral/anual), via botão e cron mensal (idempotente); tela **Obrigações**
+  (calendário do mês, filtros e selo de severidade) e seção na ficha do cliente.
 - **Financeiro — Fluxo de caixa detalhado:** novo relatório em `/financeiro/relatorios/fluxo` (no hub de
   Relatórios): matriz de categorias × 12 meses combinando **realizado** (baixas) e **projetado**
   (títulos em aberto por vencimento), com **saldo acumulado** ao fim de cada mês, seletor de ano,

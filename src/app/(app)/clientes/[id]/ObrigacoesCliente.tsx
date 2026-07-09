@@ -1,0 +1,51 @@
+"use client";
+import { useState } from "react";
+import { listarInstancias, gerarCompetenciaCliente, type InstanciaView } from "@/app/(app)/obrigacoes/actions";
+
+const dataBR = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+
+export function ObrigacoesCliente({ clienteId, ano, mes, instancias: iniList, podeGerar }: { clienteId: string; ano: number; mes: number; instancias: InstanciaView[]; podeGerar: boolean }) {
+  const [lista, setLista] = useState<InstanciaView[]>(iniList);
+  const [carregando, setCarregando] = useState(false);
+  async function gerar() {
+    setCarregando(true);
+    await gerarCompetenciaCliente(clienteId, ano, mes);
+    setLista(await listarInstancias(ano, mes, { clienteId }));
+    setCarregando(false);
+  }
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-lg font-semibold text-texto">Obrigações do mês</h2>
+        {podeGerar && <button type="button" onClick={gerar} className="rounded-lg border border-linha px-3 py-1.5 text-sm">Gerar para este cliente</button>}
+      </div>
+      <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="border-b border-linha text-left text-xs text-cinza">
+              <th className="px-3 py-2 font-medium">Obrigação</th>
+              <th className="px-3 py-2 font-medium">Interno</th>
+              <th className="px-3 py-2 font-medium">Legal</th>
+              <th className="px-3 py-2 font-medium">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lista.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-3 py-3 text-cinza">{carregando ? "Carregando…" : "Sem obrigações a vencer neste mês."}</td>
+              </tr>
+            )}
+            {lista.map((r) => (
+              <tr key={r.id} className="border-b border-linha/60">
+                <td className="px-3 py-1.5 text-texto">{r.obrigacaoNome}</td>
+                <td className="px-3 py-1.5">{dataBR(r.vencimentoInterno)}</td>
+                <td className="px-3 py-1.5">{dataBR(r.vencimentoLegal)}</td>
+                <td className="px-3 py-1.5">{r.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
