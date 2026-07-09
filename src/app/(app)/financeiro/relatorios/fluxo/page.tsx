@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -13,6 +14,7 @@ export default async function FluxoPage() {
   const dados = await relatorioFluxo(ano);
   return (
     <main className="mx-auto max-w-6xl space-y-5 p-4">
+      <Voltar href="/financeiro/relatorios" />
       <PageHeader titulo="Fluxo de caixa detalhado" subtitulo="Realizado e projetado, mês a mês, com saldo acumulado" />
       {dados ? <FluxoCaixaView ano={ano} fluxo={dados.fluxo} mesAtual={dados.mesAtual} /> : <p className="text-sm text-negativo">Não foi possível carregar os dados.</p>}
     </main>

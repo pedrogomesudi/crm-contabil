@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Voltar } from "@/components/ui/Voltar";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
@@ -13,6 +14,7 @@ export default async function DashboardFinanceiroPage() {
   const dados = await carregarDashboard(`${mes}-01`);
   return (
     <main className="mx-auto max-w-4xl space-y-4 p-4">
+      <Voltar href="/financeiro/cadastros" />
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Dashboard financeiro</h1>
       <div className="flex gap-3">
         <Link href="/financeiro/relatorios" className="text-sm text-verde underline">Relatórios</Link>

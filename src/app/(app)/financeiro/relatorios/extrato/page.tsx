@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -17,6 +18,7 @@ export default async function ExtratoPage() {
   const [categorias, lancamentosIni] = await Promise.all([listarCategoriasFiltro(), listarLancamentos(inicio, fim, "todos", null)]);
   return (
     <main className="mx-auto max-w-5xl space-y-5 p-4">
+      <Voltar href="/financeiro/relatorios" />
       <PageHeader titulo="Extrato / movimentações" subtitulo="Lançamentos e baixas, com export CSV" />
       <Extrato categorias={categorias} inicio={inicio} fim={fim} lancamentosIni={lancamentosIni} />
     </main>

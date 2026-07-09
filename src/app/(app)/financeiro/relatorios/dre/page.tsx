@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -14,6 +15,7 @@ export default async function DREPage() {
   const inicial = await relatorioDRE(ano, "mes", mes, "competencia");
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
+      <Voltar href="/financeiro/relatorios" />
       <PageHeader titulo="DRE" subtitulo="Demonstração de Resultado" />
       <RelatorioDRE ano={ano} tipo="mes" indice={mes} base="competencia" dre={inicial?.dre ?? null} />
     </main>

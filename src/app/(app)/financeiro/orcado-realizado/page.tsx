@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -14,6 +15,7 @@ export default async function OrcadoRealizadoPage() {
   const dados = await dashboardOrcadoRealizado(ano, "mes", indice, "competencia");
   return (
     <main className="mx-auto max-w-6xl space-y-5 p-4">
+      <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Orçado × Realizado" subtitulo="Comparativo do orçamento com o realizado" />
       {dados ? (
         <DashboardComparativo ano={ano} tipo="mes" indice={indice} base="competencia" categorias={dados.categorias} comparativo={dados.comparativo} />
