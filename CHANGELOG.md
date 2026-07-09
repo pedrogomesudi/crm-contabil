@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Financeiro — Fluxo de caixa detalhado:** novo relatório em `/financeiro/relatorios/fluxo` (no hub de
+  Relatórios): matriz de categorias × 12 meses combinando **realizado** (baixas) e **projetado**
+  (títulos em aberto por vencimento), com **saldo acumulado** ao fim de cada mês, seletor de ano,
+  exportação em CSV e impressão.
 - **Financeiro — Extrato/movimentações:** novo relatório em `/financeiro/relatorios/extrato` (no hub de
   Relatórios) que alterna entre **Lançamentos** (títulos) e **Baixas**, com filtros (período, tipo,
   categoria, busca por cliente) e **exportação em CSV**.
