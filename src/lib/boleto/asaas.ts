@@ -1,4 +1,4 @@
-import type { DadosEmissao, BoletoEmitido, EventoPagamento } from "./tipos";
+import type { DadosEmissao, BoletoEmitido, EventoPagamento, ProvedorBoleto } from "./tipos";
 
 export function baseUrlAsaas(ambiente: "sandbox" | "producao"): string {
   return ambiente === "producao" ? "https://api.asaas.com/v3" : "https://api-sandbox.asaas.com/v3";
@@ -42,5 +42,29 @@ export function interpretarWebhookAsaas(payload: unknown): EventoPagamento | nul
     pago: true,
     valorPago: typeof pay.value === "number" ? pay.value : null,
     pagoEm: typeof pay.paymentDate === "string" ? pay.paymentDate : null,
+  };
+}
+
+export function criarAdaptadorAsaas(apiKey: string, ambiente: "sandbox" | "producao"): ProvedorBoleto {
+  const base = baseUrlAsaas(ambiente);
+  const headers = headersAsaas(apiKey);
+  async function req(method: "GET" | "POST", path: string, body?: unknown): Promise<Record<string, unknown>> {
+    const r = await fetch(`${base}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    const j = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!r.ok) throw new Error(`Asaas ${r.status}: ${JSON.stringify(j.errors ?? j)}`);
+    return j;
+  }
+  return {
+    async emitir(dados: DadosEmissao): Promise<BoletoEmitido> {
+      const cliente = await req("POST", "/customers", corpoClienteAsaas(dados));
+      const pagamento = await req("POST", "/payments", corpoCobrancaAsaas(String(cliente.id ?? ""), dados));
+      const id = String(pagamento.id ?? "");
+      const identif = await req("GET", `/payments/${id}/identificationField`).catch(() => null);
+      const pix = await req("GET", `/payments/${id}/pixQrCode`).catch(() => null);
+      return parsearCobrancaAsaas(pagamento, identif, pix);
+    },
+    interpretarWebhook(payload: unknown): EventoPagamento | null {
+      return interpretarWebhookAsaas(payload);
+    },
   };
 }
