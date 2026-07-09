@@ -52,3 +52,24 @@ export async function semearMatrizPadrao(): Promise<{ ok?: boolean; erro?: strin
   revalidatePath("/configuracoes/obrigacoes");
   return { ok: true, inseridas: novas.length };
 }
+
+export type ConfigEscalonamentoView = { ativo: boolean; diasLider: number; diasSocio: number };
+
+export async function obterConfigEscalonamento(): Promise<ConfigEscalonamentoView> {
+  const p = await getPerfilAtual();
+  if (!p?.ativo) return { ativo: false, diasLider: 7, diasSocio: 15 };
+  const supabase = await createServerSupabase();
+  const { data } = await supabase.from("obrigacao_config").select("escalonamento_ativo, dias_lider, dias_socio").eq("id", 1).maybeSingle();
+  return { ativo: !!data?.escalonamento_ativo, diasLider: (data?.dias_lider as number) ?? 7, diasSocio: (data?.dias_socio as number) ?? 15 };
+}
+
+export async function salvarConfigEscalonamento(input: ConfigEscalonamentoView): Promise<{ ok?: boolean; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const diasLider = Math.max(1, Math.trunc(input.diasLider));
+  const diasSocio = Math.max(diasLider, Math.trunc(input.diasSocio));
+  const { error } = await supabase.from("obrigacao_config").update({ escalonamento_ativo: input.ativo, dias_lider: diasLider, dias_socio: diasSocio }).eq("id", 1);
+  if (error) return { erro: error.message };
+  revalidatePath("/configuracoes/obrigacoes");
+  return { ok: true };
+}
