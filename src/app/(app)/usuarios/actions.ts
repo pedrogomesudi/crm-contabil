@@ -176,3 +176,25 @@ export async function reenviarAcesso(usuarioId: string) {
   }
   redirect("/usuarios?ok=reenviado");
 }
+
+export async function definirSuperior(usuarioId: string, formData: FormData) {
+  await exigirAdmin();
+  const bruto = String(formData.get("superior_id") ?? "");
+  const superiorId = bruto === "" ? null : bruto;
+  if (superiorId === usuarioId) return; // não pode ser superior de si mesmo
+  const admin = createAdminSupabase();
+  // proteção contra ciclo: sobe a partir do superior escolhido
+  if (superiorId) {
+    let cur: string | null = superiorId;
+    const visto = new Set<string>();
+    while (cur) {
+      if (cur === usuarioId) return; // fecharia um ciclo — rejeita
+      if (visto.has(cur)) break;
+      visto.add(cur);
+      const res: { data: { superior_id: string | null } | null } = await admin.from("usuarios").select("superior_id").eq("id", cur).maybeSingle();
+      cur = res.data?.superior_id ?? null;
+    }
+  }
+  await admin.from("usuarios").update({ superior_id: superiorId }).eq("id", usuarioId);
+  revalidatePath("/usuarios");
+}
