@@ -10,6 +10,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Boletos — adaptador Inter:** implementado o adaptador do Banco Inter (emissão de boleto BoléPix via
+  OAuth2 + mTLS e interpretação do webhook), pronto para ser ligado na emissão. Ainda não é acionado pela
+  interface — isso vem na etapa de emissão. Nomes de campo/situação podem exigir acerto no primeiro teste
+  ao vivo com a conta Inter.
+
 - **Boletos — adaptador Asaas:** implementado o adaptador do provedor Asaas (emissão de boleto híbrido
   boleto+PIX e interpretação do webhook de pagamento), pronto para ser ligado na emissão. Ainda não é
   acionado pela interface — isso vem na etapa de emissão.
