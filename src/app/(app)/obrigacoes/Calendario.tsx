@@ -64,7 +64,8 @@ export function Calendario({ ano: anoIni, mes: mesIni, instancias: iniList, pode
         </select>
         <label className="flex items-center gap-1 text-sm text-cinza"><input type="checkbox" checked={soMeus} onChange={(e) => setSoMeus(e.target.checked)} />só os meus</label>
         <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar cliente/obrigação" className={inp} />
-        {podeGerar && <button type="button" onClick={gerar} className="ml-auto rounded-lg bg-verde px-3 py-1.5 text-sm font-medium text-white">Gerar competência</button>}
+        <a href="/obrigacoes/riscos" className="ml-auto rounded-lg border border-linha px-3 py-1.5 text-sm">Ver riscos</a>
+        {podeGerar && <button type="button" onClick={gerar} className="rounded-lg bg-verde px-3 py-1.5 text-sm font-medium text-white">Gerar competência</button>}
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-linha bg-white">

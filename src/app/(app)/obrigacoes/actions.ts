@@ -3,6 +3,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { gerarInstancias } from "@/lib/obrigacoes/motor";
+import { montarPainel, classificarRisco, type PainelRiscos, type ItemRisco } from "@/lib/obrigacoes/risco";
 
 export type InstanciaView = { id: string; clienteNome: string; obrigacaoNome: string; obrigacaoCodigo: string; periodicidade: string; competencia: string; vencimentoLegal: string; vencimentoInterno: string; status: string; responsavelNome: string | null; meu: boolean; entregueEm: string | null; entreguePorNome: string | null; temComprovante: boolean; comprovanteObrigatorio: boolean };
 
@@ -68,4 +69,30 @@ export async function listarInstancias(ano: number, mes: number, opts?: { client
       comprovanteObrigatorio: o?.comprovante_obrigatorio ?? true,
     };
   });
+}
+
+export async function listarRiscos(opts?: { soMeus?: boolean }): Promise<PainelRiscos> {
+  const perfil = await gate();
+  if (!perfil) return { resumo: { vencendoHoje: 0, vencidas: 0, semResponsavel: 0 }, grupos: [] };
+  const supabase = await createServerSupabase();
+  let q = supabase.from("obrigacao_instancia").select("id, competencia, vencimento_legal, vencimento_interno, responsavel_id, entregue_em, obrigacao(nome, periodicidade), clientes(razao_social), responsavel:responsavel_id(nome)").eq("status", "pendente").is("entregue_em", null);
+  if (opts?.soMeus) q = q.eq("responsavel_id", perfil.id);
+  const { data } = await q;
+  const itens: ItemRisco[] = (data ?? []).map((r) => {
+    const o = um(r.obrigacao as { nome?: string; periodicidade?: string } | { nome?: string; periodicidade?: string }[] | null);
+    const cl = um(r.clientes as { razao_social?: string } | { razao_social?: string }[] | null);
+    const resp = um(r.responsavel as { nome?: string } | { nome?: string }[] | null);
+    return { id: r.id as string, clienteNome: cl?.razao_social ?? "—", obrigacaoNome: o?.nome ?? "—", competencia: r.competencia as string, periodicidade: o?.periodicidade ?? "mensal", vencimentoInterno: r.vencimento_interno as string, vencimentoLegal: r.vencimento_legal as string, responsavelId: (r.responsavel_id as string | null) ?? null, responsavelNome: resp?.nome ?? null };
+  });
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  return montarPainel(itens, hoje);
+}
+
+export async function contarRiscos(): Promise<number> {
+  const perfil = await gate();
+  if (!perfil) return 0;
+  const supabase = await createServerSupabase();
+  const { data } = await supabase.from("obrigacao_instancia").select("vencimento_interno").eq("status", "pendente").is("entregue_em", null);
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  return (data ?? []).filter((r) => classificarRisco(r.vencimento_interno as string, hoje) !== "no_prazo").length;
 }
