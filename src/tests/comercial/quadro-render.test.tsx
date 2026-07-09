@@ -6,8 +6,8 @@ import { QuadroComercial } from "@/app/(app)/comercial/QuadroComercial";
 import type { OportunidadeView } from "@/app/(app)/comercial/actions";
 
 const ops: OportunidadeView[] = [
-  { id: "1", prospectNome: "Padaria Sol", contatoNome: "João", contatoTelefone: null, contatoEmail: null, origem: "Indicação", servicoInteresse: "Abertura", valorEstimado: 400, responsavelId: "u1", responsavelNome: "Ana", etapa: "novo", observacoes: null, motivoPerda: null, clienteId: null, meu: true },
-  { id: "2", prospectNome: "Tech XY", contatoNome: null, contatoTelefone: null, contatoEmail: null, origem: null, servicoInteresse: null, valorEstimado: 900, responsavelId: null, responsavelNome: null, etapa: "ganho", observacoes: null, motivoPerda: null, clienteId: null, meu: false },
+  { id: "1", prospectNome: "Padaria Sol", contatoNome: "João", contatoTelefone: null, contatoEmail: null, origem: "Indicação", servicoInteresse: "Abertura", valorEstimado: 400, responsavelId: "u1", responsavelNome: "Ana", etapa: "novo", observacoes: null, motivoPerda: null, clienteId: null, meu: true, criadoEm: "2026-07-01T12:00:00.000Z", fechadoEm: null },
+  { id: "2", prospectNome: "Tech XY", contatoNome: null, contatoTelefone: null, contatoEmail: null, origem: null, servicoInteresse: null, valorEstimado: 900, responsavelId: null, responsavelNome: null, etapa: "ganho", observacoes: null, motivoPerda: null, clienteId: null, meu: false, criadoEm: "2026-07-01T12:00:00.000Z", fechadoEm: "2026-07-05T12:00:00.000Z" },
 ];
 
 describe("QuadroComercial", () => {
