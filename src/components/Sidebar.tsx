@@ -20,6 +20,7 @@ export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes =
     ...(podeCriarCliente(papel) ? [{ href: "/obrigacoes/escalonamento", label: "Escalonamento", badge: escalonamento || undefined }] : []),
     ...(podeAtender(papel) ? [{ href: "/atendimento", label: "Atendimento" }] : []),
     ...(podeGerenciarFinanceiro(papel) ? [{ href: "/financeiro/cadastros", label: "Financeiro" }] : []),
+    ...(podeGerenciarFinanceiro(papel) ? [{ href: "/financeiro/conciliacao", label: "Conciliação" }] : []),
     ...(["admin", "assistente"].includes(papel) ? [{ href: "/integracoes/dominio", label: "Integração Domínio" }] : []),
     ...(papel === "admin" ? [{ href: "/usuarios", label: "Usuários" }] : []),
     ...(papel === "admin" ? [{ href: "/configuracoes", label: "Configurações" }] : []),
