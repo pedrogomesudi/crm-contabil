@@ -4,7 +4,10 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
 
-const RELATORIOS = [{ href: "/financeiro/relatorios/dre", label: "DRE", desc: "Demonstração de Resultado por período." }];
+const RELATORIOS = [
+  { href: "/financeiro/relatorios/dre", label: "DRE", desc: "Demonstração de Resultado por período." },
+  { href: "/financeiro/relatorios/extrato", label: "Extrato / movimentações", desc: "Lançamentos e baixas com filtros e export CSV." },
+];
 
 export default async function RelatoriosPage() {
   const perfil = await getPerfilAtual();
