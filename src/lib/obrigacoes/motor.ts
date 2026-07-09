@@ -22,7 +22,7 @@ export async function gerarInstancias(supabase: SupabaseClient, ano: number, mes
   const obrigacoes = (obrigRows ?? []).map(matrizDaLinha);
   if (obrigacoes.length === 0) return { candidatas: 0, clientes: 0 };
 
-  let q = supabase.from("clientes").select("id, tipo_pessoa, regime_tributario, cnae, inscricao_estadual, inscricao_municipal, contador_id, endereco, clientes_financeiro(qtd_funcionarios)").is("excluido_em", null);
+  let q = supabase.from("clientes").select("id, tipo_pessoa, regime_tributario, cnae, inscricao_estadual, inscricao_municipal, contador_id, endereco, clientes_financeiro(qtd_funcionarios)").is("excluido_em", null).eq("status", "ativo");
   if (clienteId) q = q.eq("id", clienteId);
   const { data: clientes } = await q;
 
