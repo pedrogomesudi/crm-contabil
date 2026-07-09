@@ -36,3 +36,11 @@ export function instanciasDaCompetencia(obrigacoes: ObrigacaoMatriz[], c: Client
   }
   return out;
 }
+
+// Menor competência (YYYY-MM-01) para a qual o cliente deve ter obrigações: a competência inicial
+// (do onboarding) se houver; senão o mês da data de início do contrato; senão null (sem restrição).
+export function cutoffCompetencia(competenciaInicial: string | null, dataInicio: string | null): string | null {
+  if (competenciaInicial) return `${competenciaInicial.slice(0, 7)}-01`;
+  if (dataInicio) return `${dataInicio.slice(0, 7)}-01`;
+  return null;
+}
