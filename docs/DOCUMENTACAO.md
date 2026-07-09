@@ -1,19 +1,21 @@
 # SALDO — Documentação de funcionalidades e módulos
 
-> **Documento parcial / vivo.** Reflete o estado atual do sistema em produção (`app.seusaldo.ai`).
-> Atualizar conforme os módulos evoluem. Última revisão: 2026-07-08.
+> **Documento vivo.** Reflete o estado atual do sistema em produção (`app.seusaldo.ai`).
+> Atualizar conforme os módulos evoluem. Última revisão: 2026-07-09.
 
 ---
 
 ## 1. Visão geral
 
-**SALDO** é um CRM para escritórios de contabilidade: reúne cadastro de clientes, emissão e gestão de
-NFS-e, atendimento por WhatsApp, financeiro (contas a pagar/receber, orçamento e orçado × realizado),
-cobrança automatizada, onboarding de clientes com cofre de credenciais, e integração com o sistema
-Domínio.
+**SALDO** é um CRM para escritórios de contabilidade. Reúne, num só lugar: funil comercial (captação
+de clientes), cadastro de clientes, onboarding com cofre de credenciais, emissão e gestão de NFS-e,
+atendimento por WhatsApp, financeiro completo (contas a pagar/receber, orçamento, orçado × realizado,
+relatórios gerenciais), cobrança automatizada (WhatsApp + boletos) e integração com o sistema Domínio.
 
 - **Stack:** Next.js 16 (App Router, Server Actions) · TypeScript · Tailwind 4 · Supabase
   (Auth/Postgres/RLS/Storage) · deploy em EasyPanel.
+- **Marca:** identidade visual **SALDO** (rebrand V8), com design system próprio (tokens, fontes e
+  primitivos de UI) aplicado a toda a plataforma.
 - **Acesso:** aplicação web responsiva (desktop e celular).
 - **Segurança:** autenticação Supabase; autorização por papel (RBAC) aplicada tanto no servidor quanto
   na base (Row-Level Security); credenciais sensíveis cifradas (AES-256-GCM); ações sensíveis auditadas.
@@ -29,27 +31,29 @@ políticas do banco.
 |---|---|
 | **admin** | Dono/gestor do escritório — acesso total e configurações. |
 | **contador** | Contador responsável — vê e gerencia **seus** clientes. |
-| **assistente** | Apoio operacional — cadastro, documentos, atendimento. |
-| **financeiro** | Financeiro do escritório — contas, cobrança, honorários. |
+| **assistente** | Apoio operacional — cadastro, documentos, atendimento, comercial, onboarding. |
+| **financeiro** | Financeiro do escritório — contas, cobrança, honorários, relatórios. |
 
 **Matriz de capacidades (resumo):**
 
 | Capacidade | admin | contador | assistente | financeiro |
 |---|:--:|:--:|:--:|:--:|
+| Funil comercial (oportunidades) | ✔ | ✔ | ✔ | — |
 | Criar/editar cliente | ✔ | ✔ (os seus) | ✔ | — |
 | Excluir cliente | ✔ | — | — | — |
 | Atribuir contador ao cliente | ✔ | — | — | — |
 | Ver honorário | ✔ | ✔ | — | ✔ |
 | Gerenciar documentos | ✔ | ✔ | ✔ | — |
 | Atendimento (WhatsApp) | ✔ | ✔ | — | ✔ |
-| Onboarding (gerenciar itens) | ✔ | ✔ | ✔ | — |
+| Onboarding (gerenciar processos/itens) | ✔ | ✔ | ✔ | — |
 | Revelar senha do cofre | ✔ | ✔ | — | — |
-| Editar checklist-modelo de onboarding | ✔ | — | — | — |
-| Financeiro (contas, orçamento, dashboards) | ✔ | — | — | ✔ |
-| Configurar NFS-e / WhatsApp / usuários | ✔ | — | — | — |
+| Editar templates de onboarding | ✔ | — | — | — |
+| Financeiro (contas, orçamento, relatórios) | ✔ | — | — | ✔ |
+| Configurar NFS-e / WhatsApp / boletos / usuários | ✔ | — | — | — |
 
 > **Isolamento por cliente:** o contador só enxerga os clientes atribuídos a ele; as tabelas ligadas a
-> cliente (documentos, onboarding, etc.) herdam essa regra na RLS.
+> cliente (documentos, onboarding, títulos, etc.) herdam essa regra na RLS. Tabelas **pré-cliente**
+> (ex.: oportunidade do funil) usam RLS só por papel.
 
 ---
 
@@ -59,102 +63,152 @@ políticas do banco.
 Página inicial com indicadores de carteira: **total de clientes**, ativos/inativos, distribuição por
 regime tributário e clientes recentes.
 
-### 3.2 Clientes
+### 3.2 Comercial (funil de oportunidades)
+Módulo de captação e acompanhamento de novos clientes antes de virarem cadastro (admin/contador/assistente).
+
+- **Funil Kanban** (`/comercial`): oportunidades em colunas por etapa — **Novo → Contato → Proposta →
+  Negociação → Ganho / Perdido** — com **arrastar e soltar** para mover de etapa.
+- **Oportunidade:** prospect, contato (nome/telefone/e-mail), origem, serviço de interesse, valor
+  estimado, responsável, observações e motivo de perda.
+- **Conversão:** ao marcar **Ganho**, converte a oportunidade em **cliente** e dá partida no
+  **onboarding** — ligando o funil ao ciclo de entrada.
+- **Propostas formais:** geração de proposta comercial a partir da oportunidade.
+- **Métricas / relatórios** (`/comercial/metricas`): oportunidades ativas, taxa de conversão, valor
+  em funil e desempenho por etapa.
+
+### 3.3 Clientes
 Cadastro completo de PJ/PF/MEI e a ficha do cliente, que concentra todas as áreas ligadas a ele.
 
 - **Cadastro:** razão social, CNPJ/CPF, tipo de pessoa, regime tributário, inscrições estadual/municipal,
-  endereço, e-mail, telefone, responsável, representante, contador responsável, status, observações.
+  endereço, e-mail, telefone, responsável, representante, contador responsável, status, observações,
+  **competência inicial** (definida no onboarding).
 - **Consulta à Receita Federal:** para PJ, botão que preenche/atualiza os dados a partir do CNPJ.
 - **Honorário e dados financeiros:** valor mensal, dia de vencimento, faixa de faturamento, nº de
   funcionários, data de saída, opt-out de cobrança por WhatsApp (visível a quem pode ver honorário).
-- **Contratos:** geração de contrato de prestação de serviços a partir do cadastro.
+- **Contratos:** geração de contrato de prestação de serviços a partir do cadastro (Word + PDF).
 - **Documentos + assinatura eletrônica:** upload de documentos do cliente, com fluxo de assinatura
-  (integração ClickSign) e registro de acesso auditado.
+  (integração Clicksign) e registro de acesso auditado.
 - **NFS-e do cliente:** notas emitidas e emissão de nota com o cliente como emitente.
-- **Onboarding:** aba com o checklist de entrada do cliente (ver 3.3).
+- **Onboarding:** link "Abrir onboarding" para a página dedicada do cliente (ver 3.4).
 - **Exclusão:** soft delete (somente admin).
 
-### 3.3 Onboarding (RF-010)
-Workflow de entrada de cliente com **checklist configurável** e **cofre de credenciais**.
+### 3.4 Onboarding & Legalização
+Workflow estruturado de entrada de cliente, com **motor de templates**, **cofre de credenciais**,
+**regras de itens** e **alertas de prazo**. (Substituiu o antigo checklist plano do RF-010.)
 
-- **Checklist-modelo** (Configurações → Checklist de onboarding, admin): itens padrão por categoria —
-  documentos, procurações, certificados, acessos, responsáveis — com obrigatório/ordem/ativo.
-- **Por cliente:** aba "Onboarding" com "Iniciar onboarding" (copia o modelo), itens agrupados por
-  categoria, **barra de progresso**, status (pendente/concluído/dispensado), responsável, prazo e
-  observação.
+- **Motor de templates** (Configurações → Template de onboarding, admin): um **gerenciador de vários
+  templates**, cada um organizado em **blocos → itens**. Itens do tipo *padrão* (tarefa) ou *acesso*
+  (credencial). Editor com CRUD de blocos/itens e **reordenação (↑↓)**. Template padrão pré-semeado
+  (7 blocos, ~36 itens).
+- **Processo por cliente:** ao **iniciar o processo**, escolhe-se o template e o **perfil do cliente**
+  (MEI, Simples com/sem funcionário, Presumido/Real, PF) + flags de condição; o sistema **materializa**
+  os itens aplicáveis com prazos relativos (D+n). Barra de progresso, status (pendente/concluído/
+  dispensado), responsável, prazo e observação por item.
+- **Página autônoma por cliente** (`/onboarding/[clienteId]`): tela dedicada só ao onboarding daquele
+  cliente, com razão social e link para o cadastro completo.
+- **Regras de itens:**
+  - **Write-back ao cadastro:** concluir o item de competência inicial grava `clientes.competencia_inicial`.
+  - **Dependências:** um item só pode ser concluído quando os itens de que depende já estiverem
+    concluídos/dispensados (a UI mostra "Para concluir: …").
+  - **Anexo obrigatório:** itens que exigem anexo bloqueiam a conclusão sem o arquivo (upload no Storage,
+    URL assinada de 60s).
 - **Cofre de acessos:** itens de "acesso" guardam URL, login e **senha cifrada** (AES-256-GCM). Revelar a
   senha é restrito a **admin/contador** e **auditado** (registra quem/quando; falha fechada — sem
   auditoria, não revela). A senha nunca trafega em texto nas listagens.
-- **Lista global** (`/onboarding`): clientes em processo, % concluído, obrigatórios pendentes, próximo
-  prazo.
-- **Configuração de deploy:** exige a variável `ONBOARDING_CRIPTO_KEY` (chave do cofre; definida uma vez,
-  nunca alterada).
+- **Lista global** (`/onboarding`): clientes em processo, % concluído, obrigatórios pendentes, próximo prazo.
+- **Alertas de prazo (in-app):** cálculo ao vivo dos itens vencendo/vencidos (`/onboarding/alertas`),
+  agrupados por severidade (em breve / vencido / crítico), com **badge no menu** e filtro "todos / só os
+  meus". Um interruptor em Configurações (admin) liga/desliga as notificações de prazo para todos.
+- **Gatilho de consultoria:** qualquer item pode **gerar uma oportunidade de consultoria** no funil
+  comercial (vínculo idempotente), conectando onboarding → comercial.
+- **Configuração de deploy:** exige a variável `ONBOARDING_CRIPTO_KEY` (chave do cofre; definida uma
+  vez, nunca alterada).
 
-> **Evolução planejada:** motor de **template de processo estruturado** (blocos, prazos D+n, perfis de
-> cliente, condições, itens bloqueantes) — ver Roadmap.
+> **Em aberto (F2):** legalização/societário — processos por órgão (Junta, Receita, prefeitura, Estado,
+> bombeiros, vigilância), protocolos e prazos; templates por tipo de serviço societário; comunicação
+> automática de status ao cliente; registro de transferência de contabilidade (acervo, NBC PG 01).
 
-### 3.4 Atendimento (WhatsApp)
+### 3.5 Atendimento (WhatsApp)
 Central de atendimento integrada ao WhatsApp via **Z-API** (número dedicado do escritório).
 
-- **Inbox** em 3 colunas com abas (Abertas / Pendentes / Finalizadas / Favoritos).
+- **Inbox** em colunas com abas (Abertas / Pendentes / Finalizadas / Favoritos).
 - **Envio e recepção** de mensagens em tempo (polling); **mídia** (imagem, documento, áudio) enviada e
   recebida.
 - **Read receipts** (entregue ✓✓ / lido em azul), no padrão do WhatsApp.
 - **Status do atendimento e atendente** responsável por conversa.
 - **Identificação do cliente:** exibe nome da empresa + contato em vez do número, quando o telefone bate
-  com um cliente cadastrado.
+  com um cliente cadastrado. Normalização de telefone tolerante ao **nono dígito**.
 - **Nova conversa** a partir dos clientes cadastrados.
 
-### 3.5 NFS-e (notas fiscais de serviço)
-Emissão e gestão de NFS-e, com certificado digital e provedor nacional (ADN).
+### 3.6 NFS-e (notas fiscais de serviço)
+Emissão e gestão de NFS-e pelo padrão nacional (nfse.gov.br / Sefin Nacional), com certificado digital.
 
-- **Configuração do emitente** (Configurações → NFS-e, admin): dados do emitente e **certificado
-  digital**.
+- **NFS-e dos honorários (1 emitente):** o escritório emite as notas dos seus honorários; config do
+  emitente + certificado A1 (cifrado) em Configurações → NFS-e (admin).
+- **NFS-e dos clientes (multi-emitente):** cada cliente emite as próprias notas como prestador — config
+  fiscal + certificado A1 por cliente (cifrado), numeração de DPS por cliente, tomador externo.
 - **Emissão avulsa** e **emissão com o cliente como emitente** (preenche o tomador a partir do CNPJ).
-- **Lote** (`/nfse/lote`): emissão/gestão em lote por competência.
-- **Download em lote:** botões separados para baixar todas em **PDF** e em **XML**, com **cache do
-  DANFSe** no Storage (baixas repetidas ficam instantâneas) e reprocessamento de falhas.
+- **Lote** (`/nfse/lote`): emissão/gestão em lote por competência; cancelamento.
+- **Download em lote:** botões para baixar todas em **PDF** e em **XML**, com **cache do DANFSe** no
+  Storage (baixas repetidas ficam instantâneas) e reprocessamento de falhas.
 
-### 3.6 Cobrança (envio de notas + PIX/TED)
-Na tela de NFS-e em lote, painel que envia ao cliente, por WhatsApp, a **NFS-e (PDF)** + a **mensagem de
-cobrança** com dados de pagamento.
+### 3.7 Cobrança
+Envio da cobrança ao cliente por dois caminhos, com respeito ao opt-out do cliente.
 
-- **Seleção por lote:** lista as NFS-e autorizadas com caixas de seleção, selo **"já enviada"**
-  (pré-marcando só as pendentes) e busca.
-- **Mensagem configurável** (Configurações → Dados de pagamento): PIX + banco/agência/conta/titular/CNPJ
-  + template. Marcadores tolerantes a maiúscula/acento/espaço: `{NOME}` (contato), `{EMPRESA}`,
-  `{COMPETÊNCIA}`, `{VALOR}`, `{VENCIMENTO}`, `{CHAVE PIX}`, `{RAZÃO SOCIAL}` (favorecido), `{CNPJ}`,
-  `{BANCO}`, `{AG}`, `{CONTA}`, `{PAGAMENTO}` (bloco pronto).
-- **Progresso e reenvio** de falhas; respeita o opt-out de cobrança do cliente.
+- **Cobrança por WhatsApp (NFS-e + PIX/TED):** na tela de NFS-e em lote, painel que envia por WhatsApp a
+  **NFS-e (PDF)** + a **mensagem de cobrança** com dados de pagamento. Seleção por lote com selo "já
+  enviada", busca, progresso e reenvio de falhas. Mensagem configurável (Configurações → Dados de
+  pagamento) com marcadores tolerantes a maiúscula/acento/espaço: `{NOME}`, `{EMPRESA}`, `{COMPETÊNCIA}`,
+  `{VALOR}`, `{VENCIMENTO}`, `{CHAVE PIX}`, `{RAZÃO SOCIAL}`, `{CNPJ}`, `{BANCO}`, `{AG}`, `{CONTA}`,
+  `{PAGAMENTO}`.
+- **Régua de cobrança automática:** etapas configuráveis (ex.: D-3 / D+1 / D+7 / D+15), opt-out por
+  cliente (LGPD), idempotência por (título, etapa). Motor server-side na rota protegida
+  `/api/cron/regua-cobranca` (Bearer `CRON_SECRET`), **agendada via pg_cron** (execução diária), além
+  do botão "Processar agora".
+- **Boletos (construído; ativação pendente de conta no provedor):** emissão de boleto por título, com
+  **seletor de provedor** (Configurações → Boletos, admin): **nenhum / Banco Inter / Asaas**. Inter via
+  OAuth2 + mTLS; Asaas via API key; credenciais cifradas (AES-256-GCM, `BOLETO_CRIPTO_KEY`). Emissão,
+  **baixa por webhook** de pagamento e envio do boleto ao cliente. Exige uma conta ativa no provedor
+  para operar em produção.
 
-### 3.7 Financeiro
+### 3.8 Financeiro
 Módulo completo de gestão financeira do escritório (admin/financeiro).
 
-- **Contas a receber** e **contas a pagar:** títulos com competência, vencimento, categoria, centro de
-  custo, fornecedor; **baixas** (recebimentos/pagamentos), parcelamento, despesas recorrentes.
-- **Dashboard financeiro:** receita/despesa do mês, aging de contas a receber/pagar, fluxo de caixa
-  (6 meses), maiores devedores, receita por tipo.
+- **Contas a receber** e **contas a pagar:** títulos (RECEBER/PAGAR) com competência, vencimento,
+  categoria, centro de custo, fornecedor; **baixas** (recebimentos/pagamentos), parcelamento, despesas
+  recorrentes, **estorno auditado** (justificativa, não deleta).
+- **Dashboard financeiro** (`/financeiro/dashboard`): saldo em caixa, MRR, recebido/a receber,
+  inadimplência, previsão, aging de receber/pagar, fluxo de caixa (6 meses), maiores devedores, receita
+  por tipo.
 - **Orçamento:** grade editável (categorias × 12 meses) por ano, com totais e atalhos ("replicar nos 12
   meses", "copiar do ano anterior").
-- **Orçado × Realizado:** dashboard comparativo por categoria, com período ajustável
-  (mês/trimestre/semestre/ano) e base **competência** ou **caixa**; cartões de resumo, gráfico de barras
-  por categoria, linha de evolução da receita e tabela estilo DRE com variação colorida.
-- **Régua de cobrança:** etapas de cobrança configuráveis (base para a automação — ver Roadmap).
+- **Orçado × Realizado:** dashboard comparativo por categoria, período ajustável
+  (mês/trimestre/semestre/ano) e base **competência** ou **caixa**; cartões de resumo, barras por
+  categoria, linha de evolução da receita e tabela estilo DRE.
+- **Relatórios** (`/financeiro/relatorios`) — hub com três relatórios:
+  - **DRE:** Demonstração de Resultado por período (competência ou caixa), com resultado operacional e
+    líquido; imprimível.
+  - **Extrato / movimentações:** alternador **Lançamentos** (títulos) × **Baixas**, com filtros
+    (período, tipo, categoria, busca por cliente) e **exportação em CSV**.
+  - **Fluxo de caixa detalhado:** matriz categoria × 12 meses combinando **realizado** (baixas) e
+    **projetado** (títulos em aberto por vencimento), com **saldo acumulado** ao fim de cada mês, seletor
+    de ano, exportação em CSV e impressão.
 - **Cadastros:** plano de contas (categorias, natureza/DRE), centros de custo, contas bancárias,
-  fornecedores, serviços e contratos.
+  fornecedores, serviços e contratos de honorários (com sincronização do honorário do cliente).
 
-### 3.8 Integração Domínio
-Importação de contratos/dados a partir do sistema **Domínio** (admin/assistente), com telas de
-importação e conciliação.
+### 3.9 Integração Domínio
+Importação de contratos/dados a partir do sistema **Domínio** (admin/assistente): leitor `.xls` próprio,
+prévia (novos/atualizados/pendências), reconciliação idempotente por CNPJ e auditoria.
 
-### 3.9 Configurações (admin)
+### 3.10 Configurações (admin)
 Central de integrações e credenciais:
 - **WhatsApp (Z-API):** credenciais do provedor e teste de conexão.
 - **NFS-e (emitente):** dados do emitente e certificado digital.
+- **Boletos:** provedor (Inter / Asaas), credenciais cifradas, ambiente e conta bancária.
 - **Dados de pagamento (PIX/TED):** conta e PIX enviados na cobrança.
-- **Checklist de onboarding:** itens-modelo do onboarding.
+- **Template de onboarding:** gerenciador de templates + interruptor de notificações de prazo.
 
-### 3.10 Usuários (admin)
+### 3.11 Usuários (admin)
 Gestão da equipe: convite de usuários, definição de papel e status (ativo/inativo). O papel real é
 definido server-side (não confiável a partir do token).
 
@@ -166,9 +220,11 @@ definido server-side (não confiável a partir do token).
 |---|---|
 | **Z-API** | WhatsApp não-oficial (envio/recepção de texto e mídia, status de entrega/leitura). Webhook em `/api/webhooks/zapi/[secret]`. |
 | **Receita Federal** | Consulta de CNPJ para preencher/atualizar cadastro. |
-| **ADN / provedor NFS-e** | Emissão e download de NFS-e (DANFSe/XML), com certificado digital. |
-| **ClickSign** | Assinatura eletrônica de documentos. Webhook em `/api/webhooks/clicksign`. |
-| **Domínio** | Importação de contratos/dados contábeis. |
+| **Sefin Nacional / provedor NFS-e** | Emissão e download de NFS-e (DANFSe/XML), com certificado digital A1. |
+| **Clicksign** | Assinatura eletrônica de documentos. Webhook em `/api/webhooks/clicksign`. |
+| **Banco Inter / Asaas** | Emissão e baixa de **boletos** (construído; ativação pendente de conta). Webhook em `/api/webhooks/boleto/[secret]`. |
+| **Domínio** | Importação de contratos/dados contábeis (via relatórios `.xls`). |
+| **Gotenberg** | Conversão Word → PDF (contratos) via LibreOffice headless. |
 
 ---
 
@@ -177,14 +233,17 @@ definido server-side (não confiável a partir do token).
 - **Banco (Supabase/Postgres):** schema versionado em `supabase/migrations/NNNN_*.sql`, aplicado por um
   runner próprio (`npm run db:migrate`); **Row-Level Security** em todas as tabelas sensíveis, por papel
   e por dono do cliente.
-- **Storage (Supabase):** documentos, DANFSe (cache) e mídia de atendimento, com rotas de acesso
-  controladas.
-- **Criptografia:** credenciais do WhatsApp, certificados e o **cofre de acessos** do onboarding cifrados
-  com AES-256-GCM; chaves em variáveis de ambiente (`WHATSAPP_CRIPTO_KEY`, `ONBOARDING_CRIPTO_KEY`),
-  definidas uma vez e nunca alteradas.
-- **Auditoria:** acesso a documentos e revelação de senhas do cofre são registrados (quem/quando),
-  de forma não-forjável.
-- **Cron:** rota `/api/cron/regua-cobranca` protegida por `CRON_SECRET` (para a régua automática).
+- **Storage (Supabase):** documentos, DANFSe (cache), mídia de atendimento e anexos de onboarding, com
+  rotas de acesso controladas (URLs assinadas de curta duração).
+- **Criptografia (AES-256-GCM):** credenciais do WhatsApp, certificados NFS-e, o **cofre de acessos** do
+  onboarding e as credenciais de boleto são cifrados; chaves em variáveis de ambiente
+  (`WHATSAPP_CRIPTO_KEY`, `ONBOARDING_CRIPTO_KEY`, `BOLETO_CRIPTO_KEY`) — definidas uma vez e **nunca
+  alteradas** (mudar torna os dados cifrados irrecuperáveis).
+- **Auditoria:** acesso a documentos, revelação de senhas do cofre e estornos financeiros são
+  registrados (quem/quando), de forma não-forjável.
+- **Cron:** rota `/api/cron/regua-cobranca` protegida por `CRON_SECRET`, agendada via **pg_cron**
+  (Supabase) para a régua de cobrança diária.
+- **Exportações CSV:** neutralizam injeção de fórmula (células iniciadas por `=`/`+`/`@` viram texto).
 - **Saúde:** `/api/health` para verificação de disponibilidade.
 
 ---
@@ -196,21 +255,35 @@ definido server-side (não confiável a partir do token).
 | `GET /api/health` | Healthcheck. |
 | `POST /api/webhooks/zapi/[secret]` | Recebe eventos do WhatsApp (mensagens, status). |
 | `POST /api/webhooks/clicksign` | Recebe eventos de assinatura de documentos. |
+| `POST /api/webhooks/boleto/[secret]` | Recebe eventos de pagamento de boleto (baixa automática). |
 | `POST /api/cron/regua-cobranca` | Execução agendada da régua de cobrança (Bearer `CRON_SECRET`). |
 | `GET /api/atendimento/midia/[id]` | Serve a mídia de atendimento (com controle de acesso). |
 
 ---
 
-## 7. Roadmap / em aberto
+## 7. Estado por área
 
-- **Onboarding — motor de template estruturado (Ciclo A/B/C):** blocos, prazos relativos (D+n), perfis
-  de cliente e condições, itens bloqueantes, write-back ao cadastro, dependências, alertas escalonados,
-  oportunidades de consultoria e gatilho pelo módulo comercial.
-- **Legalização / societário:** processos por órgão (Junta, Receita, prefeitura, Estado, bombeiros,
-  vigilância), protocolos e prazos; templates por tipo de serviço; transferência de contabilidade
-  (acervo, NBC PG 01).
-- **Régua de cobrança automática:** cron externo diário disparando a rota protegida.
-- **Boletos:** emissão via provedor com API (Inter × Asaas pesquisados) — adiado.
+**Concluído e em produção:**
+- Comercial (funil Kanban, conversão, propostas, métricas).
+- Clientes (cadastro, RF, contratos, documentos, assinatura).
+- Onboarding & Legalização — motor de templates, cofre, regras de item, alertas in-app, gatilho de
+  consultoria (base RF-010 e ciclos A/B/C entregues).
+- NFS-e (honorários + multi-emitente).
+- Atendimento WhatsApp (inbox bidirecional, mídia, read receipts).
+- Financeiro (contas a pagar/receber, orçamento, orçado × realizado, dashboard, **trilogia de
+  relatórios: DRE + Extrato/CSV + Fluxo de caixa detalhado**).
+- Cobrança por WhatsApp + régua automática agendada (pg_cron).
+- Integração Domínio; rebrand SALDO (design system) 100% aplicado.
+
+**Construído, ativação pendente:**
+- **Boletos** (Inter/Asaas) — código completo; aguarda conta ativa no provedor para operar em produção.
+
+**Em aberto / próximos:**
+- **Onboarding — Legalização/societário (F2):** processos por órgão e protocolos; templates por tipo de
+  serviço societário; comunicação automática de status; transferência de contabilidade (NBC PG 01).
+- **Financeiro:** conciliação bancária (importação OFX/CSV), aprovação de pagamento.
+- **Whitelabel/multi-tenant** (comercialização) e **endurecimento de segurança/LGPD** (marcos V9/V10 do
+  [ROADMAP](../ROADMAP.md)).
 
 ---
 
@@ -218,5 +291,8 @@ definido server-side (não confiável a partir do token).
 
 - **Migrations** são imutáveis após aplicadas; mudança = nova migration idempotente.
 - **RBAC** é fonte única (`usuarios.papel` via `auth_papel()`); nunca ler papel do token.
-- **Tabelas-filhas de cliente** delegam o isolamento à RLS de `clientes` (via `EXISTS`).
+- **Tabelas-filhas de cliente** delegam o isolamento à RLS de `clientes` (via `EXISTS`); tabelas
+  pré-cliente usam RLS por papel.
+- **Ciclo de trabalho:** brainstorm → spec (`docs/superpowers/specs/`) → plano (`docs/superpowers/plans/`)
+  → execução, com TDD nos helpers puros.
 - Antes de cada entrega: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`.
