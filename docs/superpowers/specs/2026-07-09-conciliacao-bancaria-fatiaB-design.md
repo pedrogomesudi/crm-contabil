@@ -24,12 +24,18 @@ trigger `trg_status_titulo` marca o título BAIXADO). `registrarBaixa` insere na
 ignorar, reabrir, auto) + UI acionável. **Fora:** casamento parcial (1 título ↔ vários movimentos ou
 vice-versa); tolerância de valor; saldo extrato × sistema.
 
-## 1. Modelo de dados — migration `0065_baixa_conciliado.sql` (idempotente)
+## 1. Modelo de dados — migration `0065_conciliacao_baixa.sql` (idempotente)
 
 ```sql
+alter type titulo_origem add value if not exists 'RECEITA_AVULSA'; -- avulso de crédito
 alter table baixa add column if not exists conciliado_em date;
 ```
-`movimento_bancario` já tem `status` e `baixa_id` (Fatia A). Sem outras mudanças de schema.
+(`add value` primeiro, isolado; não é usado na mesma migration — padrão do 0033.) `movimento_bancario`
+já tem `status` e `baixa_id` (Fatia A).
+
+**CHECK do título (0034):** `tipo='RECEBER'` exige `cliente_id`; `tipo='PAGAR'` exige `fornecedor_id`. Por
+isso o lançamento avulso pede **cliente** (crédito, origem `RECEITA_AVULSA`) ou **fornecedor** (débito,
+origem `DESPESA_AVULSA`).
 
 ## 2. Motor de casamento — `src/lib/conciliacao/casar.ts` (helper puro, TDD)
 
@@ -68,7 +74,9 @@ export type CandidatosView = { baixas: (CandBaixa & { valor: number })[]; titulo
 export async function candidatosDoMovimento(movimentoId: string): Promise<CandidatosView>;
 export async function conciliarComBaixa(movimentoId: string, baixaId: string): Promise<{ ok?: boolean; erro?: string }>;
 export async function conciliarComTitulo(movimentoId: string, tituloId: string): Promise<{ ok?: boolean; erro?: string }>;
-export async function criarLancamento(movimentoId: string, categoriaId: string, descricao: string): Promise<{ ok?: boolean; erro?: string }>;
+export async function criarLancamento(movimentoId: string, input: { categoriaId: string; descricao: string; clienteId?: string; fornecedorId?: string }): Promise<{ ok?: boolean; erro?: string }>;
+export async function listarClientesLancamento(): Promise<{ id: string; nome: string }[]>;
+export async function listarFornecedoresLancamento(): Promise<{ id: string; nome: string }[]>;
 export async function ignorarMovimento(movimentoId: string): Promise<{ ok?: boolean; erro?: string }>;
 export async function reabrirMovimento(movimentoId: string): Promise<{ ok?: boolean; erro?: string }>;
 export async function conciliarAutomaticos(contaId: string): Promise<{ conciliados: number } | { erro: string }>;
@@ -85,10 +93,12 @@ export async function listarCategoriasLancamento(): Promise<{ id: string; nome: 
   `data_recebimento = mov.data`, `conta_bancaria_id = mov.conta`, `forma_pagamento = 'TRANSFERENCIA'`,
   `criado_por = perfil.id`, `conciliado_em = hoje`); depois `movimento.status='conciliada'` + `baixa_id`
   = a nova baixa. (Trigger marca o título BAIXADO.)
-- **`criarLancamento`** — cria um `titulo` (`tipo = mov.valor > 0 ? 'RECEBER' : 'PAGAR'`,
-  `valor = |mov.valor|`, `competencia = ${mov.data.slice(0,7)}-01`, `categoria_id`, `descricao`,
-  `status='ABERTO'`, `vencimento = mov.data`), depois cria a `baixa` do valor total (conta/data do
-  movimento, `conciliado_em`) e vincula o movimento. Requer `categoriaId`.
+- **`criarLancamento`** — `tipo = mov.valor > 0 ? 'RECEBER' : 'PAGAR'`. **Crédito:** exige `clienteId`,
+  `origem='RECEITA_AVULSA'`, `cliente_id`; **débito:** exige `fornecedorId`, `origem='DESPESA_AVULSA'`,
+  `fornecedor_id`. Cria o `titulo` (`valor=|mov.valor|`, `competencia=${mov.data.slice(0,7)}-01`,
+  `vencimento=mov.data`, `categoria_id`, `descricao`, `status='ABERTO'`), depois a `baixa` do valor total
+  (conta/data do movimento, `forma_pagamento='TRANSFERENCIA'`, `conciliado_em=hoje`) e vincula o
+  movimento. `listarClientesLancamento`/`listarFornecedoresLancamento` alimentam o form.
 - **`ignorarMovimento`** — `status='ignorada'`.
 - **`reabrirMovimento`** — `status='pendente'`, `baixa_id = null`; **não** apaga a baixa; limpa
   `conciliado_em` da baixa que estava vinculada (se houver) — o lançamento permanece, só deixa de estar
@@ -104,8 +114,8 @@ Cada **linha da lista** de movimentações ganha uma coluna de **ação** confor
   - **1 candidato** → sugestão inline ("↔ baixa ACME · 20/08" ou "↔ título Mensalidade · R$300") +
     **"Conciliar"** (chama `conciliarComBaixa`/`conciliarComTitulo`).
   - **Vários** → **"Escolher…"** lista os candidatos para o usuário selecionar.
-  - **Nenhum** → **"Criar lançamento"** (mini-form: `<select>` categoria + descrição opcional →
-    `criarLancamento`) e **"Ignorar"** (`ignorarMovimento`).
+  - **Nenhum** → **"Criar lançamento"** (mini-form: **crédito** = select cliente / **débito** = select
+    fornecedor + select categoria + descrição → `criarLancamento`) e **"Ignorar"** (`ignorarMovimento`).
 - **Conciliada / ignorada:** rótulo do status + **"Reabrir"** (`reabrirMovimento`).
 - Botão no topo **"Conciliar automáticos"** → `conciliarAutomaticos(conta)` → recarrega + `"{n}
   conciliada(s)"`.
