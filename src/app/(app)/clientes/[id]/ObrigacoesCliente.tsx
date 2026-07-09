@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { listarInstancias, gerarCompetenciaCliente, type InstanciaView } from "@/app/(app)/obrigacoes/actions";
 import { AcoesInstancia } from "@/app/(app)/obrigacoes/AcoesInstancia";
+import { GerarRetroativo } from "@/app/(app)/obrigacoes/GerarRetroativo";
 
 const dataBR = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 
@@ -21,7 +22,12 @@ export function ObrigacoesCliente({ clienteId, ano, mes, instancias: iniList, po
     <section className="space-y-2">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-lg font-semibold text-texto">Obrigações da competência</h2>
-        {podeGerar && <button type="button" onClick={gerar} className="rounded-lg border border-linha px-3 py-1.5 text-sm">Gerar para este cliente</button>}
+        {podeGerar && (
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={gerar} className="rounded-lg border border-linha px-3 py-1.5 text-sm">Gerar para este cliente</button>
+            <GerarRetroativo clienteId={clienteId} anoAtual={ano} onDone={recarregar} />
+          </div>
+        )}
       </div>
       <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
         <table className="min-w-full text-sm">
