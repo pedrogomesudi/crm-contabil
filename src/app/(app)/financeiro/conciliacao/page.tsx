@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -18,6 +19,7 @@ export default async function ConciliacaoPage() {
   const movimentosIni = contaInicial ? await listarMovimentos(contaInicial, inicio, fim, "") : [];
   return (
     <main className="mx-auto max-w-5xl space-y-5 p-4">
+      <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Conciliação bancária" subtitulo="Importe o extrato (OFX/CSV) e veja as movimentações" />
       {contas.length === 0 ? (
         <p className="rounded-2xl border border-linha bg-white px-3 py-4 text-sm text-cinza">Cadastre uma conta bancária primeiro (Financeiro → Cadastros → Contas).</p>

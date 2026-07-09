@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Voltar } from "@/components/ui/Voltar";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
@@ -15,6 +16,7 @@ export default async function RelatoriosPage() {
   if (!perfil || !podeGerenciarFinanceiro(perfil.papel)) redirect("/");
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
+      <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Relatórios" subtitulo="Relatórios financeiros" />
       <ul className="grid gap-3 sm:grid-cols-2">
         {RELATORIOS.map((r) => (
