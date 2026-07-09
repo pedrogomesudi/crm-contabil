@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Obrigações e Compliance (Fatia 2):** **baixa de obrigação** com comprovante (anexo PDF/PNG/JPG,
+  obrigatório por obrigação via flag na matriz) registrando quem entregou e quando, além de dispensar
+  e reabrir; **painel de riscos** (`/obrigacoes/riscos`) com Vencendo hoje / Vencidas / Sem responsável,
+  agrupado por responsável, e badge no menu.
 - **Obrigações e Compliance (Fatia 1):** matriz de obrigações parametrizável (Configurações → Matriz de
   obrigações, admin) com critérios de incidência (perfil/regime, flags, UF, CNAE) e regras de prazo
   (dia útil + feriados nacionais, prazo interno); **geração automática do calendário** por cliente e
