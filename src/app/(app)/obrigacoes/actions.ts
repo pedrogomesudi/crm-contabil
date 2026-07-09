@@ -33,14 +33,16 @@ export async function listarInstancias(ano: number, mes: number, opts?: { client
   const perfil = await gate();
   if (!perfil) return [];
   const supabase = await createServerSupabase();
+  // Filtra pela COMPETÊNCIA do mês selecionado (o que foi apurado/gerado nesse mês),
+  // não pelo vencimento — que costuma cair no mês seguinte. O vencimento aparece em cada linha.
   const ini = `${ano}-${String(mes).padStart(2, "0")}-01`;
   const ultimo = new Date(Date.UTC(ano, mes, 0)).getUTCDate();
   const fim = `${ano}-${String(mes).padStart(2, "0")}-${String(ultimo).padStart(2, "0")}`;
   let q = supabase
     .from("obrigacao_instancia")
     .select("id, competencia, vencimento_legal, vencimento_interno, status, responsavel_id, entregue_em, comprovante_path, obrigacao(nome, codigo, periodicidade, comprovante_obrigatorio), clientes(razao_social), responsavel:responsavel_id(nome), entregador:entregue_por(nome)")
-    .gte("vencimento_legal", ini)
-    .lte("vencimento_legal", fim)
+    .gte("competencia", ini)
+    .lte("competencia", fim)
     .order("vencimento_legal");
   if (opts?.clienteId) q = q.eq("cliente_id", opts.clienteId);
   const { data } = await q;
