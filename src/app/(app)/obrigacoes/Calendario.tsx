@@ -85,7 +85,7 @@ export function Calendario({ ano: anoIni, mes: mesIni, instancias: iniList, pode
           <tbody>
             {filtradas.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-3 text-cinza">{carregando ? "Carregando…" : "Nada a vencer neste mês. Use “Gerar competência”."}</td>
+                <td colSpan={7} className="px-3 py-3 text-cinza">{carregando ? "Carregando…" : "Sem obrigações nesta competência. Use “Gerar competência”."}</td>
               </tr>
             )}
             {filtradas.map((r) => {

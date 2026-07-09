@@ -20,7 +20,7 @@ export function ObrigacoesCliente({ clienteId, ano, mes, instancias: iniList, po
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-lg font-semibold text-texto">Obrigações do mês</h2>
+        <h2 className="font-display text-lg font-semibold text-texto">Obrigações da competência</h2>
         {podeGerar && <button type="button" onClick={gerar} className="rounded-lg border border-linha px-3 py-1.5 text-sm">Gerar para este cliente</button>}
       </div>
       <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
@@ -36,7 +36,7 @@ export function ObrigacoesCliente({ clienteId, ano, mes, instancias: iniList, po
           <tbody>
             {lista.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-3 py-3 text-cinza">{carregando ? "Carregando…" : "Sem obrigações a vencer neste mês."}</td>
+                <td colSpan={4} className="px-3 py-3 text-cinza">{carregando ? "Carregando…" : "Sem obrigações nesta competência."}</td>
               </tr>
             )}
             {lista.map((r) => (
