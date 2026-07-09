@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Comercial — métricas do funil:** tela `/comercial/metricas` com o pipeline atual (total e por etapa) e
+  os fechamentos por período (mês/trimestre/semestre/ano, navegável): ganhos, perdidos, **taxa de
+  conversão**, desempenho por responsável e motivos de perda. Link "Métricas" no quadro.
+
 - **Onboarding × Comercial — gatilho de consultoria:** em qualquer item do processo de onboarding, um botão
   **"Gerar oportunidade de consultoria"** cria uma oportunidade no funil comercial já ligada ao cliente
   (serviço "Consultoria: …", etapa Novo). O item passa a mostrar "criada ✓ · ver no funil". Fecha o Ciclo C.

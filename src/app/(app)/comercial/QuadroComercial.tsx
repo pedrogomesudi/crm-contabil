@@ -60,6 +60,7 @@ export function QuadroComercial({ oportunidades, usuarios }: { oportunidades: Op
         <label className="flex items-center gap-1 text-sm text-cinza">
           <input type="checkbox" checked={soMinhas} onChange={(e) => setSoMinhas(e.target.checked)} /> Só as minhas
         </label>
+        <Link href="/comercial/metricas" className="ml-auto text-sm text-verde underline">Métricas</Link>
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-2">
