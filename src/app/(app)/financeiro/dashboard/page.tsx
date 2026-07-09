@@ -14,7 +14,10 @@ export default async function DashboardFinanceiroPage() {
   return (
     <main className="mx-auto max-w-4xl space-y-4 p-4">
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Dashboard financeiro</h1>
-      <Link href="/financeiro/relatorios" className="text-sm text-verde underline">Relatórios</Link>
+      <div className="flex gap-3">
+        <Link href="/financeiro/relatorios" className="text-sm text-verde underline">Relatórios</Link>
+        <Link href="/financeiro/conciliacao" className="text-sm text-verde underline">Conciliação</Link>
+      </div>
       {dados ? (
         <DashboardFinanceiro mesInicial={mes} dadosIniciais={dados} />
       ) : (

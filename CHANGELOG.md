@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Conciliação bancária (Fatia A):** importação do extrato bancário em **OFX** e **CSV** (com
+  mapeamento de colunas) por conta, com **deduplicação** (não reimporta a mesma linha) e prévia; tela
+  **Conciliação** (`/financeiro/conciliacao`) com as movimentações por período e totais de crédito/débito.
+
 - **Obrigações e Compliance (Fatia 3B):** clientes **inativos** deixam de gerar obrigações e somem das
   telas de risco/escalonamento/calendário (voltam ao reativar); **geração retroativa em lote** (backfill
   de um mês inicial até o atual, no calendário e na ficha); **relatório de conformidade**
