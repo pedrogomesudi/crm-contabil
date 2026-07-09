@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 vi.mock("@/app/(app)/obrigacoes/actions", () => ({ listarInstancias: vi.fn(), gerarCompetencia: vi.fn() }));
+vi.mock("@/app/(app)/obrigacoes/baixa-actions", () => ({ darBaixa: vi.fn(), reabrir: vi.fn(), alternarDispensa: vi.fn(), urlComprovante: vi.fn() }));
 import { renderToStaticMarkup } from "react-dom/server";
 import { Calendario } from "@/app/(app)/obrigacoes/Calendario";
 import type { InstanciaView } from "@/app/(app)/obrigacoes/actions";
