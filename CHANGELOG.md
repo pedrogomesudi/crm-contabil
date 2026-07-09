@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Boletos — adaptador Asaas:** implementado o adaptador do provedor Asaas (emissão de boleto híbrido
+  boleto+PIX e interpretação do webhook de pagamento), pronto para ser ligado na emissão. Ainda não é
+  acionado pela interface — isso vem na etapa de emissão.
+
 - **Boletos (fundação):** Configurações → Boletos permite escolher o provedor de emissão (Banco Inter ou
   Asaas) e guardar as credenciais cifradas. A emissão em si vem nas próximas etapas. Requer a variável
   `BOLETO_CRIPTO_KEY` para salvar credenciais.
