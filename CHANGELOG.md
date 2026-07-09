@@ -10,6 +10,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Obrigações e Compliance (Fatia 3B):** clientes **inativos** deixam de gerar obrigações e somem das
+  telas de risco/escalonamento/calendário (voltam ao reativar); **geração retroativa em lote** (backfill
+  de um mês inicial até o atual, no calendário e na ficha); **relatório de conformidade**
+  (`/obrigacoes/conformidade`) por competência, com % de conformidade, quebra por cliente, CSV e impressão.
 - **Obrigações e Compliance (Fatia 3A — escalonamento):** hierarquia de usuários (campo Superior em
   Usuários) e **escalonamento** das obrigações muito atrasadas do responsável para o líder e o sócio,
   com limiares configuráveis e liga/desliga (Configurações → Matriz de obrigações); página
