@@ -3,6 +3,7 @@ import { useState } from "react";
 import { classificarAlerta } from "@/lib/onboarding/alertas";
 import { listarInstancias, gerarCompetencia, type InstanciaView } from "./actions";
 import { AcoesInstancia } from "./AcoesInstancia";
+import { GerarRetroativo } from "./GerarRetroativo";
 
 const MES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const dataBR = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
@@ -76,7 +77,9 @@ export function Calendario({ ano: anoIni, mes: mesIni, instancias: iniList, pode
         <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar cliente/obrigação" className={inp} />
         <a href="/obrigacoes/riscos" className="ml-auto rounded-lg border border-linha px-3 py-1.5 text-sm">Ver riscos</a>
         <a href="/obrigacoes/escalonamento" className="rounded-lg border border-linha px-3 py-1.5 text-sm">Escalonamento</a>
+        <a href="/obrigacoes/conformidade" className="rounded-lg border border-linha px-3 py-1.5 text-sm">Conformidade</a>
         {podeGerar && <button type="button" onClick={gerar} className="rounded-lg bg-verde px-3 py-1.5 text-sm font-medium text-white">Gerar competência</button>}
+        {podeGerar && <GerarRetroativo anoAtual={ano} onDone={() => recarregar(ano, mes)} />}
       </div>
 
       <p className="text-sm text-cinza">

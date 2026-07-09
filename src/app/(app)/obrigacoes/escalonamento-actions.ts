@@ -29,7 +29,7 @@ async function coletar(perfilId: string): Promise<ItemEscalado[]> {
     nomeMap.set(u.id as string, u.nome as string);
   }
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
-  const { data } = await admin.from("obrigacao_instancia").select("id, vencimento_interno, responsavel_id, obrigacao(nome), clientes(razao_social)").eq("status", "pendente").is("entregue_em", null).lt("vencimento_interno", hoje);
+  const { data } = await admin.from("obrigacao_instancia").select("id, vencimento_interno, responsavel_id, obrigacao(nome), clientes!inner(razao_social)").eq("status", "pendente").is("entregue_em", null).eq("clientes.status", "ativo").lt("vencimento_interno", hoje);
   const out: ItemEscalado[] = [];
   for (const r of data ?? []) {
     const respId = (r.responsavel_id as string | null) ?? null;

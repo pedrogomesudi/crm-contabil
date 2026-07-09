@@ -3,6 +3,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { gerarInstancias } from "@/lib/obrigacoes/motor";
+import { mesesAte } from "@/lib/obrigacoes/retroativo";
 import { montarPainel, classificarRisco, type PainelRiscos, type ItemRisco } from "@/lib/obrigacoes/risco";
 
 export type InstanciaView = { id: string; clienteNome: string; obrigacaoNome: string; obrigacaoCodigo: string; periodicidade: string; competencia: string; vencimentoLegal: string; vencimentoInterno: string; status: string; responsavelNome: string | null; meu: boolean; entregueEm: string | null; entreguePorNome: string | null; temComprovante: boolean; comprovanteObrigatorio: boolean };
@@ -25,6 +26,21 @@ export async function gerarCompetenciaCliente(clienteId: string, ano: number, me
   return gerarInstancias(supabase, ano, mes, clienteId);
 }
 
+export async function gerarRetroativo(anoIni: number, mesIni: number, clienteId?: string): Promise<{ meses: number; candidatas: number } | null> {
+  if (!(await gate())) return null;
+  const supabase = await createServerSupabase();
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const anoAtual = Number(hoje.slice(0, 4));
+  const mesAtual = Number(hoje.slice(5, 7));
+  const meses = mesesAte(anoIni, mesIni, anoAtual, mesAtual);
+  let candidatas = 0;
+  for (const { ano, mes } of meses) {
+    const r = await gerarInstancias(supabase, ano, mes, clienteId);
+    candidatas += r.candidatas;
+  }
+  return { meses: meses.length, candidatas };
+}
+
 function um<T>(v: T | T[] | null | undefined): T | null {
   return Array.isArray(v) ? (v[0] ?? null) : (v ?? null);
 }
@@ -40,11 +56,12 @@ export async function listarInstancias(ano: number, mes: number, opts?: { client
   const fim = `${ano}-${String(mes).padStart(2, "0")}-${String(ultimo).padStart(2, "0")}`;
   let q = supabase
     .from("obrigacao_instancia")
-    .select("id, competencia, vencimento_legal, vencimento_interno, status, responsavel_id, entregue_em, comprovante_path, obrigacao(nome, codigo, periodicidade, comprovante_obrigatorio), clientes(razao_social), responsavel:responsavel_id(nome), entregador:entregue_por(nome)")
+    .select("id, competencia, vencimento_legal, vencimento_interno, status, responsavel_id, entregue_em, comprovante_path, obrigacao(nome, codigo, periodicidade, comprovante_obrigatorio), clientes!inner(razao_social), responsavel:responsavel_id(nome), entregador:entregue_por(nome)")
     .gte("competencia", ini)
     .lte("competencia", fim)
     .order("vencimento_legal");
   if (opts?.clienteId) q = q.eq("cliente_id", opts.clienteId);
+  else q = q.eq("clientes.status", "ativo");
   const { data } = await q;
   return (data ?? []).map((r) => {
     const o = um(r.obrigacao as { nome?: string; codigo?: string; periodicidade?: string; comprovante_obrigatorio?: boolean } | { nome?: string; codigo?: string; periodicidade?: string; comprovante_obrigatorio?: boolean }[] | null);
@@ -77,7 +94,7 @@ export async function listarRiscos(opts?: { soMeus?: boolean }): Promise<PainelR
   const perfil = await gate();
   if (!perfil) return { resumo: { vencendoHoje: 0, vencidas: 0, semResponsavel: 0 }, grupos: [] };
   const supabase = await createServerSupabase();
-  let q = supabase.from("obrigacao_instancia").select("id, competencia, vencimento_legal, vencimento_interno, responsavel_id, entregue_em, obrigacao(nome, periodicidade), clientes(razao_social), responsavel:responsavel_id(nome)").eq("status", "pendente").is("entregue_em", null);
+  let q = supabase.from("obrigacao_instancia").select("id, competencia, vencimento_legal, vencimento_interno, responsavel_id, entregue_em, obrigacao(nome, periodicidade), clientes!inner(razao_social), responsavel:responsavel_id(nome)").eq("status", "pendente").is("entregue_em", null).eq("clientes.status", "ativo");
   if (opts?.soMeus) q = q.eq("responsavel_id", perfil.id);
   const { data } = await q;
   const itens: ItemRisco[] = (data ?? []).map((r) => {
@@ -94,7 +111,7 @@ export async function contarRiscos(): Promise<number> {
   const perfil = await gate();
   if (!perfil) return 0;
   const supabase = await createServerSupabase();
-  const { data } = await supabase.from("obrigacao_instancia").select("vencimento_interno").eq("status", "pendente").is("entregue_em", null);
+  const { data } = await supabase.from("obrigacao_instancia").select("vencimento_interno, clientes!inner(id)").eq("status", "pendente").is("entregue_em", null).eq("clientes.status", "ativo");
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
   return (data ?? []).filter((r) => classificarRisco(r.vencimento_interno as string, hoje) !== "no_prazo").length;
 }
