@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
@@ -13,6 +14,7 @@ export default async function DashboardFinanceiroPage() {
   return (
     <main className="mx-auto max-w-4xl space-y-4 p-4">
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Dashboard financeiro</h1>
+      <Link href="/financeiro/relatorios" className="text-sm text-verde underline">Relatórios</Link>
       {dados ? (
         <DashboardFinanceiro mesInicial={mes} dadosIniciais={dados} />
       ) : (
