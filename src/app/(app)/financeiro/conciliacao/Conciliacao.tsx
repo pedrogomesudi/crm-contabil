@@ -3,11 +3,13 @@ import { useState } from "react";
 import { formatarMoeda } from "@/lib/format";
 import { parsearOFX, cabecalhosCSV, parsearCSV, dedupHash, type MovimentoBruto, type MapaCSV } from "@/lib/conciliacao/parse";
 import { importarMovimentos, jaImportados, listarMovimentos, type MovimentoView } from "./actions";
+import { conciliarAutomaticos } from "./conciliar-actions";
+import { AcaoMovimento } from "./AcaoMovimento";
 
 const dataBR = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 const acharCol = (cols: string[], termos: string[]) => cols.find((c) => termos.some((t) => c.toLowerCase().includes(t))) ?? "";
 
-export function Conciliacao({ contas, inicio: iniIni, fim: fimIni, contaInicial, movimentosIni }: { contas: { id: string; nome: string }[]; inicio: string; fim: string; contaInicial: string; movimentosIni: MovimentoView[] }) {
+export function Conciliacao({ contas, inicio: iniIni, fim: fimIni, contaInicial, movimentosIni, categorias, clientes, fornecedores }: { contas: { id: string; nome: string }[]; inicio: string; fim: string; contaInicial: string; movimentosIni: MovimentoView[]; categorias: { id: string; nome: string }[]; clientes: { id: string; nome: string }[]; fornecedores: { id: string; nome: string }[] }) {
   const [conta, setConta] = useState(contaInicial);
   const [inicio, setInicio] = useState(iniIni);
   const [fim, setFim] = useState(fimIni);
@@ -94,6 +96,7 @@ export function Conciliacao({ contas, inicio: iniIni, fim: fimIni, contaInicial,
           Importar extrato (OFX/CSV)
           <input type="file" accept=".ofx,.csv,text/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) aoEscolherArquivo(f); e.target.value = ""; }} />
         </label>
+        <button type="button" disabled={busy} onClick={async () => { setBusy(true); const r = await conciliarAutomaticos(conta); setBusy(false); if ("conciliados" in r) { setMsg(`${r.conciliados} conciliada(s) automaticamente.`); await recarregar(conta, inicio, fim, status); } else setMsg(r.erro); }} className="rounded-lg border border-linha px-3 py-1.5 text-sm">Conciliar automáticos</button>
         {msg && <span className="text-sm text-cinza">{msg}</span>}
       </div>
 
@@ -157,20 +160,22 @@ export function Conciliacao({ contas, inicio: iniIni, fim: fimIni, contaInicial,
               <th className="px-3 py-2 font-medium">Descrição</th>
               <th className="px-3 py-2 text-right font-medium">Valor</th>
               <th className="px-3 py-2 font-medium">Status</th>
+              <th className="px-3 py-2 font-medium">Ação</th>
             </tr>
           </thead>
           <tbody>
             {lista.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-3 py-3 text-cinza">Nenhuma movimentação no período.</td>
+                <td colSpan={5} className="px-3 py-3 text-cinza">Nenhuma movimentação no período.</td>
               </tr>
             )}
             {lista.map((m) => (
-              <tr key={m.id} className="border-b border-linha/60">
+              <tr key={m.id} className="border-b border-linha/60 align-top">
                 <td className="px-3 py-1.5">{dataBR(m.data)}</td>
                 <td className="px-3 py-1.5 text-texto">{m.descricao}</td>
                 <td className={`px-3 py-1.5 text-right tabular-nums ${m.valor < 0 ? "text-negativo" : "text-verde"}`}>{formatarMoeda(m.valor)}</td>
                 <td className="px-3 py-1.5">{m.status}</td>
+                <td className="px-3 py-1.5"><AcaoMovimento mov={m} categorias={categorias} clientes={clientes} fornecedores={fornecedores} onDone={() => recarregar(conta, inicio, fim, status)} /></td>
               </tr>
             ))}
           </tbody>
