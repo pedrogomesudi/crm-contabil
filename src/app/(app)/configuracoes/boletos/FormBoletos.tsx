@@ -8,12 +8,13 @@ import { Botao } from "@/components/ui/Botao";
 type Prov = "nenhum" | "inter" | "asaas";
 const inputCls = "mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm";
 
-export function FormBoletos({ config }: { config: ConfigBoletoView }) {
+export function FormBoletos({ config, contas }: { config: ConfigBoletoView; contas: { id: string; nome: string }[] }) {
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [provedor, setProvedor] = useState<Prov>(config.provedor);
   const [asaasAmbiente, setAsaasAmbiente] = useState<"sandbox" | "producao">(config.asaasAmbiente);
   const [interConta, setInterConta] = useState(config.interContaCorrente ?? "");
+  const [contaBancariaId, setContaBancariaId] = useState(config.contaBancariaId ?? "");
   const [asaasApiKey, setAsaasApiKey] = useState("");
   const [interClientId, setInterClientId] = useState("");
   const [interClientSecret, setInterClientSecret] = useState("");
@@ -24,7 +25,7 @@ export function FormBoletos({ config }: { config: ConfigBoletoView }) {
 
   async function salvar() {
     setOcupado(true);
-    const r = await salvarConfigBoleto({ provedor, asaasAmbiente, interContaCorrente: interConta || null, asaasApiKey: asaasApiKey || null, interClientId: interClientId || null, interClientSecret: interClientSecret || null, interCert: interCert || null, interKey: interKey || null });
+    const r = await salvarConfigBoleto({ provedor, asaasAmbiente, interContaCorrente: interConta || null, contaBancariaId: contaBancariaId || null, asaasApiKey: asaasApiKey || null, interClientId: interClientId || null, interClientSecret: interClientSecret || null, interCert: interCert || null, interKey: interKey || null });
     setOcupado(false);
     if (r.erro) return alert(r.erro);
     alert("Configuração salva.");
@@ -78,6 +79,13 @@ export function FormBoletos({ config }: { config: ConfigBoletoView }) {
           </label>
         </div>
       )}
+
+      <label className="block text-sm text-cinza">Conta de recebimento
+        <select value={contaBancariaId} onChange={(e) => setContaBancariaId(e.target.value)} className={inputCls}>
+          <option value="">—</option>
+          {contas.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+        </select>
+      </label>
 
       <div className="flex justify-end">
         <Botao variante="primario" disabled={ocupado} onClick={salvar}>Salvar</Botao>

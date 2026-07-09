@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { statusConfigBoleto, type ConfigBoletoView } from "@/lib/boleto/config";
 
-const base: ConfigBoletoView = { provedor: "nenhum", asaasAmbiente: "producao", interContaCorrente: null, asaasApiKeyDefinida: false, interClientIdDefinido: false, interClientSecretDefinido: false, interCertDefinido: false, interKeyDefinida: false };
+const base: ConfigBoletoView = { provedor: "nenhum", asaasAmbiente: "producao", interContaCorrente: null, contaBancariaId: null, asaasApiKeyDefinida: false, interClientIdDefinido: false, interClientSecretDefinido: false, interCertDefinido: false, interKeyDefinida: false };
 
 describe("statusConfigBoleto", () => {
   it("nenhum → não configurado", () => {

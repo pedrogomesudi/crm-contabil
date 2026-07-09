@@ -2,6 +2,7 @@ export type ConfigBoletoView = {
   provedor: "nenhum" | "inter" | "asaas";
   asaasAmbiente: "sandbox" | "producao";
   interContaCorrente: string | null;
+  contaBancariaId: string | null;
   asaasApiKeyDefinida: boolean;
   interClientIdDefinido: boolean;
   interClientSecretDefinido: boolean;
