@@ -1,4 +1,5 @@
-import type { DadosEmissao, BoletoEmitido, EventoPagamento } from "./tipos";
+import type { DadosEmissao, BoletoEmitido, EventoPagamento, ProvedorBoleto } from "./tipos";
+import { Agent } from "undici";
 
 export function baseUrlInter(ambiente: "sandbox" | "producao"): { oauth: string; cobranca: string } {
   const host = ambiente === "producao" ? "https://cdpj.partners.bancointer.com.br" : "https://cdpj-sandbox.partners.uatinter.co";
@@ -54,5 +55,43 @@ export function interpretarWebhookInter(payload: unknown): EventoPagamento | nul
     pago: true,
     valorPago: typeof p.valorNominal === "number" ? p.valorNominal : null,
     pagoEm: typeof p.dataHoraSituacao === "string" ? p.dataHoraSituacao : null,
+  };
+}
+
+export function criarAdaptadorInter(clientId: string, clientSecret: string, contaCorrente: string, certPem: string, keyPem: string, ambiente: "sandbox" | "producao"): ProvedorBoleto {
+  const urls = baseUrlInter(ambiente);
+  const dispatcher = new Agent({ connect: { cert: certPem, key: keyPem } });
+  let token: { valor: string; expiraEm: number } | null = null;
+
+  async function obterToken(): Promise<string> {
+    const agora = Date.now();
+    if (token && token.expiraEm > agora + 30000) return token.valor;
+    const body = new URLSearchParams(corpoTokenInter(clientId, clientSecret)).toString();
+    const r = await fetch(urls.oauth, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body, dispatcher } as RequestInit & { dispatcher: Agent });
+    const j = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!r.ok) throw new Error(`Inter token ${r.status}: ${JSON.stringify(j)}`);
+    const exp = typeof j.expires_in === "number" ? j.expires_in : 3600;
+    token = { valor: String(j.access_token ?? ""), expiraEm: agora + exp * 1000 };
+    return token.valor;
+  }
+
+  async function req(method: "GET" | "POST", path: string, tk: string, body?: unknown): Promise<Record<string, unknown>> {
+    const r = await fetch(`${urls.cobranca}${path}`, { method, headers: { Authorization: `Bearer ${tk}`, "Content-Type": "application/json", "x-conta-corrente": contaCorrente }, body: body === undefined ? undefined : JSON.stringify(body), dispatcher } as RequestInit & { dispatcher: Agent });
+    const j = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!r.ok) throw new Error(`Inter ${r.status}: ${JSON.stringify(j)}`);
+    return j;
+  }
+
+  return {
+    async emitir(dados: DadosEmissao): Promise<BoletoEmitido> {
+      const tk = await obterToken();
+      const criada = await req("POST", "/cobrancas", tk, corpoCobrancaInter(dados));
+      const cod = String(criada.codigoSolicitacao ?? "");
+      const consulta = await req("GET", `/cobrancas/${cod}`, tk);
+      return parsearConsultaInter(cod, consulta);
+    },
+    interpretarWebhook(payload: unknown): EventoPagamento | null {
+      return interpretarWebhookInter(payload);
+    },
   };
 }
