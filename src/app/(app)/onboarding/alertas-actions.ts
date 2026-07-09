@@ -1,4 +1,5 @@
 "use server";
+import { revalidatePath } from "next/cache";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
@@ -60,11 +61,30 @@ async function coletar(usuarioId: string): Promise<AlertaView[]> {
 export async function listarAlertas(): Promise<AlertaView[]> {
   const p = await getPerfilAtual();
   if (!p?.ativo || !podeCriarCliente(p.papel)) return [];
+  if (!(await obterAlertasAtivos())) return [];
   return coletar(p.id);
 }
 
 export async function contarAlertas(): Promise<number> {
   const p = await getPerfilAtual();
   if (!p?.ativo || !podeCriarCliente(p.papel)) return 0;
+  if (!(await obterAlertasAtivos())) return 0;
   return (await coletar(p.id)).length;
+}
+
+export async function obterAlertasAtivos(): Promise<boolean> {
+  const supabase = await createServerSupabase();
+  const { data } = await supabase.from("onboarding_config").select("alertas_ativos").eq("id", 1).maybeSingle();
+  return Boolean(data?.alertas_ativos ?? true);
+}
+
+export async function definirAlertasAtivos(ativo: boolean): Promise<{ ok?: boolean; erro?: string }> {
+  const p = await getPerfilAtual();
+  if (!p?.ativo || p.papel !== "admin") return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("onboarding_config").update({ alertas_ativos: ativo, atualizado_em: new Date().toISOString() }).eq("id", 1);
+  if (error) return { erro: "Falha ao salvar." };
+  revalidatePath("/configuracoes/onboarding");
+  revalidatePath("/onboarding");
+  return { ok: true };
 }
