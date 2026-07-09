@@ -49,7 +49,7 @@ export function Sidebar({ papel, nome, alertasOnboarding = 0 }: { papel: Papel; 
   return (
     <>
       {/* Topo mobile */}
-      <div className="flex items-center justify-between bg-tinta px-4 py-3 md:hidden">
+      <div className="flex items-center justify-between bg-tinta px-4 py-3 md:hidden print:hidden">
         <LogoSaldo variante="escuro" tamanho={26} />
         <button
           type="button"
@@ -89,7 +89,7 @@ export function Sidebar({ papel, nome, alertasOnboarding = 0 }: { papel: Papel; 
       )}
 
       {/* Sidebar desktop */}
-      <aside className="hidden flex-col gap-4 bg-tinta p-4 md:flex md:h-screen md:w-56 md:shrink-0">
+      <aside className="hidden flex-col gap-4 bg-tinta p-4 md:flex md:h-screen md:w-56 md:shrink-0 print:!hidden">
         <LogoSaldo variante="escuro" tamanho={28} />
         <p className="truncate font-mono text-xs text-mono-muted">{nome}</p>
         {nav}
