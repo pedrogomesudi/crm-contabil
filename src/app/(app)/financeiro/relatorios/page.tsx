@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 const RELATORIOS = [
   { href: "/financeiro/relatorios/dre", label: "DRE", desc: "Demonstração de Resultado por período." },
   { href: "/financeiro/relatorios/extrato", label: "Extrato / movimentações", desc: "Lançamentos e baixas com filtros e export CSV." },
+  { href: "/financeiro/relatorios/fluxo", label: "Fluxo de caixa detalhado", desc: "Realizado e projetado, mês a mês, com saldo acumulado." },
 ];
 
 export default async function RelatoriosPage() {
