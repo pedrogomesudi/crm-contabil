@@ -10,6 +10,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Boletos — baixa automática + envio:** quando o cliente paga o boleto, o webhook do provedor dá baixa
+  no título automaticamente (marca como BAIXADO) e registra o boleto como pago. A cobrança por WhatsApp
+  passa a incluir a linha digitável e o PIX copia-e-cola do boleto. Requer a variável
+  `BOLETO_WEBHOOK_SECRET` e cadastrar a URL do webhook no painel do provedor. Fecha o módulo de boletos.
+
 - **Boletos — emissão:** em Contas a receber, cada título ganha "Emitir boleto" (usa o provedor configurado
   em Configurações → Boletos) e passa a exibir a linha digitável e o PIX copia-e-cola. Configure a conta de
   recebimento na tela de Boletos. (A baixa automática por pagamento vem na próxima etapa.)

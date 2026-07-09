@@ -28,6 +28,22 @@ export async function cobrarViaWhatsapp(tituloId: string): Promise<{ ok?: boolea
     vencimento: formatarData(t.vencimento as string),
   });
 
+  let textoFinal = texto;
+  const { data: bol } = await supabase
+    .from("boleto")
+    .select("linha_digitavel, pix_copia_cola")
+    .eq("titulo_id", tituloId)
+    .not("status", "in", "(cancelado,erro)")
+    .order("criado_em", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (bol) {
+    const extra: string[] = [];
+    if (bol.linha_digitavel) extra.push(`Linha digitável: ${bol.linha_digitavel as string}`);
+    if (bol.pix_copia_cola) extra.push(`PIX copia-e-cola:\n${bol.pix_copia_cola as string}`);
+    if (extra.length) textoFinal = `${texto}\n\n${extra.join("\n\n")}`;
+  }
+
   const cfg = await carregarConfigZapi();
   let status: "ENVIADO" | "ERRO" = "ERRO";
   let resposta: unknown = null;
@@ -35,7 +51,7 @@ export async function cobrarViaWhatsapp(tituloId: string): Promise<{ ok?: boolea
   if (!cfg) {
     erro = "WhatsApp não configurado.";
   } else {
-    const r = await enviarTexto(cfg, tel, texto);
+    const r = await enviarTexto(cfg, tel, textoFinal);
     status = r.ok ? "ENVIADO" : "ERRO";
     resposta = r.resposta ?? r.erro;
     if (!r.ok) erro = r.erro ?? "Falha no envio.";
