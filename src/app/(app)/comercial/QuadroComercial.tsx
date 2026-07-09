@@ -99,7 +99,8 @@ export function QuadroComercial({ oportunidades, usuarios }: { oportunidades: Op
                     <button type="button" disabled={ocupado || !etapaAdjacente(o.etapa, "proxima")} onClick={() => { const a = etapaAdjacente(o.etapa, "proxima"); if (a) void chamar(() => definirEtapa(o.id, a)); }} className="rounded border border-linha px-1.5 disabled:opacity-40">→</button>
                     <button type="button" onClick={() => void chamar(() => definirEtapa(o.id, "ganho"))} className="rounded border border-verde px-1.5 text-verde">Ganho</button>
                     <button type="button" onClick={() => perder(o.id)} className="rounded border border-negativo px-1.5 text-negativo">Perdido</button>
-                    <button type="button" onClick={() => setForm({ id: o.id, input: doView(o) })} className="ml-auto text-cinza underline">editar</button>
+                    <Link href={`/comercial/propostas?op=${o.id}`} className="ml-auto text-cinza underline">propostas</Link>
+                    <button type="button" onClick={() => setForm({ id: o.id, input: doView(o) })} className="text-cinza underline">editar</button>
                   </div>
                 </div>
               ))}
