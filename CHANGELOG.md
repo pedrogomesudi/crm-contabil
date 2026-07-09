@@ -10,6 +10,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Financeiro — Extrato/movimentações:** novo relatório em `/financeiro/relatorios/extrato` (no hub de
+  Relatórios) que alterna entre **Lançamentos** (títulos) e **Baixas**, com filtros (período, tipo,
+  categoria, busca por cliente) e **exportação em CSV**.
 - **Onboarding — ligar/desligar notificações de prazo:** em Configurações → Template de onboarding, o admin
   pode desativar os alertas de prazo (o badge no menu e a tela de alertas somem para todos). Vêm ligados
   por padrão.
