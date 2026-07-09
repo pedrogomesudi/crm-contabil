@@ -3,7 +3,7 @@ import { useState } from "react";
 import { salvarObrigacao, excluirObrigacao, semearMatrizPadrao, type ObrigacaoRow } from "./actions";
 
 const PERFIS = ["mei", "simples_sem_func", "simples_com_func", "presumido_real", "pf", "*"];
-const vazio: Omit<ObrigacaoRow, "id"> & { id?: string } = { codigo: "", nome: "", esfera: "federal", periodicidade: "mensal", aplicavelA: [], condicaoFlags: [], condicaoModo: "any", ufs: [], cnaePrefixos: [], vencDia: 20, vencMesOffset: 1, vencMes: null, vencAnoOffset: 1, prazoInternoDiasUteis: 0, antecipa: true, ativa: true, ordem: 0 };
+const vazio: Omit<ObrigacaoRow, "id"> & { id?: string } = { codigo: "", nome: "", esfera: "federal", periodicidade: "mensal", aplicavelA: [], condicaoFlags: [], condicaoModo: "any", ufs: [], cnaePrefixos: [], vencDia: 20, vencMesOffset: 1, vencMes: null, vencAnoOffset: 1, prazoInternoDiasUteis: 0, antecipa: true, comprovanteObrigatorio: true, ativa: true, ordem: 0 };
 
 export function EditorMatriz({ linhas }: { linhas: ObrigacaoRow[] }) {
   const [form, setForm] = useState<(Omit<ObrigacaoRow, "id"> & { id?: string }) | null>(null);
@@ -112,6 +112,7 @@ export function EditorMatriz({ linhas }: { linhas: ObrigacaoRow[] }) {
             <label className="text-sm text-cinza">Mês (anual)<input type="number" value={form.vencMes ?? ""} onChange={(e) => setForm({ ...form, vencMes: e.target.value ? Number(e.target.value) : null })} className={`${inp} ml-1 w-16`} /></label>
             <label className="text-sm text-cinza">Interno (d.úteis)<input type="number" value={form.prazoInternoDiasUteis} onChange={(e) => setForm({ ...form, prazoInternoDiasUteis: Number(e.target.value) })} className={`${inp} ml-1 w-16`} /></label>
             <label className="flex items-center gap-1 text-sm text-cinza"><input type="checkbox" checked={form.antecipa} onChange={(e) => setForm({ ...form, antecipa: e.target.checked })} />antecipa</label>
+            <label className="flex items-center gap-1 text-sm text-cinza"><input type="checkbox" checked={form.comprovanteObrigatorio} onChange={(e) => setForm({ ...form, comprovanteObrigatorio: e.target.checked })} />comprovante obrigatório</label>
             <label className="flex items-center gap-1 text-sm text-cinza"><input type="checkbox" checked={form.ativa} onChange={(e) => setForm({ ...form, ativa: e.target.checked })} />ativa</label>
           </div>
           <div className="flex gap-2">

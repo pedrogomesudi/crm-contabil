@@ -1,16 +1,20 @@
 "use client";
 import { useState } from "react";
 import { listarInstancias, gerarCompetenciaCliente, type InstanciaView } from "@/app/(app)/obrigacoes/actions";
+import { AcoesInstancia } from "@/app/(app)/obrigacoes/AcoesInstancia";
 
 const dataBR = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 
 export function ObrigacoesCliente({ clienteId, ano, mes, instancias: iniList, podeGerar }: { clienteId: string; ano: number; mes: number; instancias: InstanciaView[]; podeGerar: boolean }) {
   const [lista, setLista] = useState<InstanciaView[]>(iniList);
   const [carregando, setCarregando] = useState(false);
+  async function recarregar() {
+    setLista(await listarInstancias(ano, mes, { clienteId }));
+  }
   async function gerar() {
     setCarregando(true);
     await gerarCompetenciaCliente(clienteId, ano, mes);
-    setLista(await listarInstancias(ano, mes, { clienteId }));
+    await recarregar();
     setCarregando(false);
   }
   return (
@@ -26,7 +30,7 @@ export function ObrigacoesCliente({ clienteId, ano, mes, instancias: iniList, po
               <th className="px-3 py-2 font-medium">Obrigação</th>
               <th className="px-3 py-2 font-medium">Interno</th>
               <th className="px-3 py-2 font-medium">Legal</th>
-              <th className="px-3 py-2 font-medium">Status</th>
+              <th className="px-3 py-2 font-medium">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -40,7 +44,7 @@ export function ObrigacoesCliente({ clienteId, ano, mes, instancias: iniList, po
                 <td className="px-3 py-1.5 text-texto">{r.obrigacaoNome}</td>
                 <td className="px-3 py-1.5">{dataBR(r.vencimentoInterno)}</td>
                 <td className="px-3 py-1.5">{dataBR(r.vencimentoLegal)}</td>
-                <td className="px-3 py-1.5">{r.status}</td>
+                <td className="px-3 py-1.5"><AcoesInstancia inst={r} onDone={recarregar} /></td>
               </tr>
             ))}
           </tbody>

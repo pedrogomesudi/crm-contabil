@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { classificarAlerta } from "@/lib/onboarding/alertas";
 import { listarInstancias, gerarCompetencia, type InstanciaView } from "./actions";
+import { AcoesInstancia } from "./AcoesInstancia";
 
 const MES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const dataBR = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
@@ -58,11 +59,13 @@ export function Calendario({ ano: anoIni, mes: mesIni, instancias: iniList, pode
         <select value={status} onChange={(e) => setStatus(e.target.value)} className={inp}>
           <option value="">Todos status</option>
           <option value="pendente">Pendente</option>
+          <option value="entregue">Entregue</option>
           <option value="dispensada">Dispensada</option>
         </select>
         <label className="flex items-center gap-1 text-sm text-cinza"><input type="checkbox" checked={soMeus} onChange={(e) => setSoMeus(e.target.checked)} />só os meus</label>
         <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar cliente/obrigação" className={inp} />
-        {podeGerar && <button type="button" onClick={gerar} className="ml-auto rounded-lg bg-verde px-3 py-1.5 text-sm font-medium text-white">Gerar competência</button>}
+        <a href="/obrigacoes/riscos" className="ml-auto rounded-lg border border-linha px-3 py-1.5 text-sm">Ver riscos</a>
+        {podeGerar && <button type="button" onClick={gerar} className="rounded-lg bg-verde px-3 py-1.5 text-sm font-medium text-white">Gerar competência</button>}
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
@@ -94,7 +97,12 @@ export function Calendario({ ano: anoIni, mes: mesIni, instancias: iniList, pode
                   <td className="px-3 py-1.5">{dataBR(r.vencimentoInterno)}</td>
                   <td className="px-3 py-1.5">{dataBR(r.vencimentoLegal)}</td>
                   <td className="px-3 py-1.5">{r.responsavelNome ?? "—"}</td>
-                  <td className="px-3 py-1.5">{sev ? <span className={`rounded px-1.5 py-0.5 text-xs ${SELO[sev]}`}>{sev.replace("_", " ")}</span> : r.status}</td>
+                  <td className="px-3 py-1.5">
+                    <div className="flex flex-col gap-1">
+                      {sev && r.status === "pendente" ? <span className={`w-fit rounded px-1.5 py-0.5 text-xs ${SELO[sev]}`}>{sev.replace("_", " ")}</span> : null}
+                      <AcoesInstancia inst={r} onDone={() => recarregar(ano, mes)} />
+                    </div>
+                  </td>
                 </tr>
               );
             })}
