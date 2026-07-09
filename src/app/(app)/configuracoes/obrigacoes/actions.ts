@@ -73,3 +73,22 @@ export async function salvarConfigEscalonamento(input: ConfigEscalonamentoView):
   revalidatePath("/configuracoes/obrigacoes");
   return { ok: true };
 }
+
+// Notificações de obrigações: liga/desliga o badge de riscos no menu lateral (contarRiscos).
+export async function obterNotificacaoRiscos(): Promise<boolean> {
+  const p = await getPerfilAtual();
+  if (!p?.ativo) return true;
+  const supabase = await createServerSupabase();
+  const { data } = await supabase.from("obrigacao_config").select("riscos_badge_ativo").eq("id", 1).maybeSingle();
+  return data?.riscos_badge_ativo !== false;
+}
+
+export async function definirNotificacaoRiscos(ativo: boolean): Promise<{ ok?: boolean; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("obrigacao_config").update({ riscos_badge_ativo: ativo }).eq("id", 1);
+  if (error) return { erro: error.message };
+  revalidatePath("/configuracoes/obrigacoes");
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
