@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sugerirPerfil } from "@/lib/onboarding/processo";
-import { instanciasDaCompetencia, type ObrigacaoMatriz, type ClienteFiscal } from "./geracao";
+import { instanciasDaCompetencia, cutoffCompetencia, type ObrigacaoMatriz, type ClienteFiscal } from "./geracao";
 
 type Row = Record<string, unknown>;
 
@@ -22,7 +22,7 @@ export async function gerarInstancias(supabase: SupabaseClient, ano: number, mes
   const obrigacoes = (obrigRows ?? []).map(matrizDaLinha);
   if (obrigacoes.length === 0) return { candidatas: 0, clientes: 0 };
 
-  let q = supabase.from("clientes").select("id, tipo_pessoa, regime_tributario, cnae, inscricao_estadual, inscricao_municipal, contador_id, endereco, clientes_financeiro(qtd_funcionarios)").is("excluido_em", null).eq("status", "ativo");
+  let q = supabase.from("clientes").select("id, tipo_pessoa, regime_tributario, cnae, inscricao_estadual, inscricao_municipal, contador_id, endereco, competencia_inicial, data_inicio, clientes_financeiro(qtd_funcionarios)").is("excluido_em", null).eq("status", "ativo");
   if (clienteId) q = q.eq("id", clienteId);
   const { data: clientes } = await q;
 
@@ -34,7 +34,9 @@ export async function gerarInstancias(supabase: SupabaseClient, ano: number, mes
     const perfil = sugerirPerfil(cl.tipo_pessoa as string, cl.regime_tributario as string, qtd);
     const endereco = (cl.endereco as { uf?: string } | null) ?? {};
     const c: ClienteFiscal = { perfil, uf: endereco.uf ?? null, cnae: (cl.cnae as string | null) ?? null, flags: { tem_folha: (qtd ?? 0) > 0, contribui_icms: !!cl.inscricao_estadual, contribui_iss: !!cl.inscricao_municipal } };
+    const cutoff = cutoffCompetencia((cl.competencia_inicial as string | null) ?? null, (cl.data_inicio as string | null) ?? null);
     for (const inst of instanciasDaCompetencia(obrigacoes, c, ano, mes)) {
+      if (cutoff && inst.competencia < cutoff) continue; // não gera antes do início do contrato
       linhas.push({ obrigacao_id: inst.obrigacaoId, cliente_id: cl.id, competencia: inst.competencia, vencimento_legal: inst.vencimentoLegal, vencimento_interno: inst.vencimentoInterno, responsavel_id: (cl.contador_id as string | null) ?? null });
     }
   }
