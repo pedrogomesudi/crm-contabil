@@ -7,6 +7,7 @@ const ITENS = [
   { href: "/configuracoes/whatsapp", label: "WhatsApp (Z-API)", desc: "Credenciais do provedor e teste de conexão." },
   { href: "/configuracoes/nfse", label: "NFS-e (emitente)", desc: "Dados do emitente e certificado digital." },
   { href: "/configuracoes/pagamento", label: "Dados de pagamento (PIX/TED)", desc: "Conta e PIX enviados ao cliente com a NFS-e." },
+  { href: "/configuracoes/boletos", label: "Boletos", desc: "Provedor de emissão (Inter ou Asaas) e credenciais." },
   { href: "/configuracoes/onboarding", label: "Template de onboarding", desc: "Blocos e itens do processo de entrada." },
 ];
 
