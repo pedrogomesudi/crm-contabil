@@ -66,10 +66,11 @@ export async function conciliarComBaixa(movimentoId: string, baixaId: string): P
   const t = um(b.titulo as { tipo?: string } | { tipo?: string }[] | null);
   const assinado = valorAssinadoBaixa({ valorRecebido: Number(b.valor_recebido), tipoTitulo: (t?.tipo as "RECEBER" | "PAGAR") ?? "RECEBER" });
   if (Math.abs(assinado - Number(mov.valor)) >= 0.005) return { erro: "Valor da baixa não confere com o movimento." };
-  const { data: link } = await supabase.from("movimento_bancario").select("id").eq("baixa_id", baixaId).maybeSingle();
-  if (link) return { erro: "Baixa já vinculada a outro movimento." };
-  const { error: e1 } = await supabase.from("movimento_bancario").update({ status: "conciliada", baixa_id: baixaId }).eq("id", movimentoId);
-  if (e1) return { erro: e1.message };
+  // Update condicional (status ainda pendente) + índice único uq_movimento_baixa fazem o vínculo atômico:
+  // sem janela entre checar e gravar, mesmo sob requisições concorrentes.
+  const { data: upd, error: e1 } = await supabase.from("movimento_bancario").update({ status: "conciliada", baixa_id: baixaId }).eq("id", movimentoId).eq("status", "pendente").select("id");
+  if (e1) return { erro: /duplicate key|23505|uq_movimento_baixa/i.test(e1.message) ? "Baixa já vinculada a outro movimento." : e1.message };
+  if (!upd || upd.length === 0) return { erro: "Movimento já resolvido." };
   await supabase.from("baixa").update({ conciliado_em: hojeSP() }).eq("id", baixaId);
   return { ok: true };
 }
@@ -91,8 +92,11 @@ export async function conciliarComTitulo(movimentoId: string, tituloId: string):
   const hoje = hojeSP();
   const { data: nova, error } = await supabase.from("baixa").insert({ titulo_id: tituloId, data_recebimento: mov.data, valor_recebido: Math.abs(Number(mov.valor)), conta_bancaria_id: mov.conta_bancaria_id, forma_pagamento: "TRANSFERENCIA", criado_por: perfil.id, conciliado_em: hoje }).select("id").single();
   if (error || !nova) return { erro: "Falha ao criar a baixa." };
-  const { error: e2 } = await supabase.from("movimento_bancario").update({ status: "conciliada", baixa_id: nova.id }).eq("id", movimentoId);
-  if (e2) return { erro: e2.message };
+  const { data: upd, error: e2 } = await supabase.from("movimento_bancario").update({ status: "conciliada", baixa_id: nova.id }).eq("id", movimentoId).eq("status", "pendente").select("id");
+  if (e2 || !upd || upd.length === 0) {
+    await supabase.from("baixa").delete().eq("id", nova.id); // desfaz a baixa: o movimento foi resolvido em paralelo
+    return { erro: e2 ? e2.message : "Movimento já resolvido." };
+  }
   return { ok: true };
 }
 
@@ -124,8 +128,16 @@ export async function criarLancamento(movimentoId: string, input: { categoriaId:
   const { data: titulo, error } = await supabase.from("titulo").insert(tituloRow).select("id").single();
   if (error || !titulo) return { erro: error?.message ?? "Falha ao criar o título." };
   const { data: nova, error: e2 } = await supabase.from("baixa").insert({ titulo_id: titulo.id, data_recebimento: mov.data, valor_recebido: Math.abs(valor), conta_bancaria_id: mov.conta_bancaria_id, forma_pagamento: "TRANSFERENCIA", criado_por: perfil.id, conciliado_em: hojeSP() }).select("id").single();
-  if (e2 || !nova) return { erro: "Falha ao criar a baixa." };
-  await supabase.from("movimento_bancario").update({ status: "conciliada", baixa_id: nova.id }).eq("id", movimentoId);
+  if (e2 || !nova) {
+    await supabase.from("titulo").delete().eq("id", titulo.id); // não deixa título órfão sem baixa
+    return { erro: "Falha ao criar a baixa." };
+  }
+  const { data: upd, error: e3 } = await supabase.from("movimento_bancario").update({ status: "conciliada", baixa_id: nova.id }).eq("id", movimentoId).eq("status", "pendente").select("id");
+  if (e3 || !upd || upd.length === 0) {
+    await supabase.from("baixa").delete().eq("id", nova.id);
+    await supabase.from("titulo").delete().eq("id", titulo.id); // movimento resolvido em paralelo: desfaz título + baixa
+    return { erro: e3 ? e3.message : "Movimento já resolvido." };
+  }
   return { ok: true };
 }
 
