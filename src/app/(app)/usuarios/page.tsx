@@ -4,7 +4,7 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { ConviteForm } from "@/components/ConviteForm";
 import { BotaoAcao } from "@/components/usuarios/BotaoAcao";
 import { PAPEIS } from "@/lib/tipos";
-import { alterarPapel, definirAtivo, reenviarAcesso } from "./actions";
+import { alterarPapel, definirAtivo, reenviarAcesso, definirSuperior } from "./actions";
 
 export const metadata = { title: "Usuários" };
 
@@ -34,7 +34,7 @@ export default async function UsuariosPage({
   const admin = createAdminSupabase();
   const { data: usuarios, error } = await admin
     .from("usuarios")
-    .select("id, nome, email, papel, ativo")
+    .select("id, nome, email, papel, ativo, superior_id")
     .order("criado_em")
     .order("id") // desempate determinístico em criado_em iguais
     .limit(200);
@@ -69,6 +69,7 @@ export default async function UsuariosPage({
                 <th className="p-2 font-medium">Nome</th>
                 <th className="p-2 font-medium">E-mail</th>
                 <th className="p-2 font-medium">Papel</th>
+                <th className="p-2 font-medium">Superior</th>
                 <th className="p-2 font-medium">Status</th>
                 <th className="p-2 font-medium">Acesso</th>
               </tr>
@@ -106,6 +107,32 @@ export default async function UsuariosPage({
                                 : undefined
                             }
                           >
+                            Salvar
+                          </BotaoAcao>
+                        </form>
+                      )}
+                    </td>
+                    <td className="p-2">
+                      {ehProprio ? (
+                        <span className="text-cinza-claro">—</span>
+                      ) : (
+                        <form action={definirSuperior.bind(null, u.id)} className="flex gap-1">
+                          <select
+                            name="superior_id"
+                            defaultValue={(u as { superior_id: string | null }).superior_id ?? ""}
+                            aria-label={`Superior de ${u.nome}`}
+                            className="rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto focus:border-verde"
+                          >
+                            <option value="">— nenhum —</option>
+                            {usuarios!
+                              .filter((o) => o.id !== u.id)
+                              .map((o) => (
+                                <option key={o.id} value={o.id}>
+                                  {o.nome}
+                                </option>
+                              ))}
+                          </select>
+                          <BotaoAcao className="rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme" rotulo={`Salvar superior de ${u.nome}`}>
                             Salvar
                           </BotaoAcao>
                         </form>

@@ -4,6 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { contarAlertas } from "@/app/(app)/onboarding/alertas-actions";
 import { contarRiscos } from "@/app/(app)/obrigacoes/actions";
+import { contarEscalonamento } from "@/app/(app)/obrigacoes/escalonamento-actions";
 import { Sidebar } from "@/components/Sidebar";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -18,6 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const alertasOnboarding = podeCriarCliente(perfil.papel) ? await contarAlertas() : 0;
   const riscosObrigacoes = podeCriarCliente(perfil.papel) ? await contarRiscos() : 0;
+  const escalonamento = podeCriarCliente(perfil.papel) ? await contarEscalonamento() : 0;
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
@@ -27,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       >
         Pular para o conteúdo
       </a>
-      <Sidebar papel={perfil.papel} nome={perfil.nome} alertasOnboarding={alertasOnboarding} riscosObrigacoes={riscosObrigacoes} />
+      <Sidebar papel={perfil.papel} nome={perfil.nome} alertasOnboarding={alertasOnboarding} riscosObrigacoes={riscosObrigacoes} escalonamento={escalonamento} />
       <main id="conteudo" className="flex-1 bg-creme p-4 md:p-6">
         {children}
       </main>
