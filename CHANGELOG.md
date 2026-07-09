@@ -10,6 +10,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Financeiro — DRE:** novo relatório de Demonstração de Resultado em `/financeiro/relatorios/dre`
+  (também no hub `/financeiro/relatorios`, com link no dashboard). Receitas − despesas por categoria e
+  grupo (operacional/não), com resultado operacional e líquido, por período (mês/trimestre/semestre/ano) e
+  regime competência/caixa. Imprimível.
+
 - **Boletos — baixa automática + envio:** quando o cliente paga o boleto, o webhook do provedor dá baixa
   no título automaticamente (marca como BAIXADO) e registra o boleto como pago. A cobrança por WhatsApp
   passa a incluir a linha digitável e o PIX copia-e-cola do boleto. Requer a variável
