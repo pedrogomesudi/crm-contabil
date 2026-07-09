@@ -15,8 +15,8 @@ Legenda: ✅ concluída · 🚧 em andamento · ⬜ planejada
 | **V4** | Assinaturas digitais integradas | ✅ |
 | **V5** | Emissão de NFS-e pelo CRM (A: honorários ✅ · B: multi-emitente ✅) | ✅ |
 | **V6** | Módulo Financeiro (contas a receber/pagar) | ✅ |
-| **V7** | Integração com WhatsApp (atendimento, boletos, avisos) | ⬜ |
-| **V8** | Layout e estética | ⬜ |
+| **V7** | Integração com WhatsApp (atendimento, boletos, avisos) | ✅ |
+| **V8** | Layout e estética | ✅ |
 | **V9** | Modo whitelabel (comercialização) | ⬜ |
 | **V10** | Segurança da informação e legalidade técnica | ⬜ |
 
@@ -142,10 +142,15 @@ Integração do CRM com o **WhatsApp** para relacionamento com clientes: **atend
   cliente (LGPD), idempotência por (título, etapa), motor server-side via rota protegida
   (`/api/cron/regua-cobranca`, `CRON_SECRET`) + agendador externo, botão "Processar agora". Migration 0039.
 - **V7.3 — Atendimento (inbox bidirecional)** ✅ — `whatsapp_mensagem` bidirecional, webhook
-  `/api/webhooks/zapi/[secret]` (dedup + resolução do cliente), inbox `/atendimento` (dois painéis,
-  thread unificada por telefone, polling). Migration 0040. **V7 concluída.**
+  `/api/webhooks/zapi/[secret]` (dedup + resolução do cliente + tolerância ao nono dígito), inbox
+  `/atendimento` (painéis, thread unificada por telefone, polling, read receipts).
+- **V7.4 — Boletos** 🚧 — emissão/baixa de boleto por título com seletor de provedor **Inter × Asaas**
+  (Configurações → Boletos), credenciais cifradas (`BOLETO_CRIPTO_KEY`), webhook de pagamento
+  (`/api/webhooks/boleto/[secret]`, `BOLETO_WEBHOOK_SECRET`). Código completo; **ativação pendente** de
+  conta ativa no provedor. Migrations 0058–0059. **Atendimento + régua concluídos; boletos aguardando
+  ativação.**
 
-> Opt-in/opt-out (LGPD) a tratar na V7.2 (régua). Número dedicado do escritório (risco do não-oficial).
+> Opt-in/opt-out (LGPD) tratado na V7.2 (régua). Número dedicado do escritório (risco do não-oficial).
 
 ## V8 — Layout e estética ✅
 
@@ -164,6 +169,23 @@ Rebrand como **SALDO** (`seusaldo.ai`) a partir do Brand Kit: identidade visual,
     do emitente/certificado. Helper `badgeStatusNfse`. Emissão avulsa preservada.
   - **V8.2d — Atendimento + Integrações + resto** ✅ — inbox (chat), usuários (badge de papel), Domínio,
     documentos, assinatura, config WhatsApp. `badgePapel`; `CardResumo` legado removido. **Rollout 100% completo.**
+
+## Entregas transversais (fora da trilha de versões)
+
+Módulos que nasceram como diferenciais de CRM contábil, entregues em paralelo aos marcos acima
+(cadência brainstorm → spec → plano). Ver [`docs/DOCUMENTACAO.md`](docs/DOCUMENTACAO.md).
+
+- **Módulo Comercial (funil de oportunidades)** ✅ — funil Kanban arrastável
+  (Novo → Contato → Proposta → Negociação → Ganho/Perdido), conversão **ganho → cliente → onboarding**,
+  propostas formais e métricas (`/comercial`, `/comercial/metricas`). Migrations 0054, 0056–0057.
+- **Onboarding & Legalização** ✅ (F1) — motor de **templates** (blocos → itens, perfis, condições,
+  materialização com prazos D+n), **cofre de credenciais** cifrado + auditoria, regras de item
+  (write-back de competência, dependências, anexo obrigatório), **alertas de prazo in-app** com badge e
+  interruptor, página autônoma por cliente e **gatilho de consultoria** para o funil. Migrations
+  0048–0052, 0055, 0060. **F2 (legalização/societário) em aberto.**
+- **Financeiro — Relatórios gerenciais** ✅ — hub `/financeiro/relatorios` com **DRE**,
+  **Extrato/movimentações (CSV)** e **Fluxo de caixa detalhado** (realizado + projetado, saldo
+  acumulado). Sem migration.
 
 ## V9 — Modo whitelabel ⬜
 
