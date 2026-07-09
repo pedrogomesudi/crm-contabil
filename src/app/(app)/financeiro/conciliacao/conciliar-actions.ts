@@ -2,7 +2,7 @@
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
-import { candidatosMovimento, autoCasar, type BaixaDisp, type TituloAberto, type MovPendente, type CandBaixa, type CandTitulo } from "@/lib/conciliacao/casar";
+import { candidatosMovimento, autoCasar, valorAssinadoBaixa, saldoTitulo, type BaixaDisp, type TituloAberto, type MovPendente, type CandBaixa, type CandTitulo } from "@/lib/conciliacao/casar";
 
 export type CandidatosView = { baixas: CandBaixa[]; titulos: CandTitulo[] };
 
@@ -58,10 +58,19 @@ export async function conciliarComBaixa(movimentoId: string, baixaId: string): P
   const perfil = await gate();
   if (!perfil) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
-  const hoje = hojeSP();
+  const mov = await carregarMovimento(supabase, movimentoId);
+  if (!mov) return { erro: "Movimento não encontrado." };
+  if (mov.status !== "pendente") return { erro: "Movimento já resolvido." };
+  const { data: b } = await supabase.from("baixa").select("id, valor_recebido, estornada, titulo:titulo_id(tipo)").eq("id", baixaId).maybeSingle();
+  if (!b || b.estornada) return { erro: "Baixa inválida." };
+  const t = um(b.titulo as { tipo?: string } | { tipo?: string }[] | null);
+  const assinado = valorAssinadoBaixa({ valorRecebido: Number(b.valor_recebido), tipoTitulo: (t?.tipo as "RECEBER" | "PAGAR") ?? "RECEBER" });
+  if (Math.abs(assinado - Number(mov.valor)) >= 0.005) return { erro: "Valor da baixa não confere com o movimento." };
+  const { data: link } = await supabase.from("movimento_bancario").select("id").eq("baixa_id", baixaId).maybeSingle();
+  if (link) return { erro: "Baixa já vinculada a outro movimento." };
   const { error: e1 } = await supabase.from("movimento_bancario").update({ status: "conciliada", baixa_id: baixaId }).eq("id", movimentoId);
   if (e1) return { erro: e1.message };
-  await supabase.from("baixa").update({ conciliado_em: hoje }).eq("id", baixaId);
+  await supabase.from("baixa").update({ conciliado_em: hojeSP() }).eq("id", baixaId);
   return { ok: true };
 }
 
@@ -71,6 +80,14 @@ export async function conciliarComTitulo(movimentoId: string, tituloId: string):
   const supabase = await createServerSupabase();
   const mov = await carregarMovimento(supabase, movimentoId);
   if (!mov) return { erro: "Movimento não encontrado." };
+  if (mov.status !== "pendente") return { erro: "Movimento já resolvido." };
+  const { data: tit } = await supabase.from("titulo").select("id, valor, tipo, status, baixa(valor_recebido, estornada)").eq("id", tituloId).maybeSingle();
+  if (!tit || !["ABERTO", "VENCIDO"].includes(tit.status as string)) return { erro: "Título indisponível." };
+  const credito = Number(mov.valor) > 0;
+  if ((credito && tit.tipo !== "RECEBER") || (!credito && tit.tipo !== "PAGAR")) return { erro: "Tipo do título não confere com o movimento." };
+  const bxs = (Array.isArray(tit.baixa) ? tit.baixa : tit.baixa ? [tit.baixa] : []) as { valor_recebido: number; estornada: boolean }[];
+  const baixado = bxs.filter((x) => !x.estornada).reduce((s, x) => s + Number(x.valor_recebido), 0);
+  if (Math.abs(saldoTitulo({ valor: Number(tit.valor), baixado }) - Math.abs(Number(mov.valor))) >= 0.005) return { erro: "Saldo do título não confere com o movimento." };
   const hoje = hojeSP();
   const { data: nova, error } = await supabase.from("baixa").insert({ titulo_id: tituloId, data_recebimento: mov.data, valor_recebido: Math.abs(Number(mov.valor)), conta_bancaria_id: mov.conta_bancaria_id, forma_pagamento: "TRANSFERENCIA", criado_por: perfil.id, conciliado_em: hoje }).select("id").single();
   if (error || !nova) return { erro: "Falha ao criar a baixa." };
@@ -86,6 +103,7 @@ export async function criarLancamento(movimentoId: string, input: { categoriaId:
   const supabase = await createServerSupabase();
   const mov = await carregarMovimento(supabase, movimentoId);
   if (!mov) return { erro: "Movimento não encontrado." };
+  if (mov.status !== "pendente") return { erro: "Movimento já resolvido." };
   const valor = Number(mov.valor);
   const credito = valor > 0;
   if (credito && !input.clienteId) return { erro: "Selecione o cliente." };
