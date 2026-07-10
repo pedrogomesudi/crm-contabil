@@ -194,6 +194,10 @@ Emissão e gestão de NFS-e pelo padrão nacional (nfse.gov.br / Sefin Nacional)
   fiscal + certificado A1 por cliente (cifrado), numeração de DPS por cliente, tomador externo.
 - **Emissão avulsa** e **emissão com o cliente como emitente** (preenche o tomador a partir do CNPJ).
 - **Lote** (`/nfse/lote`): emissão/gestão em lote por competência; cancelamento.
+- **Competência × `dCompet`:** `nfse.competencia` é o **mês do serviço** (regime vencido); `nfse.dcompet`
+  guarda o que foi **efetivamente enviado à Sefin** na DPS. Nas notas emitidas até julho/2026 os dois
+  divergem — a nota declarou julho para o serviço de junho — e daí em diante coincidem. O **XML
+  autorizado é a verdade fiscal** e nunca é alterado. A anti-duplicidade da emissão usa `competencia`.
 - **Download em lote:** botões para baixar todas em **PDF** e em **XML**, com **cache do DANFSe** no
   Storage (baixas repetidas ficam instantâneas) e reprocessamento de falhas.
 
@@ -222,6 +226,11 @@ Módulo completo de gestão financeira do escritório (admin/financeiro).
 - **Contas a receber** e **contas a pagar:** títulos (RECEBER/PAGAR) com competência, vencimento,
   categoria, centro de custo, fornecedor; **baixas** (recebimentos/pagamentos), parcelamento, despesas
   recorrentes, **estorno auditado** (justificativa, não deleta).
+- **Regime vencido:** a **competência** de um título é o **mês do serviço**; o **vencimento** cai no
+  **mês seguinte**. A geração roda no dia 1 (pg_cron) para a competência do mês anterior, e o seletor
+  de competência nas telas já vem no mês anterior. O **13º honorário** equivale a um honorário,
+  dividido em **duas parcelas de 50%**, com vencimentos fixos em **20/11** e **15/12**, geradas na
+  rodada de outubro (quando ambos ainda estão no futuro).
 - **Dashboard financeiro** (`/financeiro/dashboard`): saldo em caixa, MRR, recebido/a receber,
   inadimplência, previsão, aging de receber/pagar, fluxo de caixa (6 meses), maiores devedores, receita
   por tipo.
