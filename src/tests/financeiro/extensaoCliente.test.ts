@@ -17,6 +17,8 @@ describe("normalizarExtensaoFinanceira", () => {
       qtd_funcionarios: 5,
       faixa_faturamento: "ATE_360K",
       data_saida: null,
+      indice_reajuste: "SALARIO_MINIMO",
+      percentual_reajuste: null,
     });
   });
   it("rejeita dia de vencimento fora de 1..28", () => {
@@ -34,6 +36,8 @@ describe("normalizarExtensaoFinanceira", () => {
       qtd_funcionarios: null,
       faixa_faturamento: null,
       data_saida: null,
+      indice_reajuste: "SALARIO_MINIMO",
+      percentual_reajuste: null,
     });
   });
 });

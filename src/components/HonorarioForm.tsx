@@ -10,6 +10,8 @@ export type ExtensaoFinanceiraForm = {
   qtd_funcionarios: number | null;
   faixa_faturamento: string | null;
   data_saida: string | null;
+  indice_reajuste: string | null;
+  percentual_reajuste: number | null;
 };
 
 export function HonorarioForm({
@@ -80,6 +82,28 @@ export function HonorarioForm({
             name="data_saida"
             type="date"
             defaultValue={extensao.data_saida ?? ""}
+            className={inputCls}
+          />
+        </Campo>
+        <Campo label="Índice de reajuste">
+          <select
+            name="indice_reajuste"
+            defaultValue={extensao.indice_reajuste ?? "SALARIO_MINIMO"}
+            className={inputCls}
+          >
+            <option value="SALARIO_MINIMO">Salário mínimo</option>
+            <option value="IPCA">IPCA</option>
+            <option value="IGPM">IGP-M</option>
+            <option value="INPC">INPC</option>
+            <option value="PERCENTUAL_FIXO">Percentual fixo</option>
+            <option value="SEM_REAJUSTE">Sem reajuste</option>
+          </select>
+        </Campo>
+        <Campo label="Percentual fixo (%) — só p/ 'Percentual fixo'">
+          <input
+            name="percentual_reajuste"
+            inputMode="decimal"
+            defaultValue={extensao.percentual_reajuste != null ? String(extensao.percentual_reajuste) : ""}
             className={inputCls}
           />
         </Campo>
