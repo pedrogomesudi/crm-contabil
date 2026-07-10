@@ -5,6 +5,7 @@ import {
   consultarCnpjTomador,
   type EstadoEmitente,
 } from "@/app/(app)/clientes/[id]/nfse-emitente";
+import { mesAnteriorDeHoje } from "@/lib/financeiro/competencia";
 
 const inputCls =
   "rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto placeholder:text-cinza-claro focus:border-verde";
@@ -27,7 +28,7 @@ export function EmitirNfseCliente({ clienteId, ambiente }: { clienteId: string; 
     {},
   );
   const [aberto, setAberto] = useState(false);
-  const [mes, setMes] = useState("");
+  const [mes, setMes] = useState(mesAnteriorDeHoje());
   const [f, setF] = useState<CamposTomador>({
     doc: "",
     razao: "",

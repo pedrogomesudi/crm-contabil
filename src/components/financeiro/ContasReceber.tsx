@@ -15,6 +15,7 @@ import { saldoTitulo, ehVencido, LABEL_STATUS } from "@/lib/financeiro/titulos";
 import { Badge } from "@/components/ui/Badge";
 import { badgeStatusTitulo } from "@/lib/ui/apresentacao";
 import { formatarMoeda, formatarData } from "@/lib/format";
+import { mesAnteriorDeHoje } from "@/lib/financeiro/competencia";
 
 export function ContasReceber({
   contas,
@@ -23,7 +24,8 @@ export function ContasReceber({
   contas: { id: string; nome: string }[];
   automacaoInicial: boolean;
 }) {
-  const [mes, setMes] = useState("");
+  // Faturamento em regime vencido: a competência corrente é o mês anterior.
+  const [mes, setMes] = useState(mesAnteriorDeHoje());
   const [titulos, setTitulos] = useState<TituloView[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [auto, setAuto] = useState(automacaoInicial);

@@ -686,12 +686,14 @@ do $$ declare r1 jsonb; r2 jsonb; v numeric; n int; begin
   r1 := gerar_mensalidades('2026-07-01');
   select valor into v from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1' and origem='MENSALIDADE';
   if v is distinct from 1600.00 then raise exception 'FALHA: pró-rata <> 1600 (=%)', v; end if;
+  -- 0071: o 13º saiu do laço de contratos e passou a ser gerado POR CLIENTE, na rodada de outubro.
+  -- Se voltasse a ser gerado aqui, um cliente com contrato receberia a cobrança duas vezes.
   select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1' and origem='DECIMO_TERCEIRO';
-  if n <> 1 then raise exception 'FALHA: 13º não gerado (n=%)', n; end if;
+  if n <> 0 then raise exception 'FALHA: 13º ainda é gerado pelo contrato (n=%) — deve ser por cliente', n; end if;
 
   r2 := gerar_mensalidades('2026-07-01');
   select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1';
-  if n <> 2 then raise exception 'FALHA: geração duplicou (n=%)', n; end if;
+  if n <> 1 then raise exception 'FALHA: geração duplicou (n=%, esperado só a mensalidade)', n; end if;
 
   perform encerrar_contrato('dddddddd-0000-0000-0000-0000000000d1', now()::date, 'teste');
   select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1' and status='CANCELADO';
@@ -938,4 +940,74 @@ begin
   if n <> 2 then raise exception 'FALHA: assistente viu % certificados (esperado 2)', n; end if;
 
   raise notice 'OK: vencimentos — financeiro fora, contador escopado, RPC da NFS-e não vaza';
+end $$;
+
+-- ===== Faturamento em regime vencido: competência do serviço, vencimento no mês seguinte =====
+do $$
+declare v_venc date; v_comp date; n int; v_p1 numeric; v_p2 numeric;
+begin
+  reset role;
+
+  -- competencia_padrao devolve o mês anterior (fronteiras: virada de ano)
+  if competencia_padrao(date '2026-01-15') <> date '2025-12-01' then
+    raise exception 'FALHA: competencia_padrao não virou o ano';
+  end if;
+  if competencia_padrao(date '2026-03-01') <> date '2026-02-01' then
+    raise exception 'FALHA: competencia_padrao errou o mês anterior';
+  end if;
+  if competencia_padrao(date '2026-08-31') <> date '2026-07-01' then
+    raise exception 'FALHA: competencia_padrao dependeu do dia do mês';
+  end if;
+  raise notice 'OK: competencia_padrao devolve o mês anterior';
+
+  -- cliente de teste com honorário 333.33 e vencimento dia 10
+  update clientes_financeiro set honorario_mensal = 333.33, dia_vencimento = 10
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+
+  -- a mensalidade de maio vence em JUNHO
+  perform gerar_mensalidades(date '2026-05-01');
+  select vencimento into v_venc from titulo
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002'
+      and origem = 'MENSALIDADE' and competencia = date '2026-05-01';
+  if v_venc is distinct from date '2026-06-10' then
+    raise exception 'FALHA: mensalidade de maio venceu em % (esperado 2026-06-10)', v_venc;
+  end if;
+  raise notice 'OK: mensalidade da competência M vence em M+1';
+
+  -- a rodada de maio NÃO gera 13º
+  select count(*) into n from titulo
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002' and origem = 'DECIMO_TERCEIRO';
+  if n <> 0 then raise exception 'FALHA: rodada de maio gerou % títulos de 13º', n; end if;
+
+  -- a rodada de OUTUBRO gera as duas parcelas, com vencimentos fixos
+  perform gerar_mensalidades(date '2026-10-01');
+  select count(*) into n from titulo
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002' and origem = 'DECIMO_TERCEIRO';
+  if n <> 2 then raise exception 'FALHA: rodada de outubro gerou % parcelas de 13º (esperado 2)', n; end if;
+
+  select competencia, vencimento, valor into v_comp, v_venc, v_p1 from titulo
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002' and origem = 'DECIMO_TERCEIRO' and parcela = 1;
+  if v_comp <> date '2026-11-01' or v_venc <> date '2026-11-20' then
+    raise exception 'FALHA: 13º 1/2 com competência % e vencimento % (esperado 2026-11-01 / 2026-11-20)', v_comp, v_venc;
+  end if;
+
+  select competencia, vencimento, valor into v_comp, v_venc, v_p2 from titulo
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002' and origem = 'DECIMO_TERCEIRO' and parcela = 2;
+  if v_comp <> date '2026-12-01' or v_venc <> date '2026-12-15' then
+    raise exception 'FALHA: 13º 2/2 com competência % e vencimento % (esperado 2026-12-01 / 2026-12-15)', v_comp, v_venc;
+  end if;
+  raise notice 'OK: 13º em duas parcelas, vencimentos 20/11 e 15/12';
+
+  -- a soma das parcelas é exata (nem cria nem perde centavo)
+  if v_p1 <> 166.67 or v_p2 <> 166.66 or (v_p1 + v_p2) <> 333.33 then
+    raise exception 'FALHA: parcelas do 13º somam % (% + %), esperado 333.33', v_p1 + v_p2, v_p1, v_p2;
+  end if;
+  raise notice 'OK: parcelas do 13º somam o honorário exato (166.67 + 166.66)';
+
+  -- idempotência: rodar de novo não duplica
+  perform gerar_mensalidades(date '2026-10-01');
+  select count(*) into n from titulo
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002' and origem = 'DECIMO_TERCEIRO';
+  if n <> 2 then raise exception 'FALHA: segunda rodada duplicou o 13º (% títulos)', n; end if;
+  raise notice 'OK: geração é idempotente';
 end $$;
