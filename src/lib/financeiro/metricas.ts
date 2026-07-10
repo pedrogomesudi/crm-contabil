@@ -31,7 +31,9 @@ const pct1 = (n: number) => Math.round(n * 1000) / 10; // fração → % com 1 c
 
 // N meses em ordem cronológica, terminando em refAnoMes ("YYYY-MM").
 export function mesesJanela(refAnoMes: string, n: number): string[] {
-  const [a, m] = refAnoMes.split("-").map(Number);
+  const partes = refAnoMes.split("-");
+  const a = Number(partes[0]);
+  const m = Number(partes[1]);
   const out: string[] = [];
   for (let i = n - 1; i >= 0; i--) {
     const total = a * 12 + (m - 1) - i;
@@ -44,7 +46,9 @@ export function mesesJanela(refAnoMes: string, n: number): string[] {
 
 export function calcularMetricas(clientes: ClienteMetrica[], meses: string[]): ResumoMetricas {
   const serie: MesMetrica[] = meses.map((mes) => {
-    const [a, m] = mes.split("-").map(Number);
+    const partes = mes.split("-");
+    const a = Number(partes[0]);
+    const m = Number(partes[1]);
     const ini = `${mes}-01`;
     const prox = m === 12 ? `${a + 1}-01-01` : `${a}-${String(m + 1).padStart(2, "0")}-01`;
     let base = 0,
