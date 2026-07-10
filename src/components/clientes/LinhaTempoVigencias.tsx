@@ -1,7 +1,9 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
+import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { formatarMoeda } from "@/lib/format";
 import type { Papel } from "@/lib/tipos";
+import { DesfazerReajuste } from "./DesfazerReajuste";
 
 // As vigências nascem das mudanças (trigger de banco) — não se digitam. Por isso: só leitura.
 function mesAno(iso: string): string {
@@ -13,7 +15,7 @@ export async function LinhaTempoVigencias({ clienteId, papel }: { clienteId: str
   if (!podeVerHonorario(papel)) return null;
   const supabase = await createServerSupabase();
 
-  const [{ data: hon }, { data: reg }] = await Promise.all([
+  const [{ data: hon }, { data: reg }, { data: rej }] = await Promise.all([
     supabase
       .from("honorario_vigencia")
       .select("vigente_de, valor, estimada")
@@ -24,9 +26,15 @@ export async function LinhaTempoVigencias({ clienteId, papel }: { clienteId: str
       .select("vigente_de, regime, estimada")
       .eq("cliente_id", clienteId)
       .order("vigente_de", { ascending: false }),
+    supabase
+      .from("reajuste_item")
+      .select("id, ano_base, indice, percentual, valor_anterior, valor_novo")
+      .eq("cliente_id", clienteId)
+      .order("ano_base", { ascending: false }),
   ]);
 
-  if (!hon?.length && !reg?.length) return null;
+  const podeDesfazer = podeGerenciarFinanceiro(papel);
+  if (!hon?.length && !reg?.length && !rej?.length) return null;
 
   return (
     <section className="max-w-4xl space-y-3 rounded-lg border border-linha bg-white p-4">
@@ -63,6 +71,23 @@ export async function LinhaTempoVigencias({ clienteId, papel }: { clienteId: str
           </ul>
         </div>
       </div>
+      {rej && rej.length > 0 && (
+        <div>
+          <h3 className="mb-1 text-xs font-medium text-cinza">Reajustes aplicados</h3>
+          <ul className="space-y-1 text-sm">
+            {rej.map((r) => (
+              <li key={r.id} className="flex items-center gap-2">
+                <span className="tabular-nums text-cinza">{r.ano_base}</span>
+                <span className="text-texto">
+                  {r.indice} {Number(r.percentual).toFixed(2)}% · {formatarMoeda(Number(r.valor_anterior))} →{" "}
+                  {formatarMoeda(Number(r.valor_novo))}
+                </span>
+                {podeDesfazer && <DesfazerReajuste itemId={r.id} clienteId={clienteId} />}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <p className="text-xs text-cinza">
         As vigências são registradas automaticamente a cada mudança. As marcadas como{" "}
         <strong>estimada</strong> vêm da carga inicial — não há registro do valor da época.
