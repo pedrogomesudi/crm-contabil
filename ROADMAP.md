@@ -201,6 +201,12 @@ Módulos que nasceram como diferenciais de CRM contábil, entregues em paralelo 
 - **Financeiro — Indicadores da carteira** ✅ — `/financeiro/indicadores`: MRR, ticket médio, clientes
   ativos, **churn** (de clientes e de receita), novos × saídas e evolução de 12 meses; CSV e impressão.
   Trigger captura `data_saida` + honorário na inativação do cliente. Migration 0068.
+- **Reajuste anual de honorários em lote** ✅ *(v5.10.0)* — reajusta por índice do cliente (padrão **salário
+  mínimo**; IPCA/IGP-M/INPC buscados no **BACEN**, séries SGS; percentual fixo; sem reajuste). Fluxo
+  **simular → revisar → aplicar** (`/financeiro/reajuste`), percentual editável por linha, **trava por
+  ano-base**, histórico auditado e **desfazer sem rastro** (usa `session_replication_role = replica` para
+  voltar o honorário sem recriar a vigência). Só grava o honorário — a vigência de janeiro nasce pelo
+  trigger da Fatia B. Migrations 0074–0075. **Terceira fatia do RF-021 — requisito fechado (A+B+C).**
 - **Vigências de honorário e regime** ✅ *(v5.9.0)* — toda mudança de honorário/regime grava uma **vigência**
   (`vigente_de` aberto), capturada por **trigger** (o honorário tem 4 caminhos de escrita). O MRR/churn/ticket
   passam a usar o **honorário de cada mês**, a geração usa o **valor vigente na competência** e as obrigações
