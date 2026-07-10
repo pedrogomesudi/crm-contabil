@@ -199,6 +199,7 @@ export async function emitirNfseDoCliente(
     emitente: "cliente" as const,
     valor: dados.valor,
     competencia: dados.competencia,
+    dcompet: dados.competencia, // o que foi enviado na DPS (dCompet)
     ambiente,
     tomador_documento: documento,
     tomador_razao_social: dados.tomadorRazaoSocial,

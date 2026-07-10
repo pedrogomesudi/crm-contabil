@@ -182,6 +182,7 @@ export async function emitirNfseCliente(
       cliente_id: clienteId,
       valor,
       competencia,
+      dcompet: competencia, // o que foi enviado na DPS (dCompet)
       status: "erro",
       dps_xml: assinado,
       ambiente,
@@ -195,6 +196,7 @@ export async function emitirNfseCliente(
     cliente_id: clienteId,
     valor,
     competencia,
+    dcompet: competencia, // o que foi enviado na DPS (dCompet)
     status: resultado.autorizada ? "autorizada" : "rejeitada",
     chave_acesso: resultado.chaveAcesso ?? null,
     numero: resultado.numero ?? null,
