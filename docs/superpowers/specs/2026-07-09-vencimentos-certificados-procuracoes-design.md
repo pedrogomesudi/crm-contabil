@@ -148,14 +148,16 @@ Gate no app **e** na RLS. O contador é isolado aos seus clientes pela RLS.
 
 ### 6.1 Seção na ficha do cliente — "Certificados e procurações"
 
-Abaixo da seção de Obrigações. Duas listas curtas, cada uma com **adicionar / editar / desativar** e
+Abaixo da seção de Obrigações. Duas listas curtas, cada uma com **adicionar / renovar / desativar** e
 **selo de severidade**.
 
 - O A1 da NFS-e aparece como **linha somente-leitura**, marcada `origem: NFS-e`, com link para
   Configurações → NFS-e. Deixa explícito que aquele vencimento é o mesmo que a emissão usa.
-- **Renovar** (botão próprio): desativa o registro atual (`ativo = false`) e abre o formulário do novo.
-  Um certificado renovado *é* outro certificado — preserva o histórico sem tabela de histórico.
-- **Editar** existe para corrigir erro de digitação, não para renovar.
+- **Renovar** (botão próprio): grava o novo registro e desativa o antigo, numa ação só. Um certificado
+  renovado *é* outro certificado — preserva o histórico sem tabela de histórico.
+- **Desativar**: arquiva o registro (sai do painel, permanece na ficha), com confirmação inline.
+- **Não há "editar"** (YAGNI): corrigir um erro de digitação é desativar e cadastrar de novo, o que
+  também deixa rastro. Evita uma terceira ação de escrita para um caso raro.
 
 ### 6.2 Página global `/vencimentos`
 
@@ -183,7 +185,9 @@ Abaixo da seção de Obrigações. Duas listas curtas, cada uma com **adicionar 
   31 → `aviso`, 30 → `alerta`, 16 → `alerta`, 15 → `critico`, 0 → `critico`, −1 → `vencido`.
 - **Unit** — `ordemSeveridade` ordena do mais grave ao menos grave; `montarPainel` conta os quatro
   cartões corretamente.
-- **Unit** — a união das três fontes marca `editavel: false` **somente** nas linhas de `origem = "nfse"`.
+- **Unit `montar.ts`** — a união das três fontes marca `editavel: false` **somente** nas linhas de
+  `origem = "nfse"`. A união é uma função pura (`montarItens`), separada da server action justamente
+  para poder ser testada sem mock do banco.
 - **Unit** — `podeGerenciarVencimentos`: true para admin/assistente/contador; false para financeiro e
   `undefined`.
 - **RLS (`supabase/tests/rls.test.sql`)** — contador vê só os certificados/procurações dos **seus**
