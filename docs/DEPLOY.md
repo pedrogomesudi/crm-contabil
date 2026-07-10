@@ -94,6 +94,39 @@ npm run admin:bootstrap
 
 ---
 
+## 4.1 Jobs agendados (pg_cron) — **rodar após qualquer restore de banco**
+
+Três jobs `pg_cron` sustentam automações que ninguém percebe funcionando — só percebe quando param:
+
+| Job | Agenda | O que faz |
+|---|---|---|
+| `gerar-mensalidades-mensal` | `0 6 1 * *` | Gera as mensalidades do mês (função SQL). |
+| `regua-cobranca-diaria` | `0 12 * * *` | `POST` em `/api/cron/regua-cobranca` (via `pg_net`). |
+| `gerar-obrigacoes-mensal` | `0 12 1 * *` | `POST` em `/api/cron/gerar-obrigacoes` (via `pg_net`). |
+
+Os dois últimos enviam o `CRON_SECRET` no header `Authorization`. Por isso **não** vivem numa
+migration (seria commitar o segredo); vivem num script que lê o segredo do ambiente.
+
+> **Risco real:** um restore de backup pode deixar `cron.job` vazio. Sem esses jobs, a régua de
+> cobrança e a geração mensal de obrigações param **silenciosamente** — a falha só apareceria no
+> primeiro prazo perdido. Depois de todo restore, rode:
+
+```bash
+CRON_SECRET=<mesmo valor do EasyPanel> APP_URL=https://app.seusaldo.ai npm run cron:bootstrap
+```
+
+O script é **idempotente** (faz upsert pelo nome do job, preservando o `jobid`) e nunca imprime o
+segredo. Para conferir o estado atual sem gravar nada:
+
+```bash
+CRON_SECRET=... APP_URL=https://app.seusaldo.ai npm run cron:bootstrap -- --dry-run
+```
+
+Ele recusa `APP_URL` que não seja `https` público — o cron roda **no banco**, não na sua máquina,
+então `localhost` nunca funcionaria.
+
+---
+
 ## 5. Verificação ponta a ponta (no domínio público)
 
 1. `https://crm.SEU-DOMINIO.com.br/api/health` → `{"status":"ok"}`.

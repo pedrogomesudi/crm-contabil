@@ -288,8 +288,11 @@ definido server-side (não confiável a partir do token). Cada usuário pode ter
   2. `regua-cobranca-diaria` (`0 12 * * *`) — via `pg_net`, faz `POST` em `/api/cron/regua-cobranca`.
   3. `gerar-obrigacoes-mensal` (`0 12 1 * *`) — via `pg_net`, faz `POST` em `/api/cron/gerar-obrigacoes`.
 
-  As rotas HTTP são protegidas por Bearer `CRON_SECRET` (comparação em tempo constante). Os jobs 2 e 3
-  foram criados **direto no banco** (não há migration que os crie) — ao restaurar o banco, recriá-los.
+  As rotas HTTP são protegidas por Bearer `CRON_SECRET` (comparação em tempo constante). Como os jobs 2
+  e 3 carregam o segredo no header, eles **não vivem numa migration** (seria commitá-lo). São recriados
+  pelo script idempotente **`npm run cron:bootstrap`** (lê `CRON_SECRET` e `APP_URL` do ambiente,
+  preserva o `jobid`, aceita `--dry-run`). **Rodar após todo restore de banco** — sem os jobs, a régua e
+  a geração de obrigações param em silêncio. Ver [`DEPLOY.md`](DEPLOY.md#41-jobs-agendados-pg_cron--rodar-após-qualquer-restore-de-banco).
 - **Exportações CSV:** neutralizam injeção de fórmula (células iniciadas por `=`/`+`/`@` viram texto).
 - **Saúde:** `/api/health` para verificação de disponibilidade.
 
