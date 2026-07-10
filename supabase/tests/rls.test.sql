@@ -1081,3 +1081,53 @@ begin
   end if;
   raise notice 'OK: geração retroativa usa o honorário da época';
 end $$;
+
+-- ===== Reajuste: trava por ano, aplicação cria vigência, desfazer limpa o rastro =====
+do $$
+declare n int; v numeric; v_mes date; v_item uuid;
+begin
+  reset role;
+  insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario)
+    values ('aaaaaaaa-0000-0000-0000-0000000000fa','PJ','Cli Reajuste','55000000000888','Simples')
+    on conflict do nothing;
+  insert into clientes_financeiro (cliente_id, honorario_mensal)
+    values ('aaaaaaaa-0000-0000-0000-0000000000fa', 500.00)
+    on conflict (cliente_id) do update set honorario_mensal = 500.00;
+
+  -- limpa vigências criadas pelo insert acima, para medir só o efeito do reajuste
+  delete from honorario_vigencia where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000fa';
+
+  -- aplica um reajuste: sobe o honorário (cria a vigência via trigger) + registra
+  update clientes_financeiro set honorario_mensal = 533.93 where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000fa';
+  insert into reajuste_item (cliente_id, ano_base, indice, percentual, valor_anterior, valor_novo)
+    values ('aaaaaaaa-0000-0000-0000-0000000000fa', 2027, 'SALARIO_MINIMO', 6.785, 500.00, 533.93)
+    returning id into v_item;
+
+  v_mes := date_trunc('month', now())::date;
+  select count(*) into n from honorario_vigencia
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000fa' and vigente_de = v_mes;
+  if n <> 1 then raise exception 'FALHA: reajuste não criou a vigência (n=%)', n; end if;
+  raise notice 'OK: aplicar reajuste cria a vigência (via trigger da Fatia B)';
+
+  -- trava: um segundo reajuste no mesmo ano-base é barrado
+  begin
+    insert into reajuste_item (cliente_id, ano_base, indice, percentual, valor_anterior, valor_novo)
+      values ('aaaaaaaa-0000-0000-0000-0000000000fa', 2027, 'IPCA', 5, 533.93, 560.00);
+    raise exception 'FALHA: a trava por ano-base não barrou o segundo reajuste';
+  exception when unique_violation then
+    raise notice 'OK: trava (cliente, ano_base) barra reajuste duplicado';
+  end;
+
+  -- desfazer: volta o honorário, remove a vigência do mês e apaga o registro — sem rastro.
+  -- Mede a vigência pelo MESMO mês que a função usa (date_trunc do criado_em do item).
+  select date_trunc('month', criado_em)::date into v_mes from reajuste_item where id = v_item;
+  perform desfazer_reajuste(v_item);
+  select honorario_mensal into v from clientes_financeiro where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000fa';
+  if v <> 500.00 then raise exception 'FALHA: desfazer não voltou o honorário (=%)', v; end if;
+  select count(*) into n from honorario_vigencia
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000fa' and vigente_de = v_mes;
+  if n <> 0 then raise exception 'FALHA: desfazer não removeu a vigência (n=%)', n; end if;
+  select count(*) into n from reajuste_item where id = v_item;
+  if n <> 0 then raise exception 'FALHA: desfazer não removeu o registro'; end if;
+  raise notice 'OK: desfazer volta o honorário, remove a vigência e o registro (sem rastro)';
+end $$;
