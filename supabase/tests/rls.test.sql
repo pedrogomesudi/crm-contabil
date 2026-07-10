@@ -1011,3 +1011,73 @@ begin
   if n <> 2 then raise exception 'FALHA: segunda rodada duplicou o 13º (% títulos)', n; end if;
   raise notice 'OK: geração é idempotente';
 end $$;
+
+-- ===== Vigências: captura por trigger, sem poluir o histórico =====
+do $$
+declare n int; v numeric; v_mes date := date_trunc('month', now())::date;
+begin
+  reset role;
+
+  -- (1) INSERT em clientes_financeiro não explode (OLD não existe no INSERT) e cria a vigência
+  insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario)
+    values ('aaaaaaaa-0000-0000-0000-0000000000f9','PJ','Cli Vigencia','55000000000999','Simples')
+    on conflict do nothing;
+  insert into clientes_financeiro (cliente_id, honorario_mensal)
+    values ('aaaaaaaa-0000-0000-0000-0000000000f9', 500.00)
+    on conflict (cliente_id) do update set honorario_mensal = 500.00;
+  select count(*) into n from honorario_vigencia where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000f9';
+  if n <> 1 then raise exception 'FALHA: insert não criou vigência de honorário (n=%)', n; end if;
+  raise notice 'OK: insert em clientes_financeiro cria vigência (e não explode com OLD)';
+
+  -- o insert do cliente criou a vigência de regime
+  select count(*) into n from regime_vigencia where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000f9';
+  if n <> 1 then raise exception 'FALHA: insert de cliente não criou vigência de regime (n=%)', n; end if;
+
+  -- (2) update que NÃO muda o honorário não cria vigência
+  update clientes_financeiro set dia_vencimento = 15 where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000f9';
+  update clientes_financeiro set honorario_mensal = 500.00 where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000f9';
+  select count(*) into n from honorario_vigencia where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000f9';
+  if n <> 1 then raise exception 'FALHA: update sem mudança poluiu o histórico (n=%)', n; end if;
+  raise notice 'OK: update que não muda o valor não cria vigência';
+
+  -- (3) duas mudanças no mesmo mês => UMA linha, com o último valor
+  update clientes_financeiro set honorario_mensal = 600.00 where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000f9';
+  update clientes_financeiro set honorario_mensal = 700.00 where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000f9';
+  select count(*) into n from honorario_vigencia
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000f9' and vigente_de = v_mes;
+  if n <> 1 then raise exception 'FALHA: duas mudanças no mesmo mês criaram % linhas', n; end if;
+  select valor into v from honorario_vigencia
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000f9' and vigente_de = v_mes;
+  if v <> 700.00 then raise exception 'FALHA: a última mudança do mês não venceu (valor=%)', v; end if;
+  raise notice 'OK: duas mudanças no mesmo mês => uma linha, último valor';
+
+  -- (4) mudança de regime cria vigência de regime (comparação por contagem: `regime` é enum)
+  update clientes set regime_tributario = 'Presumido' where id = 'aaaaaaaa-0000-0000-0000-0000000000f9';
+  select count(*) into n from regime_vigencia
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000f9'
+      and vigente_de = v_mes and regime = 'Presumido';
+  if n <> 1 then raise exception 'FALHA: mudança de regime não criou vigência (n=%)', n; end if;
+  raise notice 'OK: mudança de regime cria vigência';
+
+  -- (5) honorario_vigente devolve o valor DA ÉPOCA, não o atual
+  insert into honorario_vigencia (cliente_id, valor, vigente_de, estimada)
+    values ('aaaaaaaa-0000-0000-0000-0000000000f9', 300.00, date '2025-01-01', false)
+    on conflict do nothing;
+  if honorario_vigente('aaaaaaaa-0000-0000-0000-0000000000f9', date '2025-06-01') <> 300.00 then
+    raise exception 'FALHA: honorario_vigente não devolveu o valor da época';
+  end if;
+  if honorario_vigente('aaaaaaaa-0000-0000-0000-0000000000f9', v_mes) <> 700.00 then
+    raise exception 'FALHA: honorario_vigente não devolveu o valor corrente';
+  end if;
+  raise notice 'OK: honorario_vigente resolve pela competência';
+
+  -- (6) gerar_mensalidades de uma competência antiga usa o honorário daquela competência
+  perform gerar_mensalidades(date '2025-06-01');
+  select valor into v from titulo
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-0000000000f9'
+      and origem = 'MENSALIDADE' and competencia = date '2025-06-01';
+  if v is distinct from 300.00 then
+    raise exception 'FALHA: geração retroativa cobrou % (esperado 300.00, o valor da época)', v;
+  end if;
+  raise notice 'OK: geração retroativa usa o honorário da época';
+end $$;
