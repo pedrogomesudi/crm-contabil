@@ -284,6 +284,10 @@ prévia (novos/atualizados/pendências), reconciliação idempotente por CNPJ e 
 
 ### 3.12 Configurações (admin)
 Central de integrações e credenciais:
+- **Marca do escritório:** nome, CNPJ, endereço, e-mail, telefone e **logo** (PNG/JPG, validado por
+  magic bytes; SVG proibido por ser vetor de XSS) usados na proposta comercial e no whitelabel. O logo
+  vai para o bucket privado `documentos` e é exibido por URL assinada. Registro único (`escritorio_config`
+  id=1), estruturado para virar por-tenant na multi-tenancy futura.
 - **WhatsApp (Z-API):** credenciais do provedor e teste de conexão.
 - **NFS-e (emitente):** dados do emitente e certificado digital.
 - **Boletos:** provedor (Inter / Asaas), credenciais cifradas, ambiente e conta bancária.
