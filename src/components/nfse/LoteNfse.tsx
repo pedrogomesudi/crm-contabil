@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { listarElegiveisLote, emitirNfseCliente } from "@/app/(app)/clientes/[id]/nfse";
 import { montarCsv } from "@/lib/nfse/relatorioLote";
 import type { ClienteLote, LinhaRelatorio } from "@/lib/nfse/tipos";
+import { mesAnteriorDeHoje } from "@/lib/financeiro/competencia";
 
 type Linha = ClienteLote & {
   marcado: boolean;
@@ -14,7 +15,8 @@ type Linha = ClienteLote & {
 const ROTULO: Record<string, string> = { apta: "", ja_emitida: "Já emitida", sem_documento: "Sem CNPJ/CPF" };
 
 export function LoteNfse() {
-  const [mes, setMes] = useState("");
+  // Emissão nos primeiros dias do mês, referente ao serviço do mês anterior.
+  const [mes, setMes] = useState(mesAnteriorDeHoje());
   const [linhas, setLinhas] = useState<Linha[]>([]);
   const [carregando, setCarregando] = useState(false);
   const [executando, setExecutando] = useState(false);

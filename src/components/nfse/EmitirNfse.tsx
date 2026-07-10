@@ -1,6 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
 import { emitirNfse, type EstadoNfse } from "@/app/(app)/clientes/[id]/nfse";
+import { mesAnteriorDeHoje } from "@/lib/financeiro/competencia";
 
 export function EmitirNfse({
   clienteId,
@@ -13,7 +14,7 @@ export function EmitirNfse({
 }) {
   const [estado, action, pend] = useActionState<EstadoNfse, FormData>(emitirNfse.bind(null, clienteId), {});
   const [aberto, setAberto] = useState(false);
-  const [mes, setMes] = useState("");
+  const [mes, setMes] = useState(mesAnteriorDeHoje());
 
   if (estado.ok) return <span className="text-xs text-verde">NFS-e emitida ✓</span>;
   if (!aberto)
