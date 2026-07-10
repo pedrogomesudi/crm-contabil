@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Papel } from "@/lib/tipos";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
-import { podeAtender, podeCriarCliente } from "@/lib/clientes/permissoes";
+import { podeAtender, podeCriarCliente, podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
 import { sair } from "@/app/login/actions";
 import { LogoSaldo } from "@/components/marca/LogoSaldo";
 
-export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes = 0, escalonamento = 0 }: { papel: Papel; nome: string; alertasOnboarding?: number; riscosObrigacoes?: number; escalonamento?: number }) {
+export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes = 0, escalonamento = 0, vencimentos = 0 }: { papel: Papel; nome: string; alertasOnboarding?: number; riscosObrigacoes?: number; escalonamento?: number; vencimentos?: number }) {
   const pathname = usePathname();
   const [aberto, setAberto] = useState(false);
   const itens: { href: string; label: string; badge?: number }[] = [
@@ -18,6 +18,7 @@ export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes =
     ...(podeCriarCliente(papel) ? [{ href: "/comercial", label: "Comercial" }] : []),
     ...(podeCriarCliente(papel) ? [{ href: "/obrigacoes", label: "Obrigações", badge: riscosObrigacoes || undefined }] : []),
     ...(podeCriarCliente(papel) ? [{ href: "/obrigacoes/escalonamento", label: "Escalonamento", badge: escalonamento || undefined }] : []),
+    ...(podeGerenciarVencimentos(papel) ? [{ href: "/vencimentos", label: "Vencimentos", badge: vencimentos || undefined }] : []),
     ...(podeAtender(papel) ? [{ href: "/atendimento", label: "Atendimento" }] : []),
     ...(podeGerenciarFinanceiro(papel) ? [{ href: "/financeiro/cadastros", label: "Financeiro" }] : []),
     ...(podeGerenciarFinanceiro(papel) ? [{ href: "/financeiro/conciliacao", label: "Conciliação" }] : []),
