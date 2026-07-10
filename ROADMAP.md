@@ -201,6 +201,11 @@ Módulos que nasceram como diferenciais de CRM contábil, entregues em paralelo 
 - **Financeiro — Indicadores da carteira** ✅ — `/financeiro/indicadores`: MRR, ticket médio, clientes
   ativos, **churn** (de clientes e de receita), novos × saídas e evolução de 12 meses; CSV e impressão.
   Trigger captura `data_saida` + honorário na inativação do cliente. Migration 0068.
+- **Certificados e procurações (vencimentos)** ✅ *(v5.7.0)* — cadastro por cliente (certificado A1/A3 e
+  procuração), **renovar arquiva o anterior**, alertas escalonados **60/30/15/vencido**, badge no menu e
+  painel `/vencimentos` com cartões, filtros e CSV. Lê a validade do **A1 da NFS-e** (cliente e
+  escritório) por função `SECURITY DEFINER` que expõe só a data — nunca o certificado cifrado. RLS
+  fechada ao financeiro. Migrations 0069–0070. Atende RF-022/023 do gap analysis.
 
 ## V9 — Modo whitelabel ⬜
 
