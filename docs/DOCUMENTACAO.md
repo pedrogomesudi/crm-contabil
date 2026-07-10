@@ -231,6 +231,15 @@ Módulo completo de gestão financeira do escritório (admin/financeiro).
   de competência nas telas já vem no mês anterior. O **13º honorário** equivale a um honorário,
   dividido em **duas parcelas de 50%**, com vencimentos fixos em **20/11** e **15/12**, geradas na
   rodada de outubro (quando ambos ainda estão no futuro).
+- **Vigências de honorário e regime:** toda mudança de honorário ou de regime tributário grava uma
+  **vigência** (a partir de qual competência o valor vale), capturada por **trigger de banco** — o
+  honorário é escrito por quatro caminhos diferentes. O MRR, o churn de receita e o ticket médio passam
+  a usar **o honorário de cada mês**, e a geração de mensalidades usa o **valor vigente na competência**
+  (uma geração retroativa não cobra o valor de hoje por um serviço antigo). As obrigações usam o
+  **regime vigente na competência**. A ficha do cliente mostra a linha do tempo.
+- **O que é estimativa:** o histórico anterior à entrega **não existe** — as vigências da carga inicial
+  são marcadas como `estimada`, e a tela de indicadores assinala com `*` os meses cujo valor veio de
+  estimativa. O sistema não finge saber o que não sabe.
 - **Dashboard financeiro** (`/financeiro/dashboard`): saldo em caixa, MRR, recebido/a receber,
   inadimplência, previsão, aging de receber/pagar, fluxo de caixa (6 meses), maiores devedores, receita
   por tipo.

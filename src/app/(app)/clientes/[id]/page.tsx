@@ -6,6 +6,7 @@ import { listarContadores, contadorPorId } from "@/lib/clientes/contadores";
 import { podeAtribuirContador, podeVerHonorario, podeExcluirCliente, podeCriarCliente } from "@/lib/clientes/permissoes";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
+import { LinhaTempoVigencias } from "@/components/clientes/LinhaTempoVigencias";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
 import { NotasFiscaisSection } from "@/components/nfse/NotasFiscaisSection";
 import { EmissaoClienteSection } from "@/components/nfse/EmissaoClienteSection";
@@ -118,6 +119,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
       {mostrarHonorario && (
         <HonorarioForm clienteId={id} valorAtual={valorHonorario} extensao={extensaoFinanceira} />
       )}
+      {mostrarHonorario && <LinhaTempoVigencias clienteId={id} papel={papel} />}
       {mostrarHonorario && <ContratosSection clienteId={id} contratos={contratos} />}
       {mostrarHonorario && (
         <section className="rounded-lg border border-linha bg-white p-4">

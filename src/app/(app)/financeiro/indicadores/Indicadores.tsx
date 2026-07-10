@@ -19,8 +19,8 @@ export function Indicadores({ resumo }: { resumo: ResumoMetricas }) {
   const { serie } = resumo;
   function exportar() {
     const csv = paraCSV(
-      ["Mês", "Base", "Novos", "Churn", "Líquido", "Ativos fim", "Churn %", "Churn R$", "MRR", "Ticket médio"],
-      serie.map((m) => [m.mes, String(m.base), String(m.novos), String(m.churn), String(m.liquido), String(m.ativosFim), pct(m.churnPct), formatarMoeda(m.churnReceita), formatarMoeda(m.mrr), formatarMoeda(m.ticketMedio)]),
+      ["Mês", "Base", "Novos", "Churn", "Líquido", "Ativos fim", "Churn %", "Churn R$", "MRR", "Ticket médio", "Estimado"],
+      serie.map((m) => [m.mes, String(m.base), String(m.novos), String(m.churn), String(m.liquido), String(m.ativosFim), pct(m.churnPct), formatarMoeda(m.churnReceita), formatarMoeda(m.mrr), formatarMoeda(m.ticketMedio), m.estimado ? "sim" : "não"]),
     );
     baixar("indicadores-carteira.csv", csv);
   }
@@ -48,7 +48,14 @@ export function Indicadores({ resumo }: { resumo: ResumoMetricas }) {
           <tbody>
             {serie.map((m) => (
               <tr key={m.mes} className="border-b border-linha/60">
-                <td className="px-3 py-1.5 tabular-nums">{m.mes}</td>
+                <td className="px-3 py-1.5 tabular-nums">
+                  {m.mes}
+                  {m.estimado && (
+                    <span title="Honorário estimado neste mês" className="ml-1 text-cinza">
+                      *
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-1.5 text-right tabular-nums">{m.base}</td>
                 <td className="px-3 py-1.5 text-right tabular-nums text-verde">{m.novos ? `+${m.novos}` : "0"}</td>
                 <td className="px-3 py-1.5 text-right tabular-nums text-negativo">{m.churn ? `-${m.churn}` : "0"}</td>
@@ -63,7 +70,12 @@ export function Indicadores({ resumo }: { resumo: ResumoMetricas }) {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-cinza">O MRR histórico usa o honorário atual (clientes ativos) e o valor fotografado na saída (clientes que saíram) — aproximação, pois não há histórico de honorário.</p>
+      <p className="text-xs text-cinza">
+        O MRR de cada mês usa o <strong>honorário vigente naquele mês</strong>. Os meses marcados com{" "}
+        <strong>*</strong> contêm algum honorário <strong>estimado</strong> — não há registro do valor da
+        época, e o sistema não finge saber o que não sabe. O histórico real começa nas mudanças
+        registradas a partir de julho/2026.
+      </p>
     </div>
   );
 }

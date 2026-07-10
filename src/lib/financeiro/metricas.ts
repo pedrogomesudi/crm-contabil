@@ -1,11 +1,13 @@
 // Métricas de carteira (RF-070): série mensal de MRR, ticket médio, churn e crescimento.
 // Puro e testável — datas ISO (YYYY-MM-DD) comparadas por string (ordenáveis lexicograficamente).
 
+import { honorarioEm, type VigenciaValor } from "./vigencia";
+
 export type ClienteMetrica = {
   dataInicio: string | null; // entrada (null = presente desde antes da janela)
   dataSaida: string | null; // saída (null = ativo)
-  honorario: number; // honorario_mensal atual (0 se ausente)
-  honorarioSaida: number | null; // honorário fotografado na saída
+  vigencias: VigenciaValor[]; // histórico do honorário; resolvido mês a mês
+  honorarioSaida: number | null; // fallback para cliente sem vigência alguma
 };
 
 export type MesMetrica = {
@@ -19,6 +21,7 @@ export type MesMetrica = {
   churnReceita: number; // R$ de honorário perdido no mês
   mrr: number; // Σ honorário dos ativos ao fim do mês
   ticketMedio: number; // mrr / ativosFim
+  estimado: boolean; // algum honorário que CONTRIBUIU no mês veio de vigência estimada/extrapolada
 };
 
 export type ResumoMetricas = {
@@ -57,8 +60,13 @@ export function calcularMetricas(clientes: ClienteMetrica[], meses: string[]): R
       churnReceita = 0,
       mrr = 0,
       ativosFim = 0;
+    let estimado = false;
     for (const c of clientes) {
-      const hon = c.dataSaida ? (c.honorarioSaida ?? c.honorario) : c.honorario;
+      const r = honorarioEm(c.vigencias, mes);
+      // Sem vigência alguma (cliente antigo já inativado), cai no honorário fotografado na saída.
+      const hon = c.vigencias.length > 0 ? r.valor : (c.honorarioSaida ?? 0);
+      const semRegistro = c.vigencias.length === 0 || r.estimado;
+
       const entrouAntes = !c.dataInicio || c.dataInicio < ini;
       const entrouNoMes = !!c.dataInicio && c.dataInicio >= ini && c.dataInicio < prox;
       const naoSaiuAteIni = !c.dataSaida || c.dataSaida >= ini;
@@ -69,17 +77,19 @@ export function calcularMetricas(clientes: ClienteMetrica[], meses: string[]): R
       if (saiuNoMes) {
         churn += 1;
         churnReceita += hon;
+        if (semRegistro) estimado = true; // contribuiu com receita perdida: o selo conta
       }
       if (ativoFim) {
         ativosFim += 1;
         mrr += hon;
+        if (semRegistro) estimado = true; // contribuiu com MRR: o selo conta
       }
     }
     mrr = cent(mrr);
     churnReceita = cent(churnReceita);
     const churnPct = base > 0 ? pct1(churn / base) : 0;
     const ticketMedio = ativosFim > 0 ? cent(mrr / ativosFim) : 0;
-    return { mes, base, novos, churn, liquido: novos - churn, ativosFim, churnPct, churnReceita, mrr, ticketMedio };
+    return { mes, base, novos, churn, liquido: novos - churn, ativosFim, churnPct, churnReceita, mrr, ticketMedio, estimado };
   });
   const u = serie[serie.length - 1];
   const atual = u

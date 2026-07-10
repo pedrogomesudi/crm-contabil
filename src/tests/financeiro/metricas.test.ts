@@ -12,9 +12,27 @@ describe("mesesJanela", () => {
 
 describe("calcularMetricas", () => {
   const clientes: ClienteMetrica[] = [
-    { dataInicio: null, dataSaida: null, honorario: 300, honorarioSaida: null }, // A: sempre ativo
-    { dataInicio: "2026-02-10", dataSaida: null, honorario: 200, honorarioSaida: null }, // B: novo em fev
-    { dataInicio: "2025-12-01", dataSaida: "2026-02-15", honorario: 0, honorarioSaida: 100 }, // C: saiu em fev
+    // A: sempre ativo, 300
+    {
+      dataInicio: null,
+      dataSaida: null,
+      honorarioSaida: null,
+      vigencias: [{ vigenteDe: "1900-01-01", valor: 300, estimada: false }],
+    },
+    // B: novo em fev, 200
+    {
+      dataInicio: "2026-02-10",
+      dataSaida: null,
+      honorarioSaida: null,
+      vigencias: [{ vigenteDe: "2026-02-01", valor: 200, estimada: false }],
+    },
+    // C: saiu em fev; pagava 100 enquanto ativo
+    {
+      dataInicio: "2025-12-01",
+      dataSaida: "2026-02-15",
+      honorarioSaida: 100,
+      vigencias: [{ vigenteDe: "2025-12-01", valor: 100, estimada: false }],
+    },
   ];
   const meses = mesesJanela("2026-03", 3); // jan, fev, mar
   const { serie, atual } = calcularMetricas(clientes, meses);
@@ -33,7 +51,73 @@ describe("calcularMetricas", () => {
     expect(atual).toEqual({ mrr: 500, ticketMedio: 250, ativos: 2, churnPct: 0, churnReceita: 0 });
   });
   it("churn % é 0 quando a base do mês é 0", () => {
-    const r = calcularMetricas([{ dataInicio: "2026-03-05", dataSaida: null, honorario: 100, honorarioSaida: null }], ["2026-03"]);
+    const r = calcularMetricas(
+      [
+        {
+          dataInicio: "2026-03-05",
+          dataSaida: null,
+          honorarioSaida: null,
+          vigencias: [{ vigenteDe: "2026-03-01", valor: 100, estimada: false }],
+        },
+      ],
+      ["2026-03"],
+    );
     expect(r.serie[0]).toMatchObject({ base: 0, novos: 1, churnPct: 0 });
+  });
+});
+
+describe("calcularMetricas com vigências", () => {
+  it("o MRR de cada mês usa o honorário daquele mês, não o atual", () => {
+    // Cliente entrou em 2025-10 pagando 500; passou a 800 em março de 2026.
+    const clientes: ClienteMetrica[] = [
+      {
+        dataInicio: "2025-10-01",
+        dataSaida: null,
+        honorarioSaida: null,
+        vigencias: [
+          { vigenteDe: "2025-10-01", valor: 500, estimada: false },
+          { vigenteDe: "2026-03-01", valor: 800, estimada: false },
+        ],
+      },
+    ];
+    const { serie } = calcularMetricas(clientes, ["2026-02", "2026-03"]);
+    // Antes desta mudança, ambos dariam 800 — a aproximação que a tela admitia.
+    expect(serie[0]!.mrr).toBe(500);
+    expect(serie[1]!.mrr).toBe(800);
+  });
+
+  it("marca o mês como estimado quando o valor veio de vigência estimada", () => {
+    const clientes: ClienteMetrica[] = [
+      {
+        dataInicio: "2025-10-01",
+        dataSaida: null,
+        honorarioSaida: null,
+        vigencias: [{ vigenteDe: "2025-10-01", valor: 500, estimada: true }],
+      },
+    ];
+    const { serie } = calcularMetricas(clientes, ["2026-02"]);
+    expect(serie[0]!.estimado).toBe(true);
+  });
+
+  it("um cliente que ainda não entrou não marca o mês como estimado", () => {
+    // B entra em fevereiro. Em janeiro ele não soma nada ao MRR, logo não pode
+    // contaminar o selo de janeiro só porque sua vigência começa depois.
+    const clientes: ClienteMetrica[] = [
+      {
+        dataInicio: "2025-01-01",
+        dataSaida: null,
+        honorarioSaida: null,
+        vigencias: [{ vigenteDe: "2025-01-01", valor: 300, estimada: false }],
+      },
+      {
+        dataInicio: "2026-02-10",
+        dataSaida: null,
+        honorarioSaida: null,
+        vigencias: [{ vigenteDe: "2026-02-01", valor: 200, estimada: false }],
+      },
+    ];
+    const { serie } = calcularMetricas(clientes, ["2026-01"]);
+    expect(serie[0]!.mrr).toBe(300);
+    expect(serie[0]!.estimado).toBe(false);
   });
 });

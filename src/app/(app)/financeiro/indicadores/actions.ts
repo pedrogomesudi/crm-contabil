@@ -10,14 +10,21 @@ export async function carregarIndicadores(): Promise<ResumoMetricas | null> {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("clientes")
-    .select("data_inicio, clientes_financeiro(honorario_mensal, data_saida, honorario_saida)")
+    .select(
+      "data_inicio, clientes_financeiro(honorario_mensal, data_saida, honorario_saida), honorario_vigencia(vigente_de, valor, estimada)",
+    )
     .is("excluido_em", null);
   const clientes: ClienteMetrica[] = (data ?? []).map((c) => {
     const fin = Array.isArray(c.clientes_financeiro) ? c.clientes_financeiro[0] : c.clientes_financeiro;
+    const vigRows = (c.honorario_vigencia ?? []) as { vigente_de: string; valor: number; estimada: boolean }[];
     return {
       dataInicio: (c.data_inicio as string | null) ?? null,
       dataSaida: (fin?.data_saida as string | null) ?? null,
-      honorario: Number(fin?.honorario_mensal ?? 0),
+      vigencias: vigRows.map((v) => ({
+        vigenteDe: v.vigente_de,
+        valor: Number(v.valor),
+        estimada: v.estimada,
+      })),
       honorarioSaida: fin?.honorario_saida != null ? Number(fin.honorario_saida) : null,
     };
   });
