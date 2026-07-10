@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sugerirPerfil } from "@/lib/onboarding/processo";
 import { instanciasDaCompetencia, cutoffCompetencia, type ObrigacaoMatriz, type ClienteFiscal } from "./geracao";
+import { regimeEm, type VigenciaRegime } from "./vigencia";
 
 type Row = Record<string, unknown>;
 
@@ -22,16 +23,23 @@ export async function gerarInstancias(supabase: SupabaseClient, ano: number, mes
   const obrigacoes = (obrigRows ?? []).map(matrizDaLinha);
   if (obrigacoes.length === 0) return { candidatas: 0, clientes: 0 };
 
-  let q = supabase.from("clientes").select("id, tipo_pessoa, regime_tributario, cnae, inscricao_estadual, inscricao_municipal, contador_id, endereco, competencia_inicial, data_inicio, clientes_financeiro(qtd_funcionarios)").is("excluido_em", null).eq("status", "ativo");
+  let q = supabase.from("clientes").select("id, tipo_pessoa, regime_tributario, cnae, inscricao_estadual, inscricao_municipal, contador_id, endereco, competencia_inicial, data_inicio, clientes_financeiro(qtd_funcionarios), regime_vigencia(vigente_de, regime)").is("excluido_em", null).eq("status", "ativo");
   if (clienteId) q = q.eq("id", clienteId);
   const { data: clientes } = await q;
 
+  const competencia = `${ano}-${String(mes).padStart(2, "0")}`;
   const linhas: Row[] = [];
   for (const cl of (clientes ?? []) as Row[]) {
     const finRaw = cl.clientes_financeiro;
     const fin = (Array.isArray(finRaw) ? finRaw[0] : finRaw) as { qtd_funcionarios?: number | null } | null;
     const qtd = fin?.qtd_funcionarios ?? null;
-    const perfil = sugerirPerfil(cl.tipo_pessoa as string, cl.regime_tributario as string, qtd);
+    // Regime VIGENTE na competência: a geração retroativa não pode aplicar o regime de hoje
+    // a um mês antigo. Sem vigência, cai no regime atual do cadastro.
+    const vigencias = ((cl.regime_vigencia as { vigente_de: string; regime: string }[] | null) ?? []).map(
+      (v): VigenciaRegime => ({ vigenteDe: v.vigente_de, regime: v.regime }),
+    );
+    const regime = regimeEm(vigencias, competencia) ?? (cl.regime_tributario as string);
+    const perfil = sugerirPerfil(cl.tipo_pessoa as string, regime, qtd);
     const endereco = (cl.endereco as { uf?: string } | null) ?? {};
     const c: ClienteFiscal = { perfil, uf: endereco.uf ?? null, cnae: (cl.cnae as string | null) ?? null, flags: { tem_folha: (qtd ?? 0) > 0, contribui_icms: !!cl.inscricao_estadual, contribui_iss: !!cl.inscricao_municipal } };
     const cutoff = cutoffCompetencia((cl.competencia_inicial as string | null) ?? null, (cl.data_inicio as string | null) ?? null);
