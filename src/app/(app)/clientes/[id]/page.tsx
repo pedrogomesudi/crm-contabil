@@ -9,6 +9,7 @@ import { HonorarioForm } from "@/components/HonorarioForm";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
 import { NotasFiscaisSection } from "@/components/nfse/NotasFiscaisSection";
 import { EmissaoClienteSection } from "@/components/nfse/EmissaoClienteSection";
+import { VencimentosSection } from "@/components/vencimentos/VencimentosSection";
 import { GerarContrato } from "@/components/contrato/GerarContrato";
 import { AcoesExclusaoCliente } from "@/components/clientes/AcoesExclusaoCliente";
 import { BotaoAtualizarReceita } from "@/components/clientes/BotaoAtualizarReceita";
@@ -146,6 +147,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
           podeGerar={podeGerenciarMatriz(papel)}
         />
       )}
+      <VencimentosSection clienteId={id} papel={papel} />
     </div>
   );
 }

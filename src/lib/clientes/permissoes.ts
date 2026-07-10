@@ -59,3 +59,9 @@ export function podeRevelarCredencial(papel: Papel | undefined): boolean {
 export function podeGerenciarModeloOnboarding(papel: Papel | undefined): boolean {
   return papel === "admin";
 }
+
+// Quem vê/gerencia certificados e procurações: quem gerencia o cadastro do cliente.
+// O financeiro fica de fora — não é dado financeiro (a RLS também o barra).
+export function podeGerenciarVencimentos(papel: Papel | undefined): boolean {
+  return papel === "admin" || papel === "assistente" || papel === "contador";
+}

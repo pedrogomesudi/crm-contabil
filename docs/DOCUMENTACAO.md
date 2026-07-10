@@ -8,9 +8,11 @@
 ## 1. Visão geral
 
 **SALDO** é um CRM para escritórios de contabilidade. Reúne, num só lugar: funil comercial (captação
-de clientes), cadastro de clientes, onboarding com cofre de credenciais, emissão e gestão de NFS-e,
-atendimento por WhatsApp, financeiro completo (contas a pagar/receber, orçamento, orçado × realizado,
-relatórios gerenciais), cobrança automatizada (WhatsApp + boletos) e integração com o sistema Domínio.
+de clientes), cadastro de clientes, onboarding com cofre de credenciais, **calendário de obrigações
+fiscais com escalonamento e conformidade**, emissão e gestão de NFS-e, atendimento por WhatsApp,
+financeiro completo (contas a pagar/receber, orçamento, orçado × realizado, **conciliação bancária**,
+relatórios gerenciais e indicadores de carteira), cobrança automatizada (WhatsApp + boletos) e
+integração com o sistema Domínio.
 
 - **Stack:** Next.js 16 (App Router, Server Actions) · TypeScript · Tailwind 4 · Supabase
   (Auth/Postgres/RLS/Storage) · deploy em EasyPanel.
@@ -48,8 +50,11 @@ políticas do banco.
 | Onboarding (gerenciar processos/itens) | ✔ | ✔ | ✔ | — |
 | Revelar senha do cofre | ✔ | ✔ | — | — |
 | Editar templates de onboarding | ✔ | — | — | — |
-| Financeiro (contas, orçamento, relatórios) | ✔ | — | — | ✔ |
-| Configurar NFS-e / WhatsApp / boletos / usuários | ✔ | — | — | — |
+| Obrigações (calendário, baixa, riscos, conformidade) | ✔ | ✔ (os seus) | ✔ | — |
+| Editar a matriz de obrigações | ✔ | — | — | — |
+| Certificados e procurações (vencimentos) | ✔ | ✔ (os seus) | ✔ | — |
+| Financeiro (contas, orçamento, conciliação, indicadores, relatórios) | ✔ | — | — | ✔ |
+| Configurar NFS-e / WhatsApp / boletos / obrigações / usuários | ✔ | — | — | — |
 
 > **Isolamento por cliente:** o contador só enxerga os clientes atribuídos a ele; as tabelas ligadas a
 > cliente (documentos, onboarding, títulos, etc.) herdam essa regra na RLS. Tabelas **pré-cliente**
@@ -90,6 +95,9 @@ Cadastro completo de PJ/PF/MEI e a ficha do cliente, que concentra todas as áre
   (integração Clicksign) e registro de acesso auditado.
 - **NFS-e do cliente:** notas emitidas e emissão de nota com o cliente como emitente.
 - **Onboarding:** link "Abrir onboarding" para a página dedicada do cliente (ver 3.4).
+- **Obrigações:** seção com as obrigações do cliente na competência, com selo de severidade (ver 3.6).
+- **Certificados e procurações:** seção com validade e selo de severidade, incluindo o A1 da NFS-e
+  em modo leitura (ver 3.7).
 - **Exclusão:** soft delete (somente admin).
 
 ### 3.4 Onboarding & Legalização
@@ -140,7 +148,44 @@ Central de atendimento integrada ao WhatsApp via **Z-API** (número dedicado do 
   com um cliente cadastrado. Normalização de telefone tolerante ao **nono dígito**.
 - **Nova conversa** a partir dos clientes cadastrados.
 
-### 3.6 NFS-e (notas fiscais de serviço)
+### 3.6 Obrigações e Compliance
+Controle do calendário de obrigações fiscais e trabalhistas dos clientes, do prazo à entrega, com
+escalonamento de atrasos e relatório de conformidade (admin/contador/assistente).
+
+- **Matriz de obrigações** (Configurações → Obrigações, admin): catálogo curado com esfera, periodicidade,
+  regra de incidência (perfil do cliente, flags, UF, prefixo de CNAE) e exigência de comprovante.
+  Pré-semeada com ~9 obrigações (DASN-SIMEI, PGDAS-D, DEFIS, DCTFWeb, FGTS Digital, EFD-Contribuições,
+  EFD-Reinf, ECD, ECF).
+- **Motor de prazos:** cálculo em dias úteis com **feriados nacionais** (fixos + móveis, via Páscoa),
+  prazo interno em N dias úteis e antecipação quando o vencimento cai em dia não útil.
+- **Geração de instâncias:** por competência, aplicando a regra de incidência a cada cliente, de forma
+  **idempotente**. Roda **automaticamente todo mês** (ver §5, pg_cron) e também sob demanda.
+- **Geração retroativa** em lote (até 24 meses) e **suspensão** de clientes inativos.
+- **Calendário global** (`/obrigacoes`) e seção na ficha do cliente, com selo de severidade.
+- **Baixa/entrega:** conclusão da obrigação com data de entrega, responsável, observação e **comprovante
+  anexo** (obrigatório quando a obrigação exige).
+- **Painel de riscos** (`/obrigacoes/riscos`): agrupado por responsável, classificando *vencida /
+  vencendo hoje / no prazo*. Badge no menu, ligável por interruptor.
+- **Escalonamento hierárquico** (`/obrigacoes/escalonamento`): atrasos sobem colaborador → líder → sócio
+  pela cadeia `usuarios.superior_id`, com limiares configuráveis (padrão 7 e 15 dias) e interruptor.
+- **Relatório de conformidade** (`/obrigacoes/conformidade`): por competência, agregado e por cliente,
+  com **% de conformidade**, exportação em CSV e impressão.
+
+### 3.7 Certificados e procurações (vencimentos)
+Controle dos certificados digitais e das procurações de cada cliente, com alertas escalonados.
+
+- **Cadastro por cliente:** certificado (tipo A1/A3, titular, documento, emissão, validade) e procuração
+  (órgão, outorgante, outorgado, início, validade).
+- **Renovar arquiva o anterior:** um certificado renovado é outro certificado; o histórico fica na ficha.
+  Não há "editar" — corrigir é desativar e cadastrar de novo, o que deixa rastro.
+- **Visão única:** o painel lê também a validade do **A1 usado pela NFS-e** (do cliente e do escritório),
+  sem duplicá-la — via função `SECURITY DEFINER` que expõe apenas a data, nunca o certificado cifrado.
+- **Alertas in-app:** severidade em 60/30/15 dias e vencido; **badge no menu** com vencidos + críticos;
+  painel `/vencimentos` com quatro cartões, filtros, tabela e exportação CSV.
+- **Acesso:** admin, assistente e contador (escopado aos seus clientes). O **financeiro não acessa** —
+  a RLS já nasce fechada para ele, sem depender do gate da tela.
+
+### 3.8 NFS-e (notas fiscais de serviço)
 Emissão e gestão de NFS-e pelo padrão nacional (nfse.gov.br / Sefin Nacional), com certificado digital.
 
 - **NFS-e dos honorários (1 emitente):** o escritório emite as notas dos seus honorários; config do
@@ -152,7 +197,7 @@ Emissão e gestão de NFS-e pelo padrão nacional (nfse.gov.br / Sefin Nacional)
 - **Download em lote:** botões para baixar todas em **PDF** e em **XML**, com **cache do DANFSe** no
   Storage (baixas repetidas ficam instantâneas) e reprocessamento de falhas.
 
-### 3.7 Cobrança
+### 3.9 Cobrança
 Envio da cobrança ao cliente por dois caminhos, com respeito ao opt-out do cliente.
 
 - **Cobrança por WhatsApp (NFS-e + PIX/TED):** na tela de NFS-e em lote, painel que envia por WhatsApp a
@@ -171,7 +216,7 @@ Envio da cobrança ao cliente por dois caminhos, com respeito ao opt-out do clie
   **baixa por webhook** de pagamento e envio do boleto ao cliente. Exige uma conta ativa no provedor
   para operar em produção.
 
-### 3.8 Financeiro
+### 3.10 Financeiro
 Módulo completo de gestão financeira do escritório (admin/financeiro).
 
 - **Contas a receber** e **contas a pagar:** títulos (RECEBER/PAGAR) com competência, vencimento,
@@ -193,24 +238,38 @@ Módulo completo de gestão financeira do escritório (admin/financeiro).
   - **Fluxo de caixa detalhado:** matriz categoria × 12 meses combinando **realizado** (baixas) e
     **projetado** (títulos em aberto por vencimento), com **saldo acumulado** ao fim de cada mês, seletor
     de ano, exportação em CSV e impressão.
+- **Conciliação bancária** (`/financeiro/conciliacao`): importação de extrato em **OFX** (v1 SGML e v2 XML)
+  e **CSV** (mapeamento de colunas, valor no formato BR), com **prevenção de importação duplicada**
+  (hash por FITID ou conta+data+valor+descrição) e prévia "novo × já importado". Motor de **casamento**
+  por valor com sinal (crédito → a receber, débito → a pagar) e **auto-conciliação** dos casos 1:1
+  inequívocos. Por movimento: conciliar com uma baixa existente, conciliar com um título (gera a baixa),
+  **criar lançamento avulso** (título + baixa), ignorar ou reabrir (desvincula sem apagar). Um índice
+  único garante que uma baixa se ligue a no máximo um movimento.
+- **Indicadores da carteira** (`/financeiro/indicadores`): saúde da recorrência — **MRR**, **ticket médio**,
+  clientes ativos, **churn** (de clientes e de receita), crescimento (novos × saídas) e evolução mês a mês
+  (janela de 12 meses), com exportação em CSV e impressão. A saída do cliente é capturada por trigger
+  (fotografa `data_saida` e o honorário vigente ao inativar; limpa ao reativar). O MRR histórico é uma
+  **aproximação** (não há histórico de honorário), o que a própria tela sinaliza.
 - **Cadastros:** plano de contas (categorias, natureza/DRE), centros de custo, contas bancárias,
   fornecedores, serviços e contratos de honorários (com sincronização do honorário do cliente).
 
-### 3.9 Integração Domínio
+### 3.11 Integração Domínio
 Importação de contratos/dados a partir do sistema **Domínio** (admin/assistente): leitor `.xls` próprio,
 prévia (novos/atualizados/pendências), reconciliação idempotente por CNPJ e auditoria.
 
-### 3.10 Configurações (admin)
+### 3.12 Configurações (admin)
 Central de integrações e credenciais:
 - **WhatsApp (Z-API):** credenciais do provedor e teste de conexão.
 - **NFS-e (emitente):** dados do emitente e certificado digital.
 - **Boletos:** provedor (Inter / Asaas), credenciais cifradas, ambiente e conta bancária.
 - **Dados de pagamento (PIX/TED):** conta e PIX enviados na cobrança.
 - **Template de onboarding:** gerenciador de templates + interruptor de notificações de prazo.
+- **Obrigações:** matriz de obrigações + interruptores de escalonamento e do badge de riscos.
 
-### 3.11 Usuários (admin)
+### 3.13 Usuários (admin)
 Gestão da equipe: convite de usuários, definição de papel e status (ativo/inativo). O papel real é
-definido server-side (não confiável a partir do token).
+definido server-side (não confiável a partir do token). Cada usuário pode ter um **superior**
+(`superior_id`), formando a cadeia hierárquica usada pelo escalonamento de obrigações.
 
 ---
 
@@ -241,8 +300,16 @@ definido server-side (não confiável a partir do token).
   alteradas** (mudar torna os dados cifrados irrecuperáveis).
 - **Auditoria:** acesso a documentos, revelação de senhas do cofre e estornos financeiros são
   registrados (quem/quando), de forma não-forjável.
-- **Cron:** rota `/api/cron/regua-cobranca` protegida por `CRON_SECRET`, agendada via **pg_cron**
-  (Supabase) para a régua de cobrança diária.
+- **Agendamentos (pg_cron, em produção):** três jobs ativos no banco —
+  1. `gerar-mensalidades-mensal` (`0 6 1 * *`) — chama a função SQL `gerar_mensalidades_automatico()`.
+  2. `regua-cobranca-diaria` (`0 12 * * *`) — via `pg_net`, faz `POST` em `/api/cron/regua-cobranca`.
+  3. `gerar-obrigacoes-mensal` (`0 12 1 * *`) — via `pg_net`, faz `POST` em `/api/cron/gerar-obrigacoes`.
+
+  As rotas HTTP são protegidas por Bearer `CRON_SECRET` (comparação em tempo constante). Como os jobs 2
+  e 3 carregam o segredo no header, eles **não vivem numa migration** (seria commitá-lo). São recriados
+  pelo script idempotente **`npm run cron:bootstrap`** (lê `CRON_SECRET` e `APP_URL` do ambiente,
+  preserva o `jobid`, aceita `--dry-run`). **Rodar após todo restore de banco** — sem os jobs, a régua e
+  a geração de obrigações param em silêncio. Ver [`DEPLOY.md`](DEPLOY.md#41-jobs-agendados-pg_cron--rodar-após-qualquer-restore-de-banco).
 - **Exportações CSV:** neutralizam injeção de fórmula (células iniciadas por `=`/`+`/`@` viram texto).
 - **Saúde:** `/api/health` para verificação de disponibilidade.
 
@@ -257,6 +324,7 @@ definido server-side (não confiável a partir do token).
 | `POST /api/webhooks/clicksign` | Recebe eventos de assinatura de documentos. |
 | `POST /api/webhooks/boleto/[secret]` | Recebe eventos de pagamento de boleto (baixa automática). |
 | `POST /api/cron/regua-cobranca` | Execução agendada da régua de cobrança (Bearer `CRON_SECRET`). |
+| `POST /api/cron/gerar-obrigacoes` | Geração mensal das instâncias de obrigações (Bearer `CRON_SECRET`). |
 | `GET /api/atendimento/midia/[id]` | Serve a mídia de atendimento (com controle de acesso). |
 
 ---
@@ -268,10 +336,16 @@ definido server-side (não confiável a partir do token).
 - Clientes (cadastro, RF, contratos, documentos, assinatura).
 - Onboarding & Legalização — motor de templates, cofre, regras de item, alertas in-app, gatilho de
   consultoria (base RF-010 e ciclos A/B/C entregues).
+- **Obrigações e Compliance** — matriz + motor de prazos (dias úteis/feriados), geração mensal automática,
+  baixa com comprovante, painel de riscos, escalonamento hierárquico, geração retroativa/suspensão e
+  relatório de conformidade.
+- **Certificados e procurações** — cadastro por cliente, alertas escalonados em 60/30/15 dias, painel
+  global com badge, filtros e CSV, lendo também a validade do A1 da NFS-e sem duplicá-la.
 - NFS-e (honorários + multi-emitente).
 - Atendimento WhatsApp (inbox bidirecional, mídia, read receipts).
 - Financeiro (contas a pagar/receber, orçamento, orçado × realizado, dashboard, **trilogia de
-  relatórios: DRE + Extrato/CSV + Fluxo de caixa detalhado**).
+  relatórios: DRE + Extrato/CSV + Fluxo de caixa detalhado**, **conciliação bancária OFX/CSV** e
+  **indicadores de carteira: MRR, ticket médio, churn**).
 - Cobrança por WhatsApp + régua automática agendada (pg_cron).
 - Integração Domínio; rebrand SALDO (design system) 100% aplicado.
 
@@ -281,7 +355,10 @@ definido server-side (não confiável a partir do token).
 **Em aberto / próximos:**
 - **Onboarding — Legalização/societário (F2):** processos por órgão e protocolos; templates por tipo de
   serviço societário; comunicação automática de status; transferência de contabilidade (NBC PG 01).
-- **Financeiro:** conciliação bancária (importação OFX/CSV), aprovação de pagamento.
+- **Financeiro:** aprovação de pagamento; na conciliação, casamento parcial (1 título ↔ vários
+  movimentos), tolerância de valor e conferência de saldo extrato × sistema.
+- **Obrigações:** curadoria da matriz e flags fiscais explícitas no cadastro do cliente (hoje derivadas
+  de nº de funcionários e inscrições).
 - **Whitelabel/multi-tenant** (comercialização) e **endurecimento de segurança/LGPD** (marcos V9/V10 do
   [ROADMAP](../ROADMAP.md)).
 

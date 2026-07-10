@@ -85,7 +85,7 @@ Dividido em dois subsistemas de complexidade distinta:
   emissão por nota com tomador externo, e cancelar/baixar por emitente. Validado em homologação.
   Spec: `docs/superpowers/specs/2026-07-02-v5b-nfse-multiemitente-design.md`.
 
-## V6 — Módulo Financeiro ⬜
+## V6 — Módulo Financeiro ✅
 
 Módulo de **controle de receitas e despesas** (contas a receber e a pagar) do escritório,
 integrado à base de clientes do CRM, tendo o **contrato de honorários** como entidade central do
@@ -124,10 +124,15 @@ Oito blocos funcionais (fase sugerida entre parênteses):
   recorrente (+pg_cron), baixa de pagamento, estorno auditado (justificativa, não deleta), anexos,
   dashboard com saldo real (entradas − saídas) e aging de pagar. Migrations 0033–0037. **Módulo
   Financeiro fechado** (aprovação de pagamento = incremento futuro).
-- **V6.4 — Régua de cobrança** ⬜ (casa com a V7).
+- **V6.4 — Régua de cobrança** ✅ — entregue dentro da **V7.2** (etapas D-3/D+1/D+7/D+15, opt-out,
+  idempotência, agendamento diário).
 - **V6.5 — Relatórios e dashboard** ✅ — dashboard financeiro (`/financeiro/dashboard`): saldo, MRR,
   recebido/a receber, inadimplência, previsão, aging, fluxo de caixa (6m), maiores devedores, receita
   por tipo. RPCs SECURITY INVOKER + barras CSS. Só lado receita até a V6.3 (contas a pagar). Migration 0032.
+- **V6.6 — Conciliação bancária** ✅ — Fatia A (importação OFX v1/v2 + CSV, dedup por hash, prévia) e
+  Fatia B (motor de casamento por valor/sinal, auto-conciliação 1:1, conciliar com baixa/título, criar
+  lançamento avulso, ignorar/reabrir). Índice único `uq_movimento_baixa` fecha a corrida do casamento.
+  Migrations 0064–0066.
 
 ## V7 — Integração com WhatsApp ✅
 
@@ -186,6 +191,16 @@ Módulos que nasceram como diferenciais de CRM contábil, entregues em paralelo 
 - **Financeiro — Relatórios gerenciais** ✅ — hub `/financeiro/relatorios` com **DRE**,
   **Extrato/movimentações (CSV)** e **Fluxo de caixa detalhado** (realizado + projetado, saldo
   acumulado). Sem migration.
+- **Obrigações e Compliance** ✅ — matriz curada + **motor de prazos** (dias úteis, feriados fixos e
+  móveis), geração de instâncias por competência (idempotente, **mensal via pg_cron**), calendário global
+  e na ficha, **baixa com comprovante**, **painel de riscos** por responsável, **escalonamento
+  hierárquico** (`usuarios.superior_id`, limiares 7/15 dias), geração retroativa/suspensão e **relatório
+  de conformidade** (% por competência, CSV). Rotas `/obrigacoes`, `/obrigacoes/riscos`,
+  `/obrigacoes/escalonamento`, `/obrigacoes/conformidade`, `/configuracoes/obrigacoes`.
+  Migrations 0061–0063, 0067.
+- **Financeiro — Indicadores da carteira** ✅ — `/financeiro/indicadores`: MRR, ticket médio, clientes
+  ativos, **churn** (de clientes e de receita), novos × saídas e evolução de 12 meses; CSV e impressão.
+  Trigger captura `data_saida` + honorário na inativação do cliente. Migration 0068.
 
 ## V9 — Modo whitelabel ⬜
 

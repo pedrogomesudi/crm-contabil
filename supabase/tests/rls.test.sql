@@ -888,3 +888,54 @@ do $$ declare erro boolean := false; begin
   if not erro then raise exception 'FALHA: permitiu z_message_id duplicado'; end if;
   raise notice 'OK: dedup por z_message_id';
 end $$;
+
+-- ===== Vencimentos: financeiro fora; contador escopado; RPC da NFS-e não vaza cliente alheio =====
+reset role;
+insert into nfse_certificado_cliente (cliente_id, nome_arquivo, validade)
+  values ('aaaaaaaa-0000-0000-0000-000000000002', 'teste.pfx', now() + interval '30 days')
+  on conflict (cliente_id) do nothing;
+
+do $$
+declare n int;
+begin
+  -- admin cadastra um certificado e uma procuração para o cliente do CONTADOR (…001)
+  perform _simular('00000000-0000-0000-0000-000000000001'); -- admin
+  insert into certificado_digital (cliente_id, tipo, titular, validade)
+    values ('aaaaaaaa-0000-0000-0000-000000000001', 'A1', 'Titular Teste', current_date + 10);
+  insert into procuracao (cliente_id, orgao, outorgante, validade)
+    values ('aaaaaaaa-0000-0000-0000-000000000001', 'e-CAC', 'Outorgante Teste', current_date + 40);
+  -- e um certificado para o cliente do ADMIN (…002), alheio ao contador
+  insert into certificado_digital (cliente_id, tipo, titular, validade)
+    values ('aaaaaaaa-0000-0000-0000-000000000002', 'A3', 'Outro Titular', current_date + 5);
+
+  -- financeiro NÃO vê nada (a política já nasce fechada para ele)
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  select count(*) into n from certificado_digital;
+  if n <> 0 then raise exception 'FALHA: financeiro viu % certificado_digital (devia ser 0)', n; end if;
+  select count(*) into n from procuracao;
+  if n <> 0 then raise exception 'FALHA: financeiro viu % procuracao (devia ser 0)', n; end if;
+  select count(*) into n from certificados_nfse_vencimento();
+  if n <> 0 then raise exception 'FALHA: financeiro obteve linhas da RPC da NFS-e (devia ser 0)'; end if;
+
+  -- contador vê os do SEU cliente…
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  select count(*) into n from certificado_digital where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+  if n <> 1 then raise exception 'FALHA: contador não viu o certificado do seu cliente (viu %)', n; end if;
+  select count(*) into n from procuracao where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+  if n <> 1 then raise exception 'FALHA: contador não viu a procuração do seu cliente (viu %)', n; end if;
+  -- …e NÃO vê os do cliente alheio
+  select count(*) into n from certificado_digital where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+  if n <> 0 then raise exception 'FALHA: contador viu certificado de cliente alheio'; end if;
+  -- a RPC (SECURITY DEFINER) também não vaza o certificado NFS-e do cliente alheio
+  select count(*) into n from certificados_nfse_vencimento()
+    where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+  if n <> 0 then raise exception 'FALHA: RPC da NFS-e vazou cliente alheio ao contador'; end if;
+
+  -- assistente vê os dois clientes
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  select count(*) into n from certificado_digital
+    where cliente_id in ('aaaaaaaa-0000-0000-0000-000000000001','aaaaaaaa-0000-0000-0000-000000000002');
+  if n <> 2 then raise exception 'FALHA: assistente viu % certificados (esperado 2)', n; end if;
+
+  raise notice 'OK: vencimentos — financeiro fora, contador escopado, RPC da NFS-e não vaza';
+end $$;
