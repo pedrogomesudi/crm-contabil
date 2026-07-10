@@ -5,7 +5,11 @@ export type ExtensaoFinanceira = {
   qtd_funcionarios: number | null;
   faixa_faturamento: string | null;
   data_saida: string | null;
+  indice_reajuste: string | null;
+  percentual_reajuste: number | null;
 };
+
+const INDICES_REAJUSTE = ["SALARIO_MINIMO", "IPCA", "IGPM", "INPC", "PERCENTUAL_FIXO", "SEM_REAJUSTE"];
 
 // Extrai e valida os campos financeiros da ficha do cliente (RF-006/RF-007).
 // Retorna { erro } quando algum valor é inválido; caso contrário, o registro
@@ -41,10 +45,23 @@ export function normalizarExtensaoFinanceira(
     }
     faixa_faturamento = faixaRaw;
   }
+  const indiceRaw = String(fd.get("indice_reajuste") ?? "").trim();
+  const indice_reajuste = INDICES_REAJUSTE.includes(indiceRaw) ? indiceRaw : "SALARIO_MINIMO";
+  const pctRaw = String(fd.get("percentual_reajuste") ?? "")
+    .trim()
+    .replace(",", ".");
+  let percentual_reajuste: number | null = null;
+  if (indice_reajuste === "PERCENTUAL_FIXO" && pctRaw) {
+    const n = Number(pctRaw);
+    if (Number.isFinite(n) && n >= 0) percentual_reajuste = n;
+  }
+
   return {
     dia_vencimento,
     qtd_funcionarios,
     faixa_faturamento,
     data_saida: dataRaw || null,
+    indice_reajuste,
+    percentual_reajuste,
   };
 }

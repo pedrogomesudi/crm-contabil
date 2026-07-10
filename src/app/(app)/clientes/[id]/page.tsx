@@ -59,11 +59,13 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
     qtd_funcionarios: null as number | null,
     faixa_faturamento: null as string | null,
     data_saida: null as string | null,
+    indice_reajuste: null as string | null,
+    percentual_reajuste: null as number | null,
   };
   if (mostrarHonorario) {
     const { data: fin } = await supabase
       .from("clientes_financeiro")
-      .select("honorario_mensal, dia_vencimento, qtd_funcionarios, faixa_faturamento, data_saida, cobranca_whatsapp")
+      .select("honorario_mensal, dia_vencimento, qtd_funcionarios, faixa_faturamento, data_saida, cobranca_whatsapp, indice_reajuste, percentual_reajuste")
       .eq("cliente_id", id)
       .maybeSingle();
     valorHonorario = fin?.honorario_mensal != null ? Number(fin.honorario_mensal) : null;
@@ -74,6 +76,8 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         qtd_funcionarios: fin.qtd_funcionarios ?? null,
         faixa_faturamento: fin.faixa_faturamento ?? null,
         data_saida: fin.data_saida ?? null,
+        indice_reajuste: fin.indice_reajuste ?? null,
+        percentual_reajuste: fin.percentual_reajuste != null ? Number(fin.percentual_reajuste) : null,
       };
     }
   }

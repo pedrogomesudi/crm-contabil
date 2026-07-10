@@ -240,6 +240,13 @@ Módulo completo de gestão financeira do escritório (admin/financeiro).
 - **O que é estimativa:** o histórico anterior à entrega **não existe** — as vigências da carga inicial
   são marcadas como `estimada`, e a tela de indicadores assinala com `*` os meses cujo valor veio de
   estimativa. O sistema não finge saber o que não sabe.
+- **Reajuste anual em lote (`/financeiro/reajuste`):** reajusta os honorários uma vez ao ano pelo índice
+  de cada cliente — padrão **salário mínimo**, com IPCA/IGP-M/INPC (buscados no **BACEN**, séries SGS),
+  percentual fixo ou "sem reajuste". Fluxo **simular → revisar → aplicar**: o percentual vem
+  pré-preenchido e **editável por linha**; desmarca-se quem não entra; nada muda antes do "Aplicar". O
+  reajuste só grava o honorário — a vigência de janeiro nasce pelo trigger. Um cliente já reajustado no
+  **ano-base** fica fora do lote (trava por `(cliente, ano)`). A ficha mostra os reajustes com
+  **Desfazer**, que volta o honorário e remove a vigência daquele mês, como se não tivesse acontecido.
 - **Dashboard financeiro** (`/financeiro/dashboard`): saldo em caixa, MRR, recebido/a receber,
   inadimplência, previsão, aging de receber/pagar, fluxo de caixa (6 meses), maiores devedores, receita
   por tipo.
@@ -297,6 +304,7 @@ definido server-side (não confiável a partir do token). Cada usuário pode ter
 |---|---|
 | **Z-API** | WhatsApp não-oficial (envio/recepção de texto e mídia, status de entrega/leitura). Webhook em `/api/webhooks/zapi/[secret]`. |
 | **Receita Federal** | Consulta de CNPJ para preencher/atualizar cadastro. |
+| **BACEN (SGS)** | Séries de índices (salário mínimo, IPCA, IGP-M, INPC) para o reajuste anual de honorários. |
 | **Sefin Nacional / provedor NFS-e** | Emissão e download de NFS-e (DANFSe/XML), com certificado digital A1. |
 | **Clicksign** | Assinatura eletrônica de documentos. Webhook em `/api/webhooks/clicksign`. |
 | **Banco Inter / Asaas** | Emissão e baixa de **boletos** (construído; ativação pendente de conta). Webhook em `/api/webhooks/boleto/[secret]`. |
