@@ -1131,3 +1131,31 @@ begin
   if n <> 0 then raise exception 'FALHA: desfazer não removeu o registro'; end if;
   raise notice 'OK: desfazer volta o honorário, remove a vigência e o registro (sem rastro)';
 end $$;
+
+-- ASSERT: escritorio_config — todos leem (select true); só admin escreve
+do $$
+declare n int; v_nome text;
+begin
+  reset role;
+  update escritorio_config set nome = 'Base' where id = 1; -- garante estado conhecido
+
+  -- financeiro LÊ a marca (whitelabel visível a todos)
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  select count(*) into n from escritorio_config where id = 1;
+  if n <> 1 then raise exception 'FALHA: financeiro não leu escritorio_config (n=%)', n; end if;
+
+  -- financeiro NÃO altera (update sem efeito pela RLS)
+  update escritorio_config set nome = 'Hack' where id = 1;
+  reset role;
+  select nome into v_nome from escritorio_config where id = 1;
+  if v_nome <> 'Base' then raise exception 'FALHA: financeiro alterou a marca (nome=%)', v_nome; end if;
+  raise notice 'OK: financeiro lê a marca mas não altera';
+
+  -- admin ALTERA com efeito
+  perform _simular('00000000-0000-0000-0000-000000000001'); -- admin
+  update escritorio_config set nome = 'Escritório X' where id = 1;
+  reset role;
+  select nome into v_nome from escritorio_config where id = 1;
+  if v_nome <> 'Escritório X' then raise exception 'FALHA: admin não alterou a marca (nome=%)', v_nome; end if;
+  raise notice 'OK: admin altera a marca do escritório';
+end $$;
