@@ -57,17 +57,49 @@ Migration `supabase/migrations/0071_competencia_mes_anterior.sql` (idempotente v
 
 ### 4.1 `gerar_mensalidades(p_competencia date)`
 
-Passa a gravar o vencimento **no mês seguinte à competência**:
+Passa a gravar o vencimento da **mensalidade** no mês seguinte à competência:
 
 ```sql
 v_venc := (v_comp + interval '1 month')::date + (dia_vencimento - 1);
 ```
 
-Vale para `MENSALIDADE` e para `DECIMO_TERCEIRO` (ambos usam `v_venc`). O contrato da função vira:
-*"gera os títulos da competência X, vencendo no mês X+1"*.
+O contrato da função vira: *"gera a mensalidade da competência X, vencendo no mês X+1"*. O **13º não
+segue essa regra** (ver §4.3).
 
 Não há risco de transbordo de data: `dia_vencimento` tem `CHECK between 1 and 28` tanto em `contrato`
 quanto em `clientes_financeiro`, então somar um mês nunca escorrega para o mês seguinte.
+
+### 4.3 O 13º honorário: duas parcelas, vencimentos fixos
+
+**Regra de negócio:** o 13º equivale a **um** honorário mensal, dividido em **duas parcelas de 50%**,
+vencendo sempre em **20/11** e **15/12**. Vale para **todos os clientes ativos com honorário**.
+
+**Timing.** As parcelas são geradas na rodada de **1º de novembro** (`p_competencia` = outubro), quando
+ambos os vencimentos ainda estão no futuro. Se fossem geradas na rodada de dezembro (competência
+novembro), a parcela 1 — que vence 20/11 — **nasceria vencida**.
+
+**Modelo:**
+
+| | Competência | Vencimento | Valor | `parcela` |
+|---|---|---|---|---|
+| Parcela 1 | `AAAA-11-01` | `AAAA-11-20` | `round(honorario / 2, 2)` | 1 de 2 |
+| Parcela 2 | `AAAA-12-01` | `AAAA-12-15` | `honorario − parcela 1` | 2 de 2 |
+
+- As competências precisam ser **distintas** por causa de `uq_titulo_honorario (cliente_id, competencia, origem)`.
+- Os vencimentos são **fixos**, não derivados da competência.
+- O valor da parcela 2 é o **resto**, não `round(honorario/2, 2)` de novo: para R$ 333,33 isso dá
+  166,67 + 166,66 = 333,33 exato. Arredondar as duas metades cria ou destrói um centavo.
+- Categoria de receita: **"13º honorário"** (já existe em `categoria`).
+- Colunas `parcela` e `total_parcelas` (já existem em `titulo`) recebem 1/2 e 2/2.
+- `contrato_id = null`, mesmo para clientes com contrato — o índice aplicável passa a ser
+  `uq_titulo_honorario`.
+
+**Remoção deliberada de comportamento:** o 13º **sai do laço de contratos** da RPC. Hoje ele só é
+gerado ali (para contratos com `gera_decimo_terceiro`), e como **não existe nenhum contrato cadastrado**,
+nenhum cliente jamais receberia 13º. Passa a ser gerado **por cliente**, a partir de
+`clientes_financeiro.honorario_mensal` — que já é a soma dos contratos ativos, mantida pelo trigger
+`sync_honorario_por_contrato`. Se os dois blocos coexistissem, um cliente com contrato receberia o 13º
+**duas vezes** (uma pelo contrato, outra pelo cliente).
 
 ### 4.2 `competencia_padrao()` e `gerar_mensalidades_automatico()`
 
@@ -138,9 +170,16 @@ Asserts em `supabase/tests/rls.test.sql` (roda em transação com ROLLBACK, sem 
 - **Vencimento no mês seguinte:** criar cliente de teste com `dia_vencimento = 10`, chamar
   `gerar_mensalidades('2026-05-01')` e verificar `competencia = 2026-05-01` e
   **`vencimento = 2026-06-10`** — não maio.
-- **13º acompanha:** com `gera_decimo_terceiro`, o título de 13º tem o mesmo vencimento do mês seguinte.
-- **Idempotência:** chamar `gerar_mensalidades` duas vezes na mesma competência não duplica
-  (`on conflict do nothing`).
+- **13º nas rodadas erradas não gera nada:** `gerar_mensalidades('2026-05-01')` não cria nenhum título
+  `DECIMO_TERCEIRO`.
+- **13º na rodada de outubro gera duas parcelas:** `gerar_mensalidades('2026-10-01')` cria exatamente
+  dois títulos `DECIMO_TERCEIRO` para o cliente, com:
+  - parcela 1: `competencia = 2026-11-01`, `vencimento = 2026-11-20`, `parcela = 1`, `total_parcelas = 2`;
+  - parcela 2: `competencia = 2026-12-01`, `vencimento = 2026-12-15`, `parcela = 2`.
+- **A soma das parcelas é exata:** com honorário `333.33`, as parcelas são `166.67` e `166.66`, e
+  `sum(valor) = 333.33` — nem um centavo criado nem perdido.
+- **Idempotência:** chamar `gerar_mensalidades` duas vezes na mesma competência não duplica nem a
+  mensalidade nem as parcelas do 13º (`on conflict do nothing`).
 - **`competencia_padrao(data)` devolve o mês anterior**, testada em fronteiras: `2026-01-15 → 2025-12-01`
   (vira o ano), `2026-03-01 → 2026-02-01`, `2026-08-31 → 2026-07-01`. É por ela que o job escolhe a
   competência, então testá-la prova a regra sem precisar gerar títulos reais.
