@@ -52,6 +52,7 @@ políticas do banco.
 | Editar templates de onboarding | ✔ | — | — | — |
 | Obrigações (calendário, baixa, riscos, conformidade) | ✔ | ✔ (os seus) | ✔ | — |
 | Editar a matriz de obrigações | ✔ | — | — | — |
+| Certificados e procurações (vencimentos) | ✔ | ✔ (os seus) | ✔ | — |
 | Financeiro (contas, orçamento, conciliação, indicadores, relatórios) | ✔ | — | — | ✔ |
 | Configurar NFS-e / WhatsApp / boletos / obrigações / usuários | ✔ | — | — | — |
 
@@ -95,6 +96,8 @@ Cadastro completo de PJ/PF/MEI e a ficha do cliente, que concentra todas as áre
 - **NFS-e do cliente:** notas emitidas e emissão de nota com o cliente como emitente.
 - **Onboarding:** link "Abrir onboarding" para a página dedicada do cliente (ver 3.4).
 - **Obrigações:** seção com as obrigações do cliente na competência, com selo de severidade (ver 3.6).
+- **Certificados e procurações:** seção com validade e selo de severidade, incluindo o A1 da NFS-e
+  em modo leitura (ver 3.7).
 - **Exclusão:** soft delete (somente admin).
 
 ### 3.4 Onboarding & Legalização
@@ -168,7 +171,21 @@ escalonamento de atrasos e relatório de conformidade (admin/contador/assistente
 - **Relatório de conformidade** (`/obrigacoes/conformidade`): por competência, agregado e por cliente,
   com **% de conformidade**, exportação em CSV e impressão.
 
-### 3.7 NFS-e (notas fiscais de serviço)
+### 3.7 Certificados e procurações (vencimentos)
+Controle dos certificados digitais e das procurações de cada cliente, com alertas escalonados.
+
+- **Cadastro por cliente:** certificado (tipo A1/A3, titular, documento, emissão, validade) e procuração
+  (órgão, outorgante, outorgado, início, validade).
+- **Renovar arquiva o anterior:** um certificado renovado é outro certificado; o histórico fica na ficha.
+  Não há "editar" — corrigir é desativar e cadastrar de novo, o que deixa rastro.
+- **Visão única:** o painel lê também a validade do **A1 usado pela NFS-e** (do cliente e do escritório),
+  sem duplicá-la — via função `SECURITY DEFINER` que expõe apenas a data, nunca o certificado cifrado.
+- **Alertas in-app:** severidade em 60/30/15 dias e vencido; **badge no menu** com vencidos + críticos;
+  painel `/vencimentos` com quatro cartões, filtros, tabela e exportação CSV.
+- **Acesso:** admin, assistente e contador (escopado aos seus clientes). O **financeiro não acessa** —
+  a RLS já nasce fechada para ele, sem depender do gate da tela.
+
+### 3.8 NFS-e (notas fiscais de serviço)
 Emissão e gestão de NFS-e pelo padrão nacional (nfse.gov.br / Sefin Nacional), com certificado digital.
 
 - **NFS-e dos honorários (1 emitente):** o escritório emite as notas dos seus honorários; config do
@@ -180,7 +197,7 @@ Emissão e gestão de NFS-e pelo padrão nacional (nfse.gov.br / Sefin Nacional)
 - **Download em lote:** botões para baixar todas em **PDF** e em **XML**, com **cache do DANFSe** no
   Storage (baixas repetidas ficam instantâneas) e reprocessamento de falhas.
 
-### 3.8 Cobrança
+### 3.9 Cobrança
 Envio da cobrança ao cliente por dois caminhos, com respeito ao opt-out do cliente.
 
 - **Cobrança por WhatsApp (NFS-e + PIX/TED):** na tela de NFS-e em lote, painel que envia por WhatsApp a
@@ -199,7 +216,7 @@ Envio da cobrança ao cliente por dois caminhos, com respeito ao opt-out do clie
   **baixa por webhook** de pagamento e envio do boleto ao cliente. Exige uma conta ativa no provedor
   para operar em produção.
 
-### 3.9 Financeiro
+### 3.10 Financeiro
 Módulo completo de gestão financeira do escritório (admin/financeiro).
 
 - **Contas a receber** e **contas a pagar:** títulos (RECEBER/PAGAR) com competência, vencimento,
@@ -236,11 +253,11 @@ Módulo completo de gestão financeira do escritório (admin/financeiro).
 - **Cadastros:** plano de contas (categorias, natureza/DRE), centros de custo, contas bancárias,
   fornecedores, serviços e contratos de honorários (com sincronização do honorário do cliente).
 
-### 3.10 Integração Domínio
+### 3.11 Integração Domínio
 Importação de contratos/dados a partir do sistema **Domínio** (admin/assistente): leitor `.xls` próprio,
 prévia (novos/atualizados/pendências), reconciliação idempotente por CNPJ e auditoria.
 
-### 3.11 Configurações (admin)
+### 3.12 Configurações (admin)
 Central de integrações e credenciais:
 - **WhatsApp (Z-API):** credenciais do provedor e teste de conexão.
 - **NFS-e (emitente):** dados do emitente e certificado digital.
@@ -249,7 +266,7 @@ Central de integrações e credenciais:
 - **Template de onboarding:** gerenciador de templates + interruptor de notificações de prazo.
 - **Obrigações:** matriz de obrigações + interruptores de escalonamento e do badge de riscos.
 
-### 3.12 Usuários (admin)
+### 3.13 Usuários (admin)
 Gestão da equipe: convite de usuários, definição de papel e status (ativo/inativo). O papel real é
 definido server-side (não confiável a partir do token). Cada usuário pode ter um **superior**
 (`superior_id`), formando a cadeia hierárquica usada pelo escalonamento de obrigações.
@@ -322,6 +339,8 @@ definido server-side (não confiável a partir do token). Cada usuário pode ter
 - **Obrigações e Compliance** — matriz + motor de prazos (dias úteis/feriados), geração mensal automática,
   baixa com comprovante, painel de riscos, escalonamento hierárquico, geração retroativa/suspensão e
   relatório de conformidade.
+- **Certificados e procurações** — cadastro por cliente, alertas escalonados em 60/30/15 dias, painel
+  global com badge, filtros e CSV, lendo também a validade do A1 da NFS-e sem duplicá-la.
 - NFS-e (honorários + multi-emitente).
 - Atendimento WhatsApp (inbox bidirecional, mídia, read receipts).
 - Financeiro (contas a pagar/receber, orçamento, orçado × realizado, dashboard, **trilogia de
