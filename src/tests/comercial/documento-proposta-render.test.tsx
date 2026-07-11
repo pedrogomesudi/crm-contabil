@@ -7,6 +7,7 @@ const proposta: PropostaView = {
   id: "p1", numero: 7, status: "enviada", validade: "2026-08-01", observacoes: "Pagamento até dia 10.", oportunidadeId: "o1", prospectNome: "ACME LTDA", contatoNome: "João",
   itens: [{ id: "i1", descricao: "Honorário mensal", valor: 500, recorrencia: "mensal", ordem: 0 }, { id: "i2", descricao: "Abertura", valor: 900, recorrencia: "unico", ordem: 1 }],
   pagamento: { pixChave: "12345", banco: "Inter", agencia: "0001", conta: "99", titular: "Contabilidade X", documento: "00.000.000/0001-00" },
+  responsavel: { nome: null, email: null, telefone: null },
 };
 
 describe("DocumentoProposta", () => {

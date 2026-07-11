@@ -10,11 +10,14 @@ const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", curren
 type Linha = { descricao: string; valor: number; recorrencia: ItemRecorrencia };
 const STATUS: { v: PropostaStatus; l: string }[] = [{ v: "rascunho", l: "Rascunho" }, { v: "enviada", l: "Enviada" }, { v: "aceita", l: "Aceita" }, { v: "recusada", l: "Recusada" }];
 
-export function EditorProposta({ proposta }: { proposta: PropostaView }) {
+export function EditorProposta({ proposta, responsavelPadrao }: { proposta: PropostaView; responsavelPadrao: { nome: string; email: string } }) {
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [validade, setValidade] = useState(proposta.validade ?? "");
   const [observacoes, setObservacoes] = useState(proposta.observacoes ?? "");
+  const [respNome, setRespNome] = useState(proposta.responsavel.nome ?? responsavelPadrao.nome);
+  const [respEmail, setRespEmail] = useState(proposta.responsavel.email ?? responsavelPadrao.email);
+  const [respTelefone, setRespTelefone] = useState(proposta.responsavel.telefone ?? "");
   const [itens, setItens] = useState<Linha[]>(proposta.itens.length ? proposta.itens.map((i) => ({ descricao: i.descricao, valor: i.valor, recorrencia: i.recorrencia })) : [{ descricao: "", valor: 0, recorrencia: "mensal" }]);
   const t = totaisProposta(itens);
 
@@ -23,7 +26,12 @@ export function EditorProposta({ proposta }: { proposta: PropostaView }) {
   }
   async function salvar() {
     setOcupado(true);
-    const r = await salvarProposta(proposta.id, { validade: validade || null, observacoes: observacoes || null, itens });
+    const r = await salvarProposta(proposta.id, {
+      validade: validade || null,
+      observacoes: observacoes || null,
+      itens,
+      responsavel: { nome: respNome || null, email: respEmail || null, telefone: respTelefone || null },
+    });
     setOcupado(false);
     if (r.erro) return alert(r.erro);
     router.refresh();
@@ -76,6 +84,21 @@ export function EditorProposta({ proposta }: { proposta: PropostaView }) {
         <label className="flex-1 text-xs text-cinza">Observações / condições
           <textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={3} className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm" />
         </label>
+      </div>
+
+      <div className="space-y-2 rounded-2xl border border-linha bg-white p-3">
+        <h3 className="font-display text-sm font-semibold text-texto">Responsável comercial</h3>
+        <div className="flex flex-wrap gap-2">
+          <label className="flex-1 text-xs text-cinza">Nome
+            <input value={respNome} onChange={(e) => setRespNome(e.target.value)} className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm" />
+          </label>
+          <label className="flex-1 text-xs text-cinza">E-mail
+            <input value={respEmail} onChange={(e) => setRespEmail(e.target.value)} className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm" />
+          </label>
+          <label className="flex-1 text-xs text-cinza">Telefone
+            <input value={respTelefone} onChange={(e) => setRespTelefone(e.target.value)} className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm" />
+          </label>
+        </div>
       </div>
 
       <div className="flex justify-end">

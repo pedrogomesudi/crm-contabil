@@ -9,7 +9,8 @@ export type PropostaStatus = "rascunho" | "enviada" | "aceita" | "recusada";
 export type PropostaItemView = { id: string; descricao: string; valor: number; recorrencia: ItemRecorrencia; ordem: number };
 export type PropostaResumo = { id: string; numero: number; status: PropostaStatus; validade: string | null; totalMensal: number; totalUnico: number };
 export type Pagamento = { pixChave: string | null; banco: string | null; agencia: string | null; conta: string | null; titular: string | null; documento: string | null };
-export type PropostaView = { id: string; numero: number; status: PropostaStatus; validade: string | null; observacoes: string | null; oportunidadeId: string; prospectNome: string; contatoNome: string | null; itens: PropostaItemView[]; pagamento: Pagamento };
+export type Responsavel = { nome: string | null; email: string | null; telefone: string | null };
+export type PropostaView = { id: string; numero: number; status: PropostaStatus; validade: string | null; observacoes: string | null; oportunidadeId: string; prospectNome: string; contatoNome: string | null; itens: PropostaItemView[]; pagamento: Pagamento; responsavel: Responsavel };
 export type ItemInput = { descricao: string; valor: number; recorrencia: ItemRecorrencia };
 
 async function gate() {
@@ -41,7 +42,7 @@ export async function listarPropostas(oportunidadeId: string): Promise<PropostaR
 export async function obterProposta(id: string): Promise<PropostaView | null> {
   if (!(await gate())) return null;
   const supabase = await createServerSupabase();
-  const { data: pr } = await supabase.from("proposta").select("id, numero, status, validade, observacoes, oportunidade_id").eq("id", id).maybeSingle();
+  const { data: pr } = await supabase.from("proposta").select("id, numero, status, validade, observacoes, oportunidade_id, responsavel_nome, responsavel_email, responsavel_telefone").eq("id", id).maybeSingle();
   if (!pr) return null;
   const { data: itens } = await supabase.from("proposta_item").select("id, descricao, valor, recorrencia, ordem").eq("proposta_id", id).order("ordem");
   const { data: op } = await supabase.from("oportunidade").select("prospect_nome, contato_nome").eq("id", pr.oportunidade_id as string).maybeSingle();
@@ -57,6 +58,11 @@ export async function obterProposta(id: string): Promise<PropostaView | null> {
     contatoNome: (op?.contato_nome as string | null) ?? null,
     itens: (itens ?? []).map((i) => ({ id: i.id as string, descricao: i.descricao as string, valor: Number(i.valor), recorrencia: i.recorrencia as ItemRecorrencia, ordem: i.ordem as number })),
     pagamento: { pixChave: (db?.pix_chave as string | null) ?? null, banco: (db?.banco as string | null) ?? null, agencia: (db?.agencia as string | null) ?? null, conta: (db?.conta as string | null) ?? null, titular: (db?.titular as string | null) ?? null, documento: (db?.documento as string | null) ?? null },
+    responsavel: {
+      nome: (pr.responsavel_nome as string | null) ?? null,
+      email: (pr.responsavel_email as string | null) ?? null,
+      telefone: (pr.responsavel_telefone as string | null) ?? null,
+    },
   };
 }
 
@@ -68,10 +74,10 @@ export async function criarProposta(oportunidadeId: string): Promise<{ id?: stri
   return { id: data.id as string };
 }
 
-export async function salvarProposta(id: string, dados: { validade: string | null; observacoes: string | null; itens: ItemInput[] }): Promise<{ ok?: boolean; erro?: string }> {
+export async function salvarProposta(id: string, dados: { validade: string | null; observacoes: string | null; itens: ItemInput[]; responsavel: Responsavel }): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
-  const { error: e1 } = await supabase.from("proposta").update({ validade: dados.validade, observacoes: dados.observacoes, atualizado_em: new Date().toISOString() }).eq("id", id);
+  const { error: e1 } = await supabase.from("proposta").update({ validade: dados.validade, observacoes: dados.observacoes, responsavel_nome: dados.responsavel.nome, responsavel_email: dados.responsavel.email, responsavel_telefone: dados.responsavel.telefone, atualizado_em: new Date().toISOString() }).eq("id", id);
   if (e1) return { erro: "Falha ao salvar." };
   await supabase.from("proposta_item").delete().eq("proposta_id", id);
   const linhas = dados.itens.filter((i) => i.descricao.trim()).map((i, idx) => ({ proposta_id: id, descricao: i.descricao.trim(), valor: i.valor, recorrencia: i.recorrencia, ordem: idx }));
