@@ -4,6 +4,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { urlLogoAtual } from "./actions";
 import { FormMarca } from "./FormMarca";
+import { FormProposta } from "./FormProposta";
 
 export const metadata = { title: "Marca do escritório" };
 
@@ -13,7 +14,7 @@ export default async function MarcaPage() {
   const supabase = await createServerSupabase();
   const { data: marca } = await supabase
     .from("escritorio_config")
-    .select("nome, cnpj, email, telefone, endereco")
+    .select("nome, cnpj, email, telefone, endereco, proposta_modelo, proposta_template_tipo, proposta_template_path")
     .eq("id", 1)
     .maybeSingle();
   const logoUrl = await urlLogoAtual();
@@ -27,6 +28,11 @@ export default async function MarcaPage() {
         </p>
       )}
       <FormMarca marca={marca ?? null} logoUrl={logoUrl} />
+      <FormProposta
+        modelo={(marca?.proposta_modelo as "padrao" | "proprio" | null) ?? "padrao"}
+        templateTipo={(marca?.proposta_template_tipo as "docx" | "html" | null) ?? null}
+        temTemplate={Boolean(marca?.proposta_template_path)}
+      />
     </main>
   );
 }
