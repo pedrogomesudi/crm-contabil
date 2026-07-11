@@ -1,16 +1,24 @@
+import Image from "next/image";
 import { totaisProposta } from "@/lib/comercial/proposta";
 import type { PropostaView } from "../../../propostas-actions";
+
+type Marca = { nome: string | null; cnpj: string | null; enderecoLinha: string };
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const dataBR = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 
-export function DocumentoProposta({ proposta, hoje }: { proposta: PropostaView; hoje: string }) {
+export function DocumentoProposta({ proposta, hoje, marca, logoUrl }: { proposta: PropostaView; hoje: string; marca: Marca; logoUrl: string | null }) {
   const t = totaisProposta(proposta.itens);
   const pg = proposta.pagamento;
+  const nomeEscritorio = marca.nome ?? pg.titular;
   return (
     <div className="mx-auto max-w-2xl bg-white p-8 text-texto">
       <header className="border-b border-linha pb-3">
-        {pg.titular && <p className="font-display text-lg font-semibold">{pg.titular}</p>}
+        {logoUrl && <Image src={logoUrl} alt="Logo do escritório" width={140} height={56} className="mb-2 max-h-14 w-auto object-contain" unoptimized />}
+        {nomeEscritorio && <p className="font-display text-lg font-semibold">{nomeEscritorio}</p>}
+        {(marca.cnpj || marca.enderecoLinha) && (
+          <p className="text-xs text-cinza">{[marca.cnpj && `CNPJ ${marca.cnpj}`, marca.enderecoLinha].filter(Boolean).join(" · ")}</p>
+        )}
         <h1 className="mt-1 font-display text-xl font-bold">Proposta de Honorários</h1>
         <p className="mt-1 text-sm text-cinza">Nº {proposta.numero} · Emissão {dataBR(hoje)}{proposta.validade ? ` · Válida até ${dataBR(proposta.validade)}` : ""}</p>
       </header>

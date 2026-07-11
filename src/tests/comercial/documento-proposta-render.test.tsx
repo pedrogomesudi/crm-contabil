@@ -12,10 +12,12 @@ const proposta: PropostaView = {
 
 describe("DocumentoProposta", () => {
   it("renderiza cabeçalho, prospect, totais e pagamento", () => {
-    const html = renderToStaticMarkup(<DocumentoProposta proposta={proposta} hoje="2026-07-08" />);
+    const marca = { nome: "Contabilidade X", cnpj: "11.222.333/0001-81", enderecoLinha: "Uberlândia/MG" };
+    const html = renderToStaticMarkup(<DocumentoProposta proposta={proposta} hoje="2026-07-08" marca={marca} logoUrl={null} />);
     expect(html).toContain("Proposta de Honorários");
     expect(html).toContain("ACME LTDA");
     expect(html).toContain("Contabilidade X");
+    expect(html).toContain("CNPJ 11.222.333/0001-81");
     expect(html).toContain("Dados para pagamento");
   });
 });
