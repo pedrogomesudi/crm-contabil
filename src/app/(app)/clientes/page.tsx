@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
-import { podeCriarCliente, podeVerHonorario } from "@/lib/clientes/permissoes";
+import { podeCriarCliente, podeVerHonorario, podeGerenciarResponsaveis } from "@/lib/clientes/permissoes";
 import { normalizarFiltro, aplicarFiltroStatus } from "@/lib/clientes/filtroStatus";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Botao } from "@/components/ui/Botao";
@@ -62,6 +62,11 @@ export default async function ClientesPage({
             {podeVerHonorario(perfil?.papel) && (
               <Link href="/nfse/lote">
                 <Botao variante="secundario">Emitir NFS-e em lote</Botao>
+              </Link>
+            )}
+            {podeGerenciarResponsaveis(perfil?.papel) && (
+              <Link href="/clientes/responsaveis">
+                <Botao variante="secundario">Responsáveis por departamento</Botao>
               </Link>
             )}
             {podeCriar && (
