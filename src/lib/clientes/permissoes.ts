@@ -65,3 +65,8 @@ export function podeGerenciarModeloOnboarding(papel: Papel | undefined): boolean
 export function podeGerenciarVencimentos(papel: Papel | undefined): boolean {
   return papel === "admin" || papel === "assistente" || papel === "contador";
 }
+
+// Quem gerencia responsáveis por departamento e a redistribuição em massa de carteira.
+export function podeGerenciarResponsaveis(papel: Papel | undefined): boolean {
+  return papel === "admin" || papel === "assistente";
+}
