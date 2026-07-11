@@ -4,7 +4,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarLegalizacao } from "@/lib/clientes/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { progressoProcesso } from "@/lib/legalizacao/processo";
-import { rotuloTipo, type LegTipo, type LegOrgao, type LegEtapaStatus, type LegProcStatus } from "@/lib/legalizacao/tipos";
+import { rotuloTipo, etapaConcluida, type LegTipo, type LegOrgao, type LegEtapaStatus, type LegProcStatus } from "@/lib/legalizacao/tipos";
 import { PainelLegalizacao } from "./PainelLegalizacao";
 
 const STATUS = new Set<LegProcStatus>(["em_andamento", "concluido", "cancelado"]);
@@ -47,7 +47,7 @@ export default async function LegalizacaoPage({ searchParams }: { searchParams: 
     .map((p) => {
       const ets = porProc.get(p.id as string) ?? [];
       const pr = progressoProcesso(ets);
-      const orgaosPendentes = new Set(ets.filter((e) => e.status !== "concluido").map((e) => e.orgao));
+      const orgaosPendentes = new Set(ets.filter((e) => !etapaConcluida(e.status)).map((e) => e.orgao));
       return {
         id: p.id as string,
         cliente: nomeCli.get(p.cliente_id as string) ?? "—",

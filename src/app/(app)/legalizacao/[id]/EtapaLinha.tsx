@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { atualizarEtapa, anexarComprovanteEtapa } from "@/app/(app)/legalizacao/actions";
-import { rotuloOrgao, type LegOrgao, type LegEtapaStatus } from "@/lib/legalizacao/tipos";
+import { rotuloOrgao, etapaConcluida, type LegOrgao, type LegEtapaStatus } from "@/lib/legalizacao/tipos";
 import { classificarAlerta } from "@/lib/onboarding/alertas";
 
 type Etapa = {
@@ -13,7 +13,7 @@ type Etapa = {
   avisarCliente: boolean; clienteAvisadoEm: string | null; observacao: string | null;
 };
 
-const STATUS: { v: LegEtapaStatus; l: string }[] = [{ v: "pendente", l: "Pendente" }, { v: "em_andamento", l: "Em andamento" }, { v: "concluido", l: "Concluído" }];
+const STATUS: { v: LegEtapaStatus; l: string }[] = [{ v: "pendente", l: "Pendente" }, { v: "em_andamento", l: "Em andamento" }, { v: "concluido", l: "Concluído" }, { v: "isenta", l: "Isenta" }];
 const SEV: Record<string, string> = { em_breve: "text-amber-700", vencido: "text-negativo", critico: "text-negativo font-semibold" };
 const dataBR = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "—");
 
@@ -41,8 +41,8 @@ export function EtapaLinha({ etapa, hoje }: { etapa: Etapa; hoje: string }) {
     router.refresh();
   }
 
-  const sev = etapa.status !== "concluido" && etapa.prazo ? classificarAlerta(etapa.prazo, hoje) : null;
-  const concluida = etapa.status === "concluido";
+  const concluida = etapaConcluida(etapa.status);
+  const sev = !concluida && etapa.prazo ? classificarAlerta(etapa.prazo, hoje) : null;
 
   return (
     <div className={`rounded-2xl border border-linha bg-white p-3 ${concluida ? "opacity-80" : ""}`}>

@@ -43,6 +43,24 @@ describe("progressoProcesso", () => {
     expect(p.concluido).toBe(false);
     expect(p.proximoPrazo).toBe("2026-07-10");
   });
+  it("trata 'isenta' como concluída (não conta como prazo pendente)", () => {
+    const p = progressoProcesso([
+      { status: "concluido", prazo: "2026-07-05" },
+      { status: "isenta", prazo: "2026-07-08" },
+      { status: "pendente", prazo: "2026-07-20" },
+    ]);
+    expect(p.concluidas).toBe(2);
+    expect(p.pct).toBe(67);
+    expect(p.proximoPrazo).toBe("2026-07-20");
+  });
+  it("processo com todas isentas/concluídas fica concluído", () => {
+    const p = progressoProcesso([
+      { status: "isenta", prazo: null },
+      { status: "concluido", prazo: null },
+    ]);
+    expect(p.concluido).toBe(true);
+    expect(p.proximoPrazo).toBeNull();
+  });
 });
 
 describe("tipoComprovante", () => {

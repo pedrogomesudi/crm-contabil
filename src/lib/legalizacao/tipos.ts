@@ -1,7 +1,12 @@
 export type LegTipo = "abertura_simples" | "abertura_presumido" | "alteracao_quadro" | "transformacao" | "baixa" | "transferencia_entrada" | "transferencia_saida";
 export type LegOrgao = "junta" | "receita" | "prefeitura" | "sefaz" | "bombeiros" | "vigilancia" | "outro";
 export type LegProcStatus = "em_andamento" | "concluido" | "cancelado";
-export type LegEtapaStatus = "pendente" | "em_andamento" | "concluido";
+export type LegEtapaStatus = "pendente" | "em_andamento" | "concluido" | "isenta";
+
+// Etapa "isenta" (não aplicável a esta empresa) conta como concluída para progresso/prazos.
+export function etapaConcluida(status: LegEtapaStatus): boolean {
+  return status === "concluido" || status === "isenta";
+}
 
 export const LEGALIZACAO_TIPOS: { valor: LegTipo; rotulo: string }[] = [
   { valor: "abertura_simples", rotulo: "Abertura — Simples Nacional" },
