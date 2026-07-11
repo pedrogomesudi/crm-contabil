@@ -70,6 +70,11 @@ export default async function ClientesPage({
               </Link>
             )}
             {podeCriar && (
+              <Link href="/clientes/nova-empresa">
+                <Botao variante="secundario">Nova empresa (em constituição)</Botao>
+              </Link>
+            )}
+            {podeCriar && (
               <Link href="/clientes/novo">
                 <Botao variante="primario">
                   <span aria-hidden="true">+ </span>Novo cliente
