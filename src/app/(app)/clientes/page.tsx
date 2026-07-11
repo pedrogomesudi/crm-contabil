@@ -154,7 +154,7 @@ export default async function ClientesPage({
                       <Iniciais nome={cl.razao_social} />
                       <span className="min-w-0">
                         <span className="block truncate font-medium text-texto">{cl.razao_social}</span>
-                        <span className="block font-mono text-xs text-cinza-claro">{cl.cpf_cnpj}</span>
+                        <span className="block font-mono text-xs text-cinza-claro">{cl.cpf_cnpj ?? "— sem CNPJ"}</span>
                       </span>
                     </Link>
                   </td>
@@ -167,8 +167,8 @@ export default async function ClientesPage({
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="inline-flex items-center gap-1.5 text-sm text-cinza">
-                      <span className={`h-1.5 w-1.5 rounded-full ${cl.status === "ativo" ? "bg-verde" : "bg-cinza-claro"}`} />
-                      {cl.status === "ativo" ? "Ativo" : "Inativo"}
+                      <span className={`h-1.5 w-1.5 rounded-full ${cl.status === "ativo" ? "bg-verde" : cl.status === "em_constituicao" ? "bg-amber-500" : "bg-cinza-claro"}`} />
+                      {cl.status === "ativo" ? "Ativo" : cl.status === "em_constituicao" ? "Em constituição" : "Inativo"}
                     </span>
                     {cl.excluido_em && (
                       <span className="ml-2 rounded-full bg-negativo/10 px-2 py-0.5 text-xs text-negativo">excluído</span>

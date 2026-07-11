@@ -8,6 +8,7 @@ import { ResponsaveisDepartamento } from "@/components/clientes/ResponsaveisDepa
 import { listarColaboradores } from "@/lib/clientes/colaboradores";
 import { DEPARTAMENTOS, type Departamento } from "@/lib/clientes/departamentos";
 import { LegalizacaoSection } from "@/components/legalizacao/LegalizacaoSection";
+import { AtivarEmpresa } from "@/components/clientes/AtivarEmpresa";
 import { podeGerenciarLegalizacao } from "@/lib/clientes/permissoes";
 import { progressoProcesso } from "@/lib/legalizacao/processo";
 import { rotuloTipo, type LegTipo, type LegEtapaStatus } from "@/lib/legalizacao/tipos";
@@ -122,9 +123,16 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   const mesObrigacoes = Number(hojeObrigacoes.slice(5, 7));
   const obrigacoesDoMes = podeCriarCliente(papel) ? await listarInstancias(anoObrigacoes, mesObrigacoes, { clienteId: id }) : [];
 
+  const emConstituicao = cliente.status === "em_constituicao";
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold tracking-tight text-texto">{cliente.razao_social}</h1>
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-texto">{cliente.razao_social}</h1>
+        {emConstituicao && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Em constituição</span>}
+      </div>
+      {emConstituicao && (
+        <AtivarEmpresa clienteId={id} regimeAtual={cliente.regime_tributario as string} />
+      )}
       {(cliente as { competencia_inicial: string | null }).competencia_inicial && (
         <p className="-mt-4 text-sm text-cinza">
           Competência inicial: {(cliente as { competencia_inicial: string }).competencia_inicial.slice(5, 7)}/{(cliente as { competencia_inicial: string }).competencia_inicial.slice(0, 4)}
