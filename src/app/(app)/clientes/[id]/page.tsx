@@ -7,6 +7,10 @@ import { podeAtribuirContador, podeVerHonorario, podeExcluirCliente, podeCriarCl
 import { ResponsaveisDepartamento } from "@/components/clientes/ResponsaveisDepartamento";
 import { listarColaboradores } from "@/lib/clientes/colaboradores";
 import { DEPARTAMENTOS, type Departamento } from "@/lib/clientes/departamentos";
+import { LegalizacaoSection } from "@/components/legalizacao/LegalizacaoSection";
+import { podeGerenciarLegalizacao } from "@/lib/clientes/permissoes";
+import { progressoProcesso } from "@/lib/legalizacao/processo";
+import { rotuloTipo, type LegTipo, type LegEtapaStatus } from "@/lib/legalizacao/tipos";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { LinhaTempoVigencias } from "@/components/clientes/LinhaTempoVigencias";
@@ -60,6 +64,25 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   const atuaisResp = Object.fromEntries(DEPARTAMENTOS.map((d) => [d.valor, null])) as Record<Departamento, string | null>;
   for (const r of respRows ?? []) atuaisResp[r.departamento as Departamento] = (r.usuario_id as string) ?? null;
   const colaboradores = await listarColaboradores();
+
+  // Legalização / societário — processos do cliente.
+  const podeLegalizacao = podeGerenciarLegalizacao(papel);
+  const { data: procs } = await supabase.from("legalizacao_processo").select("id, tipo, titulo, status").eq("cliente_id", id).order("criado_em", { ascending: false });
+  const procIds = (procs ?? []).map((p) => p.id as string);
+  const { data: etapasProc } = procIds.length
+    ? await supabase.from("legalizacao_etapa").select("processo_id, status, prazo").in("processo_id", procIds)
+    : { data: [] };
+  const etapasPorProc = new Map<string, { status: LegEtapaStatus; prazo: string | null }[]>();
+  for (const e of etapasProc ?? []) {
+    const a = etapasPorProc.get(e.processo_id as string) ?? [];
+    a.push({ status: e.status as LegEtapaStatus, prazo: (e.prazo as string | null) ?? null });
+    etapasPorProc.set(e.processo_id as string, a);
+  }
+  const processosLeg = (procs ?? []).map((p) => {
+    const pr = progressoProcesso(etapasPorProc.get(p.id as string) ?? []);
+    return { id: p.id as string, titulo: (p.titulo as string) || rotuloTipo(p.tipo as LegTipo), status: p.status as string, pct: pr.pct, proximoPrazo: pr.proximoPrazo };
+  });
+  const { data: modelosLeg } = await supabase.from("legalizacao_template").select("id, nome").eq("ativo", true).order("nome");
 
   const mostrarHonorario = podeVerHonorario(papel);
   let valorHonorario: number | null = null;
@@ -166,6 +189,15 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
       <VencimentosSection clienteId={id} papel={papel} />
       {podeCriarCliente(papel) && (
         <ResponsaveisDepartamento clienteId={id} colaboradores={colaboradores} atuais={atuaisResp} editavel={respEditavel} />
+      )}
+      {podeCriarCliente(papel) && (
+        <LegalizacaoSection
+          clienteId={id}
+          processos={processosLeg}
+          modelos={(modelosLeg ?? []).map((m) => ({ id: m.id as string, nome: m.nome as string }))}
+          podeGerenciar={podeLegalizacao}
+          hoje={new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })}
+        />
       )}
     </div>
   );
