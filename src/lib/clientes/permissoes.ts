@@ -70,3 +70,8 @@ export function podeGerenciarVencimentos(papel: Papel | undefined): boolean {
 export function podeGerenciarResponsaveis(papel: Papel | undefined): boolean {
   return papel === "admin" || papel === "assistente";
 }
+
+// Quem gerencia processos de legalização/societário (financeiro só lê).
+export function podeGerenciarLegalizacao(papel: Papel | undefined): boolean {
+  return papel === "admin" || papel === "assistente" || papel === "contador";
+}
