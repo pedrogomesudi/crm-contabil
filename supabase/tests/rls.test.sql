@@ -1260,3 +1260,23 @@ begin
 
   raise notice 'OK: legalizacao — contador só no próprio, financeiro só lê';
 end $$;
+
+-- ASSERT: em_constituicao aceita CNPJ nulo; ativo sem CNPJ é barrado pela constraint
+do $$
+declare cid uuid; ok boolean;
+begin
+  reset role;
+  insert into clientes (tipo_pessoa, razao_social, cpf_cnpj, regime_tributario, status)
+    values ('PJ','Nova Em Constituicao', null, 'Simples', 'em_constituicao') returning id into cid;
+  if cid is null then raise exception 'FALHA: não criou em_constituicao sem CNPJ'; end if;
+
+  ok := true;
+  begin
+    insert into clientes (tipo_pessoa, razao_social, cpf_cnpj, regime_tributario, status)
+      values ('PJ','Sem CNPJ Ativo', null, 'Simples', 'ativo');
+  exception when check_violation then ok := false; end;
+  if ok then raise exception 'FALHA: aceitou cliente ativo sem CNPJ'; end if;
+
+  delete from clientes where id = cid;
+  raise notice 'OK: em_constituicao aceita CNPJ nulo; ativo sem CNPJ barrado';
+end $$;
