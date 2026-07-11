@@ -1180,3 +1180,46 @@ begin
   if v <> 'proprio' then raise exception 'FALHA: admin não alterou proposta_modelo (=%)', v; end if;
   raise notice 'OK: só admin altera proposta_modelo';
 end $$;
+
+-- ASSERT: cliente_responsavel — contador escreve só no cliente dele; admin em qualquer; financeiro não
+do $$
+declare n int;
+begin
+  -- contador atribui no PRÓPRIO cliente (…001 é dele) -> efeito
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  insert into cliente_responsavel (cliente_id, departamento, usuario_id)
+    values ('aaaaaaaa-0000-0000-0000-000000000001', 'fiscal', '00000000-0000-0000-0000-000000000003')
+    on conflict (cliente_id, departamento) do update set usuario_id = excluded.usuario_id;
+  reset role;
+  select count(*) into n from cliente_responsavel where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000001' and departamento = 'fiscal';
+  if n <> 1 then raise exception 'FALHA: contador não gravou responsável no próprio cliente (n=%)', n; end if;
+
+  -- contador tenta no cliente de OUTRO (…002 é do admin) -> negado pela RLS
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  begin
+    insert into cliente_responsavel (cliente_id, departamento, usuario_id)
+      values ('aaaaaaaa-0000-0000-0000-000000000002', 'fiscal', '00000000-0000-0000-0000-000000000003');
+    raise exception 'FALHA: contador gravou responsável em cliente de outro';
+  exception when insufficient_privilege then null; -- esperado
+  end;
+
+  -- financeiro NÃO escreve
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  begin
+    insert into cliente_responsavel (cliente_id, departamento, usuario_id)
+      values ('aaaaaaaa-0000-0000-0000-000000000001', 'contabil', '00000000-0000-0000-0000-000000000004');
+    raise exception 'FALHA: financeiro gravou responsável';
+  exception when insufficient_privilege then null; -- esperado
+  end;
+
+  -- admin atribui em QUALQUER cliente -> efeito
+  perform _simular('00000000-0000-0000-0000-000000000001'); -- admin
+  insert into cliente_responsavel (cliente_id, departamento, usuario_id)
+    values ('aaaaaaaa-0000-0000-0000-000000000002', 'contabil', '00000000-0000-0000-0000-000000000001')
+    on conflict (cliente_id, departamento) do update set usuario_id = excluded.usuario_id;
+  reset role;
+  select count(*) into n from cliente_responsavel where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002' and departamento = 'contabil';
+  if n <> 1 then raise exception 'FALHA: admin não gravou responsável (n=%)', n; end if;
+
+  raise notice 'OK: cliente_responsavel — contador só no próprio, admin em qualquer, financeiro barrado';
+end $$;

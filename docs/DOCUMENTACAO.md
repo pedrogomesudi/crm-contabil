@@ -96,6 +96,12 @@ Cadastro completo de PJ/PF/MEI e a ficha do cliente, que concentra todas as áre
 - **Consulta à Receita Federal:** para PJ, botão que preenche/atualiza os dados a partir do CNPJ.
 - **Honorário e dados financeiros:** valor mensal, dia de vencimento, faixa de faturamento, nº de
   funcionários, data de saída, opt-out de cobrança por WhatsApp (visível a quem pode ver honorário).
+- **Responsáveis por departamento (RF-025):** na ficha, um responsável interno por departamento —
+  **Contábil, Fiscal, Pessoal (Folha), Societário/Legalização**. É uma camada de organização: **não altera
+  a visibilidade** (o `contador_id` continua governando a RLS "cada contador vê os seus"). Admin/assistente
+  editam qualquer cliente; o contador edita apenas os dele. Admin/assistente têm ainda a **redistribuição de
+  carteira** em `/clientes/responsaveis` (acessível pelo botão na lista de Clientes): filtra por departamento,
+  responsável atual e nome, marca vários clientes e atribui/remove o responsável de um departamento em massa.
 - **Contratos:** geração de contrato de prestação de serviços a partir do cadastro (Word + PDF).
 - **Documentos + assinatura eletrônica:** upload de documentos do cliente, com fluxo de assinatura
   (integração Clicksign) e registro de acesso auditado.
