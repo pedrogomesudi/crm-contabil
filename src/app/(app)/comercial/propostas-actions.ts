@@ -66,6 +66,40 @@ export async function obterProposta(id: string): Promise<PropostaView | null> {
   };
 }
 
+export type PropostaGlobal = PropostaResumo & { oportunidadeId: string; prospectNome: string };
+
+export async function listarTodasPropostas(): Promise<PropostaGlobal[]> {
+  if (!(await gate())) return [];
+  const supabase = await createServerSupabase();
+  const { data: props } = await supabase.from("proposta").select("id, numero, status, validade, oportunidade_id").order("numero", { ascending: false });
+  const rows = props ?? [];
+  if (rows.length === 0) return [];
+  const ids = rows.map((r) => r.id as string);
+  const opIds = [...new Set(rows.map((r) => r.oportunidade_id as string))];
+  const { data: itens } = await supabase.from("proposta_item").select("proposta_id, valor, recorrencia").in("proposta_id", ids);
+  const { data: ops } = await supabase.from("oportunidade").select("id, prospect_nome").in("id", opIds);
+  const nomePorOp = new Map<string, string>((ops ?? []).map((o) => [o.id as string, (o.prospect_nome as string) ?? "—"]));
+  const porProp = new Map<string, { valor: number; recorrencia: ItemRecorrencia }[]>();
+  for (const it of itens ?? []) {
+    const a = porProp.get(it.proposta_id as string) ?? [];
+    a.push({ valor: Number(it.valor), recorrencia: it.recorrencia as ItemRecorrencia });
+    porProp.set(it.proposta_id as string, a);
+  }
+  return rows.map((r) => {
+    const t = totaisProposta(porProp.get(r.id as string) ?? []);
+    return {
+      id: r.id as string,
+      numero: Number(r.numero),
+      status: r.status as PropostaStatus,
+      validade: (r.validade as string | null) ?? null,
+      totalMensal: t.mensal,
+      totalUnico: t.unico,
+      oportunidadeId: r.oportunidade_id as string,
+      prospectNome: nomePorOp.get(r.oportunidade_id as string) ?? "—",
+    };
+  });
+}
+
 export async function criarProposta(oportunidadeId: string): Promise<{ id?: string; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();

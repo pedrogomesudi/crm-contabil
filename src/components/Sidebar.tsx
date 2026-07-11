@@ -16,6 +16,7 @@ export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes =
     { href: "/clientes", label: "Clientes" },
     ...(podeCriarCliente(papel) ? [{ href: "/onboarding", label: "Onboarding", badge: alertasOnboarding }] : []),
     ...(podeCriarCliente(papel) ? [{ href: "/comercial", label: "Comercial" }] : []),
+    ...(podeCriarCliente(papel) ? [{ href: "/comercial/propostas", label: "Propostas" }] : []),
     ...(podeCriarCliente(papel) ? [{ href: "/obrigacoes", label: "Obrigações", badge: riscosObrigacoes || undefined }] : []),
     ...(podeCriarCliente(papel) ? [{ href: "/obrigacoes/escalonamento", label: "Escalonamento", badge: escalonamento || undefined }] : []),
     ...(podeGerenciarVencimentos(papel) ? [{ href: "/vencimentos", label: "Vencimentos", badge: vencimentos || undefined }] : []),
@@ -26,7 +27,13 @@ export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes =
     ...(papel === "admin" ? [{ href: "/usuarios", label: "Usuários" }] : []),
     ...(papel === "admin" ? [{ href: "/configuracoes", label: "Configurações" }] : []),
   ];
-  const ehAtivo = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
+  // Realça só o item mais específico (o href mais longo que casa com a rota atual),
+  // evitando destacar "Comercial" e "Propostas" ao mesmo tempo.
+  const hrefAtivo = itens
+    .map((it) => it.href)
+    .filter((h) => (h === "/" ? pathname === "/" : pathname === h || pathname.startsWith(`${h}/`)))
+    .sort((a, b) => b.length - a.length)[0];
+  const ehAtivo = (href: string) => href === hrefAtivo;
 
   const nav = (
     <nav aria-label="Navegação principal" className="flex flex-col gap-1 text-sm">

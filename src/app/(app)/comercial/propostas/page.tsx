@@ -4,13 +4,24 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PropostasLista } from "./PropostasLista";
-import { listarPropostas } from "../propostas-actions";
+import { TodasPropostas } from "./TodasPropostas";
+import { listarPropostas, listarTodasPropostas } from "../propostas-actions";
 
 export default async function PropostasPage({ searchParams }: { searchParams: Promise<{ op?: string }> }) {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeCriarCliente(perfil.papel)) redirect("/");
   const op = (await searchParams).op ?? "";
-  if (!op) redirect("/comercial");
+
+  if (!op) {
+    const propostas = await listarTodasPropostas();
+    return (
+      <main className="mx-auto max-w-4xl space-y-5 p-4">
+        <PageHeader titulo="Propostas" subtitulo="Todas as propostas de honorários" />
+        <TodasPropostas propostas={propostas} />
+      </main>
+    );
+  }
+
   const supabase = await createServerSupabase();
   const { data: oport } = await supabase.from("oportunidade").select("prospect_nome").eq("id", op).maybeSingle();
   const propostas = await listarPropostas(op);
