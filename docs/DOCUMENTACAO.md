@@ -144,9 +144,18 @@ Workflow estruturado de entrada de cliente, com **motor de templates**, **cofre 
 - **Configuração de deploy:** exige a variável `ONBOARDING_CRIPTO_KEY` (chave do cofre; definida uma
   vez, nunca alterada).
 
-> **Em aberto (F2):** legalização/societário — processos por órgão (Junta, Receita, prefeitura, Estado,
-> bombeiros, vigilância), protocolos e prazos; templates por tipo de serviço societário; comunicação
-> automática de status ao cliente; registro de transferência de contabilidade (acervo, NBC PG 01).
+**Legalização / Societário (RF-011 a RF-014 — Fatia A):** módulo **dedicado** (não altera o onboarding),
+com acompanhamento de processos societários e de legalização **por órgão** (Junta, Receita, Prefeitura,
+Sefaz, Bombeiros, Vigilância, Outro) e **número de protocolo**. **7 modelos semeados** (abertura Simples/
+Presumido, alteração de quadro, transformação, baixa, transferência entrada/saída), cada um com etapas
+(órgão, prazo D+n, responsável por papel, anexo obrigatório, "avisar cliente?"). Fluxo: na **ficha do
+cliente**, inicia-se um processo (escolhe o modelo + data) — as etapas são **materializadas** com prazo;
+no **detalhe do processo** (`/legalizacao/[id]`) preenche-se protocolo/data, muda-se status, ajusta-se
+prazo (com selo de severidade), anexa-se comprovante (PDF/PNG/JPG por magic bytes) e registra-se
+**"cliente avisado"** (RF-013 parcial — sem envio automático). O **menu "Legalização"** abre um painel
+global com filtros por **órgão pendente** e **status**. RLS: processos herdam a visibilidade do cliente
+(contador só os seus); **financeiro apenas lê**. Modelos são editáveis por admin (**Fatia B**) e o **termo
+de entrega** da transferência — NBC PG 01 (**Fatia C**) — são as próximas fatias.
 
 ### 3.5 Atendimento (WhatsApp)
 Central de atendimento integrada ao WhatsApp via **Z-API** (número dedicado do escritório).

@@ -1223,3 +1223,40 @@ begin
 
   raise notice 'OK: cliente_responsavel — contador só no próprio, admin em qualquer, financeiro barrado';
 end $$;
+
+-- ASSERT: legalizacao — contador cria processo só no cliente dele; financeiro lê e não escreve
+do $$
+declare tpl uuid; proc uuid; n int;
+begin
+  reset role;
+  insert into legalizacao_template (tipo, slug, nome) values ('baixa','tpl-teste-rls','TPL teste')
+    on conflict (slug) do update set nome = excluded.nome returning id into tpl;
+
+  -- contador cria no PRÓPRIO cliente (…001) -> efeito
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  insert into legalizacao_processo (cliente_id, template_id, tipo, titulo, data_inicio)
+    values ('aaaaaaaa-0000-0000-0000-000000000001', tpl, 'baixa', 'Baixa', current_date) returning id into proc;
+  reset role;
+  select count(*) into n from legalizacao_processo where id = proc;
+  if n <> 1 then raise exception 'FALHA: contador não criou processo no próprio cliente'; end if;
+
+  -- contador NÃO cria no cliente de outro (…002) -> barrado
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  begin
+    insert into legalizacao_processo (cliente_id, template_id, tipo, titulo, data_inicio)
+      values ('aaaaaaaa-0000-0000-0000-000000000002', tpl, 'baixa', 'X', current_date);
+    raise exception 'FALHA: contador criou processo em cliente de outro';
+  exception when insufficient_privilege then null; end;
+
+  -- financeiro LÊ mas NÃO escreve (update não afeta a linha)
+  perform _simular('00000000-0000-0000-0000-000000000004');
+  select count(*) into n from legalizacao_processo where id = proc;
+  if n <> 1 then raise exception 'FALHA: financeiro não leu processo'; end if;
+  update legalizacao_processo set titulo = 'hack' where id = proc;
+  reset role;
+  if exists (select 1 from legalizacao_processo where id = proc and titulo = 'hack') then
+    raise exception 'FALHA: financeiro alterou processo';
+  end if;
+
+  raise notice 'OK: legalizacao — contador só no próprio, financeiro só lê';
+end $$;
