@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 vi.mock("@/app/(app)/comercial/propostas-actions", () => ({ salvarProposta: vi.fn(), definirStatusProposta: vi.fn() }));
+vi.mock("@/app/(app)/comercial/propostas/[id]/gerar-actions", () => ({ gerarDocumentoProposta: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 import { renderToStaticMarkup } from "react-dom/server";
 import { EditorProposta } from "@/app/(app)/comercial/propostas/[id]/EditorProposta";

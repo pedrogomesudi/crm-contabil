@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { salvarProposta, definirStatusProposta, type PropostaView, type PropostaStatus } from "../../propostas-actions";
+import { gerarDocumentoProposta } from "./gerar-actions";
 import { totaisProposta, type ItemRecorrencia } from "@/lib/comercial/proposta";
 import { Botao } from "@/components/ui/Botao";
 
@@ -36,6 +37,22 @@ export function EditorProposta({ proposta, responsavelPadrao }: { proposta: Prop
     if (r.erro) return alert(r.erro);
     router.refresh();
   }
+  async function gerar() {
+    setOcupado(true);
+    const r = await gerarDocumentoProposta(proposta.id);
+    setOcupado(false);
+    if (r.erro) return alert(r.erro);
+    if (r.modelo === "padrao") { router.push(`/comercial/propostas/${proposta.id}/documento`); return; }
+    if (r.pdfBase64 && r.nome) {
+      const bytes = Uint8Array.from(atob(r.pdfBase64), (c) => c.charCodeAt(0));
+      const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = r.nome;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  }
   async function status(s: PropostaStatus) {
     setOcupado(true);
     const r = await definirStatusProposta(proposta.id, s);
@@ -48,7 +65,10 @@ export function EditorProposta({ proposta, responsavelPadrao }: { proposta: Prop
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link href={`/comercial/propostas?op=${proposta.oportunidadeId}`} className="text-sm text-verde underline">← Propostas</Link>
-        <Link href={`/comercial/propostas/${proposta.id}/documento`} className="text-sm text-verde underline">Ver documento</Link>
+        <div className="flex items-center gap-3">
+          <Link href={`/comercial/propostas/${proposta.id}/documento`} className="text-sm text-verde underline">Ver documento</Link>
+          <button type="button" disabled={ocupado} onClick={gerar} className="text-sm text-verde underline disabled:opacity-60">Gerar documento</button>
+        </div>
       </div>
 
       <div className="space-y-1">
