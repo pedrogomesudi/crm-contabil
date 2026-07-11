@@ -3,7 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { listarContadores, contadorPorId } from "@/lib/clientes/contadores";
-import { podeAtribuirContador, podeVerHonorario, podeExcluirCliente, podeCriarCliente } from "@/lib/clientes/permissoes";
+import { podeAtribuirContador, podeVerHonorario, podeExcluirCliente, podeCriarCliente, podeGerenciarResponsaveis } from "@/lib/clientes/permissoes";
+import { ResponsaveisDepartamento } from "@/components/clientes/ResponsaveisDepartamento";
+import { listarColaboradores } from "@/lib/clientes/colaboradores";
+import { DEPARTAMENTOS, type Departamento } from "@/lib/clientes/departamentos";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { LinhaTempoVigencias } from "@/components/clientes/LinhaTempoVigencias";
@@ -50,6 +53,13 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
     const c = await contadorPorId(cliente.contador_id);
     if (c) contadores = [c];
   }
+
+  // Responsáveis por departamento (camada nova; não altera a RLS/visibilidade).
+  const respEditavel = podeGerenciarResponsaveis(papel) || (papel === "contador" && cliente.contador_id === perfil.id);
+  const { data: respRows } = await supabase.from("cliente_responsavel").select("departamento, usuario_id").eq("cliente_id", id);
+  const atuaisResp = Object.fromEntries(DEPARTAMENTOS.map((d) => [d.valor, null])) as Record<Departamento, string | null>;
+  for (const r of respRows ?? []) atuaisResp[r.departamento as Departamento] = (r.usuario_id as string) ?? null;
+  const colaboradores = await listarColaboradores();
 
   const mostrarHonorario = podeVerHonorario(papel);
   let valorHonorario: number | null = null;
@@ -154,6 +164,9 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         />
       )}
       <VencimentosSection clienteId={id} papel={papel} />
+      {podeCriarCliente(papel) && (
+        <ResponsaveisDepartamento clienteId={id} colaboradores={colaboradores} atuais={atuaisResp} editavel={respEditavel} />
+      )}
     </div>
   );
 }
