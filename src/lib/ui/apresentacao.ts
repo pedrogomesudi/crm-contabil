@@ -41,3 +41,11 @@ export function badgePapel(papel: string): "ia" | "positivo" | "neutro" | "atenc
   if (p === "assistente") return "atencao";
   return "neutro"; // contador e desconhecidos
 }
+
+// Status do cliente → rótulo legível.
+export function rotuloStatusCliente(status: string): string {
+  if (status === "em_constituicao") return "Em constituição";
+  if (status === "ativo") return "Ativo";
+  if (status === "inativo") return "Inativo";
+  return status;
+}
