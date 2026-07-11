@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import PizZip from "pizzip";
-import { gerarDocx, converterPdf } from "@/lib/contrato/gerar";
+import { gerarDocx, converterPdf, converterPdfHtml } from "@/lib/contrato/gerar";
 
 // Constrói um .docx mínimo válido com tags, em memória.
 function miniDocx(corpo: string): Buffer {
@@ -73,5 +73,23 @@ describe("converterPdf", () => {
       vi.fn(async () => new Response("erro", { status: 503 })),
     );
     expect(await converterPdf(Buffer.from("docx"))).toBeNull();
+  });
+});
+
+describe("converterPdfHtml", () => {
+  it("retorna null sem GOTENBERG_URL", async () => {
+    vi.stubEnv("GOTENBERG_URL", "");
+    expect(await converterPdfHtml("<p>oi</p>")).toBeNull();
+  });
+  it("POSTa o HTML ao Gotenberg e retorna o PDF", async () => {
+    vi.stubEnv("GOTENBERG_URL", "http://gotenberg:3000");
+    const fakePdf = new Uint8Array([0x25, 0x50, 0x44, 0x46]); // %PDF
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(fakePdf, { status: 200 })),
+    );
+    const out = await converterPdfHtml("<p>oi</p>");
+    expect(out).not.toBeNull();
+    expect(out!.subarray(0, 4).toString()).toBe("%PDF");
   });
 });

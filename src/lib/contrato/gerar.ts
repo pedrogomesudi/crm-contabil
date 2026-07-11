@@ -51,3 +51,33 @@ export async function converterPdf(docx: Buffer): Promise<Buffer | null> {
     clearTimeout(timer);
   }
 }
+
+// Converte HTML estático -> PDF via Gotenberg (/forms/chromium/convert/html). O
+// HTML já vem sanitizado (sem <script>/on*/javascript:), então não há JS a
+// executar; recursos devem ser data URI (sem rede externa). Retorna null se a
+// URL não estiver configurada ou a conversão falhar (mesma degradação graciosa).
+export async function converterPdfHtml(html: string): Promise<Buffer | null> {
+  const base = process.env.GOTENBERG_URL;
+  if (!base) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 30_000);
+  try {
+    const form = new FormData();
+    form.append("files", new Blob([html], { type: "text/html" }), "index.html");
+    const resp = await fetch(`${base}/forms/chromium/convert/html`, {
+      method: "POST",
+      body: form,
+      signal: ctrl.signal,
+    });
+    if (!resp.ok) {
+      console.error("converterPdfHtml: Gotenberg respondeu", resp.status);
+      return null;
+    }
+    return Buffer.from(await resp.arrayBuffer());
+  } catch (e) {
+    console.error("converterPdfHtml:", e instanceof Error ? e.message : e);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
