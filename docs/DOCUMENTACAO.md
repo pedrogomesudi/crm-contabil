@@ -77,7 +77,13 @@ Módulo de captação e acompanhamento de novos clientes antes de virarem cadast
   estimado, responsável, observações e motivo de perda.
 - **Conversão:** ao marcar **Ganho**, converte a oportunidade em **cliente** e dá partida no
   **onboarding** — ligando o funil ao ciclo de entrada.
-- **Propostas formais:** geração de proposta comercial a partir da oportunidade.
+- **Propostas formais:** proposta comercial a partir da oportunidade — itens (mensal/único), validade,
+  condições e **responsável comercial** (nome/e-mail pré-preenchidos do usuário logado, telefone digitado).
+  **Geração por modelo:** o **modelo padrão** da plataforma monta o documento HTML com a **Marca**
+  (logo/nome/CNPJ/endereço) e imprime pelo navegador; o **modelo próprio** (definido em Configurações →
+  Marca) gera um **PDF baixável** a partir de um arquivo `.docx` ou HTML enviado pelo escritório, trocando
+  as **tags** (`{nome_cliente}`, `{mes_ano}`, `{#itens}…{/itens}`, etc.) pelos dados da proposta. O HTML é
+  sanitizado e convertido sem executar JavaScript de terceiros.
 - **Métricas / relatórios** (`/comercial/metricas`): oportunidades ativas, taxa de conversão, valor
   em funil e desempenho por etapa.
 
@@ -287,7 +293,10 @@ Central de integrações e credenciais:
 - **Marca do escritório:** nome, CNPJ, endereço, e-mail, telefone e **logo** (PNG/JPG, validado por
   magic bytes; SVG proibido por ser vetor de XSS) usados na proposta comercial e no whitelabel. O logo
   vai para o bucket privado `documentos` e é exibido por URL assinada. Registro único (`escritorio_config`
-  id=1), estruturado para virar por-tenant na multi-tenancy futura.
+  id=1), estruturado para virar por-tenant na multi-tenancy futura. Inclui o bloco **Proposta:** escolha
+  entre **modelo padrão** (usa a Marca) e **modelo próprio**, com upload do arquivo (`.docx`/HTML, até 5 MB,
+  validado), painel de **referência de tags** e download de um **modelo de exemplo**. A validação do upload
+  reconhece as tags, sinaliza as desconhecidas e avisa sobre recursos externos no HTML.
 - **WhatsApp (Z-API):** credenciais do provedor e teste de conexão.
 - **NFS-e (emitente):** dados do emitente e certificado digital.
 - **Boletos:** provedor (Inter / Asaas), credenciais cifradas, ambiente e conta bancária.

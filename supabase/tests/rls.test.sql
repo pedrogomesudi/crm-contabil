@@ -1159,3 +1159,24 @@ begin
   if v_nome <> 'Escritório X' then raise exception 'FALHA: admin não alterou a marca (nome=%)', v_nome; end if;
   raise notice 'OK: admin altera a marca do escritório';
 end $$;
+
+-- ASSERT: escritorio_config.proposta_modelo — só admin escreve
+do $$
+declare v text;
+begin
+  reset role;
+  update escritorio_config set proposta_modelo = 'padrao' where id = 1;
+
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  update escritorio_config set proposta_modelo = 'proprio' where id = 1;
+  reset role;
+  select proposta_modelo into v from escritorio_config where id = 1;
+  if v <> 'padrao' then raise exception 'FALHA: financeiro alterou proposta_modelo (=%)', v; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000001'); -- admin
+  update escritorio_config set proposta_modelo = 'proprio' where id = 1;
+  reset role;
+  select proposta_modelo into v from escritorio_config where id = 1;
+  if v <> 'proprio' then raise exception 'FALHA: admin não alterou proposta_modelo (=%)', v; end if;
+  raise notice 'OK: só admin altera proposta_modelo';
+end $$;
