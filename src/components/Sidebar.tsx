@@ -15,6 +15,7 @@ export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes =
     { href: "/", label: "Início" },
     { href: "/clientes", label: "Clientes" },
     ...(podeCriarCliente(papel) ? [{ href: "/onboarding", label: "Onboarding", badge: alertasOnboarding }] : []),
+    ...(podeCriarCliente(papel) ? [{ href: "/legalizacao", label: "Legalização" }] : []),
     ...(podeCriarCliente(papel) ? [{ href: "/comercial", label: "Comercial" }] : []),
     ...(podeCriarCliente(papel) ? [{ href: "/comercial/propostas", label: "Propostas" }] : []),
     ...(podeCriarCliente(papel) ? [{ href: "/obrigacoes", label: "Obrigações", badge: riscosObrigacoes || undefined }] : []),
