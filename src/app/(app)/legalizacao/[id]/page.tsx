@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { progressoProcesso } from "@/lib/legalizacao/processo";
 import { rotuloTipo, type LegTipo, type LegOrgao, type LegEtapaStatus, type LegProcStatus } from "@/lib/legalizacao/tipos";
 import { EtapaLinha } from "./EtapaLinha";
+import { TermoAcervo } from "./TermoAcervo";
 import { AcoesProcesso } from "./AcoesProcesso";
 
 const ROT_PROC: Record<string, string> = { em_andamento: "Em andamento", concluido: "Concluído", cancelado: "Cancelado" };
@@ -68,6 +69,9 @@ export default async function ProcessoLegalizacaoPage({ params }: { params: Prom
         subtitulo={`${ROT_PROC[status] ?? status} · ${prog.pct}% · ${prog.concluidas}/${prog.total} etapas`}
         acoes={<AcoesProcesso id={id} status={status} />}
       />
+      {String(proc.tipo).startsWith("transferencia_") && (
+        <TermoAcervo processoId={id} hoje={hoje} responsavelPadrao={perfil.nome} />
+      )}
       <div className="space-y-3">
         {linhas.map((l) => (
           <EtapaLinha key={l.id} etapa={l} hoje={hoje} />
