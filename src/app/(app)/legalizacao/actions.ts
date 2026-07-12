@@ -6,6 +6,10 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeGerenciarLegalizacao } from "@/lib/clientes/permissoes";
 import { materializarEtapas, tipoComprovante, type EtapaTemplate } from "@/lib/legalizacao/processo";
 import { rotuloTipo, type LegProcStatus, type LegEtapaStatus, type LegOrgao, type LegTipo } from "@/lib/legalizacao/tipos";
+import { montarTermoHtml } from "@/lib/legalizacao/termo";
+import { converterPdfHtml } from "@/lib/contrato/gerar";
+import { sanitizarHtml } from "@/lib/comercial/gerar-proposta";
+import { formatarEnderecoLinha } from "@/lib/comercial/proposta-template";
 
 async function gate() {
   const p = await getPerfilAtual();
@@ -98,4 +102,37 @@ export async function definirStatusProcesso(id: string, status: LegProcStatus): 
   revalidatePath(`/legalizacao/${id}`);
   if (proc) revalidatePath(`/clientes/${proc.cliente_id}`);
   return { ok: true };
+}
+
+export async function gerarTermoAcervo(processoId: string, input: { itens: string[]; data: string; responsavel: string | null }): Promise<{ pdfBase64?: string; nome?: string; erro?: string }> {
+  const perfil = await gate();
+  if (!perfil) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { data: proc } = await supabase.from("legalizacao_processo").select("id, cliente_id, tipo").eq("id", processoId).maybeSingle();
+  if (!proc) return { erro: "Processo não encontrado." };
+  const tipo = proc.tipo as string;
+  if (tipo !== "transferencia_entrada" && tipo !== "transferencia_saida") return { erro: "O termo só se aplica a processos de transferência." };
+  const { data: cli } = await supabase.from("clientes").select("razao_social").eq("id", proc.cliente_id as string).maybeSingle();
+  const { data: cfg } = await supabase.from("escritorio_config").select("nome, cnpj, endereco").eq("id", 1).maybeSingle();
+
+  const html = sanitizarHtml(montarTermoHtml({
+    tipo: tipo as "transferencia_entrada" | "transferencia_saida",
+    cliente: (cli?.razao_social as string) ?? "—",
+    marca: { nome: (cfg?.nome as string | null) ?? null, cnpj: (cfg?.cnpj as string | null) ?? null, enderecoLinha: formatarEnderecoLinha((cfg?.endereco as Record<string, string> | null) ?? null) },
+    itens: input.itens,
+    data: input.data,
+    responsavel: input.responsavel,
+  }));
+  const pdf = await converterPdfHtml(html);
+  if (!pdf) return { erro: "Conversão para PDF indisponível no momento. Tente novamente." };
+
+  // Anexa ao acervo (não aborta o download se falhar).
+  const admin = createAdminSupabase();
+  const caminho = `${proc.cliente_id}/${crypto.randomUUID()}-termo-acervo.pdf`;
+  const up = await admin.storage.from("documentos").upload(caminho, pdf, { contentType: "application/pdf" });
+  if (!up.error) {
+    await admin.from("documentos").insert({ cliente_id: proc.cliente_id, nome: "Termo de acervo — NBC PG 01", tipo: "legalização", caminho_storage: caminho, enviado_por: perfil.id });
+  }
+  revalidatePath(`/clientes/${proc.cliente_id}`);
+  return { pdfBase64: pdf.toString("base64"), nome: `termo-acervo-${processoId.slice(0, 8)}.pdf` };
 }
