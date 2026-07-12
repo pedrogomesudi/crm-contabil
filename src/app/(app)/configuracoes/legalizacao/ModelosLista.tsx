@@ -7,7 +7,7 @@ import { LEGALIZACAO_TIPOS, rotuloTipo } from "@/lib/legalizacao/tipos";
 
 export function ModelosLista({ modelos }: { modelos: ModeloView[] }) {
   const router = useRouter();
-  const [tipo, setTipo] = useState(LEGALIZACAO_TIPOS[0]?.valor ?? "abertura_simples");
+  const [tipo, setTipo] = useState<string>(LEGALIZACAO_TIPOS[0]?.valor ?? "abertura_simples");
   const [nome, setNome] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
