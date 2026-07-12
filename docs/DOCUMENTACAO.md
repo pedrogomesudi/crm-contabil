@@ -165,9 +165,12 @@ no **detalhe do processo** (`/legalizacao/[id]`) preenche-se protocolo/data, mud
 prazo (com selo de severidade), anexa-se comprovante (PDF/PNG/JPG por magic bytes) e registra-se
 **"cliente avisado"** (RF-013 parcial — sem envio automático). O **menu "Legalização"** abre um painel
 global com filtros por **órgão pendente** e **status**. RLS: processos herdam a visibilidade do cliente
-(contador só os seus); **financeiro apenas lê**. Os **modelos são editáveis pelo admin** (Fatia B —
-Configurações → Modelos de legalização). Falta apenas o **termo de entrega** da transferência — NBC PG 01
-(**Fatia C**).
+(contador só os seus); **financeiro apenas lê**. Os **modelos são editáveis pelo admin** (Configurações →
+Modelos de legalização). Nos processos de **transferência** (entrada/saída), um botão gera o **Termo de
+Entrega/Recebimento de Acervo (NBC PG 01)** em PDF — cabeçalho com a Marca, cliente, **checklist editável**
+do acervo (pré-preenchido), data e assinaturas; o PDF é baixado e **anexado aos Documentos** do cliente.
+Com isso a legalização (RF-011 a RF-014) está completa — resta apenas o RF-013 como parcial (aviso ao
+cliente registrado, sem envio automático).
 
 ### 3.5 Atendimento (WhatsApp)
 Central de atendimento integrada ao WhatsApp via **Z-API** (número dedicado do escritório).
