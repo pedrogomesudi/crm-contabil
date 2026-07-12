@@ -10,6 +10,7 @@ const ITENS = [
   { href: "/configuracoes/pagamento", label: "Dados de pagamento (PIX/TED)", desc: "Conta e PIX enviados ao cliente com a NFS-e." },
   { href: "/configuracoes/boletos", label: "Boletos", desc: "Provedor de emissão (Inter ou Asaas) e credenciais." },
   { href: "/configuracoes/onboarding", label: "Template de onboarding", desc: "Blocos e itens do processo de entrada." },
+  { href: "/configuracoes/legalizacao", label: "Modelos de legalização", desc: "Processos societários e de legalização (etapas por órgão)." },
   { href: "/configuracoes/obrigacoes", label: "Matriz de obrigações", desc: "Obrigações e critérios de incidência do calendário." },
 ];
 
