@@ -15,6 +15,7 @@ export function FormConstituicao({ contadores, contadorEditavel, modelos, hoje }
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [socios, setSocios] = useState<Socio[]>([{ nome: "", cpf: "", participacao: "", papelSocietario: "administrador" }]);
 
   function setSocio(i: number, patch: Partial<Socio>) {
@@ -27,6 +28,7 @@ export function FormConstituicao({ contadores, contadorEditavel, modelos, hoje }
     setErro(null);
     const fd = new FormData(e.currentTarget);
     fd.set("socios", JSON.stringify(socios.filter((s) => s.nome.trim())));
+    if (pdfFile) fd.set("pdf", pdfFile);
     const r = await criarEmpresaConstituicao(fd);
     setOcupado(false);
     if (r.erro) return setErro(r.erro);
@@ -36,6 +38,13 @@ export function FormConstituicao({ contadores, contadorEditavel, modelos, hoje }
 
   return (
     <form onSubmit={enviar} className="space-y-4">
+      <div className="rounded-2xl border border-linha bg-creme p-3">
+        <label className="text-xs text-cinza">Formulário de constituição (PDF)
+          <input type="file" accept="application/pdf" onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)} className="mt-0.5 block text-xs" />
+        </label>
+        <p className="mt-1 text-xs text-cinza">Opcional. O PDF fica anexado ao acervo do cliente. Preencha os campos abaixo à mão.</p>
+      </div>
+
       <div className="grid grid-cols-2 gap-3 text-sm">
         <label className="col-span-2 block">Razão social pretendida
           <input name="razao_social" required className={input} />

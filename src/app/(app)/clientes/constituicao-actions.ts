@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { createAdminSupabase } from "@/lib/supabase/admin";
 import { normalizarConstituicao, validarAtivacao } from "@/lib/clientes/constituicao";
 import { iniciarProcesso } from "@/app/(app)/legalizacao/actions";
 
@@ -29,6 +30,21 @@ export async function criarEmpresaConstituicao(formData: FormData): Promise<{ id
   }).select("id").single();
   if (error || !cli) return { erro: "Falha ao criar a empresa (verifique os dados)." };
   const clienteId = cli.id as string;
+
+  // Anexa o PDF do formulário ao acervo, se enviado (não aborta a criação se falhar).
+  const pdf = formData.get("pdf");
+  if (pdf instanceof File && pdf.size > 0 && pdf.size <= 10 * 1024 * 1024) {
+    const buf = new Uint8Array(await pdf.arrayBuffer());
+    const ehPdf = buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46;
+    if (ehPdf) {
+      const admin = createAdminSupabase();
+      const caminho = `${clienteId}/${crypto.randomUUID()}-formulario-constituicao.pdf`;
+      const up = await admin.storage.from("documentos").upload(caminho, buf, { contentType: "application/pdf" });
+      if (!up.error) {
+        await admin.from("documentos").insert({ cliente_id: clienteId, nome: "Formulário de constituição", tipo: "constituição", caminho_storage: caminho, enviado_por: perfil.id });
+      }
+    }
+  }
 
   let processoId: string | undefined;
   const modeloId = String(formData.get("modelo_abertura") ?? "");
