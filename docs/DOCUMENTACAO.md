@@ -100,8 +100,11 @@ Cadastro completo de PJ/PF/MEI e a ficha do cliente, que concentra todas as áre
   regime, endereço, **sócios** em `socios` jsonb com o administrador como representante) e pode **já iniciar o
   processo de abertura** (modelo Simples/Presumido). Enquanto `em_constituicao`, o cliente **não gera obrigações
   nem mensalidades** (ambos os geradores exigem `status = 'ativo'`). Quando o CNPJ é emitido, a ação **"Ativar
-  empresa"** na ficha (CNPJ + regime + inscrições) valida e passa o cliente para **`ativo`**. A importação
-  automática dos dados a partir do **PDF do formulário** de constituição é a Fatia 2.
+  empresa"** na ficha (CNPJ + regime + inscrições) valida e passa o cliente para **`ativo`**. Ao criar, é
+  possível **anexar o PDF do formulário** de constituição ao acervo do cliente (fica nos Documentos). A
+  **extração automática** dos dados do PDF foi descartada por ora: em produto whitelabel cada escritório tem
+  um formulário próprio e o PDF do Google Forms exporta o texto fora de ordem — a única abordagem que
+  generaliza (IA) exige chave, o que foge da estratégia atual; o preenchimento é manual.
 - **Honorário e dados financeiros:** valor mensal, dia de vencimento, faixa de faturamento, nº de
   funcionários, data de saída, opt-out de cobrança por WhatsApp (visível a quem pode ver honorário).
 - **Responsáveis por departamento (RF-025):** na ficha, um responsável interno por departamento —
