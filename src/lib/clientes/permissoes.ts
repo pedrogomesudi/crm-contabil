@@ -75,3 +75,8 @@ export function podeGerenciarResponsaveis(papel: Papel | undefined): boolean {
 export function podeGerenciarLegalizacao(papel: Papel | undefined): boolean {
   return papel === "admin" || papel === "assistente" || papel === "contador";
 }
+
+// Quem gerencia tarefas internas (toda a equipe cria/vê; edição refinada pela RLS).
+export function podeGerenciarTarefas(papel: Papel | undefined): boolean {
+  return papel === "admin" || papel === "assistente" || papel === "contador" || papel === "financeiro";
+}
