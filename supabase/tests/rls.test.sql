@@ -1280,3 +1280,25 @@ begin
   delete from clientes where id = cid;
   raise notice 'OK: em_constituicao aceita CNPJ nulo; ativo sem CNPJ barrado';
 end $$;
+
+-- ASSERT: legalizacao_template — só admin escreve (editor de modelos, Fatia B)
+do $$
+declare ok boolean;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  ok := true;
+  begin
+    insert into legalizacao_template (tipo, slug, nome) values ('baixa','tpl-contador-rls','X');
+    raise exception 'FALHA: contador criou template';
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA: contador criou template (sem erro)'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000001'); -- admin
+  insert into legalizacao_template (tipo, slug, nome) values ('baixa','tpl-admin-rls','Y')
+    on conflict (slug) do nothing;
+  reset role;
+  if not exists (select 1 from legalizacao_template where slug = 'tpl-admin-rls') then
+    raise exception 'FALHA: admin não criou template';
+  end if;
+  raise notice 'OK: legalizacao_template só admin escreve';
+end $$;

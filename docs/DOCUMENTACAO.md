@@ -165,8 +165,9 @@ no **detalhe do processo** (`/legalizacao/[id]`) preenche-se protocolo/data, mud
 prazo (com selo de severidade), anexa-se comprovante (PDF/PNG/JPG por magic bytes) e registra-se
 **"cliente avisado"** (RF-013 parcial — sem envio automático). O **menu "Legalização"** abre um painel
 global com filtros por **órgão pendente** e **status**. RLS: processos herdam a visibilidade do cliente
-(contador só os seus); **financeiro apenas lê**. Modelos são editáveis por admin (**Fatia B**) e o **termo
-de entrega** da transferência — NBC PG 01 (**Fatia C**) — são as próximas fatias.
+(contador só os seus); **financeiro apenas lê**. Os **modelos são editáveis pelo admin** (Fatia B —
+Configurações → Modelos de legalização). Falta apenas o **termo de entrega** da transferência — NBC PG 01
+(**Fatia C**).
 
 ### 3.5 Atendimento (WhatsApp)
 Central de atendimento integrada ao WhatsApp via **Z-API** (número dedicado do escritório).
@@ -316,6 +317,11 @@ prévia (novos/atualizados/pendências), reconciliação idempotente por CNPJ e 
 
 ### 3.12 Configurações (admin)
 Central de integrações e credenciais:
+- **Modelos de legalização (admin):** editor dos modelos societários/legalização — criar, editar (nome,
+  descrição, tipo, ativo) e excluir modelos, e gerenciar suas **etapas** (título, descrição, órgão, prazo D+n,
+  responsável por papel, anexo obrigatório, avisar cliente) com **reordenação (↑↓)**. Completa a
+  configurabilidade do RF-012. Escrita **admin-only** (RLS); excluir um modelo **não** afeta processos já
+  iniciados (as etapas de instância são cópias).
 - **Marca do escritório:** nome, CNPJ, endereço, e-mail, telefone e **logo** (PNG/JPG, validado por
   magic bytes; SVG proibido por ser vetor de XSS) usados na proposta comercial e no whitelabel. O logo
   vai para o bucket privado `documentos` e é exibido por URL assinada. Registro único (`escritorio_config`
