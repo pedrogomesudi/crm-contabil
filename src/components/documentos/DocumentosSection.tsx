@@ -1,4 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase/server";
+import { ultimosAcessos } from "@/lib/portal/rastreio";
 import { formatarData } from "@/lib/format";
 import { podeGerenciarDocumentos } from "@/lib/clientes/permissoes";
 import type { Papel } from "@/lib/tipos";
@@ -23,9 +24,10 @@ export async function DocumentosSection({
   clienteEmail: string;
 }) {
   const supabase = await createServerSupabase();
+  const vistos = await ultimosAcessos(clienteId, "documento"); // RF-053: o cliente já viu?
   const { data: documentos, error } = await supabase
     .from("documentos")
-    .select("id, nome, tipo, enviado_em")
+    .select("id, nome, tipo, enviado_em, origem")
     .eq("cliente_id", clienteId)
     .order("enviado_em", { ascending: false })
     .order("id")
@@ -67,7 +69,15 @@ export async function DocumentosSection({
             <tbody>
               {documentos.map((d) => (
                 <tr key={d.id} className="border-t border-linha/70 align-top">
-                  <td className="p-2 text-texto">{d.nome}</td>
+                  <td className="p-2 text-texto">
+                    {d.nome}
+                    {d.origem === "cliente" && (
+                      <span className="ml-2 rounded-full bg-violeta/10 px-2 py-0.5 text-xs text-violeta">enviado pelo cliente</span>
+                    )}
+                    <span className="ml-2 text-xs text-cinza">
+                      {vistos.has(d.id) ? `· visto em ${formatarData(vistos.get(d.id) as string)}` : "· não visualizado"}
+                    </span>
+                  </td>
                   <td className="p-2 text-cinza">{d.tipo ?? "—"}</td>
                   <td className="p-2 text-cinza">
                     <time dateTime={d.enviado_em}>{formatarData(d.enviado_em)}</time>
