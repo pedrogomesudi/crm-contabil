@@ -148,6 +148,48 @@ então `localhost` nunca funcionaria.
 
 ---
 
+## 5.1 Multi-tenant — um banco e um app por escritório (V9)
+
+Cada escritório é um **projeto Supabase** + um **app no EasyPanel** + um **subdomínio**. Os dados são
+isolados **fisicamente**: um escritório não lê o do outro nem com uma policy errada, porque o dado não está
+no mesmo banco. O código é o mesmo para todos.
+
+### Provisionar um escritório novo
+
+```bash
+SUPABASE_ACCESS_TOKEN=sbp_... SUPABASE_ORG_ID=... \
+  npm run tenant:novo -- --slug contabilx --nome "Contabilidade X" --email admin@contabilx.com.br
+```
+
+Use `--dry-run` antes para conferir sem gastar um projeto. O script cria o projeto Supabase, roda as
+migrations, **gera as chaves de cripto do escritório**, cria o admin, registra os 4 jobs de cron e grava
+`tenants/<slug>.env` (fora do git, `chmod 600`). Depois, à mão: criar o app no EasyPanel, colar o env,
+apontar o subdomínio e configurar as Auth URLs no Supabase.
+
+> **Não existe `tenant:remover` — por decisão de segurança.** O `SUPABASE_ACCESS_TOKEN` destrói projetos
+> inteiros; um script com esse poder e um argumento errado apagam o banco de um cliente real. Quem apaga é
+> o humano, no painel, olhando para o nome do projeto.
+
+### Rotina multi-tenant
+
+| Comando | Quando |
+|---|---|
+| `npm run db:migrate:all` | **Antes** de cada deploy — uma coluna que o código espera e o banco não tem derruba o tenant. |
+| `npm run cron:bootstrap:all` | Depois de qualquer **restore** de banco (os jobs somem). |
+| `npm run db:test:all` | Após mudanças de RLS. |
+| `npm run tenant:doctor` | Periodicamente: quem está atrasado, sem cron, sem admin, sem chave. |
+
+Os `:all` **falham com código ≠ 0** se qualquer escritório falhar. A partir do segundo, esquecer um é a
+falha silenciosa clássica: ele fica sem os crons e ninguém percebe até um prazo estourar.
+
+### ⚠️ As chaves de cripto são o único dado sem backup
+
+`WHATSAPP_CRIPTO_KEY`, `ONBOARDING_CRIPTO_KEY`, `BOLETO_CRIPTO_KEY` e `EMAIL_CRIPTO_KEY` **não são
+recuperáveis de lugar nenhum** — nem do backup do banco, que guarda só o texto cifrado. Perdê-las torna
+irrecuperáveis: certificado NFS-e, credenciais do WhatsApp, senha do SMTP, chaves de boleto e o **cofre de
+acessos dos clientes**. Guarde o `tenants/<slug>.env` num cofre de senhas. (O envelope encryption do V10
+resolve a rotação; ele **não** resolve a perda.)
+
 ## 6. Release
 
 ```bash

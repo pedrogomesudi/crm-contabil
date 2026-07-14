@@ -20,7 +20,13 @@
     "db:migrate": "node --env-file=.env.local scripts/db-migrate.mjs",
     "db:test": "node --env-file=.env.local scripts/db-test-rls.mjs",
     "admin:bootstrap": "node --env-file=.env.local scripts/bootstrap-admin.mjs",
-    "cron:bootstrap": "node --env-file=.env.local scripts/bootstrap-cron.mjs"
+    "cron:bootstrap": "node --env-file=.env.local scripts/bootstrap-cron.mjs",
+    "tenant:novo": "node scripts/tenant-novo.mjs",
+    "tenant:adotar": "node scripts/tenant-adotar.mjs",
+    "tenant:doctor": "node scripts/tenant-doctor.mjs",
+    "db:migrate:all": "node scripts/tenants-all.mjs db-migrate",
+    "db:test:all": "node scripts/tenants-all.mjs db-test-rls",
+    "cron:bootstrap:all": "node scripts/tenants-all.mjs bootstrap-cron"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.0",

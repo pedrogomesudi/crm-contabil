@@ -1,0 +1,11 @@
+{
+  "escritorios": [
+    {
+      "slug": "gomes",
+      "nome": "Gomes Contabilidade",
+      "appUrl": "https://app.seusaldo.ai",
+      "projectRef": null,
+      "criadoEm": "2026-07-14"
+    }
+  ]
+}

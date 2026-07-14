@@ -1,0 +1,11 @@
+{
+  "escritorios": [
+    {
+      "slug": "exemplo",
+      "nome": "Escritório Exemplo Contabilidade",
+      "appUrl": "https://exemplo.seusaldo.ai",
+      "projectRef": "abcdefghijklmnopqrst",
+      "criadoEm": "2026-07-14"
+    }
+  ]
+}

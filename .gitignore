@@ -42,3 +42,7 @@ yarn-error.log*
 next-env.d.ts
 .playwright-mcp/
 .superpowers/
+
+# Credenciais por escritório (multi-tenant, um banco por escritório). NUNCA versionar:
+# uma service_role commitada não se desfaz — a chave já esteve lá e teria de ser rotacionada.
+/tenants/*.env
