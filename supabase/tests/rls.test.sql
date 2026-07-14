@@ -1849,3 +1849,71 @@ begin
 
   raise notice 'OK: SOP — ondas paralelas, avanço automático por trigger e idempotência';
 end $$;
+
+-- ============================================================================
+-- Comunicados em massa (RF-055) — 0093
+-- ============================================================================
+
+-- ASSERT: só admin/assistente criam comunicado; ninguém grava destinatário pela app
+do $$
+declare c_id uuid; n int; ok boolean := false;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  insert into comunicado (titulo, assunto, corpo, canal)
+    values ('Aviso DEFIS', 'Prazo da DEFIS', 'Ola {nome}, o prazo vence em breve.', 'email')
+    returning id into c_id;
+
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador: lê, não escreve
+  select count(*) into n from comunicado;
+  if n < 1 then raise exception 'FALHA(comunicado): contador não lê comunicados'; end if;
+  begin
+    insert into comunicado (titulo, assunto, corpo) values ('X', 'X', 'X');
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(comunicado): contador criou comunicado'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro: idem
+  ok := false;
+  begin
+    insert into comunicado (titulo, assunto, corpo) values ('Y', 'Y', 'Y');
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(comunicado): financeiro criou comunicado'; end if;
+
+  -- nem o admin grava destinatário pela app: o registro é do servidor, depois de enviar
+  perform _simular('00000000-0000-0000-0000-000000000001');
+  ok := false;
+  begin
+    insert into comunicado_destinatario (comunicado_id, cliente_id, para, status)
+      values (c_id, 'aaaaaaaa-0000-0000-0000-000000000001', 'x@y.com', 'ENVIADO');
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(comunicado): admin forjou um envio no registro'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000005'); -- cliente do portal
+  select count(*) into n from comunicado;
+  if n <> 0 then raise exception 'FALHA(comunicado): cliente do portal vê comunicados'; end if;
+  select count(*) into n from comunicado_destinatario;
+  if n <> 0 then raise exception 'FALHA(comunicado): cliente do portal vê os destinatários'; end if;
+  reset role;
+
+  raise notice 'OK: comunicado — só admin/assistente criam; ninguém forja envio; portal não vê';
+end $$;
+
+-- ASSERT: o índice único impede o mesmo cliente receber o mesmo comunicado duas vezes
+do $$
+declare c_id uuid; ok boolean := false;
+begin
+  reset role;
+  insert into comunicado (titulo, assunto, corpo) values ('Dup', 'Dup', 'Dup') returning id into c_id;
+  insert into comunicado_destinatario (comunicado_id, cliente_id, para, status)
+    values (c_id, 'aaaaaaaa-0000-0000-0000-000000000001', 'a@x.com', 'ENVIADO');
+  begin
+    insert into comunicado_destinatario (comunicado_id, cliente_id, para, status)
+      values (c_id, 'aaaaaaaa-0000-0000-0000-000000000001', 'a@x.com', 'ENVIADO');
+    ok := true;
+  exception when unique_violation then ok := false; end;
+  if ok then raise exception 'FALHA(comunicado): cliente recebeu o mesmo comunicado duas vezes'; end if;
+
+  raise notice 'OK: comunicado — índice único barra envio duplicado ao mesmo cliente';
+end $$;
