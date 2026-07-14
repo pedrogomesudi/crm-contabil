@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- **V9 — Multi-tenant (um banco e um app por escritório):** ferramental de provisionamento —
+  **`tenant:novo`** (cria o projeto Supabase, roda as migrations, gera as chaves do escritório, cria o admin
+  e registra os crons), **`tenant:adotar`** (traz um escritório existente para o registro),
+  **`db:migrate:all` / `db:test:all` / `cron:bootstrap:all`** (laços com **falha ruidosa**) e
+  **`tenant:doctor`** (diagnóstico de deriva: migrations, crons, admin, chaves e app). Segredos por
+  escritório em `tenants/<slug>.env`, **fora do git** (o script aborta se o caminho não estiver ignorado).
+  **Não existe comando de remover tenant**, por decisão de segurança. O app e o schema **não mudaram**.
+
 ### Alterado
 
 - **Menu lateral enxuto:** Propostas, Obrigações, Escalonamento, Vencimentos, Conciliação, Rentabilidade,
