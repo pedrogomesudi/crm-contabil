@@ -21,6 +21,7 @@ export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes =
     ...(podeCriarCliente(papel) ? [{ href: "/obrigacoes", label: "Obrigações", badge: riscosObrigacoes || undefined }] : []),
     { href: "/tarefas", label: "Tarefas" },
     ...(podeAtenderSolicitacoes(papel) ? [{ href: "/solicitacoes", label: "Solicitações" }] : []),
+    { href: "/comunicados", label: "Comunicados" },
     ...(podeCriarCliente(papel) ? [{ href: "/obrigacoes/escalonamento", label: "Escalonamento", badge: escalonamento || undefined }] : []),
     ...(podeGerenciarVencimentos(papel) ? [{ href: "/vencimentos", label: "Vencimentos", badge: vencimentos || undefined }] : []),
     ...(podeAtender(papel) ? [{ href: "/atendimento", label: "Atendimento" }] : []),

@@ -53,7 +53,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   const { data: cliente } = await supabase
     .from("clientes")
     .select(
-      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial",
+      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados",
     )
     .eq("id", id)
     .maybeSingle();
@@ -214,7 +214,12 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
       {mostrarHonorario && <ContratosSection clienteId={id} contratos={contratos} />}
       {mostrarHonorario && (
         <section className="rounded-lg border border-linha bg-white p-4">
-          <OptOutCobranca clienteId={id} whatsapp={cobrancaWhatsapp} email={cobrancaEmail} />
+          <OptOutCobranca
+            clienteId={id}
+            whatsapp={cobrancaWhatsapp}
+            email={cobrancaEmail}
+            comunicados={cliente.aceita_comunicados !== false}
+          />
         </section>
       )}
       {mostrarHonorario && (

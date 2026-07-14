@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Comunicados em massa segmentados (RF-055):** avisos de legislação e prazos para um **segmento** da base
+  — por regime, tipo, status, **município/UF**, contador ou responsável de departamento (E entre critérios,
+  OU dentro de cada um; município compara sem acento/caixa). **Prévia obrigatória** com contagem, lista e
+  **excluídos com motivo**, mais "Enviar teste para mim". Canal **e-mail** (sem teto) ou **WhatsApp** (teto de
+  50 + aviso de risco de banimento do número). Registro por destinatário, **"Reenviar falhas"** e **opt-out
+  próprio** (`aceita_comunicados`), distinto do de cobrança.
+
 - **Tarefas — recorrência, calendário e SOPs (RF-040/041/042):**
   - **Tarefas recorrentes:** molde + regra (semanal/mensal/trimestral/anual) com **antecedência**, geradas
     por **cron diário às 9h**. Idempotência por `(recorrencia_id, competencia)`; dia 31 em mês curto cai no
