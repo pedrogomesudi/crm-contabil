@@ -1,6 +1,6 @@
 "use client";
-import { useActionState, useState } from "react";
-import { salvarConfigEmail, enviarTeste, type EstadoEmail, type StatusEmail } from "./actions";
+import { useActionState, useState, useTransition } from "react";
+import { salvarConfigEmail, enviarTeste, setReguaFallback, type EstadoEmail, type StatusEmail } from "./actions";
 
 const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
 
@@ -8,6 +8,8 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
   const [provedor, setProvedor] = useState<"smtp" | "api">(status.provedor ?? "smtp");
   const [est, salvar, pend] = useActionState<EstadoEmail, FormData>(salvarConfigEmail, {});
   const [estTeste, testar, pendTeste] = useActionState<EstadoEmail, FormData>(enviarTeste, {});
+  const [fallback, setFallback] = useState(status.reguaFallback);
+  const [pendFallback, iniciarFallback] = useTransition();
 
   return (
     <div className="space-y-4">
@@ -98,6 +100,28 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
           {est.erro && <span role="alert" className="text-xs text-negativo">{est.erro}</span>}
         </div>
       </form>
+
+      <div className="space-y-2 rounded-2xl border border-linha bg-white p-4">
+        <h2 className="font-display text-sm font-semibold text-texto">Régua de cobrança</h2>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={fallback}
+            disabled={pendFallback}
+            onChange={() =>
+              iniciarFallback(async () => {
+                const r = await setReguaFallback(!fallback);
+                if (!r.erro) setFallback(!fallback);
+              })
+            }
+          />
+          Usar e-mail como fallback da régua
+        </label>
+        <p className="text-xs text-cinza">
+          A cobrança sai por e-mail quando o WhatsApp não entrega: canal não configurado, cliente sem telefone,
+          opt-out de WhatsApp ou erro do provedor. O cliente nunca recebe pelos dois.
+        </p>
+      </div>
 
       <form action={testar} className="space-y-3 rounded-2xl border border-linha bg-white p-4">
         <div>

@@ -21,6 +21,7 @@ export type StatusEmail = {
   apiProvedor: "resend" | "sendgrid" | null;
   temSenha: boolean;
   temChave: boolean;
+  reguaFallback: boolean;
 };
 
 async function exigirAdmin() {
@@ -34,7 +35,7 @@ export async function statusConfig(): Promise<StatusEmail | null> {
   const { data: c } = await supabase
     .from("email_config")
     .select(
-      "provedor, remetente_nome, remetente_email, smtp_host, smtp_porta, smtp_seguro, smtp_usuario, smtp_senha_cifrada, api_provedor, api_chave_cifrada",
+      "provedor, remetente_nome, remetente_email, smtp_host, smtp_porta, smtp_seguro, smtp_usuario, smtp_senha_cifrada, api_provedor, api_chave_cifrada, regua_email_fallback",
     )
     .eq("id", 1)
     .maybeSingle();
@@ -49,6 +50,7 @@ export async function statusConfig(): Promise<StatusEmail | null> {
     apiProvedor: (c?.api_provedor as "resend" | "sendgrid" | null) ?? null,
     temSenha: Boolean(c?.smtp_senha_cifrada),
     temChave: Boolean(c?.api_chave_cifrada),
+    reguaFallback: c?.regua_email_fallback !== false,
   };
 }
 
@@ -120,4 +122,14 @@ export async function enviarTeste(_prev: EstadoEmail, fd: FormData): Promise<Est
       "Se você recebeu esta mensagem, o canal de e-mail está configurado corretamente.",
   });
   return r.ok ? { enviado: true } : { erro: r.erro };
+}
+
+// Interruptor do e-mail como canal de fallback da régua de cobrança (RF-051, fatia B).
+export async function setReguaFallback(ligado: boolean): Promise<{ ok?: boolean; erro?: string }> {
+  if (!(await exigirAdmin())) return { erro: "Apenas admin." };
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("email_config").update({ regua_email_fallback: ligado }).eq("id", 1);
+  if (error) return { erro: "Falha ao alterar." };
+  revalidatePath("/configuracoes/email");
+  return { ok: true };
 }

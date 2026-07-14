@@ -127,7 +127,8 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
 
   const mostrarHonorario = podeVerHonorario(papel);
   let valorHonorario: number | null = null;
-  let optOutCobranca = true;
+  let cobrancaWhatsapp = true;
+  let cobrancaEmail = true;
   let extensaoFinanceira = {
     dia_vencimento: null as number | null,
     qtd_funcionarios: null as number | null,
@@ -139,11 +140,12 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   if (mostrarHonorario) {
     const { data: fin } = await supabase
       .from("clientes_financeiro")
-      .select("honorario_mensal, dia_vencimento, qtd_funcionarios, faixa_faturamento, data_saida, cobranca_whatsapp, indice_reajuste, percentual_reajuste")
+      .select("honorario_mensal, dia_vencimento, qtd_funcionarios, faixa_faturamento, data_saida, cobranca_whatsapp, cobranca_email, indice_reajuste, percentual_reajuste")
       .eq("cliente_id", id)
       .maybeSingle();
     valorHonorario = fin?.honorario_mensal != null ? Number(fin.honorario_mensal) : null;
-    optOutCobranca = fin?.cobranca_whatsapp !== false;
+    cobrancaWhatsapp = fin?.cobranca_whatsapp !== false;
+    cobrancaEmail = fin?.cobranca_email !== false;
     if (fin) {
       extensaoFinanceira = {
         dia_vencimento: fin.dia_vencimento ?? null,
@@ -208,7 +210,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
       {mostrarHonorario && <ContratosSection clienteId={id} contratos={contratos} />}
       {mostrarHonorario && (
         <section className="rounded-lg border border-linha bg-white p-4">
-          <OptOutCobranca clienteId={id} ativo={optOutCobranca} />
+          <OptOutCobranca clienteId={id} whatsapp={cobrancaWhatsapp} email={cobrancaEmail} />
         </section>
       )}
       {mostrarHonorario && (
