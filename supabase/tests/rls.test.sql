@@ -26,6 +26,14 @@ insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario
   ('aaaaaaaa-0000-0000-0000-000000000002', 'PJ', 'Cliente do Admin',    '11222333000262', 'Simples', '00000000-0000-0000-0000-000000000001')
   on conflict do nothing;
 
+-- Usuário do PORTAL (papel 'cliente'), vinculado ao cliente A (…001).
+insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, created_at, updated_at) values
+  ('00000000-0000-0000-0000-000000000005','00000000-0000-0000-0000-000000000000','authenticated','authenticated','portal@teste.com', '{"nome":"Portal","papel":"assistente"}'::jsonb, now(), now())
+  on conflict do nothing;
+-- O trigger cria como 'assistente'; o convite real faz este mesmo update server-side.
+update usuarios set papel = 'cliente', cliente_id = 'aaaaaaaa-0000-0000-0000-000000000001'
+  where id = '00000000-0000-0000-0000-000000000005';
+
 -- Honorário para ambos
 insert into clientes_financeiro (cliente_id, honorario_mensal) values
   ('aaaaaaaa-0000-0000-0000-000000000001', 500.00),
@@ -1341,4 +1349,122 @@ begin
   if v <> 'Editada pelo admin' then raise exception 'FALHA: admin não editou tarefa de outro (=%)', v; end if;
 
   raise notice 'OK: tarefa — admin edita qualquer; contador/financeiro só as suas';
+end $$;
+
+-- =========================================================================
+-- PORTAL DO CLIENTE — o bloco mais crítico: é a primeira superfície exposta
+-- ao cliente final. Prova isolamento (só o que é dele), leitura-apenas e que
+-- ele não enxerga nada da equipe.
+-- =========================================================================
+do $$
+declare n int; ok boolean; v_obrig uuid; v_tit_a uuid; v_tit_b uuid;
+begin
+  reset role;
+  -- Dados dos DOIS clientes, para provar o isolamento.
+  -- chk_caminho_prefixo: o caminho DEVE começar com o id do cliente (barra caminho cruzado).
+  insert into documentos (cliente_id, nome, caminho_storage) values
+    ('aaaaaaaa-0000-0000-0000-000000000001','Doc do A','aaaaaaaa-0000-0000-0000-000000000001/doc-a.pdf'),
+    ('aaaaaaaa-0000-0000-0000-000000000002','Doc do B','aaaaaaaa-0000-0000-0000-000000000002/doc-b.pdf')
+    on conflict do nothing;
+
+  insert into nfse (cliente_id, valor, competencia, ambiente) values
+    ('aaaaaaaa-0000-0000-0000-000000000001', 100, date_trunc('month', current_date)::date, 'homologacao'),
+    ('aaaaaaaa-0000-0000-0000-000000000002', 200, date_trunc('month', current_date)::date, 'homologacao');
+
+  select id into v_obrig from obrigacao limit 1;
+  if v_obrig is not null then
+    insert into obrigacao_instancia (obrigacao_id, cliente_id, competencia, vencimento_legal, vencimento_interno) values
+      (v_obrig,'aaaaaaaa-0000-0000-0000-000000000001', date_trunc('month', current_date)::date, current_date, current_date),
+      (v_obrig,'aaaaaaaa-0000-0000-0000-000000000002', date_trunc('month', current_date)::date, current_date, current_date)
+      on conflict do nothing;
+  end if;
+
+  -- Competência antiga de propósito: uq_titulo_honorario(cliente, competencia, origem)
+  -- já tem mensalidade do mês corrente semeada por outros blocos.
+  insert into titulo (cliente_id, origem, valor, competencia, vencimento) values
+    ('aaaaaaaa-0000-0000-0000-000000000001', 'MENSALIDADE', 500, '2019-01-01', '2019-01-10')
+    returning id into v_tit_a;
+  insert into titulo (cliente_id, origem, valor, competencia, vencimento) values
+    ('aaaaaaaa-0000-0000-0000-000000000002', 'MENSALIDADE', 900, '2019-01-01', '2019-01-10')
+    returning id into v_tit_b;
+
+  insert into boleto (titulo_id, provedor, valor, vencimento) values
+    (v_tit_a, 'inter', 500, current_date),
+    (v_tit_b, 'inter', 900, current_date);
+
+  -- ===== o cliente do portal (…005, vinculado ao cliente A) =====
+  perform _simular('00000000-0000-0000-0000-000000000005');
+
+  -- (1) vê SÓ o próprio cadastro
+  select count(*) into n from clientes;
+  if n <> 1 then raise exception 'FALHA(portal): cliente vê % cadastros (esperado 1)', n; end if;
+  select count(*) into n from clientes where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+  if n <> 1 then raise exception 'FALHA(portal): o cadastro visível não é o dele'; end if;
+
+  -- (2) vê SÓ os próprios documentos / notas / obrigações / títulos / boletos
+  select count(*) into n from documentos;
+  if n <> 1 then raise exception 'FALHA(portal): documentos visíveis = % (esperado 1)', n; end if;
+  select count(*) into n from documentos where cliente_id <> 'aaaaaaaa-0000-0000-0000-000000000001';
+  if n <> 0 then raise exception 'FALHA(portal): cliente vê documento de outro'; end if;
+
+  select count(*) into n from nfse where cliente_id <> 'aaaaaaaa-0000-0000-0000-000000000001';
+  if n <> 0 then raise exception 'FALHA(portal): cliente vê NFS-e de outro'; end if;
+
+  select count(*) into n from obrigacao_instancia where cliente_id <> 'aaaaaaaa-0000-0000-0000-000000000001';
+  if n <> 0 then raise exception 'FALHA(portal): cliente vê obrigação de outro'; end if;
+
+  select count(*) into n from titulo where cliente_id <> 'aaaaaaaa-0000-0000-0000-000000000001';
+  if n <> 0 then raise exception 'FALHA(portal): cliente vê título de outro'; end if;
+
+  select count(*) into n from boleto;
+  if n <> 1 then raise exception 'FALHA(portal): boletos visíveis = % (esperado 1)', n; end if;
+
+  -- (3) NÃO escreve
+  ok := true;
+  begin
+    -- caminho VÁLIDO de propósito: a barreira que queremos provar é a RLS, não a constraint.
+    insert into documentos (cliente_id, nome, caminho_storage)
+      values ('aaaaaaaa-0000-0000-0000-000000000001','Hack','aaaaaaaa-0000-0000-0000-000000000001/hack.pdf');
+    raise exception 'FALHA(portal): cliente inseriu documento';
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(portal): insert de documento não foi barrado'; end if;
+
+  update clientes set razao_social = 'hack' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+  reset role;
+  select count(*) into n from clientes where id = 'aaaaaaaa-0000-0000-0000-000000000001' and razao_social = 'hack';
+  if n <> 0 then raise exception 'FALHA(portal): cliente alterou o próprio cadastro'; end if;
+
+  -- (4) NÃO vê nada da equipe
+  perform _simular('00000000-0000-0000-0000-000000000005');
+  select count(*) into n from tarefa;
+  if n <> 0 then raise exception 'FALHA(portal): cliente vê tarefas da equipe (%)', n; end if;
+  select count(*) into n from clientes_financeiro;
+  if n <> 0 then raise exception 'FALHA(portal): cliente vê honorários'; end if;
+
+  reset role;
+  raise notice 'OK: portal — cliente vê só o que é dele, não escreve e não enxerga a equipe';
+end $$;
+
+-- ASSERT: constraint do vínculo — cliente exige cliente_id; equipe não pode ter
+do $$
+declare ok boolean;
+begin
+  reset role;
+  -- Tiro o vínculo do usuário do portal (o papel continua 'cliente'). Não mexo no papel:
+  -- o trigger anti-escalonamento reverteria a mudança e a constraint nem seria exercida.
+  ok := true;
+  begin
+    update usuarios set cliente_id = null where id = '00000000-0000-0000-0000-000000000005';
+    raise exception 'FALHA: aceitou papel cliente sem vínculo';
+  exception when check_violation then ok := false; end;
+  if ok then raise exception 'FALHA: cliente sem cliente_id não foi barrado'; end if;
+
+  ok := true;
+  begin
+    update usuarios set cliente_id = 'aaaaaaaa-0000-0000-0000-000000000001' where id = '00000000-0000-0000-0000-000000000004';
+    raise exception 'FALHA: aceitou equipe COM vínculo de cliente';
+  exception when check_violation then ok := false; end;
+  if ok then raise exception 'FALHA: equipe com cliente_id não foi barrada'; end if;
+
+  raise notice 'OK: chk_usuario_cliente — cliente exige vínculo; equipe não pode ter';
 end $$;
