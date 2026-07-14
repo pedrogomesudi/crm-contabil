@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente, podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
+import { ehCliente } from "@/lib/portal/permissoes";
 import { contarVencimentos } from "@/app/(app)/vencimentos/actions";
 import { contarAlertas } from "@/app/(app)/onboarding/alertas-actions";
 import { contarRiscos } from "@/app/(app)/obrigacoes/actions";
@@ -17,6 +18,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     await supabase.auth.signOut();
     redirect("/login");
   }
+
+  // Cliente do portal NUNCA entra nas telas da equipe (o gate espelhado vive no
+  // layout do grupo (portal)). Vem antes das contagens: o cliente não dispara
+  // nenhuma query de equipe.
+  if (ehCliente(perfil.papel)) redirect("/portal");
 
   const alertasOnboarding = podeCriarCliente(perfil.papel) ? await contarAlertas() : 0;
   const riscosObrigacoes = podeCriarCliente(perfil.papel) ? await contarRiscos() : 0;
