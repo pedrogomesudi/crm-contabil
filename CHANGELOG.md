@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Timesheet (RF-043) e Rentabilidade por cliente (RF-044):** apontamento de horas **manual** e por
+  **cronômetro** (com trava de 8h contra cronômetro esquecido), por cliente e tarefa. **Custo/hora por
+  colaborador com vigência**, em tabela **admin-only** (dado salarial — nem o financeiro vê o valor
+  individual). Relatório de **rentabilidade** por cliente e período: horas, custo, **recebido × contratado**
+  lado a lado, margem R$/% e R$/hora, ordenado pelos piores primeiro, com aviso de cliente **sem
+  apontamento** (custo zero não é cliente barato — é ninguém apontou).
+
 - **Comunicados em massa segmentados (RF-055):** avisos de legislação e prazos para um **segmento** da base
   — por regime, tipo, status, **município/UF**, contador ou responsável de departamento (E entre critérios,
   OU dentro de cada um; município compara sem acento/caixa). **Prévia obrigatória** com contagem, lista e

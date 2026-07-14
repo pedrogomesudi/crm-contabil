@@ -218,6 +218,37 @@ Tarefas internas da equipe (RF-040 núcleo + RF-042 parcial).
 - **Em aberto (fatias seguintes):** anexos em tarefa, timesheet (RF-043), rentabilidade (RF-044) e
   solicitações internas entre departamentos com SLA (RF-045).
 
+### 3.5.1 Timesheet e Rentabilidade (RF-043 / RF-044)
+Responde à pergunta que sustenta decisão de preço e de encerrar contrato ruim: **quanto custa atender este
+cliente — e ele paga por isso?**
+
+- **Apontamento (`/timesheet`, toda a equipe):** **manual** (data + duração aceitando `1h30`, `1:30` ou `90`
+  + cliente/tarefa + o que foi feito) e por **cronômetro** (iniciar/parar no painel ou na ficha da tarefa).
+  Apontar numa tarefa **herda o cliente** dela; sem cliente, a hora é **interna** (não entra no custo de
+  nenhum cliente).
+  - **Uma sessão de cronômetro por pessoa** (a PK de `apontamento_sessao` é o usuário) — dois cronômetros
+    simultâneos gerariam horas duplicadas.
+  - **Trava das 8 horas:** ao parar uma sessão longa, o sistema **não grava em silêncio** — pede confirmação
+    com o tempo editável. Cronômetro esquecido rodando a noite inteira é o defeito clássico do recurso, e 14h
+    fantasma destruiriam a margem do cliente sem ninguém entender por quê.
+- **Custo/hora (Configurações → Custo por colaborador, SÓ admin):** é dado **salarial**, por isso vive em
+  tabela própria (`colaborador_custo`) e **não** numa coluna de `usuarios` — a RLS do Postgres é por
+  **linha**, não por coluna, e a coluna vazaria o custo para qualquer um da equipe que lesse a tabela.
+  **Nem o financeiro** enxerga o valor individual.
+  - **Vigência:** cada custo vale a partir de uma data, e a nova **fecha a anterior**. O relatório usa o custo
+    **vigente na data de cada apontamento** — sem isso, um aumento reescreveria a rentabilidade do passado.
+- **Rentabilidade (`/financeiro/rentabilidade`, admin e financeiro):** por cliente e período — **Horas**,
+  **Custo estimado**, **Recebido** (baixas não estornadas), **Contratado** (honorário × meses), **Margem R$**,
+  **Margem %** e **R$/hora**. O relatório roda com `service_role` (precisa cruzar o custo, admin-only) e é
+  **agregado por cliente**: nunca mostra "quanto custa a hora do Fulano".
+  - **Recebido e contratado lado a lado:** o contratado sozinho esconde o inadimplente (ele parece rentável
+    sem pagar); o recebido sozinho pune quem só atrasou. A diferença entre os dois **é** o sinal de atraso
+    (destacado em âmbar).
+  - **Cliente sem apontamento é sinalizado**, nunca exibido como custo zero silencioso: custo zero não
+    significa "cliente barato", significa **"ninguém apontou"**.
+  - **Ordenado por margem crescente:** os piores primeiro — o relatório existe para achar cliente ruim.
+  - Divisão por zero nunca vira `Infinity`: recebido 0 → margem % **nula**.
+
 ### 3.6 Portal do cliente
 Área exposta ao **cliente final** (RF-052) — a primeira superfície fora da equipe, por isso desenhada
 **falha fechada**.

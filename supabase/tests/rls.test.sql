@@ -1917,3 +1917,84 @@ begin
 
   raise notice 'OK: comunicado — índice único barra envio duplicado ao mesmo cliente';
 end $$;
+
+-- ============================================================================
+-- Timesheet e rentabilidade (RF-043/044) — 0094
+-- ============================================================================
+
+-- ASSERT: custo/hora é dado salarial — SÓ o admin vê (nem o financeiro)
+do $$
+declare n int; ok boolean := false;
+begin
+  reset role;
+  insert into colaborador_custo (usuario_id, custo_hora, vigencia_inicio)
+    values ('00000000-0000-0000-0000-000000000003', 80.00, '2026-01-01');
+
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador: não vê nem o próprio custo
+  select count(*) into n from colaborador_custo;
+  if n <> 0 then raise exception 'FALHA(custo): contador vê o custo/hora'; end if;
+  begin
+    insert into colaborador_custo (usuario_id, custo_hora, vigencia_inicio)
+      values ('00000000-0000-0000-0000-000000000003', 10.00, '2026-02-01');
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(custo): contador cadastrou custo/hora'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro: TAMBÉM não vê salário
+  select count(*) into n from colaborador_custo;
+  if n <> 0 then raise exception 'FALHA(custo): financeiro vê o custo/hora individual'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente: não vê
+  select count(*) into n from colaborador_custo;
+  if n <> 0 then raise exception 'FALHA(custo): assistente vê o custo/hora'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000005'); -- cliente do portal
+  select count(*) into n from colaborador_custo;
+  if n <> 0 then raise exception 'FALHA(custo): cliente do portal vê o custo/hora'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000001'); -- admin: vê
+  select count(*) into n from colaborador_custo;
+  if n < 1 then raise exception 'FALHA(custo): admin não vê o custo/hora'; end if;
+  reset role;
+
+  raise notice 'OK: colaborador_custo — só admin (nem o financeiro vê salário individual)';
+end $$;
+
+-- ASSERT: apontamento — cada um o seu; ninguém aponta em nome de outro; financeiro vê todos
+do $$
+declare n int; ok boolean := false;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente aponta
+  insert into apontamento (cliente_id, data, minutos, descricao)
+    values ('aaaaaaaa-0000-0000-0000-000000000001', '2026-07-10', 120, 'Fechamento do assistente');
+
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  insert into apontamento (cliente_id, data, minutos, descricao)
+    values ('aaaaaaaa-0000-0000-0000-000000000001', '2026-07-10', 60, 'Apuracao do contador');
+
+  -- não vê o apontamento do assistente
+  select count(*) into n from apontamento where usuario_id = '00000000-0000-0000-0000-000000000002';
+  if n <> 0 then raise exception 'FALHA(apontamento): contador vê o apontamento de outro'; end if;
+  -- vê o próprio
+  select count(*) into n from apontamento where usuario_id = '00000000-0000-0000-0000-000000000003';
+  if n < 1 then raise exception 'FALHA(apontamento): contador não vê o próprio apontamento'; end if;
+
+  -- NÃO consegue apontar em nome de outro (o default auth.uid() sozinho não impediria)
+  begin
+    insert into apontamento (usuario_id, cliente_id, data, minutos)
+      values ('00000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', '2026-07-11', 480);
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(apontamento): contador apontou horas em nome de outro'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro vê TODOS
+  select count(*) into n from apontamento;
+  if n < 2 then raise exception 'FALHA(apontamento): financeiro não vê os apontamentos da equipe (n=%)', n; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000005'); -- cliente do portal
+  select count(*) into n from apontamento;
+  if n <> 0 then raise exception 'FALHA(apontamento): cliente do portal vê apontamentos'; end if;
+  reset role;
+
+  raise notice 'OK: apontamento — cada um o seu; ninguém aponta por outro; financeiro vê todos';
+end $$;
