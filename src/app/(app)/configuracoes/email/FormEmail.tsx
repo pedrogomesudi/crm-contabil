@@ -69,7 +69,9 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
               Senha
               <input name="smtp_senha" type="password" autoComplete="new-password" placeholder={status.temSenha ? "•••••• (configurada)" : ""} className={`mt-0.5 block w-56 ${cls}`} />
               <span className="mt-0.5 block text-[11px] text-cinza-claro">
-                {status.temSenha ? "Deixe em branco para manter a atual." : "Obrigatória no primeiro salvamento."}
+                {status.temSenha
+                  ? "Em branco mantém a atual — mas se você trocar o host ou o usuário, informe a senha do novo servidor."
+                  : "Obrigatória no primeiro salvamento."}
               </span>
             </label>
           </div>
@@ -86,7 +88,9 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
               Chave de API
               <input name="api_chave" type="password" autoComplete="new-password" placeholder={status.temChave ? "•••••• (configurada)" : "re_..."} className={`mt-0.5 block w-72 ${cls}`} />
               <span className="mt-0.5 block text-[11px] text-cinza-claro">
-                {status.temChave ? "Deixe em branco para manter a atual." : "O domínio precisa estar verificado no provedor."}
+                {status.temChave
+                  ? "Em branco mantém a atual — mas se você trocar de provedor, informe a nova chave."
+                  : "O domínio precisa estar verificado no provedor."}
               </span>
             </label>
           </div>
