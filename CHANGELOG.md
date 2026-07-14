@@ -10,6 +10,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Solicitações internas entre departamentos (RF-045):** pedidos de um departamento a outro, com **SLA por
+  departamento de destino** (calculado no servidor — quem abre não escolhe o prazo) e **fila de atendimento**
+  (nasce sem dono; quem atende **assume**). Thread, converter em tarefa, filtros (destino, origem, status,
+  SLA vencido, só as minhas, sem responsável) e contador de fila no Início. Gatilho impede forjar autoria,
+  status e prazo. Novo campo **departamento** do colaborador (tela de Usuários).
+
 - **Timesheet (RF-043) e Rentabilidade por cliente (RF-044):** apontamento de horas **manual** e por
   **cronômetro** (com trava de 8h contra cronômetro esquecido), por cliente e tarefa. **Custo/hora por
   colaborador com vigência**, em tabela **admin-only** (dado salarial — nem o financeiro vê o valor
