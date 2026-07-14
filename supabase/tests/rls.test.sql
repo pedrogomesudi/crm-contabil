@@ -1468,3 +1468,89 @@ begin
 
   raise notice 'OK: chk_usuario_cliente — cliente exige vínculo; equipe não pode ter';
 end $$;
+
+-- =========================================================================
+-- PORTAL FATIA B — a PRIMEIRA escrita do papel 'cliente'. Prova que ele só
+-- consegue enviar documento do próprio cadastro, marcado como origem='cliente',
+-- e que continua sem poder alterar/apagar nada nem escrever no rastreio.
+-- =========================================================================
+do $$
+declare n int; ok boolean; v_doc uuid;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000005'); -- cliente do portal (cliente A)
+
+  -- (1) ENVIA documento do próprio cadastro -> efeito
+  insert into documentos (cliente_id, nome, caminho_storage, origem)
+    values ('aaaaaaaa-0000-0000-0000-000000000001','Enviado pelo cliente','aaaaaaaa-0000-0000-0000-000000000001/envio.pdf','cliente')
+    returning id into v_doc;
+  reset role;
+  select count(*) into n from documentos where id = v_doc and origem = 'cliente';
+  if n <> 1 then raise exception 'FALHA(portal B): cliente não conseguiu enviar documento'; end if;
+
+  -- (2) NÃO envia para o cadastro de OUTRO cliente
+  perform _simular('00000000-0000-0000-0000-000000000005');
+  ok := true;
+  begin
+    insert into documentos (cliente_id, nome, caminho_storage, origem)
+      values ('aaaaaaaa-0000-0000-0000-000000000002','Invasao','aaaaaaaa-0000-0000-0000-000000000002/x.pdf','cliente');
+    raise exception 'FALHA(portal B): cliente enviou documento para outro cadastro';
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(portal B): envio para outro cadastro não foi barrado'; end if;
+
+  -- (3) NÃO consegue se passar por documento do escritório (origem='escritorio')
+  ok := true;
+  begin
+    insert into documentos (cliente_id, nome, caminho_storage, origem)
+      values ('aaaaaaaa-0000-0000-0000-000000000001','Falso','aaaaaaaa-0000-0000-0000-000000000001/falso.pdf','escritorio');
+    raise exception 'FALHA(portal B): cliente inseriu documento como origem escritorio';
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(portal B): origem escritorio não foi barrada'; end if;
+
+  -- (4) NÃO altera nem apaga documento (nem o que ele mesmo enviou)
+  update documentos set nome = 'hack' where id = v_doc;
+  reset role;
+  select count(*) into n from documentos where id = v_doc and nome = 'hack';
+  if n <> 0 then raise exception 'FALHA(portal B): cliente alterou documento'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000005');
+  delete from documentos where id = v_doc;
+  reset role;
+  select count(*) into n from documentos where id = v_doc;
+  if n <> 1 then raise exception 'FALHA(portal B): cliente apagou documento'; end if;
+
+  -- (5) NÃO escreve no rastreio (portal_acesso não tem policy de INSERT)
+  perform _simular('00000000-0000-0000-0000-000000000005');
+  ok := true;
+  begin
+    insert into portal_acesso (cliente_id, tipo, ref_id)
+      values ('aaaaaaaa-0000-0000-0000-000000000001','documento', v_doc);
+    raise exception 'FALHA(portal B): cliente escreveu no rastreio';
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(portal B): insert em portal_acesso não foi barrado'; end if;
+
+  -- (6) NÃO escreve em tarefa (a tarefa automática é criada por service_role)
+  ok := true;
+  begin
+    insert into tarefa (titulo) values ('tarefa do cliente');
+    raise exception 'FALHA(portal B): cliente criou tarefa';
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(portal B): insert em tarefa não foi barrado'; end if;
+
+  reset role;
+  raise notice 'OK: portal B — cliente só envia o próprio documento; não altera, não apaga, não escreve rastreio/tarefa';
+end $$;
+
+-- ASSERT: equipe LÊ o rastreio do seu cliente
+do $$
+declare n int;
+begin
+  reset role;
+  insert into portal_acesso (cliente_id, tipo, ref_id, usuario_id)
+    values ('aaaaaaaa-0000-0000-0000-000000000001','documento', gen_random_uuid(), '00000000-0000-0000-0000-000000000005');
+
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador (dono do cliente A)
+  select count(*) into n from portal_acesso where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+  if n < 1 then raise exception 'FALHA: contador não lê o rastreio do próprio cliente'; end if;
+  reset role;
+  raise notice 'OK: equipe lê o rastreio do portal do seu cliente';
+end $$;

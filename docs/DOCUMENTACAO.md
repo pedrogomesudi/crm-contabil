@@ -211,7 +211,19 @@ Tarefas internas da equipe (RF-040 núcleo + RF-042 parcial).
   - **downloads:** o registro é lido com o cliente Supabase **do usuário** (a RLS prova a titularidade) e só
     então a URL é assinada com `service_role` (60s). Um id vindo do navegador nunca é suficiente;
   - o papel `cliente` **não é oferecido** na tela de Usuários (`PAPEIS_EQUIPE`): só nasce pelo convite ao portal.
-- **Em aberto (fatias seguintes):** upload de documentos pelo cliente e **rastreio de entrega** (RF-053);
+- **Envio de documentos pelo cliente (Fatia B):** o cliente **envia arquivos** (PDF/PNG/JPG, até 10 MB,
+  validados por magic bytes) pelo portal. É a **única escrita** concedida ao papel `cliente`: uma policy de
+  INSERT em `documentos` com `cliente_id = auth_cliente_id() and origem = 'cliente'` — **sem UPDATE e sem
+  DELETE**, nem do que ele mesmo enviou. O caminho do arquivo é **gerado no servidor** (a constraint
+  `chk_caminho_prefixo` já impede escrita na pasta de outro). Cada envio **cria automaticamente uma tarefa**
+  ("Documento enviado pelo cliente…"), atribuída ao responsável do departamento Contábil ou ao contador do
+  cliente — assim nada passa batido.
+- **Rastreio de entrega (RF-053):** todo download do cliente (documento, DANFSe, comprovante de obrigação e
+  2ª via de boleto) é **registrado** em `portal_acesso` — gravado **apenas server-side** (a tabela não tem
+  policy de INSERT). Na ficha do cliente, a seção **Documentos** passa a mostrar **"visto em dd/mm"** ou
+  **"não visualizado"**, e marca o que foi **"enviado pelo cliente"**. Responde à pergunta que mais gera
+  ligação: *"o cliente viu a guia?"*.
+- **Em aberto (fatias seguintes):** **reenvio automático** dos itens não visualizados (completa o RF-053);
   central de **solicitações/tickets** (RF-054).
 
 ### 3.7 Atendimento (WhatsApp)
