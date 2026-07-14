@@ -15,6 +15,8 @@ const ITENS = [
   { href: "/financeiro/regua-cobranca", label: "Régua de cobrança" },
   { href: "/financeiro/reajuste", label: "Reajuste anual de honorários" },
   { href: "/financeiro/conciliacao", label: "Conciliação bancária" },
+  { href: "/financeiro/rentabilidade", label: "Rentabilidade por cliente" },
+  { href: "/financeiro/relatorios", label: "Relatórios" },
   { href: "/financeiro/cadastros/contas", label: "Contas bancárias" },
   { href: "/financeiro/cadastros/plano-de-contas", label: "Plano de contas" },
   { href: "/financeiro/cadastros/centros-de-custo", label: "Centros de custo" },

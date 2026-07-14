@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Alterado
+
+- **Menu lateral enxuto:** Propostas, Obrigações, Escalonamento, Vencimentos, Conciliação, Rentabilidade,
+  Integração Domínio e Usuários saíram da barra e passaram a viver **dentro da seção a que pertencem**
+  (Comercial, Clientes, Financeiro e Configurações). Os **badges de alerta** de Obrigações, Escalonamento e
+  Vencimentos **somam no item Clientes** e aparecem individualmente na sub-navegação de lá — um alerta que
+  ninguém vê é um alerta que não existe. O assistente passa a acessar Configurações (só a Integração
+  Domínio), que antes era admin-only.
+
 ### Adicionado
 
 - **Solicitações internas entre departamentos (RF-045):** pedidos de um departamento a outro, com **SLA por
