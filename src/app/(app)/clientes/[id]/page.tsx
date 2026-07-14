@@ -20,6 +20,10 @@ import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { LinhaTempoVigencias } from "@/components/clientes/LinhaTempoVigencias";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
+import { EmailsCliente } from "@/components/clientes/EmailsCliente";
+import { listarEmails, listarAnexaveis } from "./email-actions";
+import { variaveisDoCliente } from "@/lib/email/template";
+import { podeEnviarEmail } from "@/lib/clientes/permissoes";
 import { NotasFiscaisSection } from "@/components/nfse/NotasFiscaisSection";
 import { EmissaoClienteSection } from "@/components/nfse/EmissaoClienteSection";
 import { VencimentosSection } from "@/components/vencimentos/VencimentosSection";
@@ -52,6 +56,31 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
     .eq("id", id)
     .maybeSingle();
   if (!cliente) notFound();
+
+  // E-mail integrado (RF-051): histórico + o que dá para anexar + templates ativos.
+  const emails = await listarEmails(id);
+  const anexaveis = podeEnviarEmail(papel) ? await listarAnexaveis(id) : [];
+  const { data: tplRows } = await supabase
+    .from("email_template")
+    .select("id, nome, assunto, corpo")
+    .eq("ativo", true)
+    .order("nome");
+  const templatesEmail = (tplRows ?? []).map((t) => ({
+    id: t.id as string,
+    nome: t.nome as string,
+    assunto: t.assunto as string,
+    corpo: t.corpo as string,
+  }));
+  const { data: marcaEmail } = await supabase.from("escritorio_config").select("nome").eq("id", 1).maybeSingle();
+  const variaveisEmail = variaveisDoCliente(
+    {
+      razaoSocial: cliente.razao_social as string,
+      cnpj: (cliente.cpf_cnpj as string | null) ?? null,
+      email: (cliente.email as string | null) ?? null,
+    },
+    (marcaEmail?.nome as string | null) ?? "",
+    new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" }),
+  );
 
   // Só admin reatribui contador no UPDATE (trigger congela p/ os demais).
   const contadorEditavel = podeAtribuirContador(papel, "editar");
@@ -193,6 +222,15 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         papel={papel}
         clienteNome={cliente.responsavel_nome ?? cliente.razao_social}
         clienteEmail={cliente.email ?? ""}
+      />
+      <EmailsCliente
+        clienteId={id}
+        emailCliente={cliente.email ?? ""}
+        variaveis={variaveisEmail}
+        templates={templatesEmail}
+        anexaveis={anexaveis}
+        emails={emails}
+        podeEnviar={podeEnviarEmail(papel)}
       />
       <NotasFiscaisSection clienteId={id} papel={papel} />
       <EmissaoClienteSection clienteId={id} papel={papel} />
