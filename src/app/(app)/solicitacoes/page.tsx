@@ -63,6 +63,12 @@ export default async function SolicitacoesPage({
 
   return (
     <main className="mx-auto max-w-5xl space-y-5 p-4">
+      <div className="flex gap-1 text-sm">
+        <span className="rounded-lg border border-verde bg-verde/10 px-3 py-1.5 text-verde">Do cliente</span>
+        <Link href="/solicitacoes/internas" className="rounded-lg border border-linha px-3 py-1.5 text-cinza">
+          Internas
+        </Link>
+      </div>
       <PageHeader titulo="Solicitações" subtitulo="Pedidos abertos pelos clientes no portal" />
 
       <div className="flex flex-wrap items-center gap-1.5">

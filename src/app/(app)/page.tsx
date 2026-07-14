@@ -7,6 +7,7 @@ import { REGIMES } from "@/lib/tipos";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { Card } from "@/components/ui/Card";
+import { contadoresFila } from "@/app/(app)/solicitacoes/internas/actions";
 import { Botao } from "@/components/ui/Botao";
 
 export const metadata = { title: "Início" };
@@ -47,6 +48,9 @@ export default async function Dashboard() {
   const porRegime = resumo?.por_regime ?? {};
   const recentes = recentesR.data ?? [];
 
+  // Uma fila que ninguém abre é onde os pedidos vão morrer: o número no Início é o que faz entrar.
+  const fila = await contadoresFila();
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -67,6 +71,20 @@ export default async function Dashboard() {
           </>
         }
       />
+
+      {(fila.minhaFila > 0 || fila.vencidas > 0) && (
+        <Link
+          href={fila.vencidas > 0 ? "/solicitacoes/internas?vencidas=1" : "/solicitacoes/internas?minhas=1"}
+          className="block rounded-2xl border border-linha bg-white p-3 text-sm hover:bg-creme"
+        >
+          <span className="text-texto">
+            <strong>{fila.minhaFila}</strong> solicitação(ões) interna(s) na sua fila
+            {fila.vencidas > 0 && (
+              <span className="text-negativo"> · {fila.vencidas} com SLA vencido</span>
+            )}
+          </span>
+        </Link>
+      )}
 
       {erroResumo ? (
         <p role="alert" className="rounded bg-negativo/10 px-3 py-2 text-sm text-negativo">

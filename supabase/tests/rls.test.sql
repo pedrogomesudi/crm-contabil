@@ -1998,3 +1998,92 @@ begin
 
   raise notice 'OK: apontamento — cada um o seu; ninguém aponta por outro; financeiro vê todos';
 end $$;
+
+-- ============================================================================
+-- Solicitações internas entre departamentos (RF-045) — 0095
+-- ============================================================================
+
+-- ASSERT: o gatilho sobrescreve prazo, autoria e número — nada disso vem do formulário
+do $$
+declare s_id uuid; m_id uuid; v_prazo date; v_solic uuid; v_autor uuid; v_status text; n int;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador abre
+
+  -- Forja: prazo lá na frente, solicitante = admin, status já resolvido.
+  insert into solicitacao_interna (origem, destino, assunto, prazo, solicitante_id, status)
+    values ('fiscal', 'pessoal', 'Preciso da folha', '2030-01-01',
+            '00000000-0000-0000-0000-000000000001', 'resolvida')
+    returning id into s_id;
+  reset role;
+
+  select prazo, solicitante_id, status::text into v_prazo, v_solic, v_status
+    from solicitacao_interna where id = s_id;
+
+  -- PRAZO: veio do SLA do DESTINO (pessoal = 1 dia), não o forjado.
+  if v_prazo <> current_date + 1 then
+    raise exception 'FALHA(interna): prazo não veio do SLA do destino (=%), esperado %', v_prazo, current_date + 1;
+  end if;
+  -- SOLICITANTE: quem estava autenticado, não o forjado.
+  if v_solic <> '00000000-0000-0000-0000-000000000003' then
+    raise exception 'FALHA(interna): solicitante_id forjado sobreviveu (=%)', v_solic;
+  end if;
+  -- STATUS: nasce aberta, não "resolvida".
+  if v_status <> 'aberta' then raise exception 'FALHA(interna): status forjado sobreviveu (=%)', v_status; end if;
+
+  -- MENSAGEM: autoria forçada — o contador tenta se passar pelo admin.
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  insert into solicitacao_interna_mensagem (solicitacao_id, corpo, autor_id)
+    values (s_id, 'Mensagem com autoria forjada', '00000000-0000-0000-0000-000000000001')
+    returning id into m_id;
+  reset role;
+  select autor_id into v_autor from solicitacao_interna_mensagem where id = m_id;
+  if v_autor <> '00000000-0000-0000-0000-000000000003' then
+    raise exception 'FALHA(interna): autor_id forjado sobreviveu (=%)', v_autor;
+  end if;
+
+  -- O cliente do portal NÃO vê nada disto.
+  perform _simular('00000000-0000-0000-0000-000000000005');
+  select count(*) into n from solicitacao_interna;
+  if n <> 0 then raise exception 'FALHA(interna): cliente do portal vê solicitações internas'; end if;
+  select count(*) into n from solicitacao_interna_mensagem;
+  if n <> 0 then raise exception 'FALHA(interna): cliente do portal vê as mensagens internas'; end if;
+  reset role;
+
+  raise notice 'OK: solicitacao_interna — prazo do SLA do destino; autoria e status não são forjáveis';
+end $$;
+
+-- ASSERT: fila — a equipe assume e atende; SLA só o admin configura
+do $$
+declare s_id uuid; v_resp uuid; n int; ok boolean := false;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente abre (sem dono)
+  insert into solicitacao_interna (origem, destino, assunto)
+    values ('contabil', 'fiscal', 'Conferir apuracao') returning id into s_id;
+  reset role;
+  select responsavel_id into v_resp from solicitacao_interna where id = s_id;
+  if v_resp is not null then raise exception 'FALHA(interna): solicitação nasceu com dono (deveria ir para a fila)'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador assume e responde
+  update solicitacao_interna set responsavel_id = '00000000-0000-0000-0000-000000000003', status = 'em_andamento'
+    where id = s_id;
+  insert into solicitacao_interna_mensagem (solicitacao_id, corpo) values (s_id, 'Assumido, ja verifico.');
+
+  -- financeiro também participa da comunicação interna
+  perform _simular('00000000-0000-0000-0000-000000000004');
+  select count(*) into n from solicitacao_interna where id = s_id;
+  if n <> 1 then raise exception 'FALHA(interna): financeiro não vê a solicitação interna'; end if;
+
+  -- SLA: assistente lê, mas não altera
+  select count(*) into n from departamento_sla;
+  if n < 4 then raise exception 'FALHA(interna): SLA por departamento não foi semeado'; end if;
+  perform _simular('00000000-0000-0000-0000-000000000002');
+  begin
+    update departamento_sla set dias = 60 where departamento = 'fiscal';
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  reset role;
+  perform 1 from departamento_sla where departamento = 'fiscal' and dias = 2;
+  if not found then raise exception 'FALHA(interna): assistente alterou o SLA do departamento'; end if;
+
+  raise notice 'OK: solicitacao_interna — nasce na fila; equipe assume; SLA só o admin muda';
+end $$;

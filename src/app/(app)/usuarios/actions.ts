@@ -198,3 +198,15 @@ export async function definirSuperior(usuarioId: string, formData: FormData) {
   await admin.from("usuarios").update({ superior_id: superiorId }).eq("id", usuarioId);
   revalidatePath("/usuarios");
 }
+
+// Departamento do colaborador: é a ORIGEM das solicitações internas (RF-045) e evita
+// que a pessoa precise reescolhê-lo a cada pedido.
+export async function definirDepartamento(usuarioId: string, formData: FormData) {
+  const eu = await exigirAdmin();
+  if (!eu) return;
+  const bruto = String(formData.get("departamento") ?? "");
+  const departamento = bruto === "" ? null : bruto;
+  const admin = createAdminSupabase();
+  await admin.from("usuarios").update({ departamento }).eq("id", usuarioId);
+  revalidatePath("/usuarios");
+}

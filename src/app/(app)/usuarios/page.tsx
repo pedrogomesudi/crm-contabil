@@ -4,7 +4,8 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { ConviteForm } from "@/components/ConviteForm";
 import { BotaoAcao } from "@/components/usuarios/BotaoAcao";
 import { PAPEIS_EQUIPE } from "@/lib/tipos";
-import { alterarPapel, definirAtivo, reenviarAcesso, definirSuperior } from "./actions";
+import { DEPARTAMENTOS } from "@/lib/clientes/departamentos";
+import { alterarPapel, definirAtivo, reenviarAcesso, definirSuperior, definirDepartamento } from "./actions";
 
 export const metadata = { title: "Usuários" };
 
@@ -34,7 +35,7 @@ export default async function UsuariosPage({
   const admin = createAdminSupabase();
   const { data: usuarios, error } = await admin
     .from("usuarios")
-    .select("id, nome, email, papel, ativo, superior_id")
+    .select("id, nome, email, papel, ativo, superior_id, departamento")
     .order("criado_em")
     .order("id") // desempate determinístico em criado_em iguais
     .limit(200);
@@ -69,6 +70,7 @@ export default async function UsuariosPage({
                 <th className="p-2 font-medium">Nome</th>
                 <th className="p-2 font-medium">E-mail</th>
                 <th className="p-2 font-medium">Papel</th>
+                <th className="p-2 font-medium">Departamento</th>
                 <th className="p-2 font-medium">Superior</th>
                 <th className="p-2 font-medium">Status</th>
                 <th className="p-2 font-medium">Acesso</th>
@@ -111,6 +113,26 @@ export default async function UsuariosPage({
                           </BotaoAcao>
                         </form>
                       )}
+                    </td>
+                    <td className="p-2">
+                      <form action={definirDepartamento.bind(null, u.id)} className="flex gap-1">
+                        <select
+                          name="departamento"
+                          defaultValue={(u as { departamento: string | null }).departamento ?? ""}
+                          aria-label={`Departamento de ${u.nome}`}
+                          className="rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto focus:border-verde"
+                        >
+                          <option value="">— nenhum —</option>
+                          {DEPARTAMENTOS.map((d) => (
+                            <option key={d.valor} value={d.valor}>
+                              {d.rotulo}
+                            </option>
+                          ))}
+                        </select>
+                        <BotaoAcao className="rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme" rotulo={`Salvar departamento de ${u.nome}`}>
+                          Salvar
+                        </BotaoAcao>
+                      </form>
                     </td>
                     <td className="p-2">
                       {ehProprio ? (

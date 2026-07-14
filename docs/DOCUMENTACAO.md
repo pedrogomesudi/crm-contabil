@@ -297,6 +297,32 @@ cliente — e ele paga por isso?**
 - **Em aberto (fatias seguintes):** **reenvio automático** dos itens não visualizados (completa o RF-053);
   central de **solicitações/tickets** (RF-054).
 
+### 3.6.1 Solicitações internas entre departamentos (RF-045)
+O mesmo motor das solicitações do portal, virado **para dentro**: um departamento pede algo a outro, com
+**SLA** e **fila de atendimento**.
+
+- **Tabela própria** (`solicitacao_interna`), **não** a do portal: aquela gira em torno de `auth_cliente_id()`
+  e de `cliente_id` obrigatório — enfiar pedidos internos ali colocaria um `cliente_id` nulo atravessando
+  policies escritas para o caso oposto.
+- **Fila:** a solicitação nasce **sem dono**, na fila do departamento de destino; quem for atender clica em
+  **"Assumir"**. Quem abre **pode** sugerir um responsável, mas não precisa. Um pedido endereçado a uma pessoa
+  específica **morre na caixa de quem saiu de férias** — na fila, o departamento inteiro enxerga.
+  - "Assumir" só vale **se estiver sem dono**: dois cliques simultâneos não trocam o responsável pelas costas
+    de quem chegou primeiro.
+- **SLA por departamento** (Configurações → SLA por departamento, admin): Pessoal responde em 1 dia,
+  Fiscal em 2, Contábil em 3, Societário em 5. O **prazo é calculado no servidor** pelo SLA do **destino** —
+  quem abre **não escolhe**, senão todo pedido nasceria "para ontem". Mudar o SLA **não** reescreve o prazo
+  das solicitações já abertas.
+- **Segurança (lição da 0088 — *default não é validação*):** um gatilho `before insert` **sobrescreve**
+  `solicitante_id`, `autor_id` da mensagem, `numero`, `status` e `prazo`. Os testes de RLS provam: um prazo
+  forjado para 2030 vira o SLA do destino, e uma mensagem com `autor_id` de outra pessoa volta com o autor
+  real.
+- **Detalhe:** thread, assumir, mudar status, atribuir responsável, **converter em tarefa** e resolver.
+- **Início:** contador de **"N na sua fila · M com SLA vencido"** — uma fila que ninguém abre é onde os
+  pedidos vão morrer.
+- **Departamento do colaborador** (tela de Usuários): é a **origem** dos pedidos dele. Sem isso, ele escolhe
+  a origem ao abrir.
+
 ### 3.7 Atendimento (WhatsApp)
 Central de atendimento integrada ao WhatsApp via **Z-API** (número dedicado do escritório).
 

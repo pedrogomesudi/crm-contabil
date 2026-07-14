@@ -6,3 +6,7 @@ export const DEPARTAMENTOS: { valor: Departamento; rotulo: string }[] = [
   { valor: "pessoal", rotulo: "Pessoal (Folha)" },
   { valor: "societario", rotulo: "Societário/Legalização" },
 ];
+
+export function rotuloDepartamento(d: Departamento): string {
+  return DEPARTAMENTOS.find((x) => x.valor === d)?.rotulo ?? d;
+}
