@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Portal do cliente (Fatia C) — Solicitações (RF-054):** o cliente abre pedidos pelo portal
+  (categoria, assunto e descrição) e conversa com o escritório numa **thread**. Cada solicitação ganha
+  **número sequencial** e **prazo por SLA** configurável em Configurações → Marca. A equipe atende em
+  **`/solicitacoes`** (filtros por status, categoria e **SLA vencido**), responde, **atribui responsável**,
+  muda o status e **converte em tarefa**. Um gatilho `before insert` sobrescreve no servidor os campos
+  forjáveis (autoria, número, prazo, status, responsável), impedindo falsificação via API.
+
 - **Conciliação bancária (Fatia B):** casamento das movimentações com o financeiro — **conciliar** com
   baixa já lançada ou com título em aberto (cria a baixa), **criar lançamento avulso** (despesa com
   fornecedor / receita com cliente), **ignorar** e **reabrir**, além do botão **"Conciliar automáticos"**
