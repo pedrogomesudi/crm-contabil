@@ -294,8 +294,11 @@ cliente — e ele paga por isso?**
     **forjar a autoria** de uma mensagem (fazendo parecer que o escritório respondeu) ou esticar o próprio SLA.
     Os testes de RLS provam a neutralização: o cliente insere mensagem com `autor_id` do contador e a leitura
     devolve o `autor_id` dele.
-- **Em aberto (fatias seguintes):** **reenvio automático** dos itens não visualizados (completa o RF-053);
-  central de **solicitações/tickets** (RF-054).
+- **DECISÃO (14/07/2026) — o reenvio automático dos não visualizados foi descartado.** O RF-053 fica
+  **parcial de propósito**: o **rastreio** de visualização e download continua (é ele que responde "o cliente
+  viu a guia?"), mas **não haverá cobrança automática** de quem não abriu. Quem decide insistir é a equipe,
+  olhando o selo "não visualizado" na ficha — e, se quiser avisar, usa os **Comunicados** (RF-055) ou o
+  e-mail da ficha (RF-051). Não há fatia pendente neste módulo.
 
 ### 3.6.1 Solicitações internas entre departamentos (RF-045)
 O mesmo motor das solicitações do portal, virado **para dentro**: um departamento pede algo a outro, com
