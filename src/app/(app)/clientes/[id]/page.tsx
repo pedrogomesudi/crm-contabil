@@ -9,6 +9,8 @@ import { listarColaboradores } from "@/lib/clientes/colaboradores";
 import { DEPARTAMENTOS, type Departamento } from "@/lib/clientes/departamentos";
 import { LegalizacaoSection } from "@/components/legalizacao/LegalizacaoSection";
 import { AtivarEmpresa } from "@/components/clientes/AtivarEmpresa";
+import { TarefasCliente } from "@/components/tarefas/TarefasCliente";
+import { listarTarefas } from "@/app/(app)/tarefas/actions";
 import { podeGerenciarLegalizacao } from "@/lib/clientes/permissoes";
 import { progressoProcesso } from "@/lib/legalizacao/processo";
 import { rotuloTipo, type LegTipo, type LegEtapaStatus } from "@/lib/legalizacao/tipos";
@@ -84,6 +86,9 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
     return { id: p.id as string, titulo: (p.titulo as string) || rotuloTipo(p.tipo as LegTipo), status: p.status as string, pct: pr.pct, proximoPrazo: pr.proximoPrazo };
   });
   const { data: modelosLeg } = await supabase.from("legalizacao_template").select("id, nome").eq("ativo", true).order("nome");
+
+  // Tarefas do cliente.
+  const tarefasCliente = await listarTarefas({ cliente: id });
 
   const mostrarHonorario = podeVerHonorario(papel);
   let valorHonorario: number | null = null;
@@ -207,6 +212,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
           hoje={new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })}
         />
       )}
+      <TarefasCliente clienteId={id} tarefas={tarefasCliente} />
     </div>
   );
 }
