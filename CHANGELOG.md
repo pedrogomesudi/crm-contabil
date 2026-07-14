@@ -10,6 +10,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **E-mail integrado (RF-051, Fatia A):** canal de e-mail do escritório — **SMTP** (qualquer provedor que
+  ele já use) ou **API** (Resend/SendGrid), com credencial cifrada (`EMAIL_CRIPTO_KEY`) e **envio de teste**.
+  **Templates com variáveis** (mesma sintaxe da régua) e prévia. Na **ficha do cliente**, botão
+  **Enviar e-mail** com anexos (documentos, comprovantes de obrigações e DANFSe) resolvidos **por id** via
+  RLS, e **histórico** de todos os envios — inclusive as falhas, com a mensagem do provedor.
+
 - **Portal do cliente (Fatia C) — Solicitações (RF-054):** o cliente abre pedidos pelo portal
   (categoria, assunto e descrição) e conversa com o escritório numa **thread**. Cada solicitação ganha
   **número sequencial** e **prazo por SLA** configurável em Configurações → Marca. A equipe atende em

@@ -86,3 +86,14 @@ export function podeAtenderSolicitacoes(papel: Papel | undefined): boolean {
 export function podeGerenciarTarefas(papel: Papel | undefined): boolean {
   return papel === "admin" || papel === "assistente" || papel === "contador" || papel === "financeiro";
 }
+
+// Quem gerencia os templates de e-mail (RLS email_tpl_write: admin/assistente).
+export function podeGerenciarTemplatesEmail(papel: Papel | undefined): boolean {
+  return papel === "admin" || papel === "assistente";
+}
+
+// Quem envia e-mail ao cliente pela ficha. Mesma lista de quem gerencia documentos —
+// o financeiro vê o histórico (RLS), mas não dispara e-mail em nome do escritório.
+export function podeEnviarEmail(papel: Papel | undefined): boolean {
+  return papel === "admin" || papel === "assistente" || papel === "contador";
+}
