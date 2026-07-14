@@ -1554,3 +1554,104 @@ begin
   reset role;
   raise notice 'OK: equipe lê o rastreio do portal do seu cliente';
 end $$;
+
+-- =========================================================================
+-- SOLICITAÇÕES (RF-054) — inclui o ANTI-FALSIFICAÇÃO apontado na revisão de
+-- segurança: um DEFAULT não impede o envio explícito da coluna, então os
+-- gatilhos (0088) sobrescrevem autoria e campos de gestão no servidor.
+-- =========================================================================
+do $$
+declare s_id uuid; m_id uuid; n int; ok boolean; v_autor uuid; v_criado uuid; v_status text; v_prazo date;
+begin
+  -- ===== o CLIENTE do portal abre uma solicitação =====
+  perform _simular('00000000-0000-0000-0000-000000000005');
+
+  -- Tenta FORJAR tudo: autoria de outro, status resolvida, prazo folgado, responsável e tarefa.
+  insert into solicitacao (cliente_id, categoria, assunto, status, prazo, responsavel_id, criado_por)
+    values ('aaaaaaaa-0000-0000-0000-000000000001','duvida','Assunto',
+            'aberta', '2099-12-31', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001')
+    returning id into s_id;
+  reset role;
+  select criado_por, status::text, prazo into v_criado, v_status, v_prazo from solicitacao where id = s_id;
+  if v_criado <> '00000000-0000-0000-0000-000000000005' then
+    raise exception 'FALHA(solic): cliente forjou criado_por (=%)', v_criado;
+  end if;
+  if v_prazo = '2099-12-31' then raise exception 'FALHA(solic): cliente forjou o prazo do SLA'; end if;
+  select count(*) into n from solicitacao where id = s_id and responsavel_id is null and tarefa_id is null;
+  if n <> 1 then raise exception 'FALHA(solic): cliente forjou responsável/tarefa'; end if;
+
+  -- NÃO abre solicitação em cadastro de OUTRO cliente
+  perform _simular('00000000-0000-0000-0000-000000000005');
+  ok := true;
+  begin
+    insert into solicitacao (cliente_id, categoria, assunto)
+      values ('aaaaaaaa-0000-0000-0000-000000000002','duvida','Invasao');
+    raise exception 'FALHA(solic): cliente abriu solicitação em cadastro alheio';
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(solic): abertura em cadastro alheio não foi barrada'; end if;
+
+  -- NÃO nasce 'resolvida': o gatilho NORMALIZA para 'aberta'. (O BEFORE trigger roda antes
+  -- do WITH CHECK, então a tentativa não é rejeitada — é neutralizada, o que basta.)
+  perform _simular('00000000-0000-0000-0000-000000000005');
+  insert into solicitacao (cliente_id, categoria, assunto, status)
+    values ('aaaaaaaa-0000-0000-0000-000000000001','duvida','Ja resolvida','resolvida')
+    returning id into m_id;
+  reset role;
+  select status::text into v_status from solicitacao where id = m_id;
+  if v_status <> 'aberta' then raise exception 'FALHA(solic): status forjado na abertura (=%)', v_status; end if;
+
+  -- NÃO altera a solicitação (status/responsável são da equipe)
+  perform _simular('00000000-0000-0000-0000-000000000005');
+  update solicitacao set status = 'resolvida', responsavel_id = '00000000-0000-0000-0000-000000000005' where id = s_id;
+  reset role;
+  select status::text into v_status from solicitacao where id = s_id;
+  if v_status = 'resolvida' then raise exception 'FALHA(solic): cliente alterou o status'; end if;
+
+  -- ===== MENSAGENS: o cliente NÃO se passa pelo escritório =====
+  perform _simular('00000000-0000-0000-0000-000000000005');
+  insert into solicitacao_mensagem (solicitacao_id, corpo, autor_id)
+    values (s_id, 'Mensagem forjada como se fosse o contador', '00000000-0000-0000-0000-000000000003')
+    returning id into m_id;
+  reset role;
+  select autor_id into v_autor from solicitacao_mensagem where id = m_id;
+  if v_autor <> '00000000-0000-0000-0000-000000000005' then
+    raise exception 'FALHA(solic): cliente FORJOU a autoria da mensagem (=%) — impersonation', v_autor;
+  end if;
+
+  -- NÃO escreve mensagem em solicitação de outro cliente
+  reset role;
+  insert into solicitacao (cliente_id, categoria, assunto)
+    values ('aaaaaaaa-0000-0000-0000-000000000002','duvida','Do cliente B') returning id into s_id;
+  perform _simular('00000000-0000-0000-0000-000000000005');
+  ok := true;
+  begin
+    insert into solicitacao_mensagem (solicitacao_id, corpo) values (s_id, 'Bisbilhotando');
+    raise exception 'FALHA(solic): cliente escreveu em solicitação alheia';
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(solic): mensagem em solicitação alheia não foi barrada'; end if;
+
+  -- E não a enxerga
+  select count(*) into n from solicitacao where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+  if n <> 0 then raise exception 'FALHA(solic): cliente vê solicitação de outro'; end if;
+
+  reset role;
+  raise notice 'OK: solicitacao — cliente não forja autoria/SLA/status nem escreve em solicitação alheia';
+end $$;
+
+-- ASSERT: a EQUIPE gerencia (status, responsável, conversão em tarefa)
+do $$
+declare s_id uuid; v_status text;
+begin
+  reset role;
+  insert into solicitacao (cliente_id, categoria, assunto)
+    values ('aaaaaaaa-0000-0000-0000-000000000001','guia','Guia de marco') returning id into s_id;
+
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador (dono do cliente A)
+  update solicitacao set status = 'em_andamento', responsavel_id = '00000000-0000-0000-0000-000000000003' where id = s_id;
+  insert into solicitacao_mensagem (solicitacao_id, corpo) values (s_id, 'Resposta do escritorio');
+  reset role;
+  select status::text into v_status from solicitacao where id = s_id;
+  if v_status <> 'em_andamento' then raise exception 'FALHA(solic): equipe não atualizou o status (=%)', v_status; end if;
+
+  raise notice 'OK: solicitacao — equipe atualiza status/responsável e responde';
+end $$;
