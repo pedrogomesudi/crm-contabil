@@ -47,6 +47,7 @@ const nome = opt("nome");
 const email = opt("email");
 const regiao = opt("regiao", "sa-east-1");
 const dominio = opt("dominio", "seusaldo.ai");
+const dbUrlManual = opt("db-url");
 const dryRun = flag("dry-run");
 const retomar = flag("retomar");
 
@@ -126,6 +127,40 @@ async function chavesDoProjeto(ref) {
   return { pub, secret };
 }
 
+// A string do POOLER não pode ser ADIVINHADA: o prefixo do host varia por projeto
+// ("aws-0-…" num, "aws-1-…" noutro). Chutar significaria criar o projeto (com custo) e só
+// então descobrir que não conecta. Perguntamos ao Supabase; se ele não responder, o
+// operador cola a string do painel via --db-url.
+async function urlDoPooler(ref, dbPass) {
+  try {
+    const cfg = await api(`/projects/${ref}/config/database/pooler`);
+    const host = cfg?.db_host ?? cfg?.connection_string?.match(/@([^:]+):/)?.[1];
+    const porta = cfg?.db_port ?? 5432;
+    const usuario = cfg?.db_user ?? `postgres.${ref}`;
+    if (host) {
+      return `postgresql://${usuario}:${encodeURIComponent(dbPass)}@${host}:${porta}/postgres`;
+    }
+  } catch (e) {
+    console.log(`  (a API não devolveu a config do pooler: ${String(e.message).slice(0, 60)})`);
+  }
+  return null;
+}
+
+// Falha CEDO: sem conexão, não adianta seguir para as migrations.
+async function testarConexao(dbUrl) {
+  const { readFileSync } = await import("node:fs");
+  const pg = (await import("pg")).default;
+  const ca = readFileSync(new URL("../supabase/db-ca.crt", import.meta.url), "utf8");
+  const cli = new pg.Client({
+    connectionString: dbUrl,
+    ssl: { rejectUnauthorized: true, ca },
+    connectionTimeoutMillis: 20_000,
+  });
+  await cli.connect();
+  await cli.query("select 1");
+  await cli.end();
+}
+
 // ---------------------------------------------------------------- passos locais
 function rodar(script, envExtra = {}) {
   console.log(`• ${script}…`);
@@ -161,6 +196,21 @@ try {
     const ref = await criarProjeto(dbPass);
     const { pub, secret } = await chavesDoProjeto(ref);
 
+    // Session pooler (o runner de migrations exige; o Transaction pooler não serve).
+    let dbUrl = dbUrlManual ?? (await urlDoPooler(ref, dbPass));
+    if (!dbUrl) {
+      console.error("\nNão consegui obter a string de conexão automaticamente.");
+      console.error("Abra o painel do Supabase → Project Settings → Database → Connection string →");
+      console.error("**Session pooler**, copie a URI e rode de novo com:");
+      console.error(`  npm run tenant:novo -- --slug ${slug} --nome "${nome}" --email ${email} --retomar --db-url "<a URI>"`);
+      console.error(`\n(o projeto ${ref} JÁ FOI CRIADO — a senha do banco é a que está no painel; se precisar, redefina-a lá)`);
+      process.exit(1);
+    }
+
+    console.log("• Testando a conexão com o banco…");
+    await testarConexao(dbUrl);
+    console.log("  conectou.");
+
     // Cada escritório com as SUAS chaves: vazar a de um não compromete os outros.
     // Inclui a NFSE_CERT_KEY (cifra os certificados A1 dos clientes) e os segredos de
     // webhook, que somos nós que escolhemos (o provedor só os repete de volta).
@@ -175,8 +225,7 @@ try {
       NEXT_PUBLIC_SUPABASE_ANON_KEY: pub,
       NEXT_PUBLIC_SITE_URL: appUrl,
       SUPABASE_SERVICE_ROLE_KEY: secret,
-      // Session pooler (o runner de migrations exige; o Transaction pooler não serve).
-      SUPABASE_DB_URL: `postgresql://postgres.${ref}:${encodeURIComponent(dbPass)}@aws-0-${regiao}.pooler.supabase.com:5432/postgres`,
+      SUPABASE_DB_URL: dbUrl,
       ...cripto,
       ...webhooks,
       ADMIN_EMAIL: email,
