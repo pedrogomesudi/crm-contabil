@@ -10,6 +10,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Régua de cobrança por e-mail (RF-051, Fatia B):** o e-mail vira o **canal redundante** do WhatsApp
+  (canal não oficial, sujeito a banimento pela Meta). Se o WhatsApp não entrega — não configurado, cliente
+  sem telefone, opt-out ou erro do provedor —, a cobrança sai por e-mail; se entregou, o e-mail não sai.
+  Idempotência **entre canais** por (título, etapa). Cada etapa ganha assunto e corpo de e-mail (em branco,
+  reaproveita o texto do WhatsApp) e o histórico da régua mostra o canal de cada envio.
+
+### Alterado
+
+- **`cobranca_whatsapp = false` não silencia mais o cliente por completo:** passa a significar apenas
+  "não cobrar por WhatsApp" — o e-mail assume. A ficha do cliente agora tem **dois** interruptores
+  ("Cobrar por WhatsApp" / "Cobrar por e-mail"); para silêncio total, desligue os dois. **Clientes hoje com
+  o WhatsApp desligado voltarão a ser cobrados, agora por e-mail.**
+
 - **E-mail integrado (RF-051, Fatia A):** canal de e-mail do escritório — **SMTP** (qualquer provedor que
   ele já use) ou **API** (Resend/SendGrid), com credencial cifrada (`EMAIL_CRIPTO_KEY`) e **envio de teste**.
   **Templates com variáveis** (mesma sintaxe da régua) e prévia. Na **ficha do cliente**, botão

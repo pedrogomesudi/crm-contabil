@@ -337,6 +337,22 @@ Envio da cobrança ao cliente por dois caminhos, com respeito ao opt-out do clie
   cliente (LGPD), idempotência por (título, etapa). Motor server-side na rota protegida
   `/api/cron/regua-cobranca` (Bearer `CRON_SECRET`), **agendada via pg_cron** (execução diária), além
   do botão "Processar agora".
+- **E-mail como canal de fallback (RF-051, fatia B):** o Z-API é canal **não oficial** e pode ser banido
+  pela Meta sem aviso — com a régua presa a ele, um banimento paralisaria a cobrança. Agora, se o WhatsApp
+  não entrega (**não configurado**, cliente **sem telefone**, **opt-out** de WhatsApp ou **erro do
+  provedor**), a cobrança sai por **e-mail**. Se o WhatsApp entregou, o e-mail **não** sai: o cliente nunca
+  recebe duas cobranças do mesmo título.
+  - Cada etapa tem **assunto** e **corpo de e-mail** próprios; **em branco, reaproveita o texto do
+    WhatsApp** — a régua não fica muda por esquecimento de configuração, que é justamente o cenário em que
+    o fallback importa.
+  - **Idempotência entre canais:** antes de enviar, o motor consulta `whatsapp_mensagem` **e**
+    `email_mensagem` por (título, etapa). O índice único de cada tabela sozinho não impediria uma
+    reexecução do cron de cobrar de novo pelo outro canal.
+  - **Interruptor** em Configurações → E-mail ("Usar e-mail como fallback da régua"), ligado por padrão.
+  - **MUDANÇA DE COMPORTAMENTO:** `cobranca_whatsapp = false` **deixa de silenciar o cliente por
+    completo** — passa a significar apenas "não me cobre por WhatsApp", e o e-mail assume. A ficha do
+    cliente agora traz **dois** interruptores ("Cobrar por WhatsApp" / "Cobrar por e-mail"); para não
+    cobrar de jeito nenhum, desligue os dois.
 - **Boletos (construído; ativação pendente de conta no provedor):** emissão de boleto por título, com
   **seletor de provedor** (Configurações → Boletos, admin): **nenhum / Banco Inter / Asaas**. Inter via
   OAuth2 + mTLS; Asaas via API key; credenciais cifradas (AES-256-GCM, `BOLETO_CRIPTO_KEY`). Emissão,
