@@ -162,7 +162,13 @@ try {
     const { pub, secret } = await chavesDoProjeto(ref);
 
     // Cada escritório com as SUAS chaves: vazar a de um não compromete os outros.
+    // Inclui a NFSE_CERT_KEY (cifra os certificados A1 dos clientes) e os segredos de
+    // webhook, que somos nós que escolhemos (o provedor só os repete de volta).
     const cripto = Object.fromEntries(CHAVES_CRIPTO.map((k) => [k, hex32()]));
+    const webhooks = {
+      ZAPI_WEBHOOK_SECRET: hex32(),
+      BOLETO_WEBHOOK_SECRET: hex32(),
+    };
 
     env = {
       NEXT_PUBLIC_SUPABASE_URL: `https://${ref}.supabase.co`,
@@ -172,6 +178,7 @@ try {
       // Session pooler (o runner de migrations exige; o Transaction pooler não serve).
       SUPABASE_DB_URL: `postgresql://postgres.${ref}:${encodeURIComponent(dbPass)}@aws-0-${regiao}.pooler.supabase.com:5432/postgres`,
       ...cripto,
+      ...webhooks,
       ADMIN_EMAIL: email,
       ADMIN_PASSWORD: senhaForte(),
       ADMIN_NOME: nome,
@@ -207,6 +214,8 @@ try {
   console.log(`  3. Apontar o domínio ${slug}.${dominio} para o app.`);
   console.log(`  4. No Supabase (Auth → URL Configuration): Site URL = ${appUrl} e Redirect URLs = ${appUrl}/**`);
   console.log(`  5. Implantar e entrar com ${email} (a senha está no arquivo de env — troque no primeiro acesso).`);
+  console.log(`  6. Guardar ${caminhoEnv} num cofre de senhas: as chaves de cripto NÃO têm backup em`);
+  console.log(`     lugar nenhum — o backup do banco guarda só o texto cifrado, não a chave.`);
   console.log(`\n  As credenciais NÃO foram impressas aqui de propósito. Abra o arquivo localmente e`);
   console.log(`  cole no EasyPanel — nunca por chat, e-mail ou captura de tela.`);
 } catch (e) {

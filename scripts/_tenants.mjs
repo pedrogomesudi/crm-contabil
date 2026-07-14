@@ -17,13 +17,26 @@ export const REGISTRY = join(DIR_TENANTS, "registry.json");
 
 export const SLUG_RE = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
 
-// As 5 chaves que cada escritório precisa ter as SUAS (vazar a de um não compromete os outros).
+// Os segredos que cada escritório precisa ter os SEUS (vazar o de um não compromete os outros).
+// PERDER QUALQUER UM DESTES = dado cifrado irrecuperável (o backup do banco guarda só o
+// texto cifrado). NFSE_CERT_KEY cifra os CERTIFICADOS DIGITAIS A1 dos clientes — é tão
+// crítica quanto as demais e não pode ficar fora desta lista.
 export const CHAVES_CRIPTO = [
   "CRON_SECRET",
   "WHATSAPP_CRIPTO_KEY",
   "ONBOARDING_CRIPTO_KEY",
   "BOLETO_CRIPTO_KEY",
   "EMAIL_CRIPTO_KEY",
+  "NFSE_CERT_KEY",
+];
+
+// Segredos NECESSÁRIOS mas RECUPERÁVEIS: se sumirem, gera-se outro e reconfigura-se no
+// provedor. Perder um destes dá trabalho; não destrói dado. Por isso o doctor apenas AVISA.
+export const SEGREDOS_ROTACIONAVEIS = [
+  "ZAPI_WEBHOOK_SECRET",
+  "BOLETO_WEBHOOK_SECRET",
+  "CLICKSIGN_HMAC_SECRET",
+  "CLICKSIGN_TOKEN",
 ];
 
 export function lerRegistry() {

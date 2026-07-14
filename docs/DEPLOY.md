@@ -184,11 +184,19 @@ falha silenciosa clássica: ele fica sem os crons e ninguém percebe até um pra
 
 ### ⚠️ As chaves de cripto são o único dado sem backup
 
-`WHATSAPP_CRIPTO_KEY`, `ONBOARDING_CRIPTO_KEY`, `BOLETO_CRIPTO_KEY` e `EMAIL_CRIPTO_KEY` **não são
+`WHATSAPP_CRIPTO_KEY`, `ONBOARDING_CRIPTO_KEY`, `BOLETO_CRIPTO_KEY`, `EMAIL_CRIPTO_KEY` e
+**`NFSE_CERT_KEY`** (esta cifra os **certificados digitais A1 dos clientes**) **não são
 recuperáveis de lugar nenhum** — nem do backup do banco, que guarda só o texto cifrado. Perdê-las torna
 irrecuperáveis: certificado NFS-e, credenciais do WhatsApp, senha do SMTP, chaves de boleto e o **cofre de
 acessos dos clientes**. Guarde o `tenants/<slug>.env` num cofre de senhas. (O envelope encryption do V10
 resolve a rotação; ele **não** resolve a perda.)
+
+O **`CRON_SECRET`** é a exceção: ele é recuperável, porque o banco precisa mandá-lo ao app no cabeçalho
+`Authorization` — está, em texto claro, dentro do `command` dos jobs de `cron.job`.
+
+Já `ZAPI_WEBHOOK_SECRET`, `BOLETO_WEBHOOK_SECRET` e as credenciais Clicksign são **rotacionáveis**: se
+sumirem, gera-se outro e reconfigura-se no provedor. O `tenant:doctor` **falha** nas chaves de cripto e
+apenas **avisa** nestas.
 
 ## 6. Release
 

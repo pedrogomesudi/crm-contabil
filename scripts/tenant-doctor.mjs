@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import pg from "pg";
 import { readFileSync } from "node:fs";
-import { CHAVES_CRIPTO, envDoTenant, lerEnv, lerRegistry } from "./_tenants.mjs";
+import { CHAVES_CRIPTO, SEGREDOS_ROTACIONAVEIS, envDoTenant, lerEnv, lerRegistry } from "./_tenants.mjs";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CA = join(RAIZ, "supabase", "db-ca.crt");
@@ -33,7 +33,7 @@ if (escritorios.length === 0) {
 }
 
 async function diagnosticar(e) {
-  const linha = { slug: e.slug, problemas: [], migracoes: "—", jobs: "—", admins: "—", chaves: "—", app: "—" };
+  const linha = { slug: e.slug, problemas: [], avisos: [], migracoes: "—", jobs: "—", admins: "—", chaves: "—", app: "—" };
 
   const caminho = envDoTenant(e.slug);
   if (!existsSync(caminho)) {
@@ -43,9 +43,15 @@ async function diagnosticar(e) {
   const env = lerEnv(e.slug) ?? {};
 
   // Chaves: só a EXISTÊNCIA. Nunca imprimir valor.
+  // As de cripto são IRRECUPERÁVEIS (o backup do banco guarda só o texto cifrado) → falha.
   const faltando = CHAVES_CRIPTO.filter((k) => !env[k]);
-  linha.chaves = faltando.length === 0 ? `${CHAVES_CRIPTO.length}/${CHAVES_CRIPTO.length}` : `faltam ${faltando.join(", ")}`;
-  if (faltando.length > 0) linha.problemas.push(`chaves ausentes: ${faltando.join(", ")}`);
+  linha.chaves = `${CHAVES_CRIPTO.length - faltando.length}/${CHAVES_CRIPTO.length}`;
+  if (faltando.length > 0) {
+    linha.problemas.push(`chaves de cripto ausentes (IRRECUPERÁVEIS se perdidas): ${faltando.join(", ")}`);
+  }
+  // As rotacionáveis dão trabalho, mas não destroem dado → apenas aviso.
+  const semRot = SEGREDOS_ROTACIONAVEIS.filter((k) => !env[k]);
+  if (semRot.length > 0) linha.avisos.push(`segredos rotacionáveis ausentes: ${semRot.join(", ")}`);
 
   // Banco: migrations, crons e admin.
   if (!env.SUPABASE_DB_URL) {
@@ -107,6 +113,12 @@ for (const l of linhas) {
     `${ok ? "✓" : "✗"} ${l.slug.padEnd(18)} ${String(l.migracoes).padEnd(11)} ${String(l.jobs).padEnd(6)} ` +
       `${String(l.admins).padEnd(7)} ${String(l.chaves).padEnd(7)} ${l.app}`,
   );
+}
+
+const comAviso = linhas.filter((l) => l.avisos.length > 0);
+if (comAviso.length > 0) {
+  console.log("\nAvisos (não bloqueiam — segredos que se pode gerar de novo):");
+  for (const l of comAviso) for (const a of l.avisos) console.log(`  ! ${l.slug}: ${a}`);
 }
 
 const comProblema = linhas.filter((l) => l.problemas.length > 0);
