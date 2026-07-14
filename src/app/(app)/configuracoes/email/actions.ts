@@ -80,23 +80,45 @@ export async function salvarConfigEmail(_prev: EstadoEmail, fd: FormData): Promi
     atualizado_por: perfil.id,
   };
 
+  const supabaseAtual = await createServerSupabase();
+  const { data: atual } = await supabaseAtual
+    .from("email_config")
+    .select("provedor, smtp_host, smtp_usuario, smtp_senha_cifrada, api_provedor, api_chave_cifrada")
+    .eq("id", 1)
+    .maybeSingle();
+
   if (provedor === "smtp") {
     const host = String(fd.get("smtp_host") ?? "").trim();
     const porta = Number(fd.get("smtp_porta"));
+    const usuario = String(fd.get("smtp_usuario") ?? "").trim() || null;
     if (!host) return { erro: "Informe o host do SMTP." };
     if (!Number.isInteger(porta) || porta < 1 || porta > 65535) return { erro: "Porta inválida." };
     dados.smtp_host = host;
     dados.smtp_porta = porta;
     dados.smtp_seguro = fd.get("smtp_seguro") === "on";
-    dados.smtp_usuario = String(fd.get("smtp_usuario") ?? "").trim() || null;
-    // Senha em branco = manter a atual (a tela nunca a recebeu de volta).
+    dados.smtp_usuario = usuario;
+
+    // Senha em branco = manter a atual — MAS SÓ se o servidor e o usuário forem os mesmos.
+    // Trocar de provedor (ex.: Gmail → Brevo) e deixar a senha em branco reaproveitaria a
+    // credencial do servidor ANTIGO, e o erro que aparece ("Authentication failed") não diz
+    // nada sobre a causa real. Falhar aqui é mais honesto.
     const senha = String(fd.get("smtp_senha") ?? "");
+    const mudouServidor =
+      atual?.provedor !== "smtp" || atual?.smtp_host !== host || (atual?.smtp_usuario ?? null) !== usuario;
+    if (!senha && (mudouServidor || !atual?.smtp_senha_cifrada)) {
+      return { erro: "Você mudou o servidor ou o usuário: informe a senha do novo SMTP." };
+    }
     if (senha) dados.smtp_senha_cifrada = cifrar(Buffer.from(senha, "utf8"), chaveCripto);
   } else {
     const api = String(fd.get("api_provedor") ?? "");
     if (api !== "resend" && api !== "sendgrid") return { erro: "Escolha o provedor de API." };
     dados.api_provedor = api;
+
     const apiChave = String(fd.get("api_chave") ?? "").trim();
+    const mudouProvedor = atual?.provedor !== "api" || atual?.api_provedor !== api;
+    if (!apiChave && (mudouProvedor || !atual?.api_chave_cifrada)) {
+      return { erro: "Você mudou o provedor de API: informe a chave." };
+    }
     if (apiChave) dados.api_chave_cifrada = cifrar(Buffer.from(apiChave, "utf8"), chaveCripto);
   }
 
