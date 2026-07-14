@@ -297,6 +297,32 @@ Nasce também como **redundância** do WhatsApp, que é canal não oficial (Z-AP
 - **Em aberto (Fatia B):** a régua de cobrança por e-mail, em **fallback** — sai quando o WhatsApp não está
   configurado, o cliente não tem telefone ou o envio falhou; nunca duas cobranças do mesmo título.
 
+### 3.7.2 Comunicados em massa (RF-055)
+Avisos de legislação e prazos para um **segmento** da base — não para "todo mundo" às cegas.
+
+- **Segmentação por atributos do cadastro:** regime tributário, tipo (PJ/PF/MEI), status, **município/UF**,
+  contador responsável e **responsável por departamento**. Os critérios combinam com **E**; dentro de cada
+  critério vale **OU** ("os Simples **ou** MEI de Goiânia").
+  - A comparação de município **ignora acento e caixa** — o endereço é digitado à mão, e "GOIANIA" precisa
+    casar com "Goiânia"; comparar texto puro deixaria clientes de fora **em silêncio**.
+- **Prévia obrigatória:** não existe botão que dispare direto. Antes de enviar, a tela mostra a **contagem**,
+  a **lista de quem recebe** e **quem foi excluído, com o motivo** (sem e-mail, opt-out). Um comunicado errado
+  sai para centenas de clientes assinado pelo escritório e não volta atrás. Há também **"Enviar teste para
+  mim"**.
+- **O segmento é recarregado no servidor no disparo.** A lista que o navegador viu é descartada: confiar
+  nela permitiria adulterar a requisição e mudar quem recebe.
+- **Canal:** **e-mail** (padrão, sem teto) ou **WhatsApp** — este com **teto de 50 destinatários** e aviso em
+  destaque, porque disparo em massa é o gatilho clássico de **banimento do número** pela Meta (o Z-API é
+  canal não oficial), o que derrubaria o **atendimento** e a **régua de cobrança** de uma vez.
+- **Registro:** cada destinatário vira uma linha com status — **inclusive as falhas**, com a mensagem do
+  provedor. `comunicado_destinatario` **não tem policy de INSERT** (só o servidor grava): ninguém forja um
+  "enviado". Índice único `(comunicado_id, cliente_id)` — o mesmo cliente **não recebe duas vezes**, nem com
+  clique duplo, nem no **"Reenviar falhas"** (que reprocessa só os que deram erro).
+- **Opt-out (LGPD):** `clientes.aceita_comunicados`, na ficha do cliente — **finalidade distinta da
+  cobrança**: o cliente pode querer receber a fatura e não os informativos.
+- **Permissão:** criar e disparar é de **admin e assistente** (mesma trava dos templates de e-mail); a equipe
+  toda consulta o histórico.
+
 ### 3.8 Obrigações e Compliance
 Controle do calendário de obrigações fiscais e trabalhistas dos clientes, do prazo à entrega, com
 escalonamento de atrasos e relatório de conformidade (admin/contador/assistente).
