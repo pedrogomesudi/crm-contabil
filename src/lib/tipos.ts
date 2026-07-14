@@ -1,6 +1,8 @@
 // Fonte única dos enums (espelham os enums das migrations em supabase/migrations).
 // Usados tanto para os tipos TS quanto para os z.enum() das validações.
-export const PAPEIS = ["admin", "contador", "assistente", "financeiro"] as const;
+// 'cliente' é o papel do PORTAL: negado por padrão em todas as policies de equipe,
+// com SELECT estreito só nas linhas do próprio cadastro (ver migration 0085).
+export const PAPEIS = ["admin", "contador", "assistente", "financeiro", "cliente"] as const;
 export type Papel = (typeof PAPEIS)[number];
 
 export const TIPOS_PESSOA = ["PJ", "PF", "MEI"] as const;
