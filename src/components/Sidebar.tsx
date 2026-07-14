@@ -11,33 +11,45 @@ import { LogoSaldo } from "@/components/marca/LogoSaldo";
 export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes = 0, escalonamento = 0, vencimentos = 0 }: { papel: Papel; nome: string; alertasOnboarding?: number; riscosObrigacoes?: number; escalonamento?: number; vencimentos?: number }) {
   const pathname = usePathname();
   const [aberto, setAberto] = useState(false);
+  // Obrigações, Escalonamento e Vencimentos saíram do menu (agora vivem dentro de Clientes).
+  // Os alertas deles NÃO podem sumir junto: somam no badge de Clientes, e a sub-navegação de
+  // lá mostra cada número separado. Um alerta que ninguém vê é um alerta que não existe.
+  const alertasClientes =
+    (podeCriarCliente(papel) ? riscosObrigacoes + escalonamento : 0) +
+    (podeGerenciarVencimentos(papel) ? vencimentos : 0);
+
   const itens: { href: string; label: string; badge?: number }[] = [
     { href: "/", label: "Início" },
-    { href: "/clientes", label: "Clientes" },
+    { href: "/clientes", label: "Clientes", badge: alertasClientes || undefined },
     ...(podeCriarCliente(papel) ? [{ href: "/onboarding", label: "Onboarding", badge: alertasOnboarding }] : []),
     ...(podeCriarCliente(papel) ? [{ href: "/legalizacao", label: "Legalização" }] : []),
     ...(podeCriarCliente(papel) ? [{ href: "/comercial", label: "Comercial" }] : []),
-    ...(podeCriarCliente(papel) ? [{ href: "/comercial/propostas", label: "Propostas" }] : []),
-    ...(podeCriarCliente(papel) ? [{ href: "/obrigacoes", label: "Obrigações", badge: riscosObrigacoes || undefined }] : []),
     { href: "/tarefas", label: "Tarefas" },
     { href: "/timesheet", label: "Timesheet" },
     ...(podeAtenderSolicitacoes(papel) ? [{ href: "/solicitacoes", label: "Solicitações" }] : []),
     { href: "/comunicados", label: "Comunicados" },
-    ...(podeCriarCliente(papel) ? [{ href: "/obrigacoes/escalonamento", label: "Escalonamento", badge: escalonamento || undefined }] : []),
-    ...(podeGerenciarVencimentos(papel) ? [{ href: "/vencimentos", label: "Vencimentos", badge: vencimentos || undefined }] : []),
     ...(podeAtender(papel) ? [{ href: "/atendimento", label: "Atendimento" }] : []),
     ...(podeGerenciarFinanceiro(papel) ? [{ href: "/financeiro/cadastros", label: "Financeiro" }] : []),
-    ...(podeGerenciarFinanceiro(papel) ? [{ href: "/financeiro/conciliacao", label: "Conciliação" }] : []),
-    ...(podeGerenciarFinanceiro(papel) ? [{ href: "/financeiro/rentabilidade", label: "Rentabilidade" }] : []),
-    ...(["admin", "assistente"].includes(papel) ? [{ href: "/integracoes/dominio", label: "Integração Domínio" }] : []),
-    ...(papel === "admin" ? [{ href: "/usuarios", label: "Usuários" }] : []),
-    ...(papel === "admin" ? [{ href: "/configuracoes", label: "Configurações" }] : []),
+    ...(["admin", "assistente"].includes(papel) ? [{ href: "/configuracoes", label: "Configurações" }] : []),
   ];
-  // Realça só o item mais específico (o href mais longo que casa com a rota atual),
-  // evitando destacar "Comercial" e "Propostas" ao mesmo tempo.
+  // As rotas que saíram do menu continuam realçando a seção que agora as abriga —
+  // senão o usuário fica sem referência de "onde estou" ao entrar em Obrigações ou Usuários.
+  const FILHAS: Record<string, string[]> = {
+    "/clientes": ["/obrigacoes", "/vencimentos"],
+    "/financeiro/cadastros": ["/financeiro"],
+    "/configuracoes": ["/integracoes", "/usuarios"],
+  };
+
+  const casa = (href: string) => {
+    if (href === "/") return pathname === "/";
+    if (pathname === href || pathname.startsWith(`${href}/`)) return true;
+    return (FILHAS[href] ?? []).some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  };
+
+  // Realça só o item mais específico (o href mais longo que casa com a rota atual).
   const hrefAtivo = itens
     .map((it) => it.href)
-    .filter((h) => (h === "/" ? pathname === "/" : pathname === h || pathname.startsWith(`${h}/`)))
+    .filter(casa)
     .sort((a, b) => b.length - a.length)[0];
   const ehAtivo = (href: string) => href === hrefAtivo;
 

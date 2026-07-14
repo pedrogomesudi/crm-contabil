@@ -4,6 +4,11 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente, podeVerHonorario, podeGerenciarResponsaveis } from "@/lib/clientes/permissoes";
 import { normalizarFiltro, aplicarFiltroStatus } from "@/lib/clientes/filtroStatus";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubNav, type ItemSubNav } from "@/components/ui/SubNav";
+import { podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
+import { contarRiscos } from "@/app/(app)/obrigacoes/actions";
+import { contarEscalonamento } from "@/app/(app)/obrigacoes/escalonamento-actions";
+import { contarVencimentos } from "@/app/(app)/vencimentos/actions";
 import { Botao } from "@/components/ui/Botao";
 import { Painel } from "@/components/ui/Painel";
 import { Badge } from "@/components/ui/Badge";
@@ -52,6 +57,19 @@ export default async function ClientesPage({
 
   const { data: clientes, error } = await query;
 
+  // Obrigações, Escalonamento e Vencimentos saíram do menu lateral e vivem aqui.
+  // Os badges vêm junto: um alerta que ninguém vê é um alerta que não existe.
+  const secoes: ItemSubNav[] = [];
+  if (podeCriarCliente(perfil?.papel)) {
+    const [riscos, escal] = await Promise.all([contarRiscos(), contarEscalonamento()]);
+    secoes.push({ href: "/obrigacoes", label: "Obrigações", badge: riscos || undefined });
+    secoes.push({ href: "/obrigacoes/escalonamento", label: "Escalonamento", badge: escal || undefined });
+  }
+  if (podeGerenciarVencimentos(perfil?.papel)) {
+    const venc = await contarVencimentos();
+    secoes.push({ href: "/vencimentos", label: "Vencimentos", badge: venc || undefined });
+  }
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -84,6 +102,8 @@ export default async function ClientesPage({
           </>
         }
       />
+
+      <SubNav itens={secoes} />
 
       {ok && (
         <p role="status" className="rounded-lg bg-verde/10 px-3 py-2 text-sm text-verde">

@@ -3,7 +3,12 @@ import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { PageHeader } from "@/components/ui/PageHeader";
 
-const ITENS = [
+// `papeis` restringe o item. Sem a chave, o item é só de admin.
+// O assistente entra aqui apenas pela Integração Domínio — que saiu do menu lateral e
+// passou a viver nesta seção; sem isso ele perderia o acesso.
+const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] = [
+  { href: "/usuarios", label: "Usuários", desc: "Convite, papel, departamento, superior e status da equipe." },
+  { href: "/integracoes/dominio", label: "Integração Domínio", desc: "Importação e conciliação com o sistema Domínio.", papeis: ["admin", "assistente"] },
   { href: "/configuracoes/marca", label: "Marca do escritório", desc: "Nome, CNPJ, endereço e logo usados na proposta." },
   { href: "/configuracoes/whatsapp", label: "WhatsApp (Z-API)", desc: "Credenciais do provedor e teste de conexão." },
   { href: "/configuracoes/email", label: "E-mail", desc: "Canal de envio (SMTP ou API), remetente e teste." },
@@ -21,12 +26,14 @@ const ITENS = [
 
 export default async function ConfiguracoesHubPage() {
   const perfil = await getPerfilAtual();
-  if (!perfil || perfil.papel !== "admin") redirect("/");
+  if (!perfil || !["admin", "assistente"].includes(perfil.papel)) redirect("/");
+  // Cada página de destino mantém o próprio gate: o filtro aqui é de navegação, não de segurança.
+  const itens = ITENS.filter((i) => (i.papeis ?? ["admin"]).includes(perfil.papel));
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
       <PageHeader titulo="Configurações" subtitulo="Integrações e credenciais do sistema" />
       <ul className="grid gap-3 sm:grid-cols-2">
-        {ITENS.map((i) => (
+        {itens.map((i) => (
           <li key={i.href}>
             <Link
               href={i.href}
