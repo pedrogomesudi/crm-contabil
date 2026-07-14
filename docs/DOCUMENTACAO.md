@@ -189,8 +189,34 @@ Tarefas internas da equipe (RF-040 núcleo + RF-042 parcial).
 - **Ficha do cliente:** seção **Tarefas** com as tarefas daquele cliente e criação rápida já vinculada.
 - **RLS:** toda a equipe (admin/assistente/contador/financeiro) vê e cria tarefas; **editar/excluir** é de
   admin/assistente ou de quem **criou**/é **responsável** pela tarefa.
-- **Em aberto (fatias seguintes):** recorrência, anexos, **visão calendário** (completa o RF-042), templates
-  de processo/SOPs (RF-041), timesheet (RF-043), rentabilidade (RF-044) e solicitações internas com SLA (RF-045).
+- **Tarefas recorrentes (RF-040)** — `/tarefas/recorrencias`: o **molde** (título, cliente, departamento,
+  responsável, prioridade, checklist) mais a **regra** (semanal/mensal/trimestral/anual, dia, e a
+  **antecedência** em dias). Um **cron diário às 9h** gera as ocorrências que entraram na janela.
+  - **Idempotência é do banco:** índice único `(recorrencia_id, competencia)`. Uma reexecução do cron não
+    duplica tarefa — o motor não depende de "lembrar" o que já fez, que é o que quebra quando o job falha
+    no meio.
+  - **Dia 31 em mês curto cai no último dia** (fevereiro → 28/29), em vez de pular o mês. Uma tarefa mensal
+    que some em fevereiro é exatamente o tipo de falha que ninguém percebe.
+  - Botão **"Gerar agora"** para não depender do cron do dia seguinte para testar.
+- **Calendário (RF-042)** — terceira vista do painel, ao lado de Lista e Kanban: grade mensal por prazo,
+  navegação de mês **preservando os filtros**, vencidas em vermelho e uma faixa **"Sem prazo"** — tarefa sem
+  prazo não pode sumir da vista.
+- **Modelos de processo / SOPs (RF-041)** — Configurações → **Modelos de processo**: etapas com
+  **responsável por papel**, **prazo relativo** (dias após o início) e checklist próprio.
+  - **A SOP gera tarefas**, não um processo paralelo — é o "desacoplamento do motor de templates" que o gap
+    analysis pede, e evita a terceira cópia do padrão onboarding/legalização. As etapas viram tarefas comuns,
+    com painel, kanban, checklist e ficha do cliente que já existiam.
+  - **Ondas:** etapas na **mesma onda** são **paralelas** (nascem juntas); **ondas** rodam em **sequência**.
+    Quando a última tarefa de uma onda fecha, a **próxima nasce sozinha** — e isso vive num **trigger no
+    banco**, não nas actions: a tarefa é concluída pelo painel, pelo kanban e pela ficha, e o caminho
+    esquecido travaria o processo em silêncio.
+  - **Responsável por papel** é resolvido na geração: (1) responsável do departamento no cliente; (2) contador
+    do cliente, se o papel for `contador`; (3) **ninguém**. Nunca chutamos um responsável — tarefa órfã
+    aparece no painel; tarefa atribuída à pessoa errada some da vista de quem deveria fazê-la.
+  - **Iniciar processo:** na ficha do cliente ou no painel de Tarefas (processo interno, sem cliente), com
+    acompanhamento por onda e progresso.
+- **Em aberto (fatias seguintes):** anexos em tarefa, timesheet (RF-043), rentabilidade (RF-044) e
+  solicitações internas entre departamentos com SLA (RF-045).
 
 ### 3.6 Portal do cliente
 Área exposta ao **cliente final** (RF-052) — a primeira superfície fora da equipe, por isso desenhada

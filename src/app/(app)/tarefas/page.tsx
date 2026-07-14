@@ -5,6 +5,8 @@ import { podeGerenciarTarefas } from "@/lib/clientes/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { listarTarefas } from "./actions";
 import { PainelTarefas } from "./PainelTarefas";
+import { ProcessosSop } from "@/components/tarefas/ProcessosSop";
+import { listarModelosAtivos, listarProcessos } from "./sop-actions";
 
 export const metadata = { title: "Tarefas" };
 
@@ -31,6 +33,9 @@ export default async function TarefasPage({
   const colaboradores = await listarColaboradores();
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
+  const modelos = await listarModelosAtivos();
+  const processos = await listarProcessos(null); // internos (sem cliente)
+
   const vista: Vista = sp.vista === "kanban" ? "kanban" : sp.vista === "calendario" ? "calendario" : "lista";
   const anoHoje = Number(hoje.slice(0, 4));
   const mesHoje = Number(hoje.slice(5, 7));
@@ -49,6 +54,7 @@ export default async function TarefasPage({
         ano={ano}
         mes={mes}
       />
+      <ProcessosSop clienteId={null} modelos={modelos} processos={processos} hoje={hoje} />
     </main>
   );
 }

@@ -10,6 +10,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Tarefas — recorrência, calendário e SOPs (RF-040/041/042):**
+  - **Tarefas recorrentes:** molde + regra (semanal/mensal/trimestral/anual) com **antecedência**, geradas
+    por **cron diário às 9h**. Idempotência por `(recorrencia_id, competencia)`; dia 31 em mês curto cai no
+    último dia. Botão "Gerar agora".
+  - **Calendário:** terceira vista do painel, com grade mensal, navegação preservando os filtros e faixa
+    "Sem prazo".
+  - **Modelos de processo (SOPs):** etapas com responsável por papel, prazo relativo e checklist, que
+    **viram tarefas**. Etapas na mesma **onda** são paralelas; a onda seguinte nasce **sozinha** (trigger no
+    banco) quando a anterior fecha. Iniciar processo na ficha do cliente ou no painel de tarefas.
+  - **Novo job pg_cron** `tarefas-recorrentes-diaria` — rodar `npm run cron:bootstrap` após o deploy.
+
 - **Régua de cobrança por e-mail (RF-051, Fatia B):** o e-mail vira o **canal redundante** do WhatsApp
   (canal não oficial, sujeito a banimento pela Meta). Se o WhatsApp não entrega — não configurado, cliente
   sem telefone, opt-out ou erro do provedor —, a cobrança sai por e-mail; se entregou, o e-mail não sai.
