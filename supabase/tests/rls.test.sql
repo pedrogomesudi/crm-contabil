@@ -1753,3 +1753,99 @@ begin
 
   raise notice 'OK: email_mensagem — contador escopado; ninguém forja envio pela app';
 end $$;
+
+-- ============================================================================
+-- Tarefas fatia B — recorrência (0091) e SOPs (0092)
+-- ============================================================================
+
+-- ASSERT: recorrência e templates de SOP — equipe lê; só admin/assistente escrevem
+do $$
+declare n int; ok boolean := false;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  insert into tarefa_recorrencia (titulo, periodicidade, dia_mes, proxima_data)
+    values ('Fechamento mensal', 'mensal', 5, '2026-08-05');
+  insert into sop_template (slug, nome) values ('abertura-teste', 'Abertura de empresa');
+
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro: lê, não escreve
+  select count(*) into n from tarefa_recorrencia;
+  if n < 1 then raise exception 'FALHA(tarefas-B): financeiro não lê recorrências'; end if;
+  begin
+    insert into tarefa_recorrencia (titulo, periodicidade, dia_mes, proxima_data)
+      values ('X', 'mensal', 1, '2026-08-01');
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(tarefas-B): financeiro criou recorrência'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador: não edita template
+  ok := false;
+  begin
+    insert into sop_template (slug, nome) values ('x-contador', 'X');
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(tarefas-B): contador criou template de SOP'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000005'); -- cliente do portal: não vê nada
+  select count(*) into n from tarefa_recorrencia;
+  if n <> 0 then raise exception 'FALHA(tarefas-B): cliente do portal vê recorrências'; end if;
+  select count(*) into n from sop_template;
+  if n <> 0 then raise exception 'FALHA(tarefas-B): cliente do portal vê templates de SOP'; end if;
+  reset role;
+
+  raise notice 'OK: recorrência e SOP — equipe lê; só admin/assistente escrevem; portal não vê';
+end $$;
+
+-- ASSERT: o TRIGGER avança a onda sozinho — a onda 2 só nasce quando a onda 1 fecha inteira
+do $$
+declare tpl uuid; proc uuid; e1 uuid; e2 uuid; e3 uuid; n int; v_status text;
+begin
+  reset role;
+  insert into sop_template (slug, nome, departamento) values ('sop-onda-teste', 'Processo de teste', 'contabil')
+    returning id into tpl;
+  -- Onda 1: DUAS etapas paralelas. Onda 2: uma etapa.
+  insert into sop_etapa (template_id, onda, ordem, titulo, prazo_dias) values (tpl, 1, 1, 'Coletar documentos', 2) returning id into e1;
+  insert into sop_etapa (template_id, onda, ordem, titulo, prazo_dias) values (tpl, 1, 2, 'Conferir cadastro', 3) returning id into e2;
+  insert into sop_etapa (template_id, onda, ordem, titulo, prazo_dias) values (tpl, 2, 1, 'Enviar ao cliente', 5) returning id into e3;
+  insert into sop_etapa_item (etapa_id, descricao, ordem) values (e1, 'Contrato social', 1);
+
+  insert into sop_processo (template_id, cliente_id, data_inicio)
+    values (tpl, 'aaaaaaaa-0000-0000-0000-000000000001', '2026-07-01') returning id into proc;
+
+  perform sop_gerar_onda(proc, 1);
+  select count(*) into n from tarefa where sop_processo_id = proc;
+  if n <> 2 then raise exception 'FALHA(sop): onda 1 deveria criar 2 tarefas paralelas (criou %)', n; end if;
+
+  -- o prazo é relativo à data_inicio
+  select count(*) into n from tarefa where sop_processo_id = proc and sop_etapa_id = e1 and prazo = date '2026-07-03';
+  if n <> 1 then raise exception 'FALHA(sop): prazo relativo (data_inicio + prazo_dias) não aplicado'; end if;
+
+  -- o checklist da etapa virou checklist da tarefa
+  select count(*) into n from tarefa_item ti join tarefa t on t.id = ti.tarefa_id
+   where t.sop_processo_id = proc and t.sop_etapa_id = e1;
+  if n <> 1 then raise exception 'FALHA(sop): checklist da etapa não virou checklist da tarefa'; end if;
+
+  -- Conclui SÓ UMA das duas paralelas: a onda 2 NÃO pode nascer.
+  update tarefa set status = 'concluida' where sop_processo_id = proc and sop_etapa_id = e1;
+  select count(*) into n from tarefa where sop_processo_id = proc and sop_onda = 2;
+  if n <> 0 then raise exception 'FALHA(sop): onda 2 nasceu com a onda 1 ainda aberta'; end if;
+
+  -- Fecha a segunda: agora a onda 2 nasce SOZINHA (trigger).
+  update tarefa set status = 'concluida' where sop_processo_id = proc and sop_etapa_id = e2;
+  select count(*) into n from tarefa where sop_processo_id = proc and sop_onda = 2;
+  if n <> 1 then raise exception 'FALHA(sop): o trigger não gerou a onda 2 (tarefas=%)', n; end if;
+
+  select onda_atual into n from sop_processo where id = proc;
+  if n <> 2 then raise exception 'FALHA(sop): onda_atual não avançou (=%)', n; end if;
+
+  -- Concluída a última onda, o processo fecha.
+  update tarefa set status = 'concluida' where sop_processo_id = proc and sop_onda = 2;
+  select status::text into v_status from sop_processo where id = proc;
+  if v_status <> 'concluido' then raise exception 'FALHA(sop): processo não foi concluído (=%)', v_status; end if;
+
+  -- Idempotência: regerar a onda não duplica tarefa.
+  perform sop_gerar_onda(proc, 1);
+  select count(*) into n from tarefa where sop_processo_id = proc and sop_onda = 1;
+  if n <> 2 then raise exception 'FALHA(sop): regerar a onda duplicou tarefas (=%)', n; end if;
+
+  raise notice 'OK: SOP — ondas paralelas, avanço automático por trigger e idempotência';
+end $$;
