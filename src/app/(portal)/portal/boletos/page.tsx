@@ -1,4 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase/server";
+import { LinkBoleto } from "./LinkBoleto";
 
 export const metadata = { title: "Boletos" };
 
@@ -34,11 +35,7 @@ export default async function PortalBoletosPage() {
                 <p className="mt-1 break-all font-mono text-xs text-cinza">{b.linha_digitavel as string}</p>
               )}
               <div className="mt-2 flex flex-wrap gap-3 text-xs">
-                {b.url_pdf && (
-                  <a href={b.url_pdf as string} target="_blank" rel="noopener noreferrer" className="text-verde underline">
-                    baixar boleto (2ª via)
-                  </a>
-                )}
+                {b.url_pdf && <LinkBoleto id={b.id as string} url={b.url_pdf as string} />}
                 {b.pix_copia_cola && <span className="text-cinza">PIX copia e cola disponível no boleto</span>}
               </div>
             </li>

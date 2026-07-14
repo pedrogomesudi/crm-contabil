@@ -1,6 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { urlDocumento } from "../actions";
 import { BotaoBaixar } from "../BotaoBaixar";
+import { EnviarDocumento } from "./EnviarDocumento";
 
 export const metadata = { title: "Documentos" };
 
@@ -8,12 +9,13 @@ const dataBR = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5
 
 export default async function PortalDocumentosPage() {
   const supabase = await createServerSupabase();
-  const { data } = await supabase.from("documentos").select("id, nome, tipo, enviado_em").order("enviado_em", { ascending: false });
+  const { data } = await supabase.from("documentos").select("id, nome, tipo, enviado_em, origem").order("enviado_em", { ascending: false });
   const docs = data ?? [];
 
   return (
     <div className="space-y-4">
       <h1 className="font-display text-xl font-bold text-texto">Documentos</h1>
+      <EnviarDocumento />
       {docs.length === 0 ? (
         <p className="text-sm text-cinza">Nenhum documento disponível.</p>
       ) : (
@@ -30,7 +32,10 @@ export default async function PortalDocumentosPage() {
             <tbody>
               {docs.map((d) => (
                 <tr key={d.id as string} className="border-b border-linha/60">
-                  <td className="px-3 py-2 text-texto">{d.nome as string}</td>
+                  <td className="px-3 py-2 text-texto">
+                    {d.nome as string}
+                    {d.origem === "cliente" && <span className="ml-2 rounded-full bg-creme px-2 py-0.5 text-xs text-cinza">enviado por você</span>}
+                  </td>
                   <td className="px-3 py-2 text-cinza">{(d.tipo as string | null) ?? "—"}</td>
                   <td className="px-3 py-2 text-cinza">{dataBR(((d.enviado_em as string | null) ?? "").slice(0, 10) || null)}</td>
                   <td className="px-3 py-2 text-right"><BotaoBaixar id={d.id as string} acao={urlDocumento} /></td>
