@@ -172,7 +172,22 @@ do acervo (pré-preenchido), data e assinaturas; o PDF é baixado e **anexado ao
 Com isso a legalização (RF-011 a RF-014) está completa — resta apenas o RF-013 como parcial (aviso ao
 cliente registrado, sem envio automático).
 
-### 3.5 Atendimento (WhatsApp)
+### 3.5 Tarefas
+Tarefas internas da equipe (RF-040 núcleo + RF-042 parcial).
+
+- **Tarefa:** título, descrição, **responsável**, **cliente** (opcional), **departamento** (opcional — reusa
+  o enum do RF-025), **prioridade** (urgente/alta/média/baixa), **prazo** (com selo de severidade) e
+  **status** (aberta / em andamento / concluída / cancelada), mais um **checklist** de subitens.
+- **Painel** (`/tarefas`, menu "Tarefas"): alterna entre **Lista** e **Kanban** (colunas por status, com
+  botões ← → para mover), com filtros por responsável, departamento, status e prioridade; criação rápida.
+- **Detalhe** (`/tarefas/[id]`): edição completa dos campos e do checklist.
+- **Ficha do cliente:** seção **Tarefas** com as tarefas daquele cliente e criação rápida já vinculada.
+- **RLS:** toda a equipe (admin/assistente/contador/financeiro) vê e cria tarefas; **editar/excluir** é de
+  admin/assistente ou de quem **criou**/é **responsável** pela tarefa.
+- **Em aberto (fatias seguintes):** recorrência, anexos, **visão calendário** (completa o RF-042), templates
+  de processo/SOPs (RF-041), timesheet (RF-043), rentabilidade (RF-044) e solicitações internas com SLA (RF-045).
+
+### 3.6 Atendimento (WhatsApp)
 Central de atendimento integrada ao WhatsApp via **Z-API** (número dedicado do escritório).
 
 - **Inbox** em colunas com abas (Abertas / Pendentes / Finalizadas / Favoritos).
@@ -184,7 +199,7 @@ Central de atendimento integrada ao WhatsApp via **Z-API** (número dedicado do 
   com um cliente cadastrado. Normalização de telefone tolerante ao **nono dígito**.
 - **Nova conversa** a partir dos clientes cadastrados.
 
-### 3.6 Obrigações e Compliance
+### 3.7 Obrigações e Compliance
 Controle do calendário de obrigações fiscais e trabalhistas dos clientes, do prazo à entrega, com
 escalonamento de atrasos e relatório de conformidade (admin/contador/assistente).
 
@@ -207,7 +222,7 @@ escalonamento de atrasos e relatório de conformidade (admin/contador/assistente
 - **Relatório de conformidade** (`/obrigacoes/conformidade`): por competência, agregado e por cliente,
   com **% de conformidade**, exportação em CSV e impressão.
 
-### 3.7 Certificados e procurações (vencimentos)
+### 3.8 Certificados e procurações (vencimentos)
 Controle dos certificados digitais e das procurações de cada cliente, com alertas escalonados.
 
 - **Cadastro por cliente:** certificado (tipo A1/A3, titular, documento, emissão, validade) e procuração
@@ -221,7 +236,7 @@ Controle dos certificados digitais e das procurações de cada cliente, com aler
 - **Acesso:** admin, assistente e contador (escopado aos seus clientes). O **financeiro não acessa** —
   a RLS já nasce fechada para ele, sem depender do gate da tela.
 
-### 3.8 NFS-e (notas fiscais de serviço)
+### 3.9 NFS-e (notas fiscais de serviço)
 Emissão e gestão de NFS-e pelo padrão nacional (nfse.gov.br / Sefin Nacional), com certificado digital.
 
 - **NFS-e dos honorários (1 emitente):** o escritório emite as notas dos seus honorários; config do
@@ -237,7 +252,7 @@ Emissão e gestão de NFS-e pelo padrão nacional (nfse.gov.br / Sefin Nacional)
 - **Download em lote:** botões para baixar todas em **PDF** e em **XML**, com **cache do DANFSe** no
   Storage (baixas repetidas ficam instantâneas) e reprocessamento de falhas.
 
-### 3.9 Cobrança
+### 3.10 Cobrança
 Envio da cobrança ao cliente por dois caminhos, com respeito ao opt-out do cliente.
 
 - **Cobrança por WhatsApp (NFS-e + PIX/TED):** na tela de NFS-e em lote, painel que envia por WhatsApp a
@@ -256,7 +271,7 @@ Envio da cobrança ao cliente por dois caminhos, com respeito ao opt-out do clie
   **baixa por webhook** de pagamento e envio do boleto ao cliente. Exige uma conta ativa no provedor
   para operar em produção.
 
-### 3.10 Financeiro
+### 3.11 Financeiro
 Módulo completo de gestão financeira do escritório (admin/financeiro).
 
 - **Contas a receber** e **contas a pagar:** títulos (RECEBER/PAGAR) com competência, vencimento,
@@ -314,11 +329,11 @@ Módulo completo de gestão financeira do escritório (admin/financeiro).
 - **Cadastros:** plano de contas (categorias, natureza/DRE), centros de custo, contas bancárias,
   fornecedores, serviços e contratos de honorários (com sincronização do honorário do cliente).
 
-### 3.11 Integração Domínio
+### 3.12 Integração Domínio
 Importação de contratos/dados a partir do sistema **Domínio** (admin/assistente): leitor `.xls` próprio,
 prévia (novos/atualizados/pendências), reconciliação idempotente por CNPJ e auditoria.
 
-### 3.12 Configurações (admin)
+### 3.13 Configurações (admin)
 Central de integrações e credenciais:
 - **Modelos de legalização (admin):** editor dos modelos societários/legalização — criar, editar (nome,
   descrição, tipo, ativo) e excluir modelos, e gerenciar suas **etapas** (título, descrição, órgão, prazo D+n,
@@ -339,7 +354,7 @@ Central de integrações e credenciais:
 - **Template de onboarding:** gerenciador de templates + interruptor de notificações de prazo.
 - **Obrigações:** matriz de obrigações + interruptores de escalonamento e do badge de riscos.
 
-### 3.13 Usuários (admin)
+### 3.14 Usuários (admin)
 Gestão da equipe: convite de usuários, definição de papel e status (ativo/inativo). O papel real é
 definido server-side (não confiável a partir do token). Cada usuário pode ter um **superior**
 (`superior_id`), formando a cadeia hierárquica usada pelo escalonamento de obrigações.

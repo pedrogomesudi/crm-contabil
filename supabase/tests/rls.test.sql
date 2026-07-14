@@ -1302,3 +1302,43 @@ begin
   end if;
   raise notice 'OK: legalizacao_template só admin escreve';
 end $$;
+
+-- ASSERT: tarefa — admin edita qualquer; contador edita a que criou e não a de outro; financeiro não edita alheia
+do $$
+declare t_contador uuid; t_admin uuid; v text;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  insert into tarefa (titulo) values ('Tarefa do contador') returning id into t_contador;
+  perform _simular('00000000-0000-0000-0000-000000000001'); -- admin
+  insert into tarefa (titulo) values ('Tarefa do admin') returning id into t_admin;
+
+  -- contador edita a PRÓPRIA (criou) -> efeito
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  update tarefa set titulo = 'Editada pelo contador' where id = t_contador;
+  reset role;
+  select titulo into v from tarefa where id = t_contador;
+  if v <> 'Editada pelo contador' then raise exception 'FALHA: contador não editou a própria tarefa (=%)', v; end if;
+
+  -- contador NÃO edita a do admin -> sem efeito
+  perform _simular('00000000-0000-0000-0000-000000000003');
+  update tarefa set titulo = 'hack' where id = t_admin;
+  reset role;
+  select titulo into v from tarefa where id = t_admin;
+  if v = 'hack' then raise exception 'FALHA: contador editou tarefa de outro'; end if;
+
+  -- financeiro NÃO edita a do admin -> sem efeito
+  perform _simular('00000000-0000-0000-0000-000000000004');
+  update tarefa set titulo = 'hack2' where id = t_admin;
+  reset role;
+  select titulo into v from tarefa where id = t_admin;
+  if v = 'hack2' then raise exception 'FALHA: financeiro editou tarefa alheia'; end if;
+
+  -- admin edita QUALQUER -> efeito
+  perform _simular('00000000-0000-0000-0000-000000000001');
+  update tarefa set titulo = 'Editada pelo admin' where id = t_contador;
+  reset role;
+  select titulo into v from tarefa where id = t_contador;
+  if v <> 'Editada pelo admin' then raise exception 'FALHA: admin não editou tarefa de outro (=%)', v; end if;
+
+  raise notice 'OK: tarefa — admin edita qualquer; contador/financeiro só as suas';
+end $$;
