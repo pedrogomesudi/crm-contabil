@@ -11,6 +11,8 @@ import { LegalizacaoSection } from "@/components/legalizacao/LegalizacaoSection"
 import { AtivarEmpresa } from "@/components/clientes/AtivarEmpresa";
 import { TarefasCliente } from "@/components/tarefas/TarefasCliente";
 import { listarTarefas } from "@/app/(app)/tarefas/actions";
+import { PortalCliente } from "@/components/clientes/PortalCliente";
+import { listarAcessosPortal } from "./portal-actions";
 import { podeGerenciarLegalizacao } from "@/lib/clientes/permissoes";
 import { progressoProcesso } from "@/lib/legalizacao/processo";
 import { rotuloTipo, type LegTipo, type LegEtapaStatus } from "@/lib/legalizacao/tipos";
@@ -89,6 +91,10 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
 
   // Tarefas do cliente.
   const tarefasCliente = await listarTarefas({ cliente: id });
+
+  // Acessos ao portal (só admin/assistente gerenciam; a action já barra os demais).
+  const gerenciaPortal = papel === "admin" || papel === "assistente";
+  const acessosPortal = gerenciaPortal ? await listarAcessosPortal(id) : [];
 
   const mostrarHonorario = podeVerHonorario(papel);
   let valorHonorario: number | null = null;
@@ -213,6 +219,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         />
       )}
       <TarefasCliente clienteId={id} tarefas={tarefasCliente} />
+      {gerenciaPortal && <PortalCliente clienteId={id} acessos={acessosPortal} />}
     </div>
   );
 }

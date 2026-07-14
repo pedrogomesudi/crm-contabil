@@ -5,6 +5,12 @@
 export const PAPEIS = ["admin", "contador", "assistente", "financeiro", "cliente"] as const;
 export type Papel = (typeof PAPEIS)[number];
 
+// Papéis atribuíveis pela tela de Usuários. 'cliente' fica DE FORA: só é criado pelo
+// convite ao portal (na ficha do cliente), que define o vínculo cliente_id junto —
+// a constraint chk_usuario_cliente exige o par.
+export const PAPEIS_EQUIPE = ["admin", "contador", "assistente", "financeiro"] as const;
+export type PapelEquipe = (typeof PAPEIS_EQUIPE)[number];
+
 export const TIPOS_PESSOA = ["PJ", "PF", "MEI"] as const;
 export type TipoPessoa = (typeof TIPOS_PESSOA)[number];
 

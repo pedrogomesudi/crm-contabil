@@ -5,7 +5,7 @@ import { z } from "zod";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { required } from "@/lib/env";
-import { PAPEIS, type Papel } from "@/lib/tipos";
+import { PAPEIS_EQUIPE, type Papel } from "@/lib/tipos";
 import type { EstadoConvite } from "./estados";
 
 // Todas as operações de usuário são privilegiadas: exigem admin e rodam com
@@ -19,7 +19,7 @@ async function exigirAdmin() {
 }
 
 function papelValido(p: string): p is Papel {
-  return (PAPEIS as readonly string[]).includes(p);
+  return (PAPEIS_EQUIPE as readonly string[]).includes(p);
 }
 
 const emailSchema = z.string().email();

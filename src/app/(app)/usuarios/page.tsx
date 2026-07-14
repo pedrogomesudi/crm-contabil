@@ -3,7 +3,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { ConviteForm } from "@/components/ConviteForm";
 import { BotaoAcao } from "@/components/usuarios/BotaoAcao";
-import { PAPEIS } from "@/lib/tipos";
+import { PAPEIS_EQUIPE } from "@/lib/tipos";
 import { alterarPapel, definirAtivo, reenviarAcesso, definirSuperior } from "./actions";
 
 export const metadata = { title: "Usuários" };
@@ -92,7 +92,7 @@ export default async function UsuariosPage({
                             aria-label={`Papel de ${u.nome}`}
                             className="rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto focus:border-verde"
                           >
-                            {PAPEIS.map((p) => (
+                            {PAPEIS_EQUIPE.map((p) => (
                               <option key={p} value={p}>
                                 {p}
                               </option>
