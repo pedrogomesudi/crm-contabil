@@ -1,0 +1,5 @@
+# Segredos de cada escritório ficam FORA do git. Só o registro (metadados) é versionado.
+*.env
+!.gitignore
+!registry.json
+!registry.example.json
