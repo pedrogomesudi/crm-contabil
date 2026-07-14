@@ -109,6 +109,7 @@ Três jobs `pg_cron` sustentam automações que ninguém percebe funcionando —
 | `gerar-mensalidades-mensal` | `0 6 1 * *` | Gera as mensalidades do mês (função SQL). |
 | `regua-cobranca-diaria` | `0 12 * * *` | `POST` em `/api/cron/regua-cobranca` (via `pg_net`). |
 | `gerar-obrigacoes-mensal` | `0 12 1 * *` | `POST` em `/api/cron/gerar-obrigacoes` (via `pg_net`). |
+| `tarefas-recorrentes-diaria` | `0 9 * * *` | `POST` em `/api/cron/tarefas-recorrentes` (via `pg_net`). Gera as ocorrências das tarefas recorrentes (RF-040). |
 
 Os dois últimos enviam o `CRON_SECRET` no header `Authorization`. Por isso **não** vivem numa
 migration (seria commitar o segredo); vivem num script que lê o segredo do ambiente.

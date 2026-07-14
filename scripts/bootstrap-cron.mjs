@@ -63,6 +63,12 @@ const JOBS = [
     comando: httpPost("gerar-obrigacoes", true),
     nota: "com body '{}' (fiel ao job de produção)",
   },
+  {
+    nome: "tarefas-recorrentes-diaria",
+    agenda: "0 9 * * *",
+    comando: httpPost("tarefas-recorrentes", true),
+    nota: "gera as ocorrências das tarefas recorrentes (RF-040)",
+  },
 ];
 
 // Nunca imprime o segredo.

@@ -97,3 +97,8 @@ export function podeGerenciarTemplatesEmail(papel: Papel | undefined): boolean {
 export function podeEnviarEmail(papel: Papel | undefined): boolean {
   return papel === "admin" || papel === "assistente" || papel === "contador";
 }
+
+// Quem gerencia tarefas recorrentes e templates de processo/SOP (RLS: admin/assistente).
+export function podeGerenciarRecorrencias(papel: Papel | undefined): boolean {
+  return papel === "admin" || papel === "assistente";
+}

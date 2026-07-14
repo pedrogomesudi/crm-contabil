@@ -6,6 +6,7 @@ import { criarTarefa, definirStatusTarefa, type TarefaView } from "./actions";
 import { TAREFA_STATUS, TAREFA_PRIORIDADE, type TarefaStatus } from "@/lib/tarefas/tarefa";
 import { DEPARTAMENTOS } from "@/lib/clientes/departamentos";
 import { classificarAlerta } from "@/lib/onboarding/alertas";
+import { Calendario } from "./Calendario";
 
 type Colab = { id: string; nome: string };
 const rotStatus = (s: string) => TAREFA_STATUS.find((x) => x.valor === s)?.rotulo ?? s;
@@ -15,12 +16,20 @@ const SEV: Record<string, string> = { em_breve: "text-amber-700", vencido: "text
 const PRIO_COR: Record<string, string> = { urgente: "bg-negativo/15 text-negativo", alta: "bg-amber-100 text-amber-800", media: "bg-linha text-cinza", baixa: "bg-linha text-cinza" };
 const KANBAN: TarefaStatus[] = ["aberta", "em_andamento", "concluida"];
 
-export function PainelTarefas({ tarefas, colaboradores, filtros, vista, hoje }: {
+export function PainelTarefas({ tarefas, colaboradores, filtros, vista, hoje, ano, mes }: {
   tarefas: TarefaView[]; colaboradores: Colab[];
   filtros: { responsavel?: string; cliente?: string; departamento?: string; status?: string; prioridade?: string };
-  vista: "lista" | "kanban"; hoje: string;
+  vista: "lista" | "kanban" | "calendario"; hoje: string; ano: number; mes: number;
 }) {
   const router = useRouter();
+  // Preserva os filtros ao trocar de vista ou de mês — senão o calendário "perde" o filtro aplicado.
+  const link = (extra: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    const merged: Record<string, string | undefined> = { ...filtros, vista, ...extra };
+    for (const [k, v] of Object.entries(merged)) if (v) p.set(k, v);
+    const q = p.toString();
+    return q ? `/tarefas?${q}` : "/tarefas";
+  };
   const [titulo, setTitulo] = useState("");
   const [ocupado, setOcupado] = useState(false);
 
@@ -71,8 +80,10 @@ export function PainelTarefas({ tarefas, colaboradores, filtros, vista, hoje }: 
         <input type="hidden" name="vista" value={vista} />
         <button className="rounded-lg bg-verde px-3 py-1.5 text-white">Filtrar</button>
         <span className="ml-auto flex gap-1">
-          <Link href={`/tarefas?vista=lista`} className={`rounded-lg border px-2 py-1.5 text-xs ${vista === "lista" ? "border-verde text-verde" : "border-linha text-cinza"}`}>Lista</Link>
-          <Link href={`/tarefas?vista=kanban`} className={`rounded-lg border px-2 py-1.5 text-xs ${vista === "kanban" ? "border-verde text-verde" : "border-linha text-cinza"}`}>Kanban</Link>
+          <Link href={link({ vista: "lista" })} className={`rounded-lg border px-2 py-1.5 text-xs ${vista === "lista" ? "border-verde text-verde" : "border-linha text-cinza"}`}>Lista</Link>
+          <Link href={link({ vista: "kanban" })} className={`rounded-lg border px-2 py-1.5 text-xs ${vista === "kanban" ? "border-verde text-verde" : "border-linha text-cinza"}`}>Kanban</Link>
+          <Link href={link({ vista: "calendario" })} className={`rounded-lg border px-2 py-1.5 text-xs ${vista === "calendario" ? "border-verde text-verde" : "border-linha text-cinza"}`}>Calendário</Link>
+          <Link href="/tarefas/recorrencias" className="rounded-lg border border-linha px-2 py-1.5 text-xs text-cinza">Recorrentes</Link>
         </span>
       </form>
 
@@ -81,7 +92,9 @@ export function PainelTarefas({ tarefas, colaboradores, filtros, vista, hoje }: 
         <button disabled={ocupado || !titulo.trim()} onClick={nova} className="rounded-lg bg-verde px-3 py-2 text-sm text-white disabled:opacity-60">Criar</button>
       </div>
 
-      {vista === "lista" ? (
+      {vista === "calendario" ? (
+        <Calendario tarefas={tarefas} ano={ano} mes={mes} hoje={hoje} link={link} />
+      ) : vista === "lista" ? (
         <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
           <table className="min-w-full text-sm">
             <thead>

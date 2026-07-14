@@ -10,6 +10,8 @@ import { DEPARTAMENTOS, type Departamento } from "@/lib/clientes/departamentos";
 import { LegalizacaoSection } from "@/components/legalizacao/LegalizacaoSection";
 import { AtivarEmpresa } from "@/components/clientes/AtivarEmpresa";
 import { TarefasCliente } from "@/components/tarefas/TarefasCliente";
+import { ProcessosSop } from "@/components/tarefas/ProcessosSop";
+import { listarModelosAtivos, listarProcessos } from "@/app/(app)/tarefas/sop-actions";
 import { listarTarefas } from "@/app/(app)/tarefas/actions";
 import { PortalCliente } from "@/components/clientes/PortalCliente";
 import { listarAcessosPortal } from "./portal-actions";
@@ -120,6 +122,8 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
 
   // Tarefas do cliente.
   const tarefasCliente = await listarTarefas({ cliente: id });
+  const modelosSop = await listarModelosAtivos();
+  const processosSop = await listarProcessos(id);
 
   // Acessos ao portal (só admin/assistente gerenciam; a action já barra os demais).
   const gerenciaPortal = papel === "admin" || papel === "assistente";
@@ -259,6 +263,12 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         />
       )}
       <TarefasCliente clienteId={id} tarefas={tarefasCliente} />
+      <ProcessosSop
+        clienteId={id}
+        modelos={modelosSop}
+        processos={processosSop}
+        hoje={new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })}
+      />
       {gerenciaPortal && <PortalCliente clienteId={id} acessos={acessosPortal} />}
     </div>
   );
