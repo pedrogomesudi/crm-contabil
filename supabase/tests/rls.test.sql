@@ -1655,3 +1655,101 @@ begin
 
   raise notice 'OK: solicitacao — equipe atualiza status/responsável e responde';
 end $$;
+
+-- ============================================================================
+-- E-mail integrado (RF-051) — 0089
+-- ============================================================================
+
+-- ASSERT: config de e-mail é só do admin (custódia de credencial)
+do $$
+declare n int; ok boolean := false;
+begin
+  reset role;
+  update email_config set provedor = 'smtp', remetente_email = 'contato@escritorio.com', smtp_host = 'smtp.x.com' where id = 1;
+
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  select count(*) into n from email_config;
+  if n <> 0 then raise exception 'FALHA(email): assistente vê a config (e as credenciais)'; end if;
+  begin
+    update email_config set smtp_host = 'smtp.malicioso.com' where id = 1;
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  reset role;
+  -- sem policy de select, o update do assistente não casa linha alguma: o que importa é o host intacto
+  perform 1 from email_config where id = 1 and smtp_host = 'smtp.x.com';
+  if not found then raise exception 'FALHA(email): assistente alterou o host do SMTP'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  select count(*) into n from email_config;
+  if n <> 0 then raise exception 'FALHA(email): financeiro vê a config'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000005'); -- cliente do portal
+  select count(*) into n from email_config;
+  if n <> 0 then raise exception 'FALHA(email): cliente do portal vê a config'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000001'); -- admin
+  select count(*) into n from email_config;
+  if n <> 1 then raise exception 'FALHA(email): admin não vê a config'; end if;
+  reset role;
+
+  raise notice 'OK: email_config — só admin lê e escreve';
+end $$;
+
+-- ASSERT: templates — equipe lê; só admin/assistente escrevem
+do $$
+declare n int; ok boolean := false;
+begin
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente
+  insert into email_template (nome, assunto, corpo) values ('Aviso de guia', 'Guia de {competencia}', 'Ola {nome}');
+  select count(*) into n from email_template;
+  if n < 1 then raise exception 'FALHA(email): assistente não criou o template'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro: lê, não escreve
+  select count(*) into n from email_template;
+  if n < 1 then raise exception 'FALHA(email): financeiro não lê templates'; end if;
+  begin
+    insert into email_template (nome, assunto, corpo) values ('X', 'X', 'X');
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(email): financeiro criou template'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000005'); -- cliente do portal
+  select count(*) into n from email_template;
+  if n <> 0 then raise exception 'FALHA(email): cliente do portal vê templates'; end if;
+  reset role;
+
+  raise notice 'OK: email_template — equipe lê; só admin/assistente escrevem';
+end $$;
+
+-- ASSERT: histórico — contador só vê o dos seus clientes; ninguém insere pela app
+do $$
+declare n int; ok boolean := false;
+begin
+  reset role;
+  insert into email_mensagem (cliente_id, para, assunto, corpo, status)
+    values ('aaaaaaaa-0000-0000-0000-000000000001','a@cliente.com','Guia','Segue a guia','ENVIADO');
+  insert into email_mensagem (cliente_id, para, assunto, corpo, status)
+    values ('aaaaaaaa-0000-0000-0000-000000000002','b@cliente.com','Guia B','Segue','ENVIADO');
+
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador (dono só do cliente A)
+  select count(*) into n from email_mensagem where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000002';
+  if n <> 0 then raise exception 'FALHA(email): contador vê e-mail de cliente que não é dele'; end if;
+  select count(*) into n from email_mensagem where cliente_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+  if n < 1 then raise exception 'FALHA(email): contador não vê o e-mail do próprio cliente'; end if;
+
+  -- nem o admin insere pela app: o registro é do servidor (service_role), depois do envio
+  perform _simular('00000000-0000-0000-0000-000000000001');
+  begin
+    insert into email_mensagem (cliente_id, para, assunto, corpo, status)
+      values ('aaaaaaaa-0000-0000-0000-000000000001','x@y.com','Forjado','Nunca saiu','ENVIADO');
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(email): admin forjou um envio no histórico'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000005'); -- cliente do portal
+  select count(*) into n from email_mensagem;
+  if n <> 0 then raise exception 'FALHA(email): cliente do portal vê o histórico de e-mails'; end if;
+  reset role;
+
+  raise notice 'OK: email_mensagem — contador escopado; ninguém forja envio pela app';
+end $$;
