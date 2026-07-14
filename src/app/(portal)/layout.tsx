@@ -26,6 +26,7 @@ export default async function PortalLayout({ children }: { children: React.React
     { href: "/portal/notas", label: "Notas fiscais" },
     { href: "/portal/guias", label: "Guias" },
     { href: "/portal/boletos", label: "Boletos" },
+    { href: "/portal/solicitacoes", label: "Solicitações" },
   ];
 
   return (

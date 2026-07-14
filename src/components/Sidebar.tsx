@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Papel } from "@/lib/tipos";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
-import { podeAtender, podeCriarCliente, podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
+import { podeAtender, podeAtenderSolicitacoes, podeCriarCliente, podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
 import { sair } from "@/app/login/actions";
 import { LogoSaldo } from "@/components/marca/LogoSaldo";
 
@@ -20,6 +20,7 @@ export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes =
     ...(podeCriarCliente(papel) ? [{ href: "/comercial/propostas", label: "Propostas" }] : []),
     ...(podeCriarCliente(papel) ? [{ href: "/obrigacoes", label: "Obrigações", badge: riscosObrigacoes || undefined }] : []),
     { href: "/tarefas", label: "Tarefas" },
+    ...(podeAtenderSolicitacoes(papel) ? [{ href: "/solicitacoes", label: "Solicitações" }] : []),
     ...(podeCriarCliente(papel) ? [{ href: "/obrigacoes/escalonamento", label: "Escalonamento", badge: escalonamento || undefined }] : []),
     ...(podeGerenciarVencimentos(papel) ? [{ href: "/vencimentos", label: "Vencimentos", badge: vencimentos || undefined }] : []),
     ...(podeAtender(papel) ? [{ href: "/atendimento", label: "Atendimento" }] : []),

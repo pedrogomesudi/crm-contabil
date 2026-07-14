@@ -76,6 +76,12 @@ export function podeGerenciarLegalizacao(papel: Papel | undefined): boolean {
   return papel === "admin" || papel === "assistente" || papel === "contador";
 }
 
+// Quem atende solicitações do portal (mesma lista da RLS de UPDATE de `solicitacao`).
+// O financeiro só lê — não responde nem muda status.
+export function podeAtenderSolicitacoes(papel: Papel | undefined): boolean {
+  return papel === "admin" || papel === "assistente" || papel === "contador";
+}
+
 // Quem gerencia tarefas internas (toda a equipe cria/vê; edição refinada pela RLS).
 export function podeGerenciarTarefas(papel: Papel | undefined): boolean {
   return papel === "admin" || papel === "assistente" || papel === "contador" || papel === "financeiro";

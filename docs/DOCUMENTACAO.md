@@ -223,6 +223,20 @@ Tarefas internas da equipe (RF-040 núcleo + RF-042 parcial).
   policy de INSERT). Na ficha do cliente, a seção **Documentos** passa a mostrar **"visto em dd/mm"** ou
   **"não visualizado"**, e marca o que foi **"enviado pelo cliente"**. Responde à pergunta que mais gera
   ligação: *"o cliente viu a guia?"*.
+- **Solicitações (RF-054, Fatia C):** o cliente **abre um pedido** pelo portal (`/portal/solicitacoes`) —
+  categoria (guia, documento, dúvida, outro), assunto e descrição — e conversa com o escritório numa
+  **thread**. Cada solicitação recebe um **número sequencial** e um **prazo** calculado pelo SLA configurável
+  em **Configurações → Marca** ("SLA de solicitações (dias)", padrão 2). A equipe atende em `/solicitacoes`,
+  com filtros por **status**, **categoria** e **SLA vencido**, e no detalhe pode **responder** (o status vira
+  *respondida*), **atribuir responsável**, **mudar o status** e **converter em tarefa** (cria a tarefa do
+  cliente com o mesmo prazo e guarda o vínculo em `solicitacao.tarefa_id`).
+  - **Segurança:** o cliente só pode **inserir** solicitação no próprio cadastro e **mensagens** nas
+    solicitações dele; **não pode dar UPDATE**. Como *default* não é validação, um gatilho `before insert`
+    **sobrescreve no servidor** os campos forjáveis — `criado_por`, `autor_id` da mensagem, `numero`, `prazo`,
+    `status`, `responsavel_id` e `tarefa_id`. Sem isso, um cliente com JWT válido poderia chamar a API direto e
+    **forjar a autoria** de uma mensagem (fazendo parecer que o escritório respondeu) ou esticar o próprio SLA.
+    Os testes de RLS provam a neutralização: o cliente insere mensagem com `autor_id` do contador e a leitura
+    devolve o `autor_id` dele.
 - **Em aberto (fatias seguintes):** **reenvio automático** dos itens não visualizados (completa o RF-053);
   central de **solicitações/tickets** (RF-054).
 
