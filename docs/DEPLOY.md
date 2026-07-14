@@ -58,7 +58,13 @@ NEXT_PUBLIC_SITE_URL=https://crm.SEU-DOMINIO.com.br
 **Runtime (secreta, só no servidor — NUNCA NEXT_PUBLIC):**
 ```
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_...                 # marcar como secreto
+EMAIL_CRIPTO_KEY=<hex de 32 bytes>                      # cifra a senha SMTP / chave de API (RF-051)
 ```
+
+> As chaves de cripto (`WHATSAPP_CRIPTO_KEY`, `ONBOARDING_CRIPTO_KEY`, `BOLETO_CRIPTO_KEY`,
+> `EMAIL_CRIPTO_KEY`) são definidas **uma vez** e **nunca alteradas** — trocar a chave torna o que já
+> está cifrado irrecuperável. Gerar com:
+> `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
 
 > Não precisa de `SUPABASE_DB_URL`/`ADMIN_*` no runtime do app — essas são só do ferramental
 > de banco (`scripts/*.mjs`), que roda na sua máquina, não no container.

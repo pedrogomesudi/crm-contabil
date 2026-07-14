@@ -252,6 +252,25 @@ Central de atendimento integrada ao WhatsApp via **Z-API** (número dedicado do 
   com um cliente cadastrado. Normalização de telefone tolerante ao **nono dígito**.
 - **Nova conversa** a partir dos clientes cadastrados.
 
+### 3.7.1 E-mail integrado (RF-051)
+Canal de e-mail do escritório, com envio a partir da **ficha do cliente** e registro automático de tudo.
+Nasce também como **redundância** do WhatsApp, que é canal não oficial (Z-API) e pode ser banido.
+
+- **Enviar e-mail** (admin/assistente/contador — o financeiro vê o histórico, mas não dispara): o
+  destinatário já vem preenchido com o e-mail do cliente; escolher um **template** preenche assunto e corpo
+  **já com as variáveis aplicadas**, e o texto continua editável antes do envio.
+- **Anexos:** documentos do cliente, comprovantes de obrigações e DANFSe. O navegador manda o **id** do
+  registro, **nunca o caminho do arquivo** — o servidor lê pelo id (a RLS prova que é daquele cliente) e só
+  então baixa do Storage. Aceitar o caminho seria path traversal disfarçado. Teto de **10 MB** somados.
+- **Histórico na ficha:** cada envio vira uma linha em `email_mensagem` com destinatário, assunto, anexos e
+  **status**. A falha é gravada também, com a mensagem do provedor — um e-mail que não saiu não pode sumir.
+  A tabela **não tem policy de INSERT**: só o servidor grava, depois de enviar, então ninguém forja um
+  "enviado". O contador só enxerga o histórico dos clientes dele; o portal (papel `cliente`) não vê nada.
+- **Corpo é texto**, com o HTML derivado por escape. Não aceitamos HTML cru — o template viraria vetor de
+  injeção no cliente de e-mail de quem recebe.
+- **Em aberto (Fatia B):** a régua de cobrança por e-mail, em **fallback** — sai quando o WhatsApp não está
+  configurado, o cliente não tem telefone ou o envio falhou; nunca duas cobranças do mesmo título.
+
 ### 3.8 Obrigações e Compliance
 Controle do calendário de obrigações fiscais e trabalhistas dos clientes, do prazo à entrega, com
 escalonamento de atrasos e relatório de conformidade (admin/contador/assistente).
@@ -401,6 +420,14 @@ Central de integrações e credenciais:
   validado), painel de **referência de tags** e download de um **modelo de exemplo**. A validação do upload
   reconhece as tags, sinaliza as desconhecidas e avisa sobre recursos externos no HTML.
 - **WhatsApp (Z-API):** credenciais do provedor e teste de conexão.
+- **E-mail (RF-051):** canal de envio do escritório — **SMTP** (host, porta, TLS, usuário e senha: serve
+  qualquer provedor que o escritório já use) ou **API** (Resend/SendGrid, com o domínio verificado lá).
+  Remetente (nome + endereço) e **envio de e-mail de teste** — sem ele, um erro de senha só apareceria
+  quando o primeiro cliente ficasse sem receber. Senha e chave são cifradas (AES-256-GCM,
+  `EMAIL_CRIPTO_KEY`) e **nunca voltam para a tela**: o campo em branco mantém a credencial atual.
+- **Templates de e-mail:** modelos com **variáveis** (`{nome}`, `{cnpj}`, `{escritorio}`, `{hoje}`,
+  `{valor}`, `{vencimento}`, `{competencia}`) — mesma sintaxe da régua do WhatsApp, com prévia aplicada a
+  um cliente de exemplo. Escrita: admin e assistente.
 - **NFS-e (emitente):** dados do emitente e certificado digital.
 - **Boletos:** provedor (Inter / Asaas), credenciais cifradas, ambiente e conta bancária.
 - **Dados de pagamento (PIX/TED):** conta e PIX enviados na cobrança.
@@ -437,9 +464,10 @@ definido server-side (não confiável a partir do token). Cada usuário pode ter
 - **Storage (Supabase):** documentos, DANFSe (cache), mídia de atendimento e anexos de onboarding, com
   rotas de acesso controladas (URLs assinadas de curta duração).
 - **Criptografia (AES-256-GCM):** credenciais do WhatsApp, certificados NFS-e, o **cofre de acessos** do
-  onboarding e as credenciais de boleto são cifrados; chaves em variáveis de ambiente
-  (`WHATSAPP_CRIPTO_KEY`, `ONBOARDING_CRIPTO_KEY`, `BOLETO_CRIPTO_KEY`) — definidas uma vez e **nunca
-  alteradas** (mudar torna os dados cifrados irrecuperáveis).
+  onboarding, as credenciais de boleto e as **credenciais de e-mail** (senha SMTP / chave de API) são
+  cifradas; chaves em variáveis de ambiente (`WHATSAPP_CRIPTO_KEY`, `ONBOARDING_CRIPTO_KEY`,
+  `BOLETO_CRIPTO_KEY`, `EMAIL_CRIPTO_KEY`) — definidas uma vez e **nunca alteradas** (mudar torna os
+  dados cifrados irrecuperáveis).
 - **Auditoria:** acesso a documentos, revelação de senhas do cofre e estornos financeiros são
   registrados (quem/quando), de forma não-forjável.
 - **Agendamentos (pg_cron, em produção):** três jobs ativos no banco —
