@@ -26,7 +26,9 @@
     "tenant:doctor": "node scripts/tenant-doctor.mjs",
     "db:migrate:all": "node scripts/tenants-all.mjs db-migrate",
     "db:test:all": "node scripts/tenants-all.mjs db-test-rls",
-    "cron:bootstrap:all": "node scripts/tenants-all.mjs bootstrap-cron"
+    "cron:bootstrap:all": "node scripts/tenants-all.mjs bootstrap-cron",
+    "cripto:migrar": "node --env-file=.env.local scripts/cripto-migrar.mjs",
+    "cripto:rotacionar": "node --env-file=.env.local scripts/cripto-rotacionar.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.0",
