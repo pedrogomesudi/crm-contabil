@@ -47,6 +47,7 @@ const nome = opt("nome");
 const email = opt("email");
 const regiao = opt("regiao", "sa-east-1");
 const dominio = opt("dominio", "seusaldo.ai");
+const dbUrlManual = opt("db-url");
 const dryRun = flag("dry-run");
 const retomar = flag("retomar");
 
@@ -126,6 +127,57 @@ async function chavesDoProjeto(ref) {
   return { pub, secret };
 }
 
+// A string do POOLER não pode ser ADIVINHADA: o prefixo do host varia por projeto
+// ("aws-0-…" num, "aws-1-…" noutro). Chutar significaria criar o projeto (com custo) e só
+// então descobrir que não conecta. Perguntamos ao Supabase; se ele não responder, o
+// operador cola a string do painel via --db-url.
+async function urlDoPooler(ref, dbPass) {
+  try {
+    const cfg = await api(`/projects/${ref}/config/database/pooler`);
+    const host = cfg?.db_host ?? cfg?.connection_string?.match(/@([^:]+):/)?.[1];
+    const porta = cfg?.db_port ?? 5432;
+    const usuario = cfg?.db_user ?? `postgres.${ref}`;
+    if (host) {
+      return `postgresql://${usuario}:${encodeURIComponent(dbPass)}@${host}:${porta}/postgres`;
+    }
+  } catch (e) {
+    console.log(`  (a API não devolveu a config do pooler: ${String(e.message).slice(0, 60)})`);
+  }
+  return null;
+}
+
+async function comBanco(dbUrl, fn) {
+  const { readFileSync } = await import("node:fs");
+  const pg = (await import("pg")).default;
+  const ca = readFileSync(new URL("../supabase/db-ca.crt", import.meta.url), "utf8");
+  const cli = new pg.Client({
+    connectionString: dbUrl,
+    ssl: { rejectUnauthorized: true, ca },
+    connectionTimeoutMillis: 20_000,
+  });
+  await cli.connect();
+  try {
+    return await fn(cli);
+  } finally {
+    await cli.end();
+  }
+}
+
+// Falha CEDO: sem conexão, não adianta seguir para as migrations.
+async function testarConexao(dbUrl) {
+  await comBanco(dbUrl, (cli) => cli.query("select 1"));
+}
+
+// pg_cron e pg_net fazem os jobs agendados chamarem o app. Um projeto Supabase NOVO não
+// vem com elas ligadas (no de produção, foram habilitadas à mão um dia). Sem isto, o
+// bootstrap-cron falha — e a régua e as obrigações nunca rodariam no escritório novo.
+async function habilitarExtensoes(dbUrl) {
+  await comBanco(dbUrl, async (cli) => {
+    await cli.query("create extension if not exists pg_net;");
+    await cli.query("create extension if not exists pg_cron;");
+  });
+}
+
 // ---------------------------------------------------------------- passos locais
 function rodar(script, envExtra = {}) {
   console.log(`• ${script}…`);
@@ -152,46 +204,98 @@ try {
   }
 
   let env = retomar ? lerEnv(slug) : null;
+  const refExistente = opt("project-ref");
 
   if (!env) {
     if (!token) abortar("Defina SUPABASE_ACCESS_TOKEN (token pessoal do Supabase) no ambiente.");
-    if (!orgId) abortar("Defina SUPABASE_ORG_ID (id da organização) no ambiente.");
 
-    const dbPass = senhaForte();
-    const ref = await criarProjeto(dbPass);
+    let ref;
+    if (refExistente) {
+      // RECUPERAÇÃO: o projeto já existe (criado numa execução anterior que não gravou o
+      // env). Não cria outro; busca as chaves e exige a --db-url do painel (a senha original
+      // se perdeu — o operador redefine no painel e cola a URI do Session pooler).
+      ref = refExistente;
+      if (!dbUrlManual) abortar("recuperação (--project-ref) exige --db-url com a URI do Session pooler.");
+      console.log(`• Recuperando o projeto ${ref} (sem criar outro)…`);
+    } else {
+      if (!orgId) abortar("Defina SUPABASE_ORG_ID (id da organização) no ambiente.");
+      const dbPass = senhaForte();
+      ref = await criarProjeto(dbPass);
+      // Guarda o dbPass já: se algo falhar adiante, --retomar reconstrói a URL a partir dele.
+      env = { SUPABASE_DB_PASS: dbPass };
+    }
+
     const { pub, secret } = await chavesDoProjeto(ref);
 
     // Cada escritório com as SUAS chaves: vazar a de um não compromete os outros.
     // Inclui a NFSE_CERT_KEY (cifra os certificados A1 dos clientes) e os segredos de
     // webhook, que somos nós que escolhemos (o provedor só os repete de volta).
     const cripto = Object.fromEntries(CHAVES_CRIPTO.map((k) => [k, hex32()]));
-    const webhooks = {
-      ZAPI_WEBHOOK_SECRET: hex32(),
-      BOLETO_WEBHOOK_SECRET: hex32(),
-    };
 
     env = {
+      ...(env ?? {}),
       NEXT_PUBLIC_SUPABASE_URL: `https://${ref}.supabase.co`,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: pub,
       NEXT_PUBLIC_SITE_URL: appUrl,
       SUPABASE_SERVICE_ROLE_KEY: secret,
-      // Session pooler (o runner de migrations exige; o Transaction pooler não serve).
-      SUPABASE_DB_URL: `postgresql://postgres.${ref}:${encodeURIComponent(dbPass)}@aws-0-${regiao}.pooler.supabase.com:5432/postgres`,
       ...cripto,
-      ...webhooks,
+      ZAPI_WEBHOOK_SECRET: hex32(),
+      BOLETO_WEBHOOK_SECRET: hex32(),
       ADMIN_EMAIL: email,
       ADMIN_PASSWORD: senhaForte(),
       ADMIN_NOME: nome,
       SUPABASE_PROJECT_REF: ref,
     };
+    // GRAVA JÁ, antes de mexer na conexão: se a DB_URL falhar, --retomar acha o env e não
+    // cria outro projeto. Foi exatamente o buraco que deixou o primeiro projeto órfão.
     gravarEnv(slug, env);
-    console.log(`• Credenciais gravadas em ${caminhoEnv} (chmod 600, fora do git).`);
+    console.log(`• Credenciais parciais gravadas em ${caminhoEnv} (chmod 600, fora do git).`);
   } else {
     console.log(`• Retomando com ${caminhoEnv}.`);
   }
 
+  // Garante a SUPABASE_DB_URL (a única coisa que a API às vezes não entrega).
+  if (!env.SUPABASE_DB_URL) {
+    const ref = env.SUPABASE_PROJECT_REF ?? refExistente;
+    const dbUrl = dbUrlManual ?? (env.SUPABASE_DB_PASS ? await urlDoPooler(ref, env.SUPABASE_DB_PASS) : null);
+    if (!dbUrl) {
+      console.error("\nFalta a string de conexão do banco.");
+      console.error("No painel do Supabase → Project Settings → Database → Connection string → **Session pooler**,");
+      console.error("copie a URI (se a senha se perdeu, use 'Reset database password' antes) e rode:");
+      console.error(`  npm run tenant:novo -- --slug ${slug} --nome "${nome}" --email ${email} --retomar --db-url "<a URI>"`);
+      process.exit(1);
+    }
+    console.log("• Testando a conexão com o banco…");
+    try {
+      await testarConexao(dbUrl);
+    } catch (e) {
+      if (/password authentication failed/i.test(e.message)) {
+        // Quase sempre é o shell comendo caractere especial da senha ($, !, etc.), não a
+        // senha errada. Aspas SIMPLES na --db-url passam o valor literal ao script.
+        console.error("\nA senha foi recusada. Se ela tem $ ! ` ou aspas, o shell pode tê-la");
+        console.error("corrompido. Rode de novo com ASPAS SIMPLES em volta da --db-url:");
+        console.error(`  npm run tenant:novo -- --slug ${slug} --nome "${nome}" --email ${email} --retomar --db-url 'a-URI-COM-A-SENHA'`);
+      }
+      throw e;
+    }
+    console.log("  conectou.");
+    env.SUPABASE_DB_URL = dbUrl;
+    gravarEnv(slug, env);
+  }
+
   rodar("db-migrate");
   rodar("bootstrap-admin");
+
+  console.log("• Habilitando pg_net e pg_cron…");
+  try {
+    await habilitarExtensoes(env.SUPABASE_DB_URL);
+    console.log("  ok.");
+  } catch (e) {
+    console.error(`  não consegui habilitar as extensões: ${String(e.message).slice(0, 120)}`);
+    console.error("  Habilite à mão no painel (Database → Extensions): pg_net e pg_cron. Depois rode com --retomar.");
+    process.exit(1);
+  }
+
   rodar("bootstrap-cron", { APP_URL: appUrl, CRON_SECRET: env.CRON_SECRET });
 
   const reg = lerRegistry();
