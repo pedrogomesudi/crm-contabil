@@ -50,9 +50,14 @@ console.log(`• Dump do schema public de "${slug}"…`);
 
 // SEM SHELL: pg_dump recebe a URL como ARGUMENTO (a senha pode ter $, !, etc. — um shell
 // os expandiria). O gzip é feito em Node, ligando os streams.
+// SSL com VERIFICAÇÃO do certificado (verify-full + CA fixada): o dump carrega todos os
+// dados de cliente; criptografar sem verificar a identidade do servidor (o padrão do
+// pg_dump) deixaria a porta aberta a man-in-the-middle.
+const caPath = join(RAIZ, "supabase", "db-ca.crt");
 await new Promise((resolve, reject) => {
   const dump = spawn("pg_dump", ["--schema=public", "--no-owner", "--no-privileges", dbUrl], {
     stdio: ["ignore", "pipe", "inherit"],
+    env: { ...process.env, PGSSLMODE: "verify-full", PGSSLROOTCERT: caPath },
   });
   const gz = createGzip();
   const out = createWriteStream(destino);
