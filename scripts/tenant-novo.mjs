@@ -285,6 +285,8 @@ try {
 
   rodar("db-migrate");
   rodar("bootstrap-admin");
+  // Envelope: transforma as 5 chaves de domínio em DEKs cifradas pela mestra.
+  rodar("cripto-migrar");
 
   console.log("• Habilitando pg_net e pg_cron…");
   try {
