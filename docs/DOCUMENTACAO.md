@@ -584,6 +584,30 @@ definido server-side (não confiável a partir do token). Cada usuário pode ter
 
 ---
 
+## 4.1 LGPD (V10-A)
+Conformidade com a Lei Geral de Proteção de Dados — pré-requisito de comercialização. Menu **Configurações
+→ LGPD** (admin) e uma seção **LGPD** na ficha do cliente.
+
+- **O eixo honesto — exclusão × retenção fiscal:** a LGPD dá o direito de exclusão, mas a lei fiscal
+  **obriga** a guardar boa parte dos dados. O sistema não finge que apaga o que é obrigado a reter: a
+  "exclusão" é **anonimização dos dados pessoais não-fiscais** (e-mail, telefone, nome do representante,
+  usuários do portal), com o **esqueleto fiscal preservado** (razão social, CNPJ, títulos, NFS-e) e o
+  **motivo da retenção documentado** (base legal). Anonimização, **não** `DELETE`, e **irreversível** — cada
+  operação é registrada (quem, o quê, quando). A trava usa a retenção configurável (`retencao_meses`, padrão
+  60) e os sinais fiscais do cliente; regra em função pura testada.
+- **Relatório de dados por titular:** reúne tudo que o sistema guarda sobre um cliente e as pessoas ligadas
+  (cadastro, financeiro, documentos, NFS-e, títulos, e-mails, comunicados, acessos ao portal, solicitações,
+  consentimentos) em **PDF** (direito de acesso, via Gotenberg) e **JSON** (portabilidade). Cada geração é
+  registrada como atendimento do direito.
+- **Registro de tratamentos (ROPA):** base legal por finalidade, **pré-semeado** com os típicos de um
+  escritório contábil (cadastro/contrato, escrituração/obrigação legal, folha, cobrança, comunicados/
+  consentimento, atendimento/legítimo interesse) e editável.
+- **Consentimento com histórico:** cada mudança do opt-in de comunicados vira um **evento** (concedido/
+  revogado, origem, quem, quando) — a prova histórica, além do estado atual. Gravado por `service_role`
+  (o titular não forja o próprio consentimento).
+- **Segurança:** as três tabelas LGPD são **admin-only** (RLS); `lgpd_consentimento_evento` não tem policy
+  de INSERT (só o servidor grava). O encarregado (DPO) é um campo de configuração.
+
 ## 5. Infraestrutura e segurança
 
 - **Banco (Supabase/Postgres):** schema versionado em `supabase/migrations/NNNN_*.sql`, aplicado por um

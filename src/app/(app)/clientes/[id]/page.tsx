@@ -23,6 +23,7 @@ import { HonorarioForm } from "@/components/HonorarioForm";
 import { LinhaTempoVigencias } from "@/components/clientes/LinhaTempoVigencias";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
 import { EmailsCliente } from "@/components/clientes/EmailsCliente";
+import { LgpdCliente } from "@/components/clientes/LgpdCliente";
 import { listarEmails, listarAnexaveis } from "./email-actions";
 import { variaveisDoCliente } from "@/lib/email/template";
 import { podeEnviarEmail } from "@/lib/clientes/permissoes";
@@ -243,6 +244,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         emails={emails}
         podeEnviar={podeEnviarEmail(papel)}
       />
+      {papel === "admin" && <LgpdCliente clienteId={id} />}
       <NotasFiscaisSection clienteId={id} papel={papel} />
       <EmissaoClienteSection clienteId={id} papel={papel} />
       {podeCriarCliente(papel) && (
