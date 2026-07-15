@@ -46,3 +46,6 @@ next-env.d.ts
 # Credenciais por escritório (multi-tenant, um banco por escritório). NUNCA versionar:
 # uma service_role commitada não se desfaz — a chave já esteve lá e teria de ser rotacionada.
 /tenants/*.env
+
+# Backups locais (contêm dado de cliente) — NUNCA versionar.
+/backups/

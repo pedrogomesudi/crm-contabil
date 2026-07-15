@@ -7,7 +7,7 @@
 // disso avisa sozinho; o prejuízo aparece semanas depois, num prazo perdido.
 //
 // Sai com código 1 se qualquer checagem falhar (serve como check de rotina).
-import { readdirSync, existsSync } from "node:fs";
+import { readdirSync, existsSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import pg from "pg";
@@ -53,6 +53,17 @@ async function diagnosticar(e) {
   // As rotacionáveis dão trabalho, mas não destroem dado → apenas aviso.
   const semRot = SEGREDOS_ROTACIONAVEIS.filter((k) => !env[k]);
   if (semRot.length > 0) linha.avisos.push(`segredos rotacionáveis ausentes: ${semRot.join(", ")}`);
+
+  // Backup local recente? (aviso, não falha — o backup do Supabase é a fonte primária.)
+  const dirBackup = join(RAIZ, "backups", e.slug);
+  if (!existsSync(dirBackup) || readdirSync(dirBackup).filter((n) => n.endsWith(".sql.gz")).length === 0) {
+    linha.avisos.push("sem dump local (rode backup:dump)");
+  } else {
+    const arqs = readdirSync(dirBackup).filter((n) => n.endsWith(".sql.gz")).map((n) => statSync(join(dirBackup, n)).mtimeMs);
+    const maisRecente = Math.max(...arqs);
+    const dias = (Date.now() - maisRecente) / 86_400_000;
+    if (dias > 8) linha.avisos.push(`dump local com ${Math.floor(dias)} dias (rode backup:dump)`);
+  }
 
   // Banco: migrations, crons e admin.
   if (!env.SUPABASE_DB_URL) {

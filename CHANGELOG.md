@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Backup e teste de restauração (RNF-06) — fecha o V10:** dump próprio do schema `public`
+  (**`backup:dump`**) com retenção 7 diários + 4 semanais e envio a bucket S3-compatível (SigV4 próprio, sem
+  SDK); **verificador pós-restore** (**`restore:verificar`**) que prova, contra um banco restaurado, que
+  dados, extensões, crons, admin, as 5 DEKs e a cripto voltaram; runbook de restauração (ensaio num projeto
+  descartável) no DEPLOY.md; o `tenant:doctor` avisa quando o dump local está velho ou ausente. O dump
+  próprio é **redundância do negócio** — auth/storage seguem cobertos pelo backup do Supabase.
+
 - **Envelope encryption (V10-B):** rotação de chave sem re-cifrar dado. Uma **chave-mestra**
   (`MASTER_CRIPTO_KEY`) cifra 5 **DEKs** (uma por domínio) em `chave_dados`; cada DEK é o valor da chave
   atual, então o ciphertext existente decifra sem tocar. `cifrarDominio`/`decifrarDominio` com **fallback**

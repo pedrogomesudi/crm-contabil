@@ -40,6 +40,9 @@ export const SEGREDOS_ROTACIONAVEIS = [
   "CLICKSIGN_TOKEN",
 ];
 
+// Backup na nuvem (opcional): o dump local já é uma cópia, então a ausência é só aviso.
+export const BACKUP_S3 = ["BACKUP_S3_ENDPOINT", "BACKUP_S3_BUCKET", "BACKUP_S3_KEY_ID", "BACKUP_S3_SECRET"];
+
 export function lerRegistry() {
   if (!existsSync(REGISTRY)) return { escritorios: [] };
   return JSON.parse(readFileSync(REGISTRY, "utf8"));
