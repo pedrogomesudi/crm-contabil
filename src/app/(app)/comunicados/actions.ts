@@ -4,6 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeCriarCliente, podeGerenciarTemplatesEmail } from "@/lib/clientes/permissoes";
+import { registrarConsentimento } from "@/lib/lgpd/consentimento";
 import { enviarEmail } from "@/lib/email/enviar";
 import { aplicarEmail, variaveisDoCliente } from "@/lib/email/template";
 import { enviarTexto } from "@/lib/whatsapp/zapi";
@@ -404,6 +405,8 @@ export async function setAceitaComunicados(
   const supabase = await createServerSupabase();
   const { error } = await supabase.from("clientes").update({ aceita_comunicados: aceita }).eq("id", clienteId);
   if (error) return { erro: "Falha ao salvar." };
+  // Deixa a prova histórica do consentimento (LGPD) — não só o estado atual.
+  await registrarConsentimento(clienteId, "comunicados", aceita, "ficha", p.id);
   revalidatePath(`/clientes/${clienteId}`);
   return { ok: true };
 }
