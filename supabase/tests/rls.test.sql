@@ -2087,3 +2087,58 @@ begin
 
   raise notice 'OK: solicitacao_interna — nasce na fila; equipe assume; SLA só o admin muda';
 end $$;
+
+-- ============================================================================
+-- LGPD (V10-A) — 0096
+-- ============================================================================
+
+-- ASSERT: tabelas de conformidade são admin-only; consentimento não é forjável pela app
+do $$
+declare n int; ok boolean := false;
+begin
+  reset role;
+  insert into lgpd_tratamento (finalidade, categorias, base_legal, ordem)
+    values ('Dados cadastrais', 'nome, e-mail, telefone', 'contrato', 1);
+  insert into lgpd_consentimento_evento (cliente_id, tipo, concedido, origem)
+    values ('aaaaaaaa-0000-0000-0000-000000000001', 'comunicados', true, 'seed');
+
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador não vê nada de LGPD
+  select count(*) into n from lgpd_tratamento;
+  if n <> 0 then raise exception 'FALHA(lgpd): contador vê o ROPA'; end if;
+  select count(*) into n from lgpd_consentimento_evento;
+  if n <> 0 then raise exception 'FALHA(lgpd): contador vê o histórico de consentimento'; end if;
+  select count(*) into n from lgpd_solicitacao_titular;
+  if n <> 0 then raise exception 'FALHA(lgpd): contador vê as solicitações do titular'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro idem
+  select count(*) into n from lgpd_tratamento;
+  if n <> 0 then raise exception 'FALHA(lgpd): financeiro vê o ROPA'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000002'); -- assistente lê? não, e não escreve
+  select count(*) into n from lgpd_tratamento;
+  if n <> 0 then raise exception 'FALHA(lgpd): assistente vê o ROPA'; end if;
+  begin
+    insert into lgpd_tratamento (finalidade, categorias, base_legal) values ('X','Y','contrato');
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(lgpd): assistente criou tratamento'; end if;
+
+  -- nem o admin insere consentimento pela app: é do servidor (service_role)
+  perform _simular('00000000-0000-0000-0000-000000000001');
+  select count(*) into n from lgpd_tratamento;
+  if n < 1 then raise exception 'FALHA(lgpd): admin não vê o ROPA'; end if;
+  ok := false;
+  begin
+    insert into lgpd_consentimento_evento (cliente_id, tipo, concedido)
+      values ('aaaaaaaa-0000-0000-0000-000000000001', 'comunicados', false);
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(lgpd): admin forjou evento de consentimento pela app'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000005'); -- cliente do portal
+  select count(*) into n from lgpd_tratamento;
+  if n <> 0 then raise exception 'FALHA(lgpd): cliente do portal vê o ROPA'; end if;
+  reset role;
+
+  raise notice 'OK: LGPD — tabelas admin-only; consentimento não é forjável pela app';
+end $$;
