@@ -34,8 +34,12 @@ jobs:
 
       - name: Rodar o backup
         env:
-          # A conexão exige SSL; pg_dump respeita PGSSLMODE.
-          PGSSLMODE: require
+          # SSL COM verificação do certificado do servidor (verify-full): criptografa E
+          # confirma que o banco é o Supabase de verdade, contra man-in-the-middle. O dump
+          # carrega todos os dados de cliente — `require` (só criptografia, sem verificar a
+          # identidade) seria fraco demais. A CA fixada vem do repositório (checkout acima).
+          PGSSLMODE: verify-full
+          PGSSLROOTCERT: ${{ github.workspace }}/supabase/db-ca.crt
           # Segredos — cadastrados em Settings → Secrets and variables → Actions.
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           BACKUP_S3_KEY_ID: ${{ secrets.BACKUP_S3_KEY_ID }}
