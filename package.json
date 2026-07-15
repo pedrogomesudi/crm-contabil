@@ -30,7 +30,8 @@
     "cripto:migrar": "node --env-file=.env.local scripts/cripto-migrar.mjs",
     "cripto:rotacionar": "node --env-file=.env.local scripts/cripto-rotacionar.mjs",
     "backup:dump": "node scripts/backup-dump.mjs",
-    "restore:verificar": "node scripts/restore-verificar.mjs"
+    "restore:verificar": "node scripts/restore-verificar.mjs",
+    "backup:agendar": "node scripts/agendar-backup.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.0",

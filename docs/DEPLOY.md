@@ -261,6 +261,20 @@ recria.
    comprovado (dados, extensões, crons, admin, envelope e a cripto decifrando dado real).
 5. **Apagar** o projeto descartável.
 
+### Agendamento automático (macOS, launchd)
+
+```bash
+npm run backup:agendar -- --slug gomes --hora 9   # todo dia às 9h
+```
+
+Instala um LaunchAgent em `~/Library/LaunchAgents/ai.seusaldo.backup.<slug>.plist`. Se o Mac estiver
+dormindo na hora, roda ao acordar (não pula o dia). O plist **não** contém segredo — os segredos ficam em
+`tenants/<slug>.env`. Log em `backups/<slug>/backup.log`. Só roda com a máquina **ligada**; para 24/7,
+agende num servidor sempre-ligado.
+
+- Testar agora: `launchctl kickstart -k gui/$(id -u)/ai.seusaldo.backup.<slug>`
+- Remover: `npm run backup:agendar -- --slug <slug> --remover`
+
 ### Variáveis do backup na nuvem (opcional)
 
 ```
