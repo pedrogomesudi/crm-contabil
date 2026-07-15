@@ -198,6 +198,42 @@ Já `ZAPI_WEBHOOK_SECRET`, `BOLETO_WEBHOOK_SECRET` e as credenciais Clicksign s�
 sumirem, gera-se outro e reconfigura-se no provedor. O `tenant:doctor` **falha** nas chaves de cripto e
 apenas **avisa** nestas.
 
+## 5.2 Envelope encryption (V10-B) — rotação de chave
+
+As 5 chaves de domínio deixam de cifrar o dado diretamente. Agora há uma **chave-mestra**
+(`MASTER_CRIPTO_KEY`) que cifra 5 **DEKs** (uma por domínio) guardadas em `chave_dados`. Cada DEK **é** o
+valor da chave antiga do domínio — então **nada de dado é re-cifrado**. Rotacionar a mestra re-embrulha as
+5 DEKs; o dado cifrado fica intacto.
+
+### Migração (uma vez por escritório)
+
+Ordem: **migration `0097` → `MASTER_CRIPTO_KEY` no env → deploy do código → `cripto:migrar`**.
+
+```bash
+# com MASTER_CRIPTO_KEY e as 5 chaves de domínio no ambiente:
+npm run cripto:migrar
+```
+
+Cria as 5 DEKs e **auto-testa** decifrando um dado real de cada domínio; se algum falhar, faz rollback e não
+grava nada. As 5 chaves de domínio **continuam no env como fallback** durante a transição — podem ser
+removidas depois de validado (sobra só a mestra).
+
+### Rotação da mestra
+
+```bash
+npm run cripto:rotacionar -- --nova <hex de 64>
+```
+
+Ordem: **banco (o script) → trocar `MASTER_CRIPTO_KEY` no EasyPanel → deploy**. O script re-embrulha e
+auto-testa com a nova mestra antes de confirmar. O fallback (chaves de domínio no env) evita downtime se a
+ordem escorregar.
+
+### ⚠️ Agora o segredo irrecuperável é a MASTER
+
+Com o envelope, a **`MASTER_CRIPTO_KEY`** é a chave que, se perdida, torna as DEKs (e todo o dado cifrado)
+irrecuperáveis. Guarde-a no `tenants/<slug>.env` e num cofre de senhas. As 5 chaves de domínio, uma vez
+migradas, viram **redundância** (a DEK guarda o mesmo valor, cifrada no banco, que tem backup).
+
 ## 6. Release
 
 ```bash

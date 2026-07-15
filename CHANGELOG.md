@@ -10,6 +10,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- **Envelope encryption (V10-B):** rotação de chave sem re-cifrar dado. Uma **chave-mestra**
+  (`MASTER_CRIPTO_KEY`) cifra 5 **DEKs** (uma por domínio) em `chave_dados`; cada DEK é o valor da chave
+  atual, então o ciphertext existente decifra sem tocar. `cifrarDominio`/`decifrarDominio` com **fallback**
+  para o env na transição. Scripts **`cripto:migrar`** e **`cripto:rotacionar`** com **auto-teste em dado
+  real** (rollback se a DEK não decifrar). Provisionador gera a mestra e migra; `tenant:doctor` confere as
+  5 DEKs. `chave_dados` é service_role-only.
+
 - **LGPD (V10-A):** conformidade com a Lei Geral de Proteção de Dados. **Relatório de dados por titular**
   (direito de acesso em PDF + portabilidade em JSON), **registro de tratamentos (ROPA)** pré-semeado e
   editável, **histórico de consentimento** (cada mudança de opt-in vira evento) e **exclusão por
