@@ -6,7 +6,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 [Versionamento Semântico](https://semver.org/lang/pt-BR/). Veja as regras em
 [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md) e o plano de evolução em [`ROADMAP.md`](ROADMAP.md).
 
-## [Não lançado]
+## [6.0.0] — 2026-07-15
 
 ### Adicionado
 
