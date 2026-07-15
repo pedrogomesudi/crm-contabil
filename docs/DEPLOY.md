@@ -234,6 +234,43 @@ Com o envelope, a **`MASTER_CRIPTO_KEY`** é a chave que, se perdida, torna as D
 irrecuperáveis. Guarde-a no `tenants/<slug>.env` e num cofre de senhas. As 5 chaves de domínio, uma vez
 migradas, viram **redundância** (a DEK guarda o mesmo valor, cifrada no banco, que tem backup).
 
+## 5.3 Backup e restauração (RNF-06)
+
+### Duas fontes, responsabilidades distintas
+
+- **Backup do Supabase (fonte primária):** cobre o **projeto inteiro** — `public` (negócio), `auth`
+  (usuários/login) e `storage` (arquivos). Automático (retenção do plano). É ele que se usa num restore
+  real.
+- **Dump próprio (redundância):** `npm run backup:dump -- --slug <slug>` (com `--env-file` do tenant) —
+  `pg_dump` do schema **`public`** para `backups/<slug>/<data>.sql.gz`, retenção **7 diários + 4 semanais**,
+  e envio a um bucket S3-compatível se `BACKUP_S3_*` estiver no ambiente. **Não** cobre auth/storage.
+  Pré-requisito: `pg_dump` instalado (client tools do Postgres — `brew install libpq`).
+
+**O que um restore NÃO traz sozinho:** as extensões `pg_cron`/`pg_net` e os 4 jobs de cron. O runbook os
+recria.
+
+### Runbook do ensaio de restauração (ritual trimestral)
+
+1. **Restaurar num projeto NOVO** (nunca produção): Supabase → Backups → Restore → novo projeto.
+2. Montar um `.env` do projeto restaurado: URL, service_role, e a **MESMA `MASTER_CRIPTO_KEY`** do original
+   (sem ela as DEKs não desembrulham) + as 5 chaves de domínio (fallback) + `SUPABASE_DB_URL` do restaurado.
+3. **Recriar o que o restore não traz:**
+   - extensões: `create extension if not exists pg_net; create extension if not exists pg_cron;`
+   - crons: `CRON_SECRET=... APP_URL=https://<restaurado> npm run cron:bootstrap` (com `--env-file` do restaurado).
+4. **Provar:** `node --env-file=<env do restaurado> scripts/restore-verificar.mjs` → tudo ✓ = restore
+   comprovado (dados, extensões, crons, admin, envelope e a cripto decifrando dado real).
+5. **Apagar** o projeto descartável.
+
+### Variáveis do backup na nuvem (opcional)
+
+```
+BACKUP_S3_ENDPOINT=s3.us-west-002.backblazeb2.com   # ou o endpoint AWS/Wasabi
+BACKUP_S3_REGION=us-west-002
+BACKUP_S3_BUCKET=saldo-backups
+BACKUP_S3_KEY_ID=...        # marcar como secreto
+BACKUP_S3_SECRET=...        # marcar como secreto
+```
+
 ## 6. Release
 
 ```bash
