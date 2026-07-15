@@ -7,6 +7,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+      // Em teste, `import "server-only"` é um no-op (não há runtime de Server Component).
+      "server-only": fileURLToPath(new URL("./src/tests/_stubs/server-only.ts", import.meta.url)),
     },
   },
   test: {

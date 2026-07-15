@@ -2,8 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { required } from "@/lib/env";
-import { cifrar } from "@/lib/nfse/cripto";
+import { cifrarDominio } from "@/lib/cripto/envelope";
 import { carregarCertificado } from "@/lib/nfse/certificado";
 
 export type EstadoConfig = { erro?: string; ok?: boolean };
@@ -49,13 +48,12 @@ export async function salvarCertificado(_prev: EstadoConfig, formData: FormData)
   } catch {
     return { erro: "Certificado ou senha inválidos." };
   }
-  const chave = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
   const supabase = await createServerSupabase();
   const { error } = await supabase.from("nfse_certificado").upsert({
     id: 1,
     nome_arquivo: arquivo.name,
-    pfx_cifrado: cifrar(pfx, chave),
-    senha_cifrada: cifrar(Buffer.from(senha, "utf8"), chave),
+    pfx_cifrado: await cifrarDominio("nfse", pfx),
+    senha_cifrada: await cifrarDominio("nfse", Buffer.from(senha, "utf8")),
     validade: validade.toISOString(),
     atualizado_em: new Date().toISOString(),
   });

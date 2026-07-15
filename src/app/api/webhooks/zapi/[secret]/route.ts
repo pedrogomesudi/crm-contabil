@@ -3,7 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { extrairMensagemZapi, extrairStatusZapi } from "@/lib/whatsapp/inbox";
 import { chaveTelefone } from "@/lib/whatsapp/mensagem";
-import { decifrar } from "@/lib/nfse/cripto";
+import { decifrarDominio } from "@/lib/cripto/envelope";
 import { baixarEStorearMidia } from "@/lib/whatsapp/midia-storage";
 
 function segredoOk(recebido: string): boolean {
@@ -54,15 +54,12 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
   if (msg.midia) {
     // Client-Token best-effort (algumas URLs do Z-API exigem o header).
     let clientToken: string | null = null;
-    const chave = process.env.WHATSAPP_CRIPTO_KEY;
-    if (chave) {
-      const { data: cfg } = await admin.from("whatsapp_config").select("client_token_cifrado").eq("id", 1).maybeSingle();
-      if (cfg?.client_token_cifrado) {
-        try {
-          clientToken = decifrar(cfg.client_token_cifrado, chave).toString("utf8");
-        } catch {
-          clientToken = null;
-        }
+    const { data: cfg } = await admin.from("whatsapp_config").select("client_token_cifrado").eq("id", 1).maybeSingle();
+    if (cfg?.client_token_cifrado) {
+      try {
+        clientToken = (await decifrarDominio("whatsapp", cfg.client_token_cifrado)).toString("utf8");
+      } catch {
+        clientToken = null;
       }
     }
     const path = await baixarEStorearMidia(admin, msg.midia.url, msg.midia.mime, clientToken);

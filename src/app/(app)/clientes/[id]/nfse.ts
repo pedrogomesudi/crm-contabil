@@ -4,8 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
-import { required } from "@/lib/env";
-import { decifrar } from "@/lib/nfse/cripto";
+import { decifrarDominio } from "@/lib/cripto/envelope";
 import { carregarCertificado } from "@/lib/nfse/certificado";
 import { montarDps } from "@/lib/nfse/dps";
 import { municipioIbgePorCep } from "@/lib/nfse/municipio";
@@ -119,12 +118,10 @@ export async function emitirNfseCliente(
       .maybeSingle();
     if (existente) return { status: "pulada", motivo: "Já emitida nesta competência." };
   }
-
-  const chaveKey = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
   let cert;
   try {
-    const pfx = decifrar(certRow.pfx_cifrado, chaveKey);
-    const senha = decifrar(certRow.senha_cifrada, chaveKey).toString("utf8");
+    const pfx = await decifrarDominio("nfse", certRow.pfx_cifrado);
+    const senha = (await decifrarDominio("nfse", certRow.senha_cifrada)).toString("utf8");
     cert = carregarCertificado(pfx, senha);
   } catch {
     return { status: "erro", motivo: "Falha ao abrir o certificado." };
@@ -294,7 +291,6 @@ export async function cancelarNfse(
   }
 
   const ambiente: "homologacao" | "producao" = nota.ambiente === "producao" ? "producao" : "homologacao";
-  const chaveKey = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
 
   // CNPJ e certificado do emitente da nota: do cliente (V5-B) ou do escritório (V5-A).
   const admin = createAdminSupabase();
@@ -311,8 +307,8 @@ export async function cancelarNfse(
   if (!certRow) return { erro: "Certificado não cadastrado." };
   let cert;
   try {
-    const pfx = decifrar(certRow.pfx_cifrado, chaveKey);
-    const senha = decifrar(certRow.senha_cifrada, chaveKey).toString("utf8");
+    const pfx = await decifrarDominio("nfse", certRow.pfx_cifrado);
+    const senha = (await decifrarDominio("nfse", certRow.senha_cifrada)).toString("utf8");
     cert = carregarCertificado(pfx, senha);
   } catch {
     return { erro: "Falha ao abrir o certificado." };
