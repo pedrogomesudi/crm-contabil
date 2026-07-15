@@ -20,6 +20,7 @@ const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] 
   { href: "/configuracoes/sop", label: "Modelos de processo (SOPs)", desc: "Etapas que viram tarefas, em ondas paralelas e sequenciais." },
   { href: "/configuracoes/custos", label: "Custo por colaborador", desc: "Custo/hora com vigência — base da rentabilidade. Só admin." },
   { href: "/configuracoes/sla", label: "SLA por departamento", desc: "Prazo-alvo das solicitações internas, por departamento de destino." },
+  { href: "/lgpd", label: "LGPD", desc: "Tratamentos (ROPA), consentimento, retenção e direitos do titular." },
   { href: "/configuracoes/legalizacao", label: "Modelos de legalização", desc: "Processos societários e de legalização (etapas por órgão)." },
   { href: "/configuracoes/obrigacoes", label: "Matriz de obrigações", desc: "Obrigações e critérios de incidência do calendário." },
 ];

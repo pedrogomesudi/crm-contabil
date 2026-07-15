@@ -6,6 +6,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 [Versionamento Semântico](https://semver.org/lang/pt-BR/). Veja as regras em
 [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md) e o plano de evolução em [`ROADMAP.md`](ROADMAP.md).
 
+## [Não lançado]
+
+### Adicionado
+
+- **LGPD (V10-A):** conformidade com a Lei Geral de Proteção de Dados. **Relatório de dados por titular**
+  (direito de acesso em PDF + portabilidade em JSON), **registro de tratamentos (ROPA)** pré-semeado e
+  editável, **histórico de consentimento** (cada mudança de opt-in vira evento) e **exclusão por
+  anonimização** que respeita a guarda fiscal — anonimiza os dados pessoais não-fiscais e preserva o
+  esqueleto fiscal, com a retenção documentada. Tabelas admin-only.
+
 ## [6.0.0] — 2026-07-15
 
 ### Adicionado
