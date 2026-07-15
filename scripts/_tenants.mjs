@@ -23,6 +23,7 @@ export const SLUG_RE = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
 // crítica quanto as demais e não pode ficar fora desta lista.
 export const CHAVES_CRIPTO = [
   "CRON_SECRET",
+  "MASTER_CRIPTO_KEY",
   "WHATSAPP_CRIPTO_KEY",
   "ONBOARDING_CRIPTO_KEY",
   "BOLETO_CRIPTO_KEY",

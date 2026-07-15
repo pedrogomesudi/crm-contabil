@@ -11,18 +11,18 @@ export async function adaptadorAtivo(): Promise<{ adaptador: ProvedorBoleto; pro
   try {
     if (data.provedor === "asaas") {
       if (!data.asaas_api_key_cifrada) return { erro: "Asaas sem API key configurada." };
-      return { adaptador: criarAdaptadorAsaas(decifrarCredencial(data.asaas_api_key_cifrada as string), data.asaas_ambiente as "sandbox" | "producao"), provedor: "asaas" };
+      return { adaptador: criarAdaptadorAsaas(await decifrarCredencial(data.asaas_api_key_cifrada as string), data.asaas_ambiente as "sandbox" | "producao"), provedor: "asaas" };
     }
     if (!data.inter_client_id_cifrado || !data.inter_client_secret_cifrado || !data.inter_cert_cifrado || !data.inter_key_cifrado || !data.inter_conta_corrente) {
       return { erro: "Banco Inter com credenciais incompletas." };
     }
     return {
       adaptador: criarAdaptadorInter(
-        decifrarCredencial(data.inter_client_id_cifrado as string),
-        decifrarCredencial(data.inter_client_secret_cifrado as string),
+        await decifrarCredencial(data.inter_client_id_cifrado as string),
+        await decifrarCredencial(data.inter_client_secret_cifrado as string),
         data.inter_conta_corrente as string,
-        decifrarCredencial(data.inter_cert_cifrado as string),
-        decifrarCredencial(data.inter_key_cifrado as string),
+        await decifrarCredencial(data.inter_cert_cifrado as string),
+        await decifrarCredencial(data.inter_key_cifrado as string),
         "producao",
       ),
       provedor: "inter",

@@ -1,15 +1,11 @@
-import { cifrar, decifrar } from "@/lib/nfse/cripto";
+import { cifrarDominio, decifrarDominio } from "@/lib/cripto/envelope";
 
-function chave(): string {
-  const k = process.env.BOLETO_CRIPTO_KEY;
-  if (!k) throw new Error("BOLETO_CRIPTO_KEY não configurada");
-  return k;
+// Credenciais de boleto (Inter/Asaas) via envelope. Async: a DEK vem do banco (com fallback
+// para a chave de env na transição).
+export async function cifrarCredencial(valor: string): Promise<string> {
+  return cifrarDominio("boleto", Buffer.from(valor, "utf8"));
 }
 
-export function cifrarCredencial(valor: string): string {
-  return cifrar(Buffer.from(valor, "utf8"), chave());
-}
-
-export function decifrarCredencial(pacote: string): string {
-  return decifrar(pacote, chave()).toString("utf8");
+export async function decifrarCredencial(pacote: string): Promise<string> {
+  return (await decifrarDominio("boleto", pacote)).toString("utf8");
 }

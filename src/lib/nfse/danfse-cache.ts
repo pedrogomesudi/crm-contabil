@@ -1,7 +1,6 @@
 import "server-only";
 import type { createAdminSupabase } from "@/lib/supabase/admin";
-import { required } from "@/lib/env";
-import { decifrar } from "@/lib/nfse/cripto";
+import { decifrarDominio } from "@/lib/cripto/envelope";
 import { carregarCertificado } from "@/lib/nfse/certificado";
 import { baixarDanfsePdf } from "@/lib/nfse/danfse";
 
@@ -51,11 +50,10 @@ export async function obterDanfsePdf(admin: Admin, nota: NotaDanfse): Promise<{ 
   if (cache) return { pdfBase64: cache.toString("base64"), chave };
   const certRow = await carregarCertRowDaNota(admin, nota.emitente, nota.cliente_id);
   if (!certRow) return { erro: "Certificado não cadastrado.", chave };
-  const chaveKey = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
   let cert;
   try {
-    const pfx = decifrar(certRow.pfx_cifrado, chaveKey);
-    const senha = decifrar(certRow.senha_cifrada, chaveKey).toString("utf8");
+    const pfx = await decifrarDominio("nfse", certRow.pfx_cifrado);
+    const senha = (await decifrarDominio("nfse", certRow.senha_cifrada)).toString("utf8");
     cert = carregarCertificado(pfx, senha);
   } catch {
     return { erro: "Falha ao abrir o certificado.", chave };

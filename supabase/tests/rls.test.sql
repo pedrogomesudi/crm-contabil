@@ -2142,3 +2142,30 @@ begin
 
   raise notice 'OK: LGPD — tabelas admin-only; consentimento não é forjável pela app';
 end $$;
+
+-- ============================================================================
+-- Envelope encryption (V10-B) — 0097: a DEK cifrada não é lida por NINGUÉM autenticado
+-- ============================================================================
+do $$
+declare n int;
+begin
+  reset role;
+  insert into chave_dados (dominio, dek_cifrado) values ('teste', 'iv:tag:ct')
+    on conflict (dominio) do nothing;
+
+  perform _simular('00000000-0000-0000-0000-000000000001'); -- nem o admin
+  select count(*) into n from chave_dados;
+  if n <> 0 then raise exception 'FALHA(envelope): admin lê a DEK cifrada (deveria ser service_role-only)'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000003'); -- contador
+  select count(*) into n from chave_dados;
+  if n <> 0 then raise exception 'FALHA(envelope): contador lê a DEK cifrada'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000005'); -- cliente do portal
+  select count(*) into n from chave_dados;
+  if n <> 0 then raise exception 'FALHA(envelope): cliente do portal lê a DEK cifrada'; end if;
+  reset role;
+
+  delete from chave_dados where dominio = 'teste';
+  raise notice 'OK: chave_dados — a DEK cifrada é invisível a qualquer usuário autenticado (só service_role)';
+end $$;

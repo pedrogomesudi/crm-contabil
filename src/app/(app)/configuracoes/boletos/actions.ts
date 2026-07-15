@@ -39,11 +39,11 @@ export async function salvarConfigBoleto(input: SalvarInput): Promise<{ ok?: boo
   const supabase = await createServerSupabase();
   const patch: Record<string, unknown> = { provedor: input.provedor, asaas_ambiente: input.asaasAmbiente, inter_conta_corrente: input.interContaCorrente, conta_bancaria_id: input.contaBancariaId, atualizado_em: new Date().toISOString() };
   try {
-    if (input.asaasApiKey) patch.asaas_api_key_cifrada = cifrarCredencial(input.asaasApiKey);
-    if (input.interClientId) patch.inter_client_id_cifrado = cifrarCredencial(input.interClientId);
-    if (input.interClientSecret) patch.inter_client_secret_cifrado = cifrarCredencial(input.interClientSecret);
-    if (input.interCert) patch.inter_cert_cifrado = cifrarCredencial(input.interCert);
-    if (input.interKey) patch.inter_key_cifrado = cifrarCredencial(input.interKey);
+    if (input.asaasApiKey) patch.asaas_api_key_cifrada = await cifrarCredencial(input.asaasApiKey);
+    if (input.interClientId) patch.inter_client_id_cifrado = await cifrarCredencial(input.interClientId);
+    if (input.interClientSecret) patch.inter_client_secret_cifrado = await cifrarCredencial(input.interClientSecret);
+    if (input.interCert) patch.inter_cert_cifrado = await cifrarCredencial(input.interCert);
+    if (input.interKey) patch.inter_key_cifrado = await cifrarCredencial(input.interKey);
   } catch {
     return { erro: "BOLETO_CRIPTO_KEY não configurada." };
   }

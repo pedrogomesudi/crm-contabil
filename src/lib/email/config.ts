@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminSupabase } from "@/lib/supabase/admin";
-import { decifrar } from "@/lib/nfse/cripto";
+import { decifrarDominio } from "@/lib/cripto/envelope";
 
 export type ConfigEmail = {
   provedor: "smtp" | "api";
@@ -12,9 +12,6 @@ export type ConfigEmail = {
 
 // Lê e DECIFRA a config. Só o servidor chama — a credencial nunca sai daqui.
 export async function carregarConfig(): Promise<ConfigEmail | { erro: string }> {
-  const chave = process.env.EMAIL_CRIPTO_KEY;
-  if (!chave) return { erro: "EMAIL_CRIPTO_KEY não configurada no servidor." };
-
   const admin = createAdminSupabase();
   const { data: c } = await admin
     .from("email_config")
@@ -40,7 +37,7 @@ export async function carregarConfig(): Promise<ConfigEmail | { erro: string }> 
         porta: (c.smtp_porta as number | null) ?? 587,
         seguro: Boolean(c.smtp_seguro),
         usuario: (c.smtp_usuario as string | null) ?? "",
-        senha: decifrar(c.smtp_senha_cifrada as string, chave).toString("utf8"),
+        senha: (await decifrarDominio("email", c.smtp_senha_cifrada as string)).toString("utf8"),
       },
     };
   }
@@ -51,7 +48,7 @@ export async function carregarConfig(): Promise<ConfigEmail | { erro: string }> 
     provedor: "api",
     api: {
       provedor: c.api_provedor as "resend" | "sendgrid",
-      chave: decifrar(c.api_chave_cifrada as string, chave).toString("utf8"),
+      chave: (await decifrarDominio("email", c.api_chave_cifrada as string)).toString("utf8"),
     },
   };
 }

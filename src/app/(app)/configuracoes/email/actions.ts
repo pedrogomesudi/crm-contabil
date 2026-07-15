@@ -2,8 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { cifrar } from "@/lib/nfse/cripto";
-import { required } from "@/lib/env";
+import { cifrarDominio } from "@/lib/cripto/envelope";
 import { emailValido } from "@/lib/email/validacao";
 import { enviarEmail } from "@/lib/email/enviar";
 
@@ -65,12 +64,6 @@ export async function salvarConfigEmail(_prev: EstadoEmail, fd: FormData): Promi
   if (!emailValido(remetenteEmail)) return { erro: "E-mail do remetente inválido." };
   const remetenteNome = String(fd.get("remetente_nome") ?? "").trim().slice(0, 120);
 
-  let chaveCripto: string;
-  try {
-    chaveCripto = required(process.env.EMAIL_CRIPTO_KEY, "EMAIL_CRIPTO_KEY");
-  } catch {
-    return { erro: "EMAIL_CRIPTO_KEY não configurada no servidor." };
-  }
 
   const dados: Record<string, unknown> = {
     provedor,
@@ -108,7 +101,7 @@ export async function salvarConfigEmail(_prev: EstadoEmail, fd: FormData): Promi
     if (!senha && (mudouServidor || !atual?.smtp_senha_cifrada)) {
       return { erro: "Você mudou o servidor ou o usuário: informe a senha do novo SMTP." };
     }
-    if (senha) dados.smtp_senha_cifrada = cifrar(Buffer.from(senha, "utf8"), chaveCripto);
+    if (senha) dados.smtp_senha_cifrada = await cifrarDominio("email", Buffer.from(senha, "utf8"));
   } else {
     const api = String(fd.get("api_provedor") ?? "");
     if (api !== "resend" && api !== "sendgrid") return { erro: "Escolha o provedor de API." };
@@ -119,7 +112,7 @@ export async function salvarConfigEmail(_prev: EstadoEmail, fd: FormData): Promi
     if (!apiChave && (mudouProvedor || !atual?.api_chave_cifrada)) {
       return { erro: "Você mudou o provedor de API: informe a chave." };
     }
-    if (apiChave) dados.api_chave_cifrada = cifrar(Buffer.from(apiChave, "utf8"), chaveCripto);
+    if (apiChave) dados.api_chave_cifrada = await cifrarDominio("email", Buffer.from(apiChave, "utf8"));
   }
 
   const supabase = await createServerSupabase();

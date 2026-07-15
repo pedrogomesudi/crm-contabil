@@ -3,7 +3,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeAtender, podeVerHonorario } from "@/lib/clientes/permissoes";
-import { decifrar } from "@/lib/nfse/cripto";
+import { decifrarDominio } from "@/lib/cripto/envelope";
 import { enviarTexto, enviarMidiaZapi } from "@/lib/whatsapp/zapi";
 import { chaveTelefone } from "@/lib/whatsapp/mensagem";
 import {
@@ -111,18 +111,17 @@ export async function responder(telefone: string, texto: string): Promise<{ ok?:
   if (!perfil) return { erro: "Sem permissão." };
   const t = texto.trim();
   if (!t) return { erro: "Mensagem vazia." };
-  const chave = process.env.WHATSAPP_CRIPTO_KEY;
   const admin = createAdminSupabase();
   const { data: cfg } = await admin
     .from("whatsapp_config")
     .select("instance, token_cifrado, client_token_cifrado")
     .eq("id", 1)
     .maybeSingle();
-  if (!chave || !cfg?.instance || !cfg.token_cifrado || !cfg.client_token_cifrado) return { erro: "WhatsApp não configurado." };
+  if (!cfg?.instance || !cfg.token_cifrado || !cfg.client_token_cifrado) return { erro: "WhatsApp não configurado." };
   const zapi = {
     instance: cfg.instance,
-    token: decifrar(cfg.token_cifrado, chave).toString("utf8"),
-    clientToken: decifrar(cfg.client_token_cifrado, chave).toString("utf8"),
+    token: (await decifrarDominio("whatsapp", cfg.token_cifrado)).toString("utf8"),
+    clientToken: (await decifrarDominio("whatsapp", cfg.client_token_cifrado)).toString("utf8"),
   };
   const r = await enviarTexto(zapi, telefone, t);
   // resolve cliente para vincular a saída à mesma thread (best-effort; só se houver exatamente um)
@@ -274,19 +273,17 @@ export async function enviarMidia(formData: FormData): Promise<{ ok?: boolean; e
   const mime = arquivo.type || "application/octet-stream";
   if (mime.startsWith("video/") || mime.startsWith("audio/")) return { erro: "Tipo não suportado no envio." };
   const tipo: "image" | "document" = mime.startsWith("image/") ? "image" : "document";
-
-  const chave = process.env.WHATSAPP_CRIPTO_KEY;
   const admin = createAdminSupabase();
   const { data: cfg } = await admin
     .from("whatsapp_config")
     .select("instance, token_cifrado, client_token_cifrado")
     .eq("id", 1)
     .maybeSingle();
-  if (!chave || !cfg?.instance || !cfg.token_cifrado || !cfg.client_token_cifrado) return { erro: "WhatsApp não configurado." };
+  if (!cfg?.instance || !cfg.token_cifrado || !cfg.client_token_cifrado) return { erro: "WhatsApp não configurado." };
   const zapi = {
     instance: cfg.instance,
-    token: decifrar(cfg.token_cifrado, chave).toString("utf8"),
-    clientToken: decifrar(cfg.client_token_cifrado, chave).toString("utf8"),
+    token: (await decifrarDominio("whatsapp", cfg.token_cifrado)).toString("utf8"),
+    clientToken: (await decifrarDominio("whatsapp", cfg.client_token_cifrado)).toString("utf8"),
   };
 
   const buf = Buffer.from(await arquivo.arrayBuffer());

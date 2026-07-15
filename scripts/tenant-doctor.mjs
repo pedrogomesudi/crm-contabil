@@ -33,7 +33,7 @@ if (escritorios.length === 0) {
 }
 
 async function diagnosticar(e) {
-  const linha = { slug: e.slug, problemas: [], avisos: [], migracoes: "—", jobs: "—", admins: "—", chaves: "—", app: "—" };
+  const linha = { slug: e.slug, problemas: [], avisos: [], migracoes: "—", jobs: "—", admins: "—", chaves: "—", envelope: "—", app: "—" };
 
   const caminho = envDoTenant(e.slug);
   if (!existsSync(caminho)) {
@@ -42,6 +42,7 @@ async function diagnosticar(e) {
   }
   const env = lerEnv(e.slug) ?? {};
 
+  // Envelope: a mestra no env é parte das CHAVES_CRIPTO (checado acima). As 5 DEKs no banco:
   // Chaves: só a EXISTÊNCIA. Nunca imprimir valor.
   // As de cripto são IRRECUPERÁVEIS (o backup do banco guarda só o texto cifrado) → falha.
   const faltando = CHAVES_CRIPTO.filter((k) => !env[k]);
@@ -82,6 +83,16 @@ async function diagnosticar(e) {
       linha.admins = String(a.rows[0].n);
       if (a.rows[0].n === 0) linha.problemas.push("nenhum admin ativo — ninguém consegue administrar este escritório");
 
+      // Envelope encryption: as 5 DEKs de domínio existem em chave_dados?
+      try {
+        const dek = await db.query("select count(*)::int n from chave_dados");
+        linha.envelope = `${dek.rows[0].n}/5`;
+        if (dek.rows[0].n < 5) linha.problemas.push(`envelope incompleto (${dek.rows[0].n}/5 DEKs) — rode cripto:migrar`);
+      } catch {
+        linha.envelope = "sem tabela";
+        linha.problemas.push("chave_dados ausente — migration 0097 não aplicada?");
+      }
+
       await db.end();
     } catch (err) {
       linha.problemas.push(`banco inacessível: ${String(err.message).slice(0, 80)}`);
@@ -105,13 +116,13 @@ async function diagnosticar(e) {
 const linhas = [];
 for (const e of escritorios) linhas.push(await diagnosticar(e));
 
-console.log("\nescritório           migrations  crons  admins  chaves  app");
+console.log("\nescritório           migrations  crons  admins  chaves  envelope  app");
 console.log("─".repeat(70));
 for (const l of linhas) {
   const ok = l.problemas.length === 0;
   console.log(
     `${ok ? "✓" : "✗"} ${l.slug.padEnd(18)} ${String(l.migracoes).padEnd(11)} ${String(l.jobs).padEnd(6)} ` +
-      `${String(l.admins).padEnd(7)} ${String(l.chaves).padEnd(7)} ${l.app}`,
+      `${String(l.admins).padEnd(7)} ${String(l.chaves).padEnd(7)} ${String(l.envelope).padEnd(9)} ${l.app}`,
   );
 }
 

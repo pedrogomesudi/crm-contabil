@@ -3,8 +3,7 @@ import { revalidatePath } from "next/cache";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeConfigurarNfse, podeVerHonorario } from "@/lib/clientes/permissoes";
-import { required } from "@/lib/env";
-import { cifrar, decifrar } from "@/lib/nfse/cripto";
+import { cifrarDominio, decifrarDominio } from "@/lib/cripto/envelope";
 import { carregarCertificado } from "@/lib/nfse/certificado";
 import { montarDps } from "@/lib/nfse/dps";
 import { assinarDps } from "@/lib/nfse/assinatura";
@@ -96,14 +95,13 @@ export async function salvarCertificadoCliente(
   } catch {
     return { erro: "Certificado ou senha inválidos." };
   }
-  const chave = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
   const supabase = await createServerSupabase();
   const { error } = await supabase.from("nfse_certificado_cliente").upsert(
     {
       cliente_id: clienteId,
       nome_arquivo: arquivo.name,
-      pfx_cifrado: cifrar(pfx, chave),
-      senha_cifrada: cifrar(Buffer.from(senha, "utf8"), chave),
+      pfx_cifrado: await cifrarDominio("nfse", pfx),
+      senha_cifrada: await cifrarDominio("nfse", Buffer.from(senha, "utf8")),
       validade: validade.toISOString(),
       atualizado_em: new Date().toISOString(),
     },
@@ -161,12 +159,10 @@ export async function emitirNfseDoCliente(
     .eq("cliente_id", clienteId)
     .maybeSingle();
   if (!certRow) return { status: "erro", motivo: "Certificado do cliente não cadastrado." };
-
-  const chaveKey = required(process.env.NFSE_CERT_KEY, "NFSE_CERT_KEY");
   let cert;
   try {
-    const pfx = decifrar(certRow.pfx_cifrado, chaveKey);
-    const senha = decifrar(certRow.senha_cifrada, chaveKey).toString("utf8");
+    const pfx = await decifrarDominio("nfse", certRow.pfx_cifrado);
+    const senha = (await decifrarDominio("nfse", certRow.senha_cifrada)).toString("utf8");
     cert = carregarCertificado(pfx, senha);
   } catch {
     return { status: "erro", motivo: "Falha ao abrir o certificado." };

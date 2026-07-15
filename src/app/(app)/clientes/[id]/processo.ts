@@ -67,7 +67,7 @@ export async function salvarProcessoItem(input: { id?: string; processoId: strin
   }
   const row: Record<string, unknown> = { processo_id: input.processoId, bloco_ordem: input.blocoOrdem, bloco_nome: input.blocoNome, codigo: input.codigo, titulo: input.titulo, tipo: input.tipo, responsavel_papel: input.responsavelPapel, responsavel_id: input.responsavelId, prazo: input.prazo || null, status: input.status, observacao: input.observacao, bloqueante: input.bloqueante, depende_de: input.dependeDe, campo_destino: input.campoDestino, valor_destino: input.valorDestino, acesso_url: input.acessoUrl, acesso_login: input.acessoLogin, ordem: input.ordem, atualizado_em: new Date().toISOString(), atualizado_por: p.id };
   if (input.novaSenha) {
-    try { row.acesso_senha_cifrada = cifrarSenha(input.novaSenha); } catch { return { erro: "Cofre não configurado (ONBOARDING_CRIPTO_KEY)." }; }
+    try { row.acesso_senha_cifrada = await cifrarSenha(input.novaSenha); } catch { return { erro: "Cofre não configurado (chave de criptografia)." }; }
   }
   const { error } = input.id ? await supabase.from("onboarding_processo_item").update(row).eq("id", input.id) : await supabase.from("onboarding_processo_item").insert(row);
   if (error) return { erro: "Falha ao salvar." };
@@ -95,7 +95,7 @@ export async function revelarSenha(itemId: string): Promise<{ senha?: string; er
   const { data } = await supabase.from("onboarding_processo_item").select("acesso_senha_cifrada").eq("id", itemId).maybeSingle();
   if (!data?.acesso_senha_cifrada) return { erro: "Sem senha cadastrada." };
   let senha: string;
-  try { senha = decifrarSenha(data.acesso_senha_cifrada as string); } catch { return { erro: "Falha ao decifrar (chave?)." }; }
+  try { senha = await decifrarSenha(data.acesso_senha_cifrada as string); } catch { return { erro: "Falha ao decifrar (chave?)." }; }
   const { error: logErr } = await supabase.from("onboarding_log_credencial").insert({ item_id: itemId, usuario_id: p.id });
   if (logErr) return { erro: "Não foi possível registrar a auditoria; revelação cancelada." };
   return { senha };

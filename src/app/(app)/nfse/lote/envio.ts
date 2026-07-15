@@ -2,7 +2,7 @@
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
-import { decifrar } from "@/lib/nfse/cripto";
+import { decifrarDominio } from "@/lib/cripto/envelope";
 import { enviarMidiaZapi } from "@/lib/whatsapp/zapi";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { linhasPagamento, competenciaBR, montarMensagemNota, vencimentoBR, valorBR } from "@/lib/whatsapp/notas-envio";
@@ -61,19 +61,17 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
 
   // Sem bloqueio de reenvio: a seleção do usuário é a intenção. O selo "já enviada" e a
   // pré-seleção (só pendentes) na UI evitam reenvio acidental.
-
-  const chave = process.env.WHATSAPP_CRIPTO_KEY;
   const { data: cfg } = await admin
     .from("whatsapp_config")
     .select("instance, token_cifrado, client_token_cifrado")
     .eq("id", 1)
     .maybeSingle();
-  if (!chave || !cfg?.instance || !cfg.token_cifrado || !cfg.client_token_cifrado)
+  if (!cfg?.instance || !cfg.token_cifrado || !cfg.client_token_cifrado)
     return { status: "erro", motivo: "WhatsApp não configurado.", razaoSocial };
   const zapi = {
     instance: cfg.instance,
-    token: decifrar(cfg.token_cifrado, chave).toString("utf8"),
-    clientToken: decifrar(cfg.client_token_cifrado, chave).toString("utf8"),
+    token: (await decifrarDominio("whatsapp", cfg.token_cifrado)).toString("utf8"),
+    clientToken: (await decifrarDominio("whatsapp", cfg.client_token_cifrado)).toString("utf8"),
   };
 
   const { data: dados } = await admin

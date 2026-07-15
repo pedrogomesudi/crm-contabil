@@ -1,5 +1,5 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
-import { decifrar } from "@/lib/nfse/cripto";
+import { decifrarDominio } from "@/lib/cripto/envelope";
 import { enviarTexto, type ZapiConfig } from "@/lib/whatsapp/zapi";
 import { aplicarTemplate, normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { formatarMoeda, formatarData } from "@/lib/format";
@@ -56,13 +56,12 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
   // O WhatsApp deixa de ser obrigatório: sem ele, a régua segue só por e-mail.
   // Abortar aqui paralisaria a cobrança justamente no cenário que o fallback existe para cobrir
   // (banimento do número pela Meta).
-  const chave = process.env.WHATSAPP_CRIPTO_KEY;
   let zapi: ZapiConfig | null = null;
-  if (chave && cfg?.instance && cfg.token_cifrado && cfg.client_token_cifrado) {
+  if (cfg?.instance && cfg.token_cifrado && cfg.client_token_cifrado) {
     zapi = {
       instance: cfg.instance as string,
-      token: decifrar(cfg.token_cifrado as string, chave).toString("utf8"),
-      clientToken: decifrar(cfg.client_token_cifrado as string, chave).toString("utf8"),
+      token: (await decifrarDominio("whatsapp", cfg.token_cifrado as string)).toString("utf8"),
+      clientToken: (await decifrarDominio("whatsapp", cfg.client_token_cifrado as string)).toString("utf8"),
     };
   }
 
