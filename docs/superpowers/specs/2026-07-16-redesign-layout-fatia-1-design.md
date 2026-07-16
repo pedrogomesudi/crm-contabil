@@ -61,8 +61,11 @@ achados medidos.
 
 ### Tokens (`globals.css`, bloco `@theme`)
 
-- **Novos:** `--color-atencao` + `--color-atencao-fundo` (matam o `amber`), escala de elevação
-  (`--shadow-superficie`, `--shadow-card`, `--shadow-flutuante`), escala tipográfica e de espaço.
+- **Novos:** `--color-atencao` + `--color-atencao-fundo` (matam o `amber`) e a escala de elevação
+  (`--shadow-card`, `--shadow-flutuante`).
+- **A escala tipográfica e a de espaço NÃO viram token global.** Declarar `--text-*`/`--spacing-*` no
+  `@theme` do Tailwind 4 sobrescreve os defaults e mudaria as 73 telas de uma vez — o oposto de "fundação
+  primeiro". Elas vivem dentro dos primitivos (`Secao`, `FormGrid`, `Abas`), e as telas herdam ao migrar.
 - **Inalterados:** todas as cores de marca e as 3 fontes.
 
 ### Dívida que esta fatia paga (por estar no caminho)
