@@ -1,8 +1,10 @@
 name: CI
 
 on:
+  # develop também: é onde o trabalho acontece. Verificar só no push para main
+  # significa descobrir a quebra no merge, quando o estrago já está no histórico.
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
 
 jobs:

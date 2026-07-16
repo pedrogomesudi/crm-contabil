@@ -1,0 +1,6 @@
+# Commits que só reformatam — o `git blame` os ignora e mostra o autor real da linha.
+# Uso local (uma vez): git config blame.ignoreRevsFile .git-blame-ignore-revs
+# O GitHub lê este arquivo sozinho.
+
+# chore(format): aplica o prettier no repo inteiro (printWidth 120)
+f122c87ae9a1c5a40fdee08afdbf00353cfe5802
