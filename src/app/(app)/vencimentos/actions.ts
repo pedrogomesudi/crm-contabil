@@ -2,13 +2,11 @@
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
-import { paraCSV } from "@/lib/financeiro/csv";
 import { hojeEmSaoPaulo } from "@/lib/vencimentos/hoje";
 import {
   montarPainel,
   type ItemVencimento,
   type ResumoVencimentos,
-  type Severidade,
 } from "@/lib/vencimentos/alerta";
 import { montarItens } from "@/lib/vencimentos/montar";
 
@@ -25,7 +23,10 @@ function nomeDe(c: unknown): string {
 
 // Une as três fontes: registros próprios (editáveis) + validade do A1 da NFS-e (só leitura).
 // Clientes inativos ou excluídos ficam de fora — certificado de quem saiu não é problema de ninguém.
-export async function listarVencimentos(): Promise<{ resumo: ResumoVencimentos; itens: ItemVencimento[] }> {
+export async function listarVencimentos(): Promise<{
+  resumo: ResumoVencimentos;
+  itens: ItemVencimento[];
+}> {
   const perfil = await getPerfilAtual();
   if (!perfil?.ativo || !podeGerenciarVencimentos(perfil.papel)) return VAZIO;
   const supabase = await createServerSupabase();
@@ -34,13 +35,17 @@ export async function listarVencimentos(): Promise<{ resumo: ResumoVencimentos; 
   const [certs, procs, nfse] = await Promise.all([
     supabase
       .from("certificado_digital")
-      .select("id, tipo, titular, validade, cliente_id, clientes!inner(razao_social, status, excluido_em)")
+      .select(
+        "id, tipo, titular, validade, cliente_id, clientes!inner(razao_social, status, excluido_em)",
+      )
       .eq("ativo", true)
       .eq("clientes.status", "ativo")
       .is("clientes.excluido_em", null),
     supabase
       .from("procuracao")
-      .select("id, orgao, outorgante, validade, cliente_id, clientes!inner(razao_social, status, excluido_em)")
+      .select(
+        "id, orgao, outorgante, validade, cliente_id, clientes!inner(razao_social, status, excluido_em)",
+      )
       .eq("ativo", true)
       .eq("clientes.status", "ativo")
       .is("clientes.excluido_em", null),
@@ -49,7 +54,11 @@ export async function listarVencimentos(): Promise<{ resumo: ResumoVencimentos; 
 
   // A RPC devolve só (cliente_id, validade, origem) — o nome vem de uma consulta à parte,
   // que também filtra clientes inativos/excluídos.
-  const linhasNfse = (nfse.data ?? []) as { cliente_id: string | null; validade: string; origem: string }[];
+  const linhasNfse = (nfse.data ?? []) as {
+    cliente_id: string | null;
+    validade: string;
+    origem: string;
+  }[];
   const ids = linhasNfse.map((l) => l.cliente_id).filter((v): v is string => Boolean(v));
   const nomes = new Map<string, string>();
   if (ids.length) {
@@ -99,30 +108,4 @@ export async function listarVencimentos(): Promise<{ resumo: ResumoVencimentos; 
 export async function contarVencimentos(): Promise<number> {
   const { resumo } = await listarVencimentos();
   return resumo.vencidos + resumo.criticos;
-}
-
-const ROTULO: Record<Severidade, string> = {
-  vencido: "Vencido",
-  critico: "Crítico",
-  alerta: "Alerta",
-  aviso: "Aviso",
-  ok: "Ok",
-};
-
-export async function csvVencimentos(): Promise<{ erro?: string; csv?: string }> {
-  const perfil = await getPerfilAtual();
-  if (!perfil?.ativo || !podeGerenciarVencimentos(perfil.papel)) return { erro: "Sem permissão." };
-  const { itens } = await listarVencimentos();
-  const csv = paraCSV(
-    ["Cliente", "Item", "Detalhe", "Validade", "Dias restantes", "Situação"],
-    itens.map((i) => [
-      i.clienteNome,
-      i.titulo,
-      i.detalhe,
-      i.validade,
-      String(i.diasRestantes),
-      ROTULO[i.severidade],
-    ]),
-  );
-  return { csv };
 }

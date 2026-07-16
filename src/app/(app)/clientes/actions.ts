@@ -4,7 +4,15 @@ import { revalidatePath } from "next/cache";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { clienteSchema } from "@/lib/validation/cliente";
-import { parseValorBR } from "@/lib/format";
+import { formatarDocumento, parseValorBR } from "@/lib/format";
+import { aplicarBusca } from "@/lib/clientes/busca";
+import { normalizarFiltro, aplicarFiltroStatus } from "@/lib/clientes/filtroStatus";
+import { exportar } from "@/app/(app)/exportar/actions";
+import type {
+  ArquivoExportado,
+  FormatoExportacao,
+  RelatorioExportavel,
+} from "@/lib/exportar/tipos";
 import { ehContadorValido } from "@/lib/clientes/contadores";
 import { podeExcluirCliente } from "@/lib/clientes/permissoes";
 import { normalizarExtensaoFinanceira } from "@/lib/financeiro/extensaoCliente";
@@ -86,7 +94,11 @@ export async function criarCliente(
   delete payload.status;
   const { data, error } = await supabase
     .from("clientes")
-    .insert({ ...payload, endereco: montarEndereco(formData), representante: montarRepresentante(formData) })
+    .insert({
+      ...payload,
+      endereco: montarEndereco(formData),
+      representante: montarRepresentante(formData),
+    })
     .select("id");
   if (error) {
     if (error.code === "23505") {
@@ -112,7 +124,10 @@ export async function criarCliente(
   const novoId = data[0]!.id as string;
   revalidatePath("/clientes");
   if (oportunidadeId) {
-    await supabase.from("oportunidade").update({ cliente_id: novoId, etapa: "ganho", atualizado_em: new Date().toISOString() }).eq("id", oportunidadeId);
+    await supabase
+      .from("oportunidade")
+      .update({ cliente_id: novoId, etapa: "ganho", atualizado_em: new Date().toISOString() })
+      .eq("id", oportunidadeId);
     redirect(`/onboarding/${novoId}`);
   }
   redirect("/clientes?ok=1");
@@ -236,4 +251,59 @@ export async function restaurarCliente(clienteId: string): Promise<{ erro?: stri
   revalidatePath("/clientes");
   revalidatePath(`/clientes/${clienteId}`);
   return {};
+}
+
+// ------------------------------------------------------------------ Exportação
+// A tela lista no máximo LIMITE clientes, mas exportar a carteira é outra coisa:
+// aqui a mesma busca roda SEM limite. A query usa o cliente com RLS, então o
+// arquivo nunca contém mais do que este usuário poderia ver na tela.
+const SITUACAO: Record<string, string> = {
+  ativo: "Ativo",
+  em_constituicao: "Em constituição",
+};
+
+export async function exportarClientes(
+  filtros: { q?: string; status?: string },
+  formato: FormatoExportacao,
+): Promise<ArquivoExportado | { erro: string }> {
+  const perfil = await getPerfilAtual();
+  if (!perfil?.ativo) return { erro: "Sem permissão." };
+
+  const supabase = await createServerSupabase();
+  const q = (filtros.q ?? "").slice(0, 100);
+  let query = supabase
+    .from("clientes")
+    .select("razao_social, cpf_cnpj, regime_tributario, status, excluido_em")
+    .order("atualizado_em", { ascending: false });
+  query = aplicarBusca(query, q);
+  query = aplicarFiltroStatus(query, normalizarFiltro(filtros.status));
+
+  const { data, error } = await query;
+  if (error) {
+    console.error("exportarClientes:", error.code, error.message);
+    return { erro: "Não foi possível exportar a lista." };
+  }
+
+  const relatorio: RelatorioExportavel = {
+    titulo: "Lista de clientes",
+    subtitulo: [q && `busca: ${q}`, normalizarFiltro(filtros.status) || "todos os status"]
+      .filter(Boolean)
+      .join(" · "),
+    colunas: [
+      { chave: "razao_social", rotulo: "Cliente", formato: "texto" },
+      { chave: "cpf_cnpj", rotulo: "CPF/CNPJ", formato: "texto" },
+      { chave: "regime_tributario", rotulo: "Regime", formato: "texto" },
+      { chave: "situacao", rotulo: "Situação", formato: "texto" },
+      { chave: "excluido", rotulo: "Excluído", formato: "texto" },
+    ],
+    linhas: (data ?? []).map((c) => ({
+      razao_social: c.razao_social,
+      cpf_cnpj: c.cpf_cnpj ? formatarDocumento(c.cpf_cnpj) : null,
+      regime_tributario: c.regime_tributario,
+      situacao: SITUACAO[c.status as string] ?? "Inativo",
+      excluido: c.excluido_em ? "sim" : "não",
+    })),
+  };
+
+  return exportar(relatorio, formato);
 }

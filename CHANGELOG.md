@@ -8,6 +8,31 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.4.0] — 2026-07-16
+
+### Adicionado
+
+- **Exportação de relatórios (RF-075):** camada única que transforma qualquer relatório tabular em **XLSX**,
+  **PDF** ou **CSV** pelo mesmo `<BotaoExportar>` — Rentabilidade, Conformidade de obrigações, Indicadores,
+  Extrato, Fluxo de caixa, Vencimentos e Lista de clientes. A tela monta um `RelatorioExportavel` e a action
+  só serializa. **XLSX com valor nativo** (número/data + `numFmt` por coluna: planilha com texto formatado
+  não soma nem ordena), via `exceljs` server-only; PDF reusa o Gotenberg e degrada para HTML sem
+  `GOTENBERG_URL`; CSV com `;` + BOM UTF-8. Exporta o que **está na tela** (as linhas filtradas) — exceto a
+  Lista de clientes, truncada em 100 na tela, cuja exportação refaz a busca **sem limite**, sob RLS.
+
+### Corrigido
+
+- **Exportação de Vencimentos ignorava os filtros da tela:** o CSV exportava o dataset bruto, então quem
+  filtrava por "Vencido" via 3 linhas na tela e recebia as 200 no arquivo. Agora o relatório é montado a
+  partir dos itens visíveis.
+
+### Removido
+
+- **`lib/financeiro/csv` e os CSV ad-hoc das telas**, substituídos pela camada de exportação do RF-075. A
+  neutralização de injeção de fórmula que morava ali foi portada para o núcleo novo, com teste.
+
+## [6.3.0] — 2026-07-15
+
 ### Adicionado
 
 - **Backup e teste de restauração (RNF-06) — fecha o V10:** dump próprio do schema `public`
@@ -17,6 +42,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   descartável) no DEPLOY.md; o `tenant:doctor` avisa quando o dump local está velho ou ausente. O dump
   próprio é **redundância do negócio** — auth/storage seguem cobertos pelo backup do Supabase.
 
+## [6.2.0] — 2026-07-15
+
+### Adicionado
+
 - **Envelope encryption (V10-B):** rotação de chave sem re-cifrar dado. Uma **chave-mestra**
   (`MASTER_CRIPTO_KEY`) cifra 5 **DEKs** (uma por domínio) em `chave_dados`; cada DEK é o valor da chave
   atual, então o ciphertext existente decifra sem tocar. `cifrarDominio`/`decifrarDominio` com **fallback**
@@ -24,13 +53,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   real** (rollback se a DEK não decifrar). Provisionador gera a mestra e migra; `tenant:doctor` confere as
   5 DEKs. `chave_dados` é service_role-only.
 
+## [6.1.0] — 2026-07-14
+
+### Adicionado
+
 - **LGPD (V10-A):** conformidade com a Lei Geral de Proteção de Dados. **Relatório de dados por titular**
   (direito de acesso em PDF + portabilidade em JSON), **registro de tratamentos (ROPA)** pré-semeado e
   editável, **histórico de consentimento** (cada mudança de opt-in vira evento) e **exclusão por
   anonimização** que respeita a guarda fiscal — anonimiza os dados pessoais não-fiscais e preserva o
   esqueleto fiscal, com a retenção documentada. Tabelas admin-only.
 
-## [6.0.0] — 2026-07-15
+## [6.0.0] — 2026-07-14
 
 ### Adicionado
 
