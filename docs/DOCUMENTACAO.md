@@ -683,7 +683,8 @@ clientes.
   baixa com comprovante, painel de riscos, escalonamento hierárquico, geração retroativa/suspensão e
   relatório de conformidade.
 - **Certificados e procurações** — cadastro por cliente, alertas escalonados em 60/30/15 dias, painel
-  global com badge, filtros e CSV, lendo também a validade do A1 da NFS-e sem duplicá-la.
+  global com badge, filtros e exportação (XLSX/PDF/CSV), lendo também a validade do A1 da NFS-e sem
+  duplicá-la.
 - NFS-e (honorários + multi-emitente).
 - Atendimento WhatsApp (inbox bidirecional, mídia, read receipts).
 - Financeiro (contas a pagar/receber, orçamento, orçado × realizado, dashboard, **trilogia de

@@ -8,6 +8,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.5.0] — 2026-07-16
+
 ### Adicionado
 
 - **`/api/health` devolve a versão no ar:** `{"status":"ok","versao":"6.4.0"}`. O deploy é automático a
@@ -19,8 +21,22 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Corrigido
 
+- **CI verde de novo — estava vermelho desde 24/06.** O `format:check` do CI falhava havia 3 semanas, então
+  **todo** push para o `main` (incluindo as releases 6.1.0 a 6.4.0) ficava vermelho e o sinal virou ruído de
+  fundo. O `printWidth` do Prettier foi para **120** (medido: é o ponto de menor divergência) e o repo foi
+  formatado num commit isolado — só reposicionamento de linha, os 650 testes idênticos antes e depois.
+  `npm run format` finalmente é inofensivo, como o AGENTS.md sempre presumiu.
 - **DEPLOY.md dizia que o Dockerfile tem `HEALTHCHECK`** — ele foi removido faz tempo, justamente porque
   um healthcheck falhando faz o proxy do EasyPanel devolver 502 com o app no ar.
+- **ROADMAP dizia que V9 e V10 eram "planejadas"** — as duas estavam entregues (V9 na 6.0.0; V10 A/B/C nas
+  6.1.0, 6.2.0 e 6.3.0). Agora cada marco aponta a versão que o entregou.
+
+### Segurança
+
+- **O `main` é protegido:** exige o CI (`verify`) verde, **inclusive para admin**, e recusa force-push e
+  deleção — a entrega vai por PR. Era o furo que deixou o CI vermelho passar por 3 semanas: o push direto
+  já colocava o estrago no histórico antes de alguém olhar. O CI passou a rodar também em `develop`, então
+  a quebra aparece no commit que a causou.
 
 ## [6.4.0] — 2026-07-16
 
