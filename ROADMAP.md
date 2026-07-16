@@ -17,8 +17,8 @@ Legenda: ✅ concluída · 🚧 em andamento · ⬜ planejada
 | **V6** | Módulo Financeiro (contas a receber/pagar) | ✅ |
 | **V7** | Integração com WhatsApp (atendimento, boletos, avisos) | ✅ |
 | **V8** | Layout e estética | ✅ |
-| **V9** | Modo whitelabel (comercialização) | ⬜ |
-| **V10** | Segurança da informação e legalidade técnica | ⬜ |
+| **V9** | Modo whitelabel (comercialização) | ✅ |
+| **V10** | Segurança da informação e legalidade técnica | ✅ |
 
 ---
 
@@ -224,16 +224,32 @@ Módulos que nasceram como diferenciais de CRM contábil, entregues em paralelo 
   escritório) por função `SECURITY DEFINER` que expõe só a data — nunca o certificado cifrado. RLS
   fechada ao financeiro. Migrations 0069–0070. Atende RF-022/023 do gap analysis.
 
-## V9 — Modo whitelabel ⬜
+## V9 — Modo whitelabel ✅
 
-Tornar a plataforma **whitelabel/multi-tenant** para comercialização a qualquer escritório de
-contabilidade (marca, domínio, isolamento de dados por cliente, planos).
+Plataforma **whitelabel/multi-tenant** para comercialização a qualquer escritório de contabilidade.
 
-> A definir: estratégia de tenancy, customização de marca, cobrança/assinaturas.
+- **Tenancy — um banco e um app por escritório** ✅ *(v6.0.0)* — o isolamento é **físico**, não por
+  coluna: cada escritório é um projeto Supabase + um app no EasyPanel + um subdomínio. O app e o
+  schema **não mudaram**. Ferramental: `tenant:novo` (cria projeto, migrations, chaves, admin e crons),
+  `tenant:adotar`, os laços `db:migrate:all` / `db:test:all` / `cron:bootstrap:all` (falha ruidosa) e
+  `tenant:doctor` (deriva de migrations, crons, admin, chaves e app). Segredos em `tenants/<slug>.env`,
+  fora do git. **Não existe comando de remover tenant**, por decisão de segurança.
+- **Marca do escritório** ✅ — logo e dados (nome, CNPJ, contato, endereço) em `/configuracoes/marca`,
+  usados nos documentos que saem para o cliente (propostas, contratos, portal).
 
-## V10 — Segurança da informação e legalidade técnica ⬜
+## V10 — Segurança da informação e legalidade técnica ✅
 
-Endurecimento de **segurança** e **conformidade legal/técnica** para comercializar a plataforma
-sem riscos (LGPD, retenção, auditoria, pentest, termos de uso e contrato SaaS).
+Endurecimento de **segurança** e **conformidade legal/técnica** para comercializar sem riscos.
 
-> A definir: escopo de auditoria, requisitos LGPD para operador/controlador, SLA.
+- **A) LGPD** ✅ *(v6.1.0)* — relatório de dados por titular (acesso em PDF + portabilidade em JSON),
+  ROPA pré-semeado, histórico de consentimento e exclusão por **anonimização** que respeita a guarda
+  fiscal (anonimiza o pessoal não-fiscal, preserva o esqueleto fiscal, documenta a retenção).
+- **B) Envelope encryption** ✅ *(v6.2.0)* — rotação de chave **sem re-cifrar dado**: a mestra cifra 5
+  DEKs (uma por domínio) em `chave_dados`. `cripto:migrar` / `cripto:rotacionar` com auto-teste em dado
+  real e rollback se a DEK não decifrar.
+- **C) Backup e teste de restauração (RNF-06)** ✅ *(v6.3.0)* — dump próprio do `public` com retenção
+  7 diários + 4 semanais em bucket S3-compatível, **verificador pós-restore** que prova contra um banco
+  restaurado que dados, extensões, crons, admin, DEKs e cripto voltaram, e runbook de ensaio. É
+  **redundância do negócio** — auth/storage seguem cobertos pelo backup do Supabase.
+
+> **Fora do marco, ainda a definir:** pentest, termos de uso e contrato SaaS, SLA formal.
