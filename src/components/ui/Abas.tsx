@@ -3,6 +3,11 @@ import Link from "next/link";
 // Alterna SEÇÕES da mesma rota, com o estado na URL (?aba=fiscal) — link direto e botão
 // voltar continuam funcionando. Não confundir com SubNav, que navega ENTRE rotas; o
 // visual é o mesmo de propósito, a diferença é o que acontece ao clicar.
+//
+// `base` é um caminho SEM query string. A troca de aba não preserva outros parâmetros
+// da URL — é o comportamento pretendido: abas são navegação (destino fixo), não filtro
+// (que precisaria acumular estado). Se `base` já vier com "?", a concatenação abaixo
+// produziria uma URL malformada ("?a=1?aba=x"), então isso é responsabilidade do chamador.
 export type ItemAba = { chave: string; rotulo: string; badge?: number };
 
 export function Abas({
@@ -16,10 +21,14 @@ export function Abas({
   base: string;
   param?: string;
 }) {
+  // Um bookmark/link antigo pode trazer uma chave que não existe mais em `itens`
+  // (?aba=xyz). Sem fallback, nenhuma aba fica marcada e nenhuma recebe aria-current —
+  // por isso a primeira aba assume o papel de ativa nesse caso.
+  const ativaValida = itens.some((it) => it.chave === ativa) ? ativa : itens[0]?.chave;
   return (
     <nav aria-label="Seções" className="flex flex-wrap gap-1 border-b border-linha">
       {itens.map((it) => {
-        const eh = it.chave === ativa;
+        const eh = it.chave === ativaValida;
         return (
           <Link
             key={it.chave}

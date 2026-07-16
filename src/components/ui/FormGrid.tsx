@@ -35,7 +35,9 @@ export function FormCampo({
   children,
 }: {
   label: string;
-  span?: number;
+  // Literal (não `number`): valores fora de 1-12 (ex.: 13, 0) hoje caem silenciosamente
+  // em 6 via `SPANS[span] ?? SPANS[6]`. Restringir o tipo vira erro de compilação.
+  span?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
   hint?: string;
   erro?: string;
   children: React.ReactNode;

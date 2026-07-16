@@ -31,10 +31,23 @@ describe("Abas", () => {
 
   it("marca a aba ativa para leitor de tela", () => {
     const html = renderToStaticMarkup(<Abas itens={itens} ativa="fiscal" base="/clientes/1" />);
-    expect(html).toContain('aria-current="page"');
+    // Contar ocorrências, não só verificar presença: se TODAS as abas recebessem
+    // aria-current, um `toContain` simples passaria igual sem cobrir o requisito
+    // (exatamente uma aba ativa).
+    const ocorrencias = html.match(/aria-current="page"/g) ?? [];
+    expect(ocorrencias).toHaveLength(1);
   });
 
   it("mostra o badge (um alerta que ninguém vê é um alerta que não existe)", () => {
     expect(renderToStaticMarkup(<Abas itens={itens} ativa="cadastro" base="/x" />)).toContain(">3<");
+  });
+
+  it("cai para a primeira aba quando 'ativa' não existe em itens (bookmark antigo)", () => {
+    const html = renderToStaticMarkup(<Abas itens={itens} ativa="inexistente" base="/clientes/1" />);
+    const ocorrencias = html.match(/aria-current="page"/g) ?? [];
+    expect(ocorrencias).toHaveLength(1);
+    // A primeira aba (cadastro) é quem assume o papel de ativa.
+    const cadastroLink = html.match(/<a[^>]*href="\/clientes\/1\?aba=cadastro"[^>]*>/)?.[0] ?? "";
+    expect(cadastroLink).toContain('aria-current="page"');
   });
 });
