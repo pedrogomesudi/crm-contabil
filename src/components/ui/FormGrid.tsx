@@ -8,6 +8,10 @@ export function FormGrid({ className = "", children }: { className?: string; chi
   return <div className={`grid grid-cols-1 gap-4 md:grid-cols-12 ${className}`}>{children}</div>;
 }
 
+// Mapa com valores literais é OBRIGATÓRIO: o scanner estático do Tailwind 4 busca strings
+// completas no código-fonte e não reconhece interpolações. Se alguém "simplificar" para
+// `md:col-span-${span}`, os testes ainda passam (string fica no HTML), mas a classe não é
+// gerada no build CSS — o layout quebra em produção, silenciosamente.
 const SPANS: Record<number, string> = {
   1: "md:col-span-1",
   2: "md:col-span-2",
