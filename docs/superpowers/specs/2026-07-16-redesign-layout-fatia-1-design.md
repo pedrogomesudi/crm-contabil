@@ -17,7 +17,7 @@ escuro. São 73 telas no app: esta fatia estabelece o padrão que as demais herd
 | **A ficha do cliente serrilha** | `clientes/[id]/page.tsx` (~330 linhas) empilha **19 seções** com larguras que brigam: form 672px, notas 896px, outras full-width. |
 | **Grids espremem no celular** | 40 `grid-cols-2` **sem breakpoint**. O endereço põe 7 campos num grid uniforme: **UF e CEP com a largura de "Logradouro"**. |
 | **Os componentes existem e ninguém usa** | `Card` importado por 2 arquivos vs. `rounded-2xl border border-linha bg-white` **29×** à mão (6 paddings, 2 raios). ~45 tabelas replicadas. **Nenhum primitivo de layout** (Container/Grid/Section). |
-| **Uma cor fora do brand** | `Badge.tsx:6` usa `amber-100/amber-800` — não há token `atencao`. |
+| **O `amber` vazou por todo o sistema** | **55 ocorrências em 9 shades, ~25 arquivos** (`amber-800`×18, `amber-50`×13, `amber-700`×10…) — não há token `atencao`. O `Badge.tsx:6` é só a mais visível. |
 | **4 cópias da mesma classe** | `inputCls` idêntico em `Campo.tsx`, `Input.tsx`, `Textarea.tsx`, `Select.tsx`. |
 
 **Conclusão:** o que incomoda não é a paleta — é estrutura. Beleza aplicada sobre isso não gruda: sem
@@ -61,8 +61,12 @@ achados medidos.
 
 ### Tokens (`globals.css`, bloco `@theme`)
 
-- **Novos:** `--color-atencao` + `--color-atencao-fundo` (matam o `amber`) e a escala de elevação
-  (`--shadow-card`, `--shadow-flutuante`).
+- **Novos:** `--color-atencao` + `--color-atencao-fundo` (o par texto/fundo do Badge) e a escala de
+  elevação (`--shadow-card`, `--shadow-flutuante`).
+- **O conjunto `atencao` está subdimensionado para o resto do sistema** e a Fatia 2 precisa decidir antes
+  de migrar: falta uma **borda** (hoje `amber-200/300/400`), um **sólido** para bolinha de status (hoje
+  `bg-amber-500`), e se `amber-50` (13 usos, o fundo mais comum) colapsa em `--color-atencao-fundo`. Sem
+  essa decisão, quem migrar inventa token ad hoc e o brand kit volta a vazar.
 - **A escala tipográfica e a de espaço NÃO viram token global.** Declarar `--text-*`/`--spacing-*` no
   `@theme` do Tailwind 4 sobrescreve os defaults e mudaria as 73 telas de uma vez — o oposto de "fundação
   primeiro". Elas vivem dentro dos primitivos (`Secao`, `FormGrid`, `Abas`), e as telas herdam ao migrar.
@@ -114,3 +118,26 @@ as outras 70 telas. Elas herdam quando forem tocadas.
 | Virar "mais um padrão concorrente" (já há 5 de navegação) | Os primitivos são a fundação: as telas da fatia consomem `Container`/`FormGrid` e servem de referência para as demais. |
 | O redesign tocar o comportamento sem querer | Testes verdes + regra do re-skin + o `/laboratorio` mostra antes/depois lado a lado. |
 | `/laboratorio` virar permanente | A remoção é tarefa explícita do plano, não "depois a gente tira". |
+
+## Achados para a Fatia 2 (da review final desta fatia)
+
+Verificados no código, não presumidos. Entram no planejamento da Fatia 2 antes de qualquer migração:
+
+- **`inputCls` como fonte única ainda não é.** Restam ~10 arquivos com cópias **divergentes** (umas com
+  `mt-1`, outras `mt-0.5`, outras sem `w-full` ou sem `focus:border-verde`): `usuarios/page.tsx:93,121,147`,
+  `EmitenteConfig.tsx` (×12), `FormConstituicao.tsx:6`, `FormMarca.tsx:6`, `FormCertificado.tsx:5`,
+  `FormProcuracao.tsx:5`, `FormDadosPagamento.tsx:15`, `CampoTexto.tsx:16`. Migrar causa mudança visual
+  **real**, não só troca de string. **Armadilha:** `nfse/EmitirNfseCliente.tsx:6` declara um `const
+  inputCls` local — importar lá dá erro de identificador duplicado.
+- **`<main>` aninhado (bug pré-existente).** O `(app)/layout.tsx:48` tem `<main id="conteudo">` e várias
+  páginas têm **outro** `<main className="mx-auto max-w-3xl">` dentro dele (`legalizacao/[id]/page.tsx:83`,
+  `comunicados/page.tsx:19`…). Landmark duplicado. Como o `Container` é uma `<div>`, migrar
+  `<main className="mx-auto max-w-*">` → `<Container>` conserta de graça — desde que quem migrar saiba, em
+  vez de "preservar" o `<main>` por zelo com a regra do re-skin.
+- **A régua de 3 degraus vai reflowar todas as telas — de propósito.** Hoje: 768/896/1024/1152. A régua:
+  720/1120/full. O `max-w-4xl` (896) é ambíguo: vira estreita (−176px) ou padrão (+224px)? O mapa
+  `larguraAtual → larguraNova` deve ser **decidido no plano**, e a aprovação humana ser **tela a tela**,
+  não em bloco.
+- **O projeto não usa `tailwind-merge`.** Em `Container`/`Secao`/`Input`, quem vence não é a ordem da
+  string de `className` e sim a ordem de emissão do CSS. Por isso os escape hatches dos primitivos são
+  **props** (`padding`, `nivel`, `largura`), nunca `className`. Quem criar primitivo novo segue a regra.
