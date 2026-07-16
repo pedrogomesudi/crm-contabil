@@ -3,8 +3,31 @@
 Guia operacional da Fase 1. Substitua `crm.SEU-DOMINIO.com.br` pelo domínio escolhido.
 
 - **VPS:** `srv1767582.hstgr.cloud` — IP `187.77.234.86` (EasyPanel).
-- **Supabase:** mesmo projeto de desenvolvimento (já com migrations 0001–0011 aplicadas e admin criado).
+- **Supabase:** dois projetos **separados** — veja abaixo.
 - **Porta do app:** 3000 · **Health check:** `/api/health`.
+
+## Ambientes — produção e desenvolvimento são bancos diferentes
+
+| | Projeto Supabase | Quem usa | Segredos |
+|---|---|---|---|
+| **Produção** | `saldo-producao` (`xeuujpop…`) | o app no EasyPanel | no painel do EasyPanel |
+| **Desenvolvimento** | `saldo-dev` (`iuttxqj…`) | sua máquina (`npm run dev`, `db:migrate`, `db:test`) | `.env.local`, fora do git |
+
+Até 16/07/2026 os dois eram **o mesmo projeto**: `npm run dev` editava dados de clientes reais e
+`db:test` rodava contra produção. A separação vem da **credencial** — o `.env.local` não contém, e não
+deve conter, nada de produção.
+
+> **Ao trocar de banco, reinicie o `npm run dev`.** O processo lê o `.env.local` **quando sobe**: um
+> `next dev` já aberto continua falando com o banco antigo mesmo depois de o arquivo mudar.
+
+**Montar um dev do zero** (~5 min): crie o projeto no Supabase (região `sa-east-1`) → preencha o
+`.env.local` a partir do `.env.local.example` (as 4 credenciais em Settings → API Keys e Connect →
+**Session pooler**) → gere as 7 chaves de cripto (`openssl rand -hex 32`, **nunca** as de produção) →
+`npm run db:migrate` → `npm run cripto:migrar` (grava as DEKs; sem ele o envelope não tem chave) →
+`npm run admin:bootstrap` → `npm run db:test`. Crons **não** são necessários em dev.
+
+> O projeto de dev no plano Free **pausa após 7 dias** sem uso — despausar é um clique no painel. O limite
+> Free é de **2 projetos ativos por conta** (não por organização), e hoje eles são exatamente estes dois.
 
 ---
 
