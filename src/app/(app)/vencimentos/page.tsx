@@ -5,7 +5,8 @@ import { podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
 import { formatarData } from "@/lib/format";
 import type { Severidade } from "@/lib/vencimentos/alerta";
 import { listarVencimentos } from "./actions";
-import { BaixarCsvVencimentos } from "@/components/vencimentos/BaixarCsvVencimentos";
+import { BotaoExportar } from "@/components/ui/BotaoExportar";
+import type { RelatorioExportavel } from "@/lib/exportar/tipos";
 
 export const metadata = { title: "Vencimentos" };
 
@@ -51,11 +52,28 @@ export default async function VencimentosPage({
     { rotulo: "≤ 60 dias", valor: resumo.avisos },
   ];
 
+  // Sobre `visiveis`, não `itens`: o CSV antigo exportava o dataset bruto, então quem
+  // filtrava por "Vencido" via 3 linhas na tela e recebia as 200 no arquivo.
+  const filtros = [sev && ROTULO[sev as Severidade], origem, q].filter(Boolean).join(" · ");
+  const relatorio: RelatorioExportavel = {
+    titulo: "Vencimentos",
+    subtitulo: filtros || "Próximos 60 dias",
+    colunas: [
+      { chave: "clienteNome", rotulo: "Cliente", formato: "texto" },
+      { chave: "titulo", rotulo: "Item", formato: "texto" },
+      { chave: "detalhe", rotulo: "Detalhe", formato: "texto" },
+      { chave: "validade", rotulo: "Validade", formato: "data" },
+      { chave: "diasRestantes", rotulo: "Dias restantes", formato: "numero" },
+      { chave: "situacao", rotulo: "Situação", formato: "texto" },
+    ],
+    linhas: visiveis.map((i) => ({ ...i, situacao: ROTULO[i.severidade] })),
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-texto">Vencimentos</h1>
-        <BaixarCsvVencimentos />
+        <BotaoExportar relatorio={relatorio} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -139,7 +157,9 @@ export default async function VencimentosPage({
             {!visiveis.length && (
               <tr>
                 <td colSpan={5} className="p-4 text-center text-cinza">
-                  {itens.length ? "Nenhum item para este filtro." : "Nada vencendo nos próximos 60 dias."}
+                  {itens.length
+                    ? "Nenhum item para este filtro."
+                    : "Nada vencendo nos próximos 60 dias."}
                 </td>
               </tr>
             )}

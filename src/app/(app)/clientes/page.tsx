@@ -1,8 +1,15 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
-import { podeCriarCliente, podeVerHonorario, podeGerenciarResponsaveis } from "@/lib/clientes/permissoes";
+import {
+  podeCriarCliente,
+  podeVerHonorario,
+  podeGerenciarResponsaveis,
+} from "@/lib/clientes/permissoes";
 import { normalizarFiltro, aplicarFiltroStatus } from "@/lib/clientes/filtroStatus";
+import { aplicarBusca } from "@/lib/clientes/busca";
+import { BotaoExportar } from "@/components/ui/BotaoExportar";
+import { exportarClientes } from "./actions";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SubNav, type ItemSubNav } from "@/components/ui/SubNav";
 import { podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
@@ -19,11 +26,6 @@ import { badgeRegime } from "@/lib/ui/apresentacao";
 export const metadata = { title: "Clientes" };
 
 const LIMITE = 100;
-
-// Escapa os curingas de LIKE para que % e _ digitados sejam literais.
-function escapeLike(s: string): string {
-  return s.replace(/[\\%_]/g, (m) => "\\" + m);
-}
 
 export default async function ClientesPage({
   searchParams,
@@ -42,16 +44,7 @@ export default async function ClientesPage({
     .order("atualizado_em", { ascending: false })
     .limit(LIMITE);
 
-  if (q) {
-    const digits = q.replace(/\D/g, "");
-    // só dígitos e pontuação de documento (./-) => busca por CPF/CNPJ
-    const pareceDocumento = /^[\d.\-/\s]+$/.test(q) && digits.length >= 3;
-    if (pareceDocumento) {
-      query = query.ilike("cpf_cnpj", `%${escapeLike(digits)}%`);
-    } else {
-      query = query.ilike("razao_social", `%${escapeLike(q)}%`);
-    }
-  }
+  query = aplicarBusca(query, q);
   const filtro = normalizarFiltro(status);
   query = aplicarFiltroStatus(query, filtro);
 
@@ -63,7 +56,11 @@ export default async function ClientesPage({
   if (podeCriarCliente(perfil?.papel)) {
     const [riscos, escal] = await Promise.all([contarRiscos(), contarEscalonamento()]);
     secoes.push({ href: "/obrigacoes", label: "Obrigações", badge: riscos || undefined });
-    secoes.push({ href: "/obrigacoes/escalonamento", label: "Escalonamento", badge: escal || undefined });
+    secoes.push({
+      href: "/obrigacoes/escalonamento",
+      label: "Escalonamento",
+      badge: escal || undefined,
+    });
   }
   if (podeGerenciarVencimentos(perfil?.papel)) {
     const venc = await contarVencimentos();
@@ -74,9 +71,15 @@ export default async function ClientesPage({
     <div className="space-y-5">
       <PageHeader
         titulo="Clientes"
-        subtitulo={clientes ? `${clientes.length}${clientes.length === LIMITE ? "+" : ""} na carteira` : undefined}
+        subtitulo={
+          clientes
+            ? `${clientes.length}${clientes.length === LIMITE ? "+" : ""} na carteira`
+            : undefined
+        }
         acoes={
           <>
+            {/* A tela lista até LIMITE; a exportação refaz a busca sem limite. */}
+            <BotaoExportar acao={exportarClientes.bind(null, { q, status })} />
             {podeVerHonorario(perfil?.papel) && (
               <Link href="/nfse/lote">
                 <Botao variante="secundario">Emitir NFS-e em lote</Botao>
@@ -160,43 +163,77 @@ export default async function ClientesPage({
             <caption className="sr-only">Lista de clientes</caption>
             <thead>
               <tr className="border-b border-linha bg-creme/60 text-left">
-                <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">Cliente</th>
-                <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">Regime</th>
-                <th className="px-4 py-3 text-right font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">Situação</th>
+                <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
+                  Cliente
+                </th>
+                <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
+                  Regime
+                </th>
+                <th className="px-4 py-3 text-right font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
+                  Situação
+                </th>
                 <th className="w-10" />
               </tr>
             </thead>
             <tbody>
               {clientes?.map((cl) => (
-                <tr key={cl.id} className="border-b border-linha/70 transition last:border-0 hover:bg-creme">
+                <tr
+                  key={cl.id}
+                  className="border-b border-linha/70 transition last:border-0 hover:bg-creme"
+                >
                   <td className="px-4 py-3">
                     <Link href={`/clientes/${cl.id}`} className="flex items-center gap-3">
                       <Iniciais nome={cl.razao_social} />
                       <span className="min-w-0">
-                        <span className="block truncate font-medium text-texto">{cl.razao_social}</span>
-                        <span className="block font-mono text-xs text-cinza-claro">{cl.cpf_cnpj ?? "— sem CNPJ"}</span>
+                        <span className="block truncate font-medium text-texto">
+                          {cl.razao_social}
+                        </span>
+                        <span className="block font-mono text-xs text-cinza-claro">
+                          {cl.cpf_cnpj ?? "— sem CNPJ"}
+                        </span>
                       </span>
                     </Link>
                   </td>
                   <td className="px-4 py-3">
                     {cl.regime_tributario ? (
-                      <Badge variante={badgeRegime(cl.regime_tributario)}>{cl.regime_tributario}</Badge>
+                      <Badge variante={badgeRegime(cl.regime_tributario)}>
+                        {cl.regime_tributario}
+                      </Badge>
                     ) : (
                       <span className="text-cinza-claro">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="inline-flex items-center gap-1.5 text-sm text-cinza">
-                      <span className={`h-1.5 w-1.5 rounded-full ${cl.status === "ativo" ? "bg-verde" : cl.status === "em_constituicao" ? "bg-amber-500" : "bg-cinza-claro"}`} />
-                      {cl.status === "ativo" ? "Ativo" : cl.status === "em_constituicao" ? "Em constituição" : "Inativo"}
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${cl.status === "ativo" ? "bg-verde" : cl.status === "em_constituicao" ? "bg-amber-500" : "bg-cinza-claro"}`}
+                      />
+                      {cl.status === "ativo"
+                        ? "Ativo"
+                        : cl.status === "em_constituicao"
+                          ? "Em constituição"
+                          : "Inativo"}
                     </span>
                     {cl.excluido_em && (
-                      <span className="ml-2 rounded-full bg-negativo/10 px-2 py-0.5 text-xs text-negativo">excluído</span>
+                      <span className="ml-2 rounded-full bg-negativo/10 px-2 py-0.5 text-xs text-negativo">
+                        excluído
+                      </span>
                     )}
                   </td>
                   <td className="px-2 py-3 text-right">
-                    <Link href={`/clientes/${cl.id}`} aria-label={`Abrir ${cl.razao_social}`} className="text-cinza-claro">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <Link
+                      href={`/clientes/${cl.id}`}
+                      aria-label={`Abrir ${cl.razao_social}`}
+                      className="text-cinza-claro"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
                         <path d="m9 6 6 6-6 6" />
                       </svg>
                     </Link>
