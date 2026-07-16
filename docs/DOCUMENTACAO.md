@@ -608,6 +608,27 @@ Conformidade com a Lei Geral de Proteção de Dados — pré-requisito de comerc
 - **Segurança:** as três tabelas LGPD são **admin-only** (RLS); `lgpd_consentimento_evento` não tem policy
   de INSERT (só o servidor grava). O encarregado (DPO) é um campo de configuração.
 
+## 4.2 Exportação de relatórios (RF-075)
+Camada única de exportação: todo relatório tabular vira **XLSX**, **PDF** e **CSV** pelo mesmo botão. Em
+Rentabilidade, Conformidade de obrigações, Indicadores, Extrato, Fluxo de caixa, Vencimentos e Lista de
+clientes.
+
+- **Um contrato só:** a tela monta um `RelatorioExportavel` (título, subtítulo, colunas com formato, linhas
+  e uma linha opcional de totais) e a action apenas serializa. Antes cada tela tinha seu CSV ad-hoc — a
+  função de download estava **copiada literalmente em 4 telas**, cada uma com seu formato de moeda e data.
+- **Exporta o que está na tela:** o relatório é montado a partir das linhas **filtradas** que o usuário vê,
+  não do dataset bruto. A exceção é a **Lista de clientes**, que a tela trunca em 100: lá a exportação
+  refaz a mesma busca **sem limite**, porque exportar a carteira é outra coisa que olhar a lista. Roda com
+  RLS, então o arquivo nunca traz mais do que aquele usuário veria.
+- **XLSX com valor nativo:** número é número e data é data, com máscara (`numFmt`) por coluna — planilha com
+  texto formatado não soma nem ordena. Gerado com `exceljs`, **server-only**.
+- **PDF** reusa o Gotenberg (`converterPdfHtml`) e **degrada para HTML** sem `GOTENBERG_URL`, como o
+  relatório da LGPD. **CSV** sai com separador `;` e **BOM UTF-8** (o Excel pt-BR precisa dos dois).
+- **Injeção de fórmula:** célula iniciada por `= + @` é neutralizada com `'`. Nome de cliente vem do banco,
+  e um `=cmd|…` em `razao_social` executaria ao abrir a planilha. Negativos (`-12,50`) são preservados.
+- **Gate:** a action só serializa o que a tela já podia ver, então exige apenas **equipe ativa** — o gate de
+  papel de cada relatório continua onde sempre esteve, na tela que busca os dados.
+
 ## 5. Infraestrutura e segurança
 
 - **Banco (Supabase/Postgres):** schema versionado em `supabase/migrations/NNNN_*.sql`, aplicado por um
