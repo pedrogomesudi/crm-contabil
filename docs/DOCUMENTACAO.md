@@ -692,9 +692,15 @@ clientes.
   **indicadores de carteira: MRR, ticket médio, churn**).
 - Cobrança por WhatsApp + régua automática agendada (pg_cron).
 - Integração Domínio; rebrand SALDO (design system) 100% aplicado.
+- **Whitelabel/multi-tenant (V9)** — um banco e um app por escritório, com o ferramental de
+  provisionamento (`tenant:novo`, `tenant:doctor`, os laços `*:all`). *(v6.0.0)*
+- **Segurança e legalidade técnica (V10)** — LGPD *(v6.1.0)*, envelope encryption *(v6.2.0)* e backup com
+  teste de restauração *(v6.3.0)*.
+- **Exportação de relatórios (RF-075)** — XLSX/PDF/CSV em todo relatório tabular. *(v6.4.0)*
 
 **Construído, ativação pendente:**
 - **Boletos** (Inter/Asaas) — código completo; aguarda conta ativa no provedor para operar em produção.
+  É o único item do ROADMAP ainda em andamento (V7.4), e o bloqueio é externo — não há o que implementar.
 
 **Em aberto / próximos:**
 - **Onboarding — Legalização/societário (F2):** processos por órgão e protocolos; templates por tipo de
@@ -703,8 +709,11 @@ clientes.
   movimentos), tolerância de valor e conferência de saldo extrato × sistema.
 - **Obrigações:** curadoria da matriz e flags fiscais explícitas no cadastro do cliente (hoje derivadas
   de nº de funcionários e inscrições).
-- **Whitelabel/multi-tenant** (comercialização) e **endurecimento de segurança/LGPD** (marcos V9/V10 do
-  [ROADMAP](../ROADMAP.md)).
+
+**Para comercializar — não é código:**
+- **Pentest**, **termos de uso**, **contrato SaaS** e **SLA formal**. Os 10 marcos do
+  [ROADMAP](../ROADMAP.md) estão concluídos; estes são o que falta para vender a plataforma a outros
+  escritórios, e dependem de trabalho jurídico e de auditoria externa.
 
 ---
 
