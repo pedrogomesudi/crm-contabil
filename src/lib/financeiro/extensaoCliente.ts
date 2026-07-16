@@ -14,9 +14,7 @@ const INDICES_REAJUSTE = ["SALARIO_MINIMO", "IPCA", "IGPM", "INPC", "PERCENTUAL_
 // Extrai e valida os campos financeiros da ficha do cliente (RF-006/RF-007).
 // Retorna { erro } quando algum valor é inválido; caso contrário, o registro
 // pronto para o upsert em clientes_financeiro. Campos vazios viram null.
-export function normalizarExtensaoFinanceira(
-  fd: FormData,
-): ExtensaoFinanceira | { erro: string } {
+export function normalizarExtensaoFinanceira(fd: FormData): ExtensaoFinanceira | { erro: string } {
   const diaRaw = String(fd.get("dia_vencimento") ?? "").trim();
   const qtdRaw = String(fd.get("qtd_funcionarios") ?? "").trim();
   const faixaRaw = String(fd.get("faixa_faturamento") ?? "").trim();

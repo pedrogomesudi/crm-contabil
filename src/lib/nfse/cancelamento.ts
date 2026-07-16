@@ -50,7 +50,14 @@ export function parseRespostaEvento(status: number, corpo: Record<string, unknow
     };
   }
   // Erros em formatos conhecidos (a Sefin usa `erro` singular); por fim, o corpo cru.
-  type Erro = { codigo?: string; Codigo?: string; descricao?: string; Descricao?: string; mensagem?: string; complemento?: string };
+  type Erro = {
+    codigo?: string;
+    Codigo?: string;
+    descricao?: string;
+    Descricao?: string;
+    mensagem?: string;
+    complemento?: string;
+  };
   const lista =
     (Array.isArray(corpo.erro) && (corpo.erro as Erro[])) ||
     (Array.isArray(corpo.erros) && (corpo.erros as Erro[])) ||

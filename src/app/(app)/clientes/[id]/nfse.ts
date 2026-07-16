@@ -145,9 +145,7 @@ export async function emitirNfseCliente(
   // nacional na DPS (senão SEFIN dá E0240 p/ clientes de outra cidade). Só
   // resolve quando há endereço a enviar (cep+logradouro); falha => fallback ao
   // município do prestador (feito na montagem da DPS).
-  const enderecoTomador = cliente.endereco
-    ? { ...(cliente.endereco as Record<string, string>) }
-    : undefined;
+  const enderecoTomador = cliente.endereco ? { ...(cliente.endereco as Record<string, string>) } : undefined;
   if (enderecoTomador?.cep && enderecoTomador?.logradouro && !enderecoTomador.codigo_municipio) {
     const ibge = await municipioIbgePorCep(enderecoTomador.cep);
     if (ibge) enderecoTomador.codigo_municipio = ibge;

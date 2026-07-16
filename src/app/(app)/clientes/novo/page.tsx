@@ -22,7 +22,11 @@ export default async function NovoClientePage({ searchParams }: { searchParams: 
   let defaults: ClienteDefaults | undefined;
   if (oportunidadeId) {
     const supabase = await createServerSupabase();
-    const { data: op } = await supabase.from("oportunidade").select("prospect_nome, contato_nome, contato_telefone, contato_email, origem").eq("id", oportunidadeId).maybeSingle();
+    const { data: op } = await supabase
+      .from("oportunidade")
+      .select("prospect_nome, contato_nome, contato_telefone, contato_email, origem")
+      .eq("id", oportunidadeId)
+      .maybeSingle();
     if (op) {
       defaults = {
         razao_social: (op.prospect_nome as string) ?? "",

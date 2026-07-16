@@ -19,8 +19,26 @@ describe("tipos", () => {
 describe("materializarEtapas", () => {
   it("calcula prazo = data_inicio + prazo_dias e preserva ordem/campos", () => {
     const etapas = [
-      { ordem: 1, titulo: "A", descricao: null, orgao: "junta" as const, prazoDias: 5, responsavelPapel: "contador", anexoObrigatorio: true, avisarCliente: false },
-      { ordem: 2, titulo: "B", descricao: null, orgao: "receita" as const, prazoDias: null, responsavelPapel: null, anexoObrigatorio: false, avisarCliente: true },
+      {
+        ordem: 1,
+        titulo: "A",
+        descricao: null,
+        orgao: "junta" as const,
+        prazoDias: 5,
+        responsavelPapel: "contador",
+        anexoObrigatorio: true,
+        avisarCliente: false,
+      },
+      {
+        ordem: 2,
+        titulo: "B",
+        descricao: null,
+        orgao: "receita" as const,
+        prazoDias: null,
+        responsavelPapel: null,
+        anexoObrigatorio: false,
+        avisarCliente: true,
+      },
     ];
     const [e1, e2] = materializarEtapas(etapas, "2026-07-01");
     expect(e1?.prazo).toBe("2026-07-06");

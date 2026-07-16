@@ -28,7 +28,11 @@ export default async function PropostasPage({ searchParams }: { searchParams: Pr
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
       <PageHeader titulo="Propostas" subtitulo="Propostas de honorários da oportunidade" />
-      <PropostasLista oportunidadeId={op} prospectNome={(oport?.prospect_nome as string) ?? "—"} propostas={propostas} />
+      <PropostasLista
+        oportunidadeId={op}
+        prospectNome={(oport?.prospect_nome as string) ?? "—"}
+        propostas={propostas}
+      />
     </main>
   );
 }

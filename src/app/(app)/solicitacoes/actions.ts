@@ -27,7 +27,11 @@ export async function responder(id: string, corpo: string): Promise<{ ok?: boole
   // A autoria é forçada pelo gatilho; a RLS confirma o vínculo com a solicitação.
   const { error } = await supabase.from("solicitacao_mensagem").insert({ solicitacao_id: id, corpo: texto });
   if (error) return { erro: "Falha ao enviar a mensagem." };
-  await supabase.from("solicitacao").update({ status: "respondida" }).eq("id", id).in("status", ["aberta", "em_andamento"]);
+  await supabase
+    .from("solicitacao")
+    .update({ status: "respondida" })
+    .eq("id", id)
+    .in("status", ["aberta", "em_andamento"]);
   revalida(id);
   return { ok: true };
 }
@@ -42,7 +46,10 @@ export async function definirStatus(id: string, status: SolicitacaoStatus): Prom
   return { ok: true };
 }
 
-export async function definirResponsavel(id: string, responsavelId: string | null): Promise<{ ok?: boolean; erro?: string }> {
+export async function definirResponsavel(
+  id: string,
+  responsavelId: string | null,
+): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
   const { error } = await supabase.from("solicitacao").update({ responsavel_id: responsavelId }).eq("id", id);

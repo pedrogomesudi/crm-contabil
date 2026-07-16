@@ -15,10 +15,7 @@ const ALINHA = (formato: string) => (formato === "texto" || formato === "data" ?
 
 export function paraHtml(rel: RelatorioExportavel): string {
   const cabecalho = rel.colunas
-    .map(
-      (c) =>
-        `<th style="${TD};text-align:${ALINHA(c.formato)};color:#666">${escapar(c.rotulo)}</th>`,
-    )
+    .map((c) => `<th style="${TD};text-align:${ALINHA(c.formato)};color:#666">${escapar(c.rotulo)}</th>`)
     .join("");
 
   const corpo =
@@ -53,9 +50,7 @@ export function paraHtml(rel: RelatorioExportavel): string {
   return (
     '<html><head><meta charset="utf-8"></head><body style="font-family:sans-serif;color:#222">' +
     `<h1 style="font-size:18px;margin-bottom:2px">${escapar(rel.titulo)}</h1>` +
-    (rel.subtitulo
-      ? `<p style="font-size:12px;color:#666;margin-top:0">${escapar(rel.subtitulo)}</p>`
-      : "") +
+    (rel.subtitulo ? `<p style="font-size:12px;color:#666;margin-top:0">${escapar(rel.subtitulo)}</p>` : "") +
     '<table style="width:100%;border-collapse:collapse;font-size:12px">' +
     `<thead><tr>${cabecalho}</tr></thead><tbody>${corpo}</tbody>${rodape}` +
     "</table></body></html>"

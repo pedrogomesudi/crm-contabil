@@ -27,10 +27,7 @@ const emailSchema = z.string().email();
 // Conta admins ATIVOS além de `exceto`. Sustenta a invariante "≥1 admin ativo":
 // o trigger garantir_admin_ativo (migration 0010) é a barreira final no banco;
 // aqui só antecipamos a mensagem amigável.
-async function outrosAdminsAtivos(
-  admin: ReturnType<typeof createAdminSupabase>,
-  exceto: string,
-): Promise<number> {
+async function outrosAdminsAtivos(admin: ReturnType<typeof createAdminSupabase>, exceto: string): Promise<number> {
   const { count } = await admin
     .from("usuarios")
     .select("id", { count: "exact", head: true })
@@ -40,10 +37,7 @@ async function outrosAdminsAtivos(
   return count ?? 0;
 }
 
-export async function convidarUsuario(
-  _prev: EstadoConvite,
-  formData: FormData,
-): Promise<EstadoConvite> {
+export async function convidarUsuario(_prev: EstadoConvite, formData: FormData): Promise<EstadoConvite> {
   await exigirAdmin();
   const emailBruto = String(formData.get("email") ?? "")
     .trim()
@@ -60,10 +54,9 @@ export async function convidarUsuario(
   // inviteUserByEmail cria o usuário E envia o e-mail de convite (via SMTP/Brevo)
   // usando o template "Invite user". redirectTo explícito torna o link robusto a
   // divergência entre o Site URL do painel e o ambiente real.
-  const { data: convidado, error: errConvite } = await admin.auth.admin.inviteUserByEmail(
-    email.data,
-    { redirectTo: `${site}/auth/confirmar` },
-  );
+  const { data: convidado, error: errConvite } = await admin.auth.admin.inviteUserByEmail(email.data, {
+    redirectTo: `${site}/auth/confirmar`,
+  });
   if (errConvite || !convidado?.user) {
     const jaExiste = /exist|registered|already/i.test(errConvite?.message ?? "");
     if (!jaExiste) console.error("convidarUsuario (invite):", errConvite?.message);
@@ -75,10 +68,7 @@ export async function convidarUsuario(
   // o e-mail: revalida para que ele apareça na lista e o admin corrija o papel ali.
   const { error: errPerfil } = await admin
     .from("usuarios")
-    .upsert(
-      { id: convidado.user.id, email: email.data, nome, papel, ativo: true },
-      { onConflict: "id" },
-    );
+    .upsert({ id: convidado.user.id, email: email.data, nome, papel, ativo: true }, { onConflict: "id" });
   revalidatePath("/usuarios");
   if (errPerfil) {
     console.error("convidarUsuario (upsert papel):", errPerfil.message);
@@ -96,16 +86,8 @@ export async function alterarPapel(usuarioId: string, formData: FormData) {
   const admin = createAdminSupabase();
   // Não rebaixar o último admin ativo (mensagem amigável; o trigger é a barreira final).
   if (papel !== "admin") {
-    const { data: atual } = await admin
-      .from("usuarios")
-      .select("papel, ativo")
-      .eq("id", usuarioId)
-      .maybeSingle();
-    if (
-      atual?.papel === "admin" &&
-      atual.ativo &&
-      (await outrosAdminsAtivos(admin, usuarioId)) === 0
-    ) {
+    const { data: atual } = await admin.from("usuarios").select("papel, ativo").eq("id", usuarioId).maybeSingle();
+    if (atual?.papel === "admin" && atual.ativo && (await outrosAdminsAtivos(admin, usuarioId)) === 0) {
       redirect("/usuarios?erro=ultimo_admin");
     }
   }
@@ -156,11 +138,7 @@ export async function definirAtivo(usuarioId: string) {
 export async function reenviarAcesso(usuarioId: string) {
   await exigirAdmin();
   const admin = createAdminSupabase();
-  const { data: alvo, error: errLer } = await admin
-    .from("usuarios")
-    .select("email")
-    .eq("id", usuarioId)
-    .maybeSingle();
+  const { data: alvo, error: errLer } = await admin.from("usuarios").select("email").eq("id", usuarioId).maybeSingle();
   if (errLer || !alvo?.email) {
     if (errLer) console.error("reenviarAcesso (ler):", errLer.message);
     redirect("/usuarios?erro=1");
@@ -191,7 +169,11 @@ export async function definirSuperior(usuarioId: string, formData: FormData) {
       if (cur === usuarioId) return; // fecharia um ciclo — rejeita
       if (visto.has(cur)) break;
       visto.add(cur);
-      const res: { data: { superior_id: string | null } | null } = await admin.from("usuarios").select("superior_id").eq("id", cur).maybeSingle();
+      const res: { data: { superior_id: string | null } | null } = await admin
+        .from("usuarios")
+        .select("superior_id")
+        .eq("id", cur)
+        .maybeSingle();
       cur = res.data?.superior_id ?? null;
     }
   }

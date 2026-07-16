@@ -6,7 +6,12 @@ import { periodoBounds, metricasFunil, type Granularidade } from "@/lib/comercia
 import type { OportunidadeView } from "./actions";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-const GRANS: { v: Granularidade; l: string }[] = [{ v: "mes", l: "Mês" }, { v: "trimestre", l: "Trimestre" }, { v: "semestre", l: "Semestre" }, { v: "ano", l: "Ano" }];
+const GRANS: { v: Granularidade; l: string }[] = [
+  { v: "mes", l: "Mês" },
+  { v: "trimestre", l: "Trimestre" },
+  { v: "semestre", l: "Semestre" },
+  { v: "ano", l: "Ano" },
+];
 
 export function MetricasFunil({ oportunidades, hoje }: { oportunidades: OportunidadeView[]; hoje: string }) {
   const [gran, setGran] = useState<Granularidade>("mes");
@@ -17,17 +22,24 @@ export function MetricasFunil({ oportunidades, hoje }: { oportunidades: Oportuni
 
   return (
     <div className="space-y-5">
-      <Link href="/comercial" className="text-sm text-verde underline">← Funil</Link>
+      <Link href="/comercial" className="text-sm text-verde underline">
+        ← Funil
+      </Link>
 
       <section className="space-y-2">
         <h2 className="font-display text-sm font-semibold text-texto">Pipeline atual</h2>
         <div className="rounded-2xl border border-linha bg-white p-4">
-          <p className="text-sm text-cinza">Em aberto: <span className="font-medium text-texto tabular-nums">{m.pipeline.total.qtd}</span> · <span className="font-medium text-texto tabular-nums">{brl(m.pipeline.total.total)}</span></p>
+          <p className="text-sm text-cinza">
+            Em aberto: <span className="font-medium text-texto tabular-nums">{m.pipeline.total.qtd}</span> ·{" "}
+            <span className="font-medium text-texto tabular-nums">{brl(m.pipeline.total.total)}</span>
+          </p>
           <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {ETAPAS_ATIVAS.map((e) => (
               <div key={e.chave} className="rounded-lg bg-creme px-2 py-1.5">
                 <div className="text-[11px] uppercase tracking-wide text-cinza">{e.rotulo}</div>
-                <div className="text-sm text-texto tabular-nums">{m.pipeline.porEtapa[e.chave]!.qtd} · {brl(m.pipeline.porEtapa[e.chave]!.total)}</div>
+                <div className="text-sm text-texto tabular-nums">
+                  {m.pipeline.porEtapa[e.chave]!.qtd} · {brl(m.pipeline.porEtapa[e.chave]!.total)}
+                </div>
               </div>
             ))}
           </div>
@@ -37,13 +49,28 @@ export function MetricasFunil({ oportunidades, hoje }: { oportunidades: Oportuni
       <section className="space-y-2">
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="font-display text-sm font-semibold text-texto">Fechamentos</h2>
-          <select value={gran} onChange={(e) => { setGran(e.target.value as Granularidade); setOffset(0); }} className="rounded-lg border border-linha px-2 py-1 text-sm">
-            {GRANS.map((g) => <option key={g.v} value={g.v}>{g.l}</option>)}
+          <select
+            value={gran}
+            onChange={(e) => {
+              setGran(e.target.value as Granularidade);
+              setOffset(0);
+            }}
+            className="rounded-lg border border-linha px-2 py-1 text-sm"
+          >
+            {GRANS.map((g) => (
+              <option key={g.v} value={g.v}>
+                {g.l}
+              </option>
+            ))}
           </select>
           <div className="flex items-center gap-2 text-sm">
-            <button type="button" onClick={() => setOffset((o) => o - 1)} className="rounded border border-linha px-2">←</button>
+            <button type="button" onClick={() => setOffset((o) => o - 1)} className="rounded border border-linha px-2">
+              ←
+            </button>
             <span className="min-w-[9rem] text-center text-texto">{rotulo}</span>
-            <button type="button" onClick={() => setOffset((o) => o + 1)} className="rounded border border-linha px-2">→</button>
+            <button type="button" onClick={() => setOffset((o) => o + 1)} className="rounded border border-linha px-2">
+              →
+            </button>
           </div>
         </div>
 
@@ -75,7 +102,13 @@ export function MetricasFunil({ oportunidades, hoje }: { oportunidades: Oportuni
               </tr>
             </thead>
             <tbody>
-              {m.periodo.porResponsavel.length === 0 && <tr><td colSpan={4} className="px-3 py-2 text-cinza">Sem fechamentos no período.</td></tr>}
+              {m.periodo.porResponsavel.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-3 py-2 text-cinza">
+                    Sem fechamentos no período.
+                  </td>
+                </tr>
+              )}
               {m.periodo.porResponsavel.map((r) => (
                 <tr key={r.nome} className="border-b border-linha/60">
                   <td className="px-3 py-2 text-texto">{r.nome}</td>
@@ -95,7 +128,10 @@ export function MetricasFunil({ oportunidades, hoje }: { oportunidades: Oportuni
           ) : (
             <ul className="mt-1 space-y-0.5 text-sm">
               {m.periodo.motivosPerda.map((mo) => (
-                <li key={mo.motivo} className="flex justify-between"><span className="text-texto">{mo.motivo}</span><span className="tabular-nums text-cinza">{mo.qtd}</span></li>
+                <li key={mo.motivo} className="flex justify-between">
+                  <span className="text-texto">{mo.motivo}</span>
+                  <span className="tabular-nums text-cinza">{mo.qtd}</span>
+                </li>
               ))}
             </ul>
           )}

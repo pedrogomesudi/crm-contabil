@@ -22,7 +22,13 @@ export type Resumo = {
 export type Aging = Record<string, { total: number; qtd: number }>;
 export type MesFluxo = { mes: string; realizado: number; a_receber: number };
 export type Devedor = { cliente: string; total: number; qtd: number };
-export type DadosDashboard = { resumo: Resumo; aging: Aging; agingPagar: Aging; fluxo: MesFluxo[]; devedores: Devedor[] };
+export type DadosDashboard = {
+  resumo: Resumo;
+  aging: Aging;
+  agingPagar: Aging;
+  fluxo: MesFluxo[];
+  devedores: Devedor[];
+};
 
 export async function carregarDashboard(competencia: string): Promise<DadosDashboard | null> {
   const perfil = await getPerfilAtual();

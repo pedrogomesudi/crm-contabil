@@ -1,16 +1,38 @@
 import type { PerfilCliente } from "@/lib/onboarding/processo";
 import { calcularVencimento, type RegraPrazo } from "./prazo";
 
-export type ObrigacaoMatriz = { id: string; periodicidade: "mensal" | "trimestral" | "anual"; aplicavelA: string[]; condicaoFlags: string[]; condicaoModo: "any" | "all"; ufs: string[]; cnaePrefixos: string[]; regra: RegraPrazo };
-export type ClienteFiscal = { perfil: PerfilCliente; uf: string | null; cnae: string | null; flags: Record<string, boolean> };
-export type InstanciaSeed = { obrigacaoId: string; competencia: string; vencimentoLegal: string; vencimentoInterno: string };
+export type ObrigacaoMatriz = {
+  id: string;
+  periodicidade: "mensal" | "trimestral" | "anual";
+  aplicavelA: string[];
+  condicaoFlags: string[];
+  condicaoModo: "any" | "all";
+  ufs: string[];
+  cnaePrefixos: string[];
+  regra: RegraPrazo;
+};
+export type ClienteFiscal = {
+  perfil: PerfilCliente;
+  uf: string | null;
+  cnae: string | null;
+  flags: Record<string, boolean>;
+};
+export type InstanciaSeed = {
+  obrigacaoId: string;
+  competencia: string;
+  vencimentoLegal: string;
+  vencimentoInterno: string;
+};
 
 const soDigitos = (s: string) => s.replace(/\D/g, "");
 
 export function obrigacaoAplica(o: ObrigacaoMatriz, c: ClienteFiscal): boolean {
   if (!o.aplicavelA.includes("*") && !o.aplicavelA.includes(c.perfil)) return false;
   if (o.condicaoFlags.length > 0) {
-    const ok = o.condicaoModo === "any" ? o.condicaoFlags.some((f) => c.flags[f] === true) : o.condicaoFlags.every((f) => c.flags[f] === true);
+    const ok =
+      o.condicaoModo === "any"
+        ? o.condicaoFlags.some((f) => c.flags[f] === true)
+        : o.condicaoFlags.every((f) => c.flags[f] === true);
     if (!ok) return false;
   }
   if (o.ufs.length > 0 && (!c.uf || !o.ufs.includes(c.uf))) return false;
@@ -21,7 +43,12 @@ export function obrigacaoAplica(o: ObrigacaoMatriz, c: ClienteFiscal): boolean {
   return true;
 }
 
-export function instanciasDaCompetencia(obrigacoes: ObrigacaoMatriz[], c: ClienteFiscal, ano: number, mes: number): InstanciaSeed[] {
+export function instanciasDaCompetencia(
+  obrigacoes: ObrigacaoMatriz[],
+  c: ClienteFiscal,
+  ano: number,
+  mes: number,
+): InstanciaSeed[] {
   const out: InstanciaSeed[] = [];
   for (const o of obrigacoes) {
     if (!obrigacaoAplica(o, c)) continue;

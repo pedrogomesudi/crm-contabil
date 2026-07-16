@@ -27,7 +27,9 @@ export default async function RecorrenciasPage() {
 
   return (
     <main className="mx-auto max-w-4xl space-y-5 p-4">
-      <Link href="/tarefas" className="text-sm text-verde underline">← Tarefas</Link>
+      <Link href="/tarefas" className="text-sm text-verde underline">
+        ← Tarefas
+      </Link>
       <PageHeader titulo="Tarefas recorrentes" subtitulo="Moldes que geram tarefas sozinhos, todo dia às 9h" />
       <FormRecorrencia
         recorrencias={recorrencias}

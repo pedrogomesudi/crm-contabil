@@ -9,18 +9,42 @@ export function headersAsaas(apiKey: string): Record<string, string> {
 }
 
 export function corpoClienteAsaas(dados: DadosEmissao): { name: string; cpfCnpj: string; email?: string } {
-  const c: { name: string; cpfCnpj: string; email?: string } = { name: dados.pagadorNome, cpfCnpj: dados.pagadorDocumento };
+  const c: { name: string; cpfCnpj: string; email?: string } = {
+    name: dados.pagadorNome,
+    cpfCnpj: dados.pagadorDocumento,
+  };
   if (dados.pagadorEmail) c.email = dados.pagadorEmail;
   return c;
 }
 
-export function corpoCobrancaAsaas(customerId: string, dados: DadosEmissao): { customer: string; billingType: "BOLETO"; value: number; dueDate: string; description: string; externalReference: string } {
-  return { customer: customerId, billingType: "BOLETO", value: dados.valor, dueDate: dados.vencimento, description: dados.descricao, externalReference: dados.seuNumero };
+export function corpoCobrancaAsaas(
+  customerId: string,
+  dados: DadosEmissao,
+): {
+  customer: string;
+  billingType: "BOLETO";
+  value: number;
+  dueDate: string;
+  description: string;
+  externalReference: string;
+} {
+  return {
+    customer: customerId,
+    billingType: "BOLETO",
+    value: dados.valor,
+    dueDate: dados.vencimento,
+    description: dados.descricao,
+    externalReference: dados.seuNumero,
+  };
 }
 
 const str = (v: unknown): string | null => (typeof v === "string" && v.length > 0 ? v : null);
 
-export function parsearCobrancaAsaas(pagamento: Record<string, unknown>, identif: Record<string, unknown> | null, pix: Record<string, unknown> | null): BoletoEmitido {
+export function parsearCobrancaAsaas(
+  pagamento: Record<string, unknown>,
+  identif: Record<string, unknown> | null,
+  pix: Record<string, unknown> | null,
+): BoletoEmitido {
   return {
     provedorBoletoId: String(pagamento.id ?? ""),
     nossoNumero: identif ? str(identif.nossoNumero) : null,
@@ -49,7 +73,11 @@ export function criarAdaptadorAsaas(apiKey: string, ambiente: "sandbox" | "produ
   const base = baseUrlAsaas(ambiente);
   const headers = headersAsaas(apiKey);
   async function req(method: "GET" | "POST", path: string, body?: unknown): Promise<Record<string, unknown>> {
-    const r = await fetch(`${base}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    const r = await fetch(`${base}${path}`, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
     const j = (await r.json().catch(() => ({}))) as Record<string, unknown>;
     if (!r.ok) throw new Error(`Asaas ${r.status}: ${JSON.stringify(j.errors ?? j)}`);
     return j;

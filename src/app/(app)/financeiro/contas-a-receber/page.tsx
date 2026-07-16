@@ -10,11 +10,7 @@ export default async function ContasReceberPage() {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeVerHonorario(perfil.papel)) redirect("/");
   const supabase = await createServerSupabase();
-  const { data: contas } = await supabase
-    .from("conta_bancaria")
-    .select("id, nome")
-    .eq("ativa", true)
-    .order("nome");
+  const { data: contas } = await supabase.from("conta_bancaria").select("id, nome").eq("ativa", true).order("nome");
   const automacao = await lerAutomacao();
   return (
     <main className="mx-auto max-w-4xl space-y-4 p-4">

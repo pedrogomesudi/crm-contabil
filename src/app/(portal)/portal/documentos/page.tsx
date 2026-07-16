@@ -9,7 +9,10 @@ const dataBR = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5
 
 export default async function PortalDocumentosPage() {
   const supabase = await createServerSupabase();
-  const { data } = await supabase.from("documentos").select("id, nome, tipo, enviado_em, origem").order("enviado_em", { ascending: false });
+  const { data } = await supabase
+    .from("documentos")
+    .select("id, nome, tipo, enviado_em, origem")
+    .order("enviado_em", { ascending: false });
   const docs = data ?? [];
 
   return (
@@ -34,11 +37,19 @@ export default async function PortalDocumentosPage() {
                 <tr key={d.id as string} className="border-b border-linha/60">
                   <td className="px-3 py-2 text-texto">
                     {d.nome as string}
-                    {d.origem === "cliente" && <span className="ml-2 rounded-full bg-creme px-2 py-0.5 text-xs text-cinza">enviado por você</span>}
+                    {d.origem === "cliente" && (
+                      <span className="ml-2 rounded-full bg-creme px-2 py-0.5 text-xs text-cinza">
+                        enviado por você
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-cinza">{(d.tipo as string | null) ?? "—"}</td>
-                  <td className="px-3 py-2 text-cinza">{dataBR(((d.enviado_em as string | null) ?? "").slice(0, 10) || null)}</td>
-                  <td className="px-3 py-2 text-right"><BotaoBaixar id={d.id as string} acao={urlDocumento} /></td>
+                  <td className="px-3 py-2 text-cinza">
+                    {dataBR(((d.enviado_em as string | null) ?? "").slice(0, 10) || null)}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    <BotaoBaixar id={d.id as string} acao={urlDocumento} />
+                  </td>
                 </tr>
               ))}
             </tbody>

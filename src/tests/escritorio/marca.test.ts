@@ -10,7 +10,14 @@ function fd(obj: Record<string, string>): FormData {
 describe("normalizarMarca", () => {
   it("aceita dados válidos e monta o endereço", () => {
     const r = normalizarMarca(
-      fd({ nome: "Escritório X", cnpj: "11.222.333/0001-81", email: "a@b.com", telefone: "34999", cidade: "Uberlândia", uf: "MG" }),
+      fd({
+        nome: "Escritório X",
+        cnpj: "11.222.333/0001-81",
+        email: "a@b.com",
+        telefone: "34999",
+        cidade: "Uberlândia",
+        uf: "MG",
+      }),
     );
     expect(r).toEqual({
       nome: "Escritório X",

@@ -39,13 +39,43 @@ describe("calcularMetricas", () => {
   const [jan, fev, mar] = serie;
 
   it("janeiro: base 2, sem novos/churn, MRR 400", () => {
-    expect(jan).toMatchObject({ mes: "2026-01", base: 2, novos: 0, churn: 0, ativosFim: 2, mrr: 400, ticketMedio: 200, churnPct: 0, churnReceita: 0 });
+    expect(jan).toMatchObject({
+      mes: "2026-01",
+      base: 2,
+      novos: 0,
+      churn: 0,
+      ativosFim: 2,
+      mrr: 400,
+      ticketMedio: 200,
+      churnPct: 0,
+      churnReceita: 0,
+    });
   });
   it("fevereiro: 1 novo, 1 churn (50%), churn receita 100 (honorário fotografado)", () => {
-    expect(fev).toMatchObject({ mes: "2026-02", base: 2, novos: 1, churn: 1, liquido: 0, ativosFim: 2, mrr: 500, ticketMedio: 250, churnPct: 50, churnReceita: 100 });
+    expect(fev).toMatchObject({
+      mes: "2026-02",
+      base: 2,
+      novos: 1,
+      churn: 1,
+      liquido: 0,
+      ativosFim: 2,
+      mrr: 500,
+      ticketMedio: 250,
+      churnPct: 50,
+      churnReceita: 100,
+    });
   });
   it("março: base 2 (A,B), sem eventos, MRR 500", () => {
-    expect(mar).toMatchObject({ mes: "2026-03", base: 2, novos: 0, churn: 0, ativosFim: 2, mrr: 500, ticketMedio: 250, churnPct: 0 });
+    expect(mar).toMatchObject({
+      mes: "2026-03",
+      base: 2,
+      novos: 0,
+      churn: 0,
+      ativosFim: 2,
+      mrr: 500,
+      ticketMedio: 250,
+      churnPct: 0,
+    });
   });
   it("atual = último mês da série", () => {
     expect(atual).toEqual({ mrr: 500, ticketMedio: 250, ativos: 2, churnPct: 0, churnReceita: 0 });

@@ -5,10 +5,7 @@ import { salvarProcuracao, type EstadoVenc } from "@/app/(app)/vencimentos/crud-
 const input = "rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto";
 
 export function FormProcuracao({ clienteId, substituiId }: { clienteId: string; substituiId?: string }) {
-  const [estado, action, pend] = useActionState<EstadoVenc, FormData>(
-    salvarProcuracao.bind(null, clienteId),
-    {},
-  );
+  const [estado, action, pend] = useActionState<EstadoVenc, FormData>(salvarProcuracao.bind(null, clienteId), {});
   const [aberto, setAberto] = useState(false);
 
   if (estado.ok) return <span className="text-xs text-verde">Procuração salva ✓</span>;

@@ -62,10 +62,7 @@ const { data: criado, error: errCreate } = await admin.auth.admin.createUser({
 if (!errCreate && criado?.user) {
   userId = criado.user.id;
   criadoAgora = true;
-} else if (
-  errCreate &&
-  (errCreate.status === 422 || /already|exist|registered/i.test(errCreate.message))
-) {
+} else if (errCreate && (errCreate.status === 422 || /already|exist|registered/i.test(errCreate.message))) {
   const existente = await acharAuthUserPorEmail(email);
   if (!existente) abort("Usuário já existe no Auth, mas não foi possível localizá-lo.");
   userId = existente.id;

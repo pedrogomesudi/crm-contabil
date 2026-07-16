@@ -35,8 +35,7 @@ export const AMOSTRA_SQL = {
   whatsapp: "select token_cifrado as pacote from whatsapp_config where token_cifrado is not null limit 1",
   onboarding:
     "select acesso_senha_cifrada as pacote from onboarding_processo_item where acesso_senha_cifrada is not null limit 1",
-  boleto:
-    "select asaas_api_key_cifrada as pacote from boleto_config where asaas_api_key_cifrada is not null limit 1",
+  boleto: "select asaas_api_key_cifrada as pacote from boleto_config where asaas_api_key_cifrada is not null limit 1",
   email: "select smtp_senha_cifrada as pacote from email_config where smtp_senha_cifrada is not null limit 1",
   nfse: "select pfx_cifrado as pacote from nfse_certificado where pfx_cifrado is not null limit 1",
 };

@@ -1,239 +1,741 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8">
-<title>SALDO — Documentação</title>
-<style>
-:root{--verde:#0FA968;--texto:#1f2724;--cinza:#5b6660;--linha:#e4e8e6;--creme:#f7f6f2;--neg:#c0503f;}
-*{box-sizing:border-box;}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--texto);line-height:1.55;max-width:820px;margin:0 auto;padding:48px 40px;font-size:14.5px;}
-h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0 0 4px;padding-bottom:14px;border-bottom:3px solid var(--verde);}
-h2{font-size:21px;font-weight:700;margin:34px 0 10px;padding-top:8px;border-top:1px solid var(--linha);}
-h3{font-size:16.5px;font-weight:700;margin:22px 0 6px;color:#12332a;}
-h4{font-size:14.5px;font-weight:700;margin:16px 0 4px;}
-p{margin:8px 0;}
-a{color:var(--verde);text-decoration:none;}
-code{background:var(--creme);border:1px solid var(--linha);border-radius:5px;padding:.5px 5px;font-family:"SFMono-Regular",Menlo,Consolas,monospace;font-size:12.5px;color:#12332a;}
-strong{font-weight:700;color:#12332a;}
-hr{border:0;border-top:1px solid var(--linha);margin:24px 0;}
-ul{margin:8px 0;padding-left:22px;}
-ul.nested{margin:2px 0 6px;}
-li{margin:3px 0;}
-blockquote{margin:12px 0;padding:10px 16px;background:var(--creme);border-left:3px solid var(--verde);border-radius:0 8px 8px 0;color:var(--cinza);font-size:13.5px;}
-blockquote strong{color:var(--texto);}
-table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px;}
-th,td{border:1px solid var(--linha);padding:6px 9px;vertical-align:top;}
-thead th{background:var(--creme);font-weight:700;color:#12332a;}
-tbody tr:nth-child(even){background:#fafbfa;}
-@page{margin:16mm 14mm;}
-@media print{body{padding:0;max-width:none;font-size:11pt;}h2{break-after:avoid;}h3{break-after:avoid;}table,blockquote,ul{break-inside:avoid;}}
-</style></head>
-<body>
-<h1>SALDO — Documentação de funcionalidades e módulos</h1>
-<blockquote><strong>Documento vivo.</strong> Reflete o estado atual do sistema em produção (<code>app.seusaldo.ai</code>). Atualizar conforme os módulos evoluem. Última revisão: 2026-07-09.</blockquote>
-<hr>
-<h2>1. Visão geral</h2>
-<p><strong>SALDO</strong> é um CRM para escritórios de contabilidade. Reúne, num só lugar: funil comercial (captação de clientes), cadastro de clientes, onboarding com cofre de credenciais, emissão e gestão de NFS-e, atendimento por WhatsApp, financeiro completo (contas a pagar/receber, orçamento, orçado × realizado, relatórios gerenciais), cobrança automatizada (WhatsApp + boletos) e integração com o sistema Domínio.</p>
-<ul>
-<li><strong>Stack:</strong> Next.js 16 (App Router, Server Actions) · TypeScript · Tailwind 4 · Supabase (Auth/Postgres/RLS/Storage) · deploy em EasyPanel.</li>
-<li><strong>Marca:</strong> identidade visual <strong>SALDO</strong> (rebrand V8), com design system próprio (tokens, fontes e primitivos de UI) aplicado a toda a plataforma.</li>
-<li><strong>Acesso:</strong> aplicação web responsiva (desktop e celular).</li>
-<li><strong>Segurança:</strong> autenticação Supabase; autorização por papel (RBAC) aplicada tanto no servidor quanto na base (Row-Level Security); credenciais sensíveis cifradas (AES-256-GCM); ações sensíveis auditadas.</li>
-</ul>
-<hr>
-<h2>2. Papéis e permissões (RBAC)</h2>
-<p>Quatro papéis. O papel é a <strong>fonte única</strong> de autorização (vive em <code>usuarios.papel</code>) e é aplicado nas políticas do banco.</p>
-<table>
-<thead><tr><th style="text-align:left">Papel</th><th style="text-align:left">Perfil típico</th></tr></thead>
-<tbody>
-<tr><td style="text-align:left"><strong>admin</strong></td><td style="text-align:left">Dono/gestor do escritório — acesso total e configurações.</td></tr>
-<tr><td style="text-align:left"><strong>contador</strong></td><td style="text-align:left">Contador responsável — vê e gerencia <strong>seus</strong> clientes.</td></tr>
-<tr><td style="text-align:left"><strong>assistente</strong></td><td style="text-align:left">Apoio operacional — cadastro, documentos, atendimento, comercial, onboarding.</td></tr>
-<tr><td style="text-align:left"><strong>financeiro</strong></td><td style="text-align:left">Financeiro do escritório — contas, cobrança, honorários, relatórios.</td></tr>
-</tbody></table>
-<p><strong>Matriz de capacidades (resumo):</strong></p>
-<table>
-<thead><tr><th style="text-align:left">Capacidade</th><th style="text-align:center">admin</th><th style="text-align:center">contador</th><th style="text-align:center">assistente</th><th style="text-align:center">financeiro</th></tr></thead>
-<tbody>
-<tr><td style="text-align:left">Funil comercial (oportunidades)</td><td style="text-align:center">✔</td><td style="text-align:center">✔</td><td style="text-align:center">✔</td><td style="text-align:center">—</td></tr>
-<tr><td style="text-align:left">Criar/editar cliente</td><td style="text-align:center">✔</td><td style="text-align:center">✔ (os seus)</td><td style="text-align:center">✔</td><td style="text-align:center">—</td></tr>
-<tr><td style="text-align:left">Excluir cliente</td><td style="text-align:center">✔</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">—</td></tr>
-<tr><td style="text-align:left">Atribuir contador ao cliente</td><td style="text-align:center">✔</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">—</td></tr>
-<tr><td style="text-align:left">Ver honorário</td><td style="text-align:center">✔</td><td style="text-align:center">✔</td><td style="text-align:center">—</td><td style="text-align:center">✔</td></tr>
-<tr><td style="text-align:left">Gerenciar documentos</td><td style="text-align:center">✔</td><td style="text-align:center">✔</td><td style="text-align:center">✔</td><td style="text-align:center">—</td></tr>
-<tr><td style="text-align:left">Atendimento (WhatsApp)</td><td style="text-align:center">✔</td><td style="text-align:center">✔</td><td style="text-align:center">—</td><td style="text-align:center">✔</td></tr>
-<tr><td style="text-align:left">Onboarding (gerenciar processos/itens)</td><td style="text-align:center">✔</td><td style="text-align:center">✔</td><td style="text-align:center">✔</td><td style="text-align:center">—</td></tr>
-<tr><td style="text-align:left">Revelar senha do cofre</td><td style="text-align:center">✔</td><td style="text-align:center">✔</td><td style="text-align:center">—</td><td style="text-align:center">—</td></tr>
-<tr><td style="text-align:left">Editar templates de onboarding</td><td style="text-align:center">✔</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">—</td></tr>
-<tr><td style="text-align:left">Financeiro (contas, orçamento, relatórios)</td><td style="text-align:center">✔</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">✔</td></tr>
-<tr><td style="text-align:left">Configurar NFS-e / WhatsApp / boletos / usuários</td><td style="text-align:center">✔</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">—</td></tr>
-</tbody></table>
-<blockquote><strong>Isolamento por cliente:</strong> o contador só enxerga os clientes atribuídos a ele; as tabelas ligadas a cliente (documentos, onboarding, títulos, etc.) herdam essa regra na RLS. Tabelas <strong>pré-cliente</strong> (ex.: oportunidade do funil) usam RLS só por papel.</blockquote>
-<hr>
-<h2>3. Módulos</h2>
-<h3>3.1 Início (dashboard geral)</h3>
-<p>Página inicial com indicadores de carteira: <strong>total de clientes</strong>, ativos/inativos, distribuição por regime tributário e clientes recentes.</p>
-<h3>3.2 Comercial (funil de oportunidades)</h3>
-<p>Módulo de captação e acompanhamento de novos clientes antes de virarem cadastro (admin/contador/assistente).</p>
-<ul>
-<li><strong>Funil Kanban</strong> (<code>/comercial</code>): oportunidades em colunas por etapa — <strong>Novo → Contato → Proposta → Negociação → Ganho / Perdido</strong> — com <strong>arrastar e soltar</strong> para mover de etapa.</li>
-<li><strong>Oportunidade:</strong> prospect, contato (nome/telefone/e-mail), origem, serviço de interesse, valor estimado, responsável, observações e motivo de perda.</li>
-<li><strong>Conversão:</strong> ao marcar <strong>Ganho</strong>, converte a oportunidade em <strong>cliente</strong> e dá partida no <strong>onboarding</strong> — ligando o funil ao ciclo de entrada.</li>
-<li><strong>Propostas formais:</strong> geração de proposta comercial a partir da oportunidade.</li>
-<li><strong>Métricas / relatórios</strong> (<code>/comercial/metricas</code>): oportunidades ativas, taxa de conversão, valor em funil e desempenho por etapa.</li>
-</ul>
-<h3>3.3 Clientes</h3>
-<p>Cadastro completo de PJ/PF/MEI e a ficha do cliente, que concentra todas as áreas ligadas a ele.</p>
-<ul>
-<li><strong>Cadastro:</strong> razão social, CNPJ/CPF, tipo de pessoa, regime tributário, inscrições estadual/municipal, endereço, e-mail, telefone, responsável, representante, contador responsável, status, observações, <strong>competência inicial</strong> (definida no onboarding).</li>
-<li><strong>Consulta à Receita Federal:</strong> para PJ, botão que preenche/atualiza os dados a partir do CNPJ.</li>
-<li><strong>Honorário e dados financeiros:</strong> valor mensal, dia de vencimento, faixa de faturamento, nº de funcionários, data de saída, opt-out de cobrança por WhatsApp (visível a quem pode ver honorário).</li>
-<li><strong>Contratos:</strong> geração de contrato de prestação de serviços a partir do cadastro (Word + PDF).</li>
-<li><strong>Documentos + assinatura eletrônica:</strong> upload de documentos do cliente, com fluxo de assinatura (integração Clicksign) e registro de acesso auditado.</li>
-<li><strong>NFS-e do cliente:</strong> notas emitidas e emissão de nota com o cliente como emitente.</li>
-<li><strong>Onboarding:</strong> link "Abrir onboarding" para a página dedicada do cliente (ver 3.4).</li>
-<li><strong>Exclusão:</strong> soft delete (somente admin).</li>
-</ul>
-<h3>3.4 Onboarding &amp; Legalização</h3>
-<p>Workflow estruturado de entrada de cliente, com <strong>motor de templates</strong>, <strong>cofre de credenciais</strong>, <strong>regras de itens</strong> e <strong>alertas de prazo</strong>. (Substituiu o antigo checklist plano do RF-010.)</p>
-<ul>
-<li><strong>Motor de templates</strong> (Configurações → Template de onboarding, admin): um <strong>gerenciador de vários templates</strong>, cada um organizado em <strong>blocos → itens</strong>. Itens do tipo *padrão* (tarefa) ou *acesso* (credencial). Editor com CRUD de blocos/itens e <strong>reordenação (↑↓)</strong>. Template padrão pré-semeado (7 blocos, ~36 itens).</li>
-<li><strong>Processo por cliente:</strong> ao <strong>iniciar o processo</strong>, escolhe-se o template e o <strong>perfil do cliente</strong> (MEI, Simples com/sem funcionário, Presumido/Real, PF) + flags de condição; o sistema <strong>materializa</strong> os itens aplicáveis com prazos relativos (D+n). Barra de progresso, status (pendente/concluído/ dispensado), responsável, prazo e observação por item.</li>
-<li><strong>Página autônoma por cliente</strong> (<code>/onboarding/[clienteId]</code>): tela dedicada só ao onboarding daquele cliente, com razão social e link para o cadastro completo.</li>
-<li><strong>Regras de itens:</strong></li>
-<ul class='nested'>
-<li><strong>Write-back ao cadastro:</strong> concluir o item de competência inicial grava <code>clientes.competencia_inicial</code>.</li>
-<li><strong>Dependências:</strong> um item só pode ser concluído quando os itens de que depende já estiverem concluídos/dispensados (a UI mostra "Para concluir: …").</li>
-<li><strong>Anexo obrigatório:</strong> itens que exigem anexo bloqueiam a conclusão sem o arquivo (upload no Storage, URL assinada de 60s).</li>
-</ul>
-<li><strong>Cofre de acessos:</strong> itens de "acesso" guardam URL, login e <strong>senha cifrada</strong> (AES-256-GCM). Revelar a senha é restrito a <strong>admin/contador</strong> e <strong>auditado</strong> (registra quem/quando; falha fechada — sem auditoria, não revela). A senha nunca trafega em texto nas listagens.</li>
-<li><strong>Lista global</strong> (<code>/onboarding</code>): clientes em processo, % concluído, obrigatórios pendentes, próximo prazo.</li>
-<li><strong>Alertas de prazo (in-app):</strong> cálculo ao vivo dos itens vencendo/vencidos (<code>/onboarding/alertas</code>), agrupados por severidade (em breve / vencido / crítico), com <strong>badge no menu</strong> e filtro "todos / só os meus". Um interruptor em Configurações (admin) liga/desliga as notificações de prazo para todos.</li>
-<li><strong>Gatilho de consultoria:</strong> qualquer item pode <strong>gerar uma oportunidade de consultoria</strong> no funil comercial (vínculo idempotente), conectando onboarding → comercial.</li>
-<li><strong>Configuração de deploy:</strong> exige a variável <code>ONBOARDING_CRIPTO_KEY</code> (chave do cofre; definida uma vez, nunca alterada).</li>
-</ul>
-<blockquote><strong>Em aberto (F2):</strong> legalização/societário — processos por órgão (Junta, Receita, prefeitura, Estado, bombeiros, vigilância), protocolos e prazos; templates por tipo de serviço societário; comunicação automática de status ao cliente; registro de transferência de contabilidade (acervo, NBC PG 01).</blockquote>
-<h3>3.5 Atendimento (WhatsApp)</h3>
-<p>Central de atendimento integrada ao WhatsApp via <strong>Z-API</strong> (número dedicado do escritório).</p>
-<ul>
-<li><strong>Inbox</strong> em colunas com abas (Abertas / Pendentes / Finalizadas / Favoritos).</li>
-<li><strong>Envio e recepção</strong> de mensagens em tempo (polling); <strong>mídia</strong> (imagem, documento, áudio) enviada e recebida.</li>
-<li><strong>Read receipts</strong> (entregue ✓✓ / lido em azul), no padrão do WhatsApp.</li>
-<li><strong>Status do atendimento e atendente</strong> responsável por conversa.</li>
-<li><strong>Identificação do cliente:</strong> exibe nome da empresa + contato em vez do número, quando o telefone bate com um cliente cadastrado. Normalização de telefone tolerante ao <strong>nono dígito</strong>.</li>
-<li><strong>Nova conversa</strong> a partir dos clientes cadastrados.</li>
-</ul>
-<h3>3.6 NFS-e (notas fiscais de serviço)</h3>
-<p>Emissão e gestão de NFS-e pelo padrão nacional (nfse.gov.br / Sefin Nacional), com certificado digital.</p>
-<ul>
-<li><strong>NFS-e dos honorários (1 emitente):</strong> o escritório emite as notas dos seus honorários; config do emitente + certificado A1 (cifrado) em Configurações → NFS-e (admin).</li>
-<li><strong>NFS-e dos clientes (multi-emitente):</strong> cada cliente emite as próprias notas como prestador — config fiscal + certificado A1 por cliente (cifrado), numeração de DPS por cliente, tomador externo.</li>
-<li><strong>Emissão avulsa</strong> e <strong>emissão com o cliente como emitente</strong> (preenche o tomador a partir do CNPJ).</li>
-<li><strong>Lote</strong> (<code>/nfse/lote</code>): emissão/gestão em lote por competência; cancelamento.</li>
-<li><strong>Download em lote:</strong> botões para baixar todas em <strong>PDF</strong> e em <strong>XML</strong>, com <strong>cache do DANFSe</strong> no Storage (baixas repetidas ficam instantâneas) e reprocessamento de falhas.</li>
-</ul>
-<h3>3.7 Cobrança</h3>
-<p>Envio da cobrança ao cliente por dois caminhos, com respeito ao opt-out do cliente.</p>
-<ul>
-<li><strong>Cobrança por WhatsApp (NFS-e + PIX/TED):</strong> na tela de NFS-e em lote, painel que envia por WhatsApp a <strong>NFS-e (PDF)</strong> + a <strong>mensagem de cobrança</strong> com dados de pagamento. Seleção por lote com selo "já enviada", busca, progresso e reenvio de falhas. Mensagem configurável (Configurações → Dados de pagamento) com marcadores tolerantes a maiúscula/acento/espaço: <code>{NOME}</code>, <code>{EMPRESA}</code>, <code>{COMPETÊNCIA}</code>, <code>{VALOR}</code>, <code>{VENCIMENTO}</code>, <code>{CHAVE PIX}</code>, <code>{RAZÃO SOCIAL}</code>, <code>{CNPJ}</code>, <code>{BANCO}</code>, <code>{AG}</code>, <code>{CONTA}</code>, <code>{PAGAMENTO}</code>.</li>
-<li><strong>Régua de cobrança automática:</strong> etapas configuráveis (ex.: D-3 / D+1 / D+7 / D+15), opt-out por cliente (LGPD), idempotência por (título, etapa). Motor server-side na rota protegida <code>/api/cron/regua-cobranca</code> (Bearer <code>CRON_SECRET</code>), <strong>agendada via pg_cron</strong> (execução diária), além do botão "Processar agora".</li>
-<li><strong>Boletos (construído; ativação pendente de conta no provedor):</strong> emissão de boleto por título, com <strong>seletor de provedor</strong> (Configurações → Boletos, admin): <strong>nenhum / Banco Inter / Asaas</strong>. Inter via OAuth2 + mTLS; Asaas via API key; credenciais cifradas (AES-256-GCM, <code>BOLETO_CRIPTO_KEY</code>). Emissão, <strong>baixa por webhook</strong> de pagamento e envio do boleto ao cliente. Exige uma conta ativa no provedor para operar em produção.</li>
-</ul>
-<h3>3.8 Financeiro</h3>
-<p>Módulo completo de gestão financeira do escritório (admin/financeiro).</p>
-<ul>
-<li><strong>Contas a receber</strong> e <strong>contas a pagar:</strong> títulos (RECEBER/PAGAR) com competência, vencimento, categoria, centro de custo, fornecedor; <strong>baixas</strong> (recebimentos/pagamentos), parcelamento, despesas recorrentes, <strong>estorno auditado</strong> (justificativa, não deleta).</li>
-<li><strong>Dashboard financeiro</strong> (<code>/financeiro/dashboard</code>): saldo em caixa, MRR, recebido/a receber, inadimplência, previsão, aging de receber/pagar, fluxo de caixa (6 meses), maiores devedores, receita por tipo.</li>
-<li><strong>Orçamento:</strong> grade editável (categorias × 12 meses) por ano, com totais e atalhos ("replicar nos 12 meses", "copiar do ano anterior").</li>
-<li><strong>Orçado × Realizado:</strong> dashboard comparativo por categoria, período ajustável (mês/trimestre/semestre/ano) e base <strong>competência</strong> ou <strong>caixa</strong>; cartões de resumo, barras por categoria, linha de evolução da receita e tabela estilo DRE.</li>
-<li><strong>Relatórios</strong> (<code>/financeiro/relatorios</code>) — hub com três relatórios:</li>
-<ul class='nested'>
-<li><strong>DRE:</strong> Demonstração de Resultado por período (competência ou caixa), com resultado operacional e líquido; imprimível.</li>
-<li><strong>Extrato / movimentações:</strong> alternador <strong>Lançamentos</strong> (títulos) × <strong>Baixas</strong>, com filtros (período, tipo, categoria, busca por cliente) e <strong>exportação em CSV</strong>.</li>
-<li><strong>Fluxo de caixa detalhado:</strong> matriz categoria × 12 meses combinando <strong>realizado</strong> (baixas) e <strong>projetado</strong> (títulos em aberto por vencimento), com <strong>saldo acumulado</strong> ao fim de cada mês, seletor de ano, exportação em CSV e impressão.</li>
-</ul>
-<li><strong>Cadastros:</strong> plano de contas (categorias, natureza/DRE), centros de custo, contas bancárias, fornecedores, serviços e contratos de honorários (com sincronização do honorário do cliente).</li>
-</ul>
-<h3>3.9 Integração Domínio</h3>
-<p>Importação de contratos/dados a partir do sistema <strong>Domínio</strong> (admin/assistente): leitor <code>.xls</code> próprio, prévia (novos/atualizados/pendências), reconciliação idempotente por CNPJ e auditoria.</p>
-<h3>3.10 Configurações (admin)</h3>
-<p>Central de integrações e credenciais:</p>
-<ul>
-<li><strong>WhatsApp (Z-API):</strong> credenciais do provedor e teste de conexão.</li>
-<li><strong>NFS-e (emitente):</strong> dados do emitente e certificado digital.</li>
-<li><strong>Boletos:</strong> provedor (Inter / Asaas), credenciais cifradas, ambiente e conta bancária.</li>
-<li><strong>Dados de pagamento (PIX/TED):</strong> conta e PIX enviados na cobrança.</li>
-<li><strong>Template de onboarding:</strong> gerenciador de templates + interruptor de notificações de prazo.</li>
-</ul>
-<h3>3.11 Usuários (admin)</h3>
-<p>Gestão da equipe: convite de usuários, definição de papel e status (ativo/inativo). O papel real é definido server-side (não confiável a partir do token).</p>
-<hr>
-<h2>4. Integrações externas</h2>
-<table>
-<thead><tr><th style="text-align:left">Integração</th><th style="text-align:left">Uso</th></tr></thead>
-<tbody>
-<tr><td style="text-align:left"><strong>Z-API</strong></td><td style="text-align:left">WhatsApp não-oficial (envio/recepção de texto e mídia, status de entrega/leitura). Webhook em <code>/api/webhooks/zapi/[secret]</code>.</td></tr>
-<tr><td style="text-align:left"><strong>Receita Federal</strong></td><td style="text-align:left">Consulta de CNPJ para preencher/atualizar cadastro.</td></tr>
-<tr><td style="text-align:left"><strong>Sefin Nacional / provedor NFS-e</strong></td><td style="text-align:left">Emissão e download de NFS-e (DANFSe/XML), com certificado digital A1.</td></tr>
-<tr><td style="text-align:left"><strong>Clicksign</strong></td><td style="text-align:left">Assinatura eletrônica de documentos. Webhook em <code>/api/webhooks/clicksign</code>.</td></tr>
-<tr><td style="text-align:left"><strong>Banco Inter / Asaas</strong></td><td style="text-align:left">Emissão e baixa de <strong>boletos</strong> (construído; ativação pendente de conta). Webhook em <code>/api/webhooks/boleto/[secret]</code>.</td></tr>
-<tr><td style="text-align:left"><strong>Domínio</strong></td><td style="text-align:left">Importação de contratos/dados contábeis (via relatórios <code>.xls</code>).</td></tr>
-<tr><td style="text-align:left"><strong>Gotenberg</strong></td><td style="text-align:left">Conversão Word → PDF (contratos) via LibreOffice headless.</td></tr>
-</tbody></table>
-<hr>
-<h2>5. Infraestrutura e segurança</h2>
-<ul>
-<li><strong>Banco (Supabase/Postgres):</strong> schema versionado em <code>supabase/migrations/NNNN_*.sql</code>, aplicado por um runner próprio (<code>npm run db:migrate</code>); <strong>Row-Level Security</strong> em todas as tabelas sensíveis, por papel e por dono do cliente.</li>
-<li><strong>Storage (Supabase):</strong> documentos, DANFSe (cache), mídia de atendimento e anexos de onboarding, com rotas de acesso controladas (URLs assinadas de curta duração).</li>
-<li><strong>Criptografia (AES-256-GCM):</strong> credenciais do WhatsApp, certificados NFS-e, o <strong>cofre de acessos</strong> do onboarding e as credenciais de boleto são cifrados; chaves em variáveis de ambiente (<code>WHATSAPP_CRIPTO_KEY</code>, <code>ONBOARDING_CRIPTO_KEY</code>, <code>BOLETO_CRIPTO_KEY</code>) — definidas uma vez e <strong>nunca alteradas</strong> (mudar torna os dados cifrados irrecuperáveis).</li>
-<li><strong>Auditoria:</strong> acesso a documentos, revelação de senhas do cofre e estornos financeiros são registrados (quem/quando), de forma não-forjável.</li>
-<li><strong>Cron:</strong> rota <code>/api/cron/regua-cobranca</code> protegida por <code>CRON_SECRET</code>, agendada via <strong>pg_cron</strong> (Supabase) para a régua de cobrança diária.</li>
-<li><strong>Exportações CSV:</strong> neutralizam injeção de fórmula (células iniciadas por <code>=</code>/<code>+</code>/<code>@</code> viram texto).</li>
-<li><strong>Saúde:</strong> <code>/api/health</code> para verificação de disponibilidade.</li>
-</ul>
-<hr>
-<h2>6. APIs e webhooks</h2>
-<table>
-<thead><tr><th style="text-align:left">Rota</th><th style="text-align:left">Função</th></tr></thead>
-<tbody>
-<tr><td style="text-align:left"><code>GET /api/health</code></td><td style="text-align:left">Healthcheck.</td></tr>
-<tr><td style="text-align:left"><code>POST /api/webhooks/zapi/[secret]</code></td><td style="text-align:left">Recebe eventos do WhatsApp (mensagens, status).</td></tr>
-<tr><td style="text-align:left"><code>POST /api/webhooks/clicksign</code></td><td style="text-align:left">Recebe eventos de assinatura de documentos.</td></tr>
-<tr><td style="text-align:left"><code>POST /api/webhooks/boleto/[secret]</code></td><td style="text-align:left">Recebe eventos de pagamento de boleto (baixa automática).</td></tr>
-<tr><td style="text-align:left"><code>POST /api/cron/regua-cobranca</code></td><td style="text-align:left">Execução agendada da régua de cobrança (Bearer <code>CRON_SECRET</code>).</td></tr>
-<tr><td style="text-align:left"><code>GET /api/atendimento/midia/[id]</code></td><td style="text-align:left">Serve a mídia de atendimento (com controle de acesso).</td></tr>
-</tbody></table>
-<hr>
-<h2>7. Estado por área</h2>
-<p><strong>Concluído e em produção:</strong></p>
-<ul>
-<li>Comercial (funil Kanban, conversão, propostas, métricas).</li>
-<li>Clientes (cadastro, RF, contratos, documentos, assinatura).</li>
-<li>Onboarding &amp; Legalização — motor de templates, cofre, regras de item, alertas in-app, gatilho de consultoria (base RF-010 e ciclos A/B/C entregues).</li>
-<li>NFS-e (honorários + multi-emitente).</li>
-<li>Atendimento WhatsApp (inbox bidirecional, mídia, read receipts).</li>
-<li>Financeiro (contas a pagar/receber, orçamento, orçado × realizado, dashboard, <strong>trilogia de relatórios: DRE + Extrato/CSV + Fluxo de caixa detalhado</strong>).</li>
-<li>Cobrança por WhatsApp + régua automática agendada (pg_cron).</li>
-<li>Integração Domínio; rebrand SALDO (design system) 100% aplicado.</li>
-</ul>
-<p><strong>Construído, ativação pendente:</strong></p>
-<ul>
-<li><strong>Boletos</strong> (Inter/Asaas) — código completo; aguarda conta ativa no provedor para operar em produção.</li>
-</ul>
-<p><strong>Em aberto / próximos:</strong></p>
-<ul>
-<li><strong>Onboarding — Legalização/societário (F2):</strong> processos por órgão e protocolos; templates por tipo de serviço societário; comunicação automática de status; transferência de contabilidade (NBC PG 01).</li>
-<li><strong>Financeiro:</strong> conciliação bancária (importação OFX/CSV), aprovação de pagamento.</li>
-<li><strong>Whitelabel/multi-tenant</strong> (comercialização) e <strong>endurecimento de segurança/LGPD</strong> (marcos V9/V10 do <a href="../ROADMAP.md">ROADMAP</a>).</li>
-</ul>
-<hr>
-<h2>8. Convenções do projeto</h2>
-<ul>
-<li><strong>Migrations</strong> são imutáveis após aplicadas; mudança = nova migration idempotente.</li>
-<li><strong>RBAC</strong> é fonte única (<code>usuarios.papel</code> via <code>auth_papel()</code>); nunca ler papel do token.</li>
-<li><strong>Tabelas-filhas de cliente</strong> delegam o isolamento à RLS de <code>clientes</code> (via <code>EXISTS</code>); tabelas pré-cliente usam RLS por papel.</li>
-<li><strong>Ciclo de trabalho:</strong> brainstorm → spec (<code>docs/superpowers/specs/</code>) → plano (<code>docs/superpowers/plans/</code>) → execução, com TDD nos helpers puros.</li>
-<li>Antes de cada entrega: <code>npm run lint</code>, <code>npm run typecheck</code>, <code>npm test</code>, <code>npm run build</code>.</li>
-</ul>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>SALDO — Documentação</title>
+    <style>
+      :root {
+        --verde: #0fa968;
+        --texto: #1f2724;
+        --cinza: #5b6660;
+        --linha: #e4e8e6;
+        --creme: #f7f6f2;
+        --neg: #c0503f;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+        color: var(--texto);
+        line-height: 1.55;
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 48px 40px;
+        font-size: 14.5px;
+      }
+      h1 {
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 0 0 4px;
+        padding-bottom: 14px;
+        border-bottom: 3px solid var(--verde);
+      }
+      h2 {
+        font-size: 21px;
+        font-weight: 700;
+        margin: 34px 0 10px;
+        padding-top: 8px;
+        border-top: 1px solid var(--linha);
+      }
+      h3 {
+        font-size: 16.5px;
+        font-weight: 700;
+        margin: 22px 0 6px;
+        color: #12332a;
+      }
+      h4 {
+        font-size: 14.5px;
+        font-weight: 700;
+        margin: 16px 0 4px;
+      }
+      p {
+        margin: 8px 0;
+      }
+      a {
+        color: var(--verde);
+        text-decoration: none;
+      }
+      code {
+        background: var(--creme);
+        border: 1px solid var(--linha);
+        border-radius: 5px;
+        padding: 0.5px 5px;
+        font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 12.5px;
+        color: #12332a;
+      }
+      strong {
+        font-weight: 700;
+        color: #12332a;
+      }
+      hr {
+        border: 0;
+        border-top: 1px solid var(--linha);
+        margin: 24px 0;
+      }
+      ul {
+        margin: 8px 0;
+        padding-left: 22px;
+      }
+      ul.nested {
+        margin: 2px 0 6px;
+      }
+      li {
+        margin: 3px 0;
+      }
+      blockquote {
+        margin: 12px 0;
+        padding: 10px 16px;
+        background: var(--creme);
+        border-left: 3px solid var(--verde);
+        border-radius: 0 8px 8px 0;
+        color: var(--cinza);
+        font-size: 13.5px;
+      }
+      blockquote strong {
+        color: var(--texto);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+        font-size: 13px;
+      }
+      th,
+      td {
+        border: 1px solid var(--linha);
+        padding: 6px 9px;
+        vertical-align: top;
+      }
+      thead th {
+        background: var(--creme);
+        font-weight: 700;
+        color: #12332a;
+      }
+      tbody tr:nth-child(even) {
+        background: #fafbfa;
+      }
+      @page {
+        margin: 16mm 14mm;
+      }
+      @media print {
+        body {
+          padding: 0;
+          max-width: none;
+          font-size: 11pt;
+        }
+        h2 {
+          break-after: avoid;
+        }
+        h3 {
+          break-after: avoid;
+        }
+        table,
+        blockquote,
+        ul {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>SALDO — Documentação de funcionalidades e módulos</h1>
+    <blockquote>
+      <strong>Documento vivo.</strong> Reflete o estado atual do sistema em produção (<code>app.seusaldo.ai</code>).
+      Atualizar conforme os módulos evoluem. Última revisão: 2026-07-09.
+    </blockquote>
+    <hr />
+    <h2>1. Visão geral</h2>
+    <p>
+      <strong>SALDO</strong> é um CRM para escritórios de contabilidade. Reúne, num só lugar: funil comercial (captação
+      de clientes), cadastro de clientes, onboarding com cofre de credenciais, emissão e gestão de NFS-e, atendimento
+      por WhatsApp, financeiro completo (contas a pagar/receber, orçamento, orçado × realizado, relatórios gerenciais),
+      cobrança automatizada (WhatsApp + boletos) e integração com o sistema Domínio.
+    </p>
+    <ul>
+      <li>
+        <strong>Stack:</strong> Next.js 16 (App Router, Server Actions) · TypeScript · Tailwind 4 · Supabase
+        (Auth/Postgres/RLS/Storage) · deploy em EasyPanel.
+      </li>
+      <li>
+        <strong>Marca:</strong> identidade visual <strong>SALDO</strong> (rebrand V8), com design system próprio
+        (tokens, fontes e primitivos de UI) aplicado a toda a plataforma.
+      </li>
+      <li><strong>Acesso:</strong> aplicação web responsiva (desktop e celular).</li>
+      <li>
+        <strong>Segurança:</strong> autenticação Supabase; autorização por papel (RBAC) aplicada tanto no servidor
+        quanto na base (Row-Level Security); credenciais sensíveis cifradas (AES-256-GCM); ações sensíveis auditadas.
+      </li>
+    </ul>
+    <hr />
+    <h2>2. Papéis e permissões (RBAC)</h2>
+    <p>
+      Quatro papéis. O papel é a <strong>fonte única</strong> de autorização (vive em <code>usuarios.papel</code>) e é
+      aplicado nas políticas do banco.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align: left">Papel</th>
+          <th style="text-align: left">Perfil típico</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="text-align: left"><strong>admin</strong></td>
+          <td style="text-align: left">Dono/gestor do escritório — acesso total e configurações.</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><strong>contador</strong></td>
+          <td style="text-align: left">Contador responsável — vê e gerencia <strong>seus</strong> clientes.</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><strong>assistente</strong></td>
+          <td style="text-align: left">
+            Apoio operacional — cadastro, documentos, atendimento, comercial, onboarding.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><strong>financeiro</strong></td>
+          <td style="text-align: left">Financeiro do escritório — contas, cobrança, honorários, relatórios.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>Matriz de capacidades (resumo):</strong></p>
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align: left">Capacidade</th>
+          <th style="text-align: center">admin</th>
+          <th style="text-align: center">contador</th>
+          <th style="text-align: center">assistente</th>
+          <th style="text-align: center">financeiro</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="text-align: left">Funil comercial (oportunidades)</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">—</td>
+        </tr>
+        <tr>
+          <td style="text-align: left">Criar/editar cliente</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">✔ (os seus)</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">—</td>
+        </tr>
+        <tr>
+          <td style="text-align: left">Excluir cliente</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">—</td>
+        </tr>
+        <tr>
+          <td style="text-align: left">Atribuir contador ao cliente</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">—</td>
+        </tr>
+        <tr>
+          <td style="text-align: left">Ver honorário</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">✔</td>
+        </tr>
+        <tr>
+          <td style="text-align: left">Gerenciar documentos</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">—</td>
+        </tr>
+        <tr>
+          <td style="text-align: left">Atendimento (WhatsApp)</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">✔</td>
+        </tr>
+        <tr>
+          <td style="text-align: left">Onboarding (gerenciar processos/itens)</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">—</td>
+        </tr>
+        <tr>
+          <td style="text-align: left">Revelar senha do cofre</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">—</td>
+        </tr>
+        <tr>
+          <td style="text-align: left">Editar templates de onboarding</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">—</td>
+        </tr>
+        <tr>
+          <td style="text-align: left">Financeiro (contas, orçamento, relatórios)</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">✔</td>
+        </tr>
+        <tr>
+          <td style="text-align: left">Configurar NFS-e / WhatsApp / boletos / usuários</td>
+          <td style="text-align: center">✔</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">—</td>
+          <td style="text-align: center">—</td>
+        </tr>
+      </tbody>
+    </table>
+    <blockquote>
+      <strong>Isolamento por cliente:</strong> o contador só enxerga os clientes atribuídos a ele; as tabelas ligadas a
+      cliente (documentos, onboarding, títulos, etc.) herdam essa regra na RLS. Tabelas
+      <strong>pré-cliente</strong> (ex.: oportunidade do funil) usam RLS só por papel.
+    </blockquote>
+    <hr />
+    <h2>3. Módulos</h2>
+    <h3>3.1 Início (dashboard geral)</h3>
+    <p>
+      Página inicial com indicadores de carteira: <strong>total de clientes</strong>, ativos/inativos, distribuição por
+      regime tributário e clientes recentes.
+    </p>
+    <h3>3.2 Comercial (funil de oportunidades)</h3>
+    <p>Módulo de captação e acompanhamento de novos clientes antes de virarem cadastro (admin/contador/assistente).</p>
+    <ul>
+      <li>
+        <strong>Funil Kanban</strong> (<code>/comercial</code>): oportunidades em colunas por etapa —
+        <strong>Novo → Contato → Proposta → Negociação → Ganho / Perdido</strong> — com
+        <strong>arrastar e soltar</strong> para mover de etapa.
+      </li>
+      <li>
+        <strong>Oportunidade:</strong> prospect, contato (nome/telefone/e-mail), origem, serviço de interesse, valor
+        estimado, responsável, observações e motivo de perda.
+      </li>
+      <li>
+        <strong>Conversão:</strong> ao marcar <strong>Ganho</strong>, converte a oportunidade em
+        <strong>cliente</strong> e dá partida no <strong>onboarding</strong> — ligando o funil ao ciclo de entrada.
+      </li>
+      <li><strong>Propostas formais:</strong> geração de proposta comercial a partir da oportunidade.</li>
+      <li>
+        <strong>Métricas / relatórios</strong> (<code>/comercial/metricas</code>): oportunidades ativas, taxa de
+        conversão, valor em funil e desempenho por etapa.
+      </li>
+    </ul>
+    <h3>3.3 Clientes</h3>
+    <p>Cadastro completo de PJ/PF/MEI e a ficha do cliente, que concentra todas as áreas ligadas a ele.</p>
+    <ul>
+      <li>
+        <strong>Cadastro:</strong> razão social, CNPJ/CPF, tipo de pessoa, regime tributário, inscrições
+        estadual/municipal, endereço, e-mail, telefone, responsável, representante, contador responsável, status,
+        observações, <strong>competência inicial</strong> (definida no onboarding).
+      </li>
+      <li>
+        <strong>Consulta à Receita Federal:</strong> para PJ, botão que preenche/atualiza os dados a partir do CNPJ.
+      </li>
+      <li>
+        <strong>Honorário e dados financeiros:</strong> valor mensal, dia de vencimento, faixa de faturamento, nº de
+        funcionários, data de saída, opt-out de cobrança por WhatsApp (visível a quem pode ver honorário).
+      </li>
+      <li>
+        <strong>Contratos:</strong> geração de contrato de prestação de serviços a partir do cadastro (Word + PDF).
+      </li>
+      <li>
+        <strong>Documentos + assinatura eletrônica:</strong> upload de documentos do cliente, com fluxo de assinatura
+        (integração Clicksign) e registro de acesso auditado.
+      </li>
+      <li><strong>NFS-e do cliente:</strong> notas emitidas e emissão de nota com o cliente como emitente.</li>
+      <li><strong>Onboarding:</strong> link "Abrir onboarding" para a página dedicada do cliente (ver 3.4).</li>
+      <li><strong>Exclusão:</strong> soft delete (somente admin).</li>
+    </ul>
+    <h3>3.4 Onboarding &amp; Legalização</h3>
+    <p>
+      Workflow estruturado de entrada de cliente, com <strong>motor de templates</strong>,
+      <strong>cofre de credenciais</strong>, <strong>regras de itens</strong> e <strong>alertas de prazo</strong>.
+      (Substituiu o antigo checklist plano do RF-010.)
+    </p>
+    <ul>
+      <li>
+        <strong>Motor de templates</strong> (Configurações → Template de onboarding, admin): um
+        <strong>gerenciador de vários templates</strong>, cada um organizado em <strong>blocos → itens</strong>. Itens
+        do tipo *padrão* (tarefa) ou *acesso* (credencial). Editor com CRUD de blocos/itens e
+        <strong>reordenação (↑↓)</strong>. Template padrão pré-semeado (7 blocos, ~36 itens).
+      </li>
+      <li>
+        <strong>Processo por cliente:</strong> ao <strong>iniciar o processo</strong>, escolhe-se o template e o
+        <strong>perfil do cliente</strong> (MEI, Simples com/sem funcionário, Presumido/Real, PF) + flags de condição; o
+        sistema <strong>materializa</strong> os itens aplicáveis com prazos relativos (D+n). Barra de progresso, status
+        (pendente/concluído/ dispensado), responsável, prazo e observação por item.
+      </li>
+      <li>
+        <strong>Página autônoma por cliente</strong> (<code>/onboarding/[clienteId]</code>): tela dedicada só ao
+        onboarding daquele cliente, com razão social e link para o cadastro completo.
+      </li>
+      <li><strong>Regras de itens:</strong></li>
+      <ul class="nested">
+        <li>
+          <strong>Write-back ao cadastro:</strong> concluir o item de competência inicial grava
+          <code>clientes.competencia_inicial</code>.
+        </li>
+        <li>
+          <strong>Dependências:</strong> um item só pode ser concluído quando os itens de que depende já estiverem
+          concluídos/dispensados (a UI mostra "Para concluir: …").
+        </li>
+        <li>
+          <strong>Anexo obrigatório:</strong> itens que exigem anexo bloqueiam a conclusão sem o arquivo (upload no
+          Storage, URL assinada de 60s).
+        </li>
+      </ul>
+      <li>
+        <strong>Cofre de acessos:</strong> itens de "acesso" guardam URL, login e
+        <strong>senha cifrada</strong> (AES-256-GCM). Revelar a senha é restrito a <strong>admin/contador</strong> e
+        <strong>auditado</strong> (registra quem/quando; falha fechada — sem auditoria, não revela). A senha nunca
+        trafega em texto nas listagens.
+      </li>
+      <li>
+        <strong>Lista global</strong> (<code>/onboarding</code>): clientes em processo, % concluído, obrigatórios
+        pendentes, próximo prazo.
+      </li>
+      <li>
+        <strong>Alertas de prazo (in-app):</strong> cálculo ao vivo dos itens vencendo/vencidos
+        (<code>/onboarding/alertas</code>), agrupados por severidade (em breve / vencido / crítico), com
+        <strong>badge no menu</strong> e filtro "todos / só os meus". Um interruptor em Configurações (admin)
+        liga/desliga as notificações de prazo para todos.
+      </li>
+      <li>
+        <strong>Gatilho de consultoria:</strong> qualquer item pode
+        <strong>gerar uma oportunidade de consultoria</strong> no funil comercial (vínculo idempotente), conectando
+        onboarding → comercial.
+      </li>
+      <li>
+        <strong>Configuração de deploy:</strong> exige a variável <code>ONBOARDING_CRIPTO_KEY</code> (chave do cofre;
+        definida uma vez, nunca alterada).
+      </li>
+    </ul>
+    <blockquote>
+      <strong>Em aberto (F2):</strong> legalização/societário — processos por órgão (Junta, Receita, prefeitura, Estado,
+      bombeiros, vigilância), protocolos e prazos; templates por tipo de serviço societário; comunicação automática de
+      status ao cliente; registro de transferência de contabilidade (acervo, NBC PG 01).
+    </blockquote>
+    <h3>3.5 Atendimento (WhatsApp)</h3>
+    <p>Central de atendimento integrada ao WhatsApp via <strong>Z-API</strong> (número dedicado do escritório).</p>
+    <ul>
+      <li><strong>Inbox</strong> em colunas com abas (Abertas / Pendentes / Finalizadas / Favoritos).</li>
+      <li>
+        <strong>Envio e recepção</strong> de mensagens em tempo (polling); <strong>mídia</strong> (imagem, documento,
+        áudio) enviada e recebida.
+      </li>
+      <li><strong>Read receipts</strong> (entregue ✓✓ / lido em azul), no padrão do WhatsApp.</li>
+      <li><strong>Status do atendimento e atendente</strong> responsável por conversa.</li>
+      <li>
+        <strong>Identificação do cliente:</strong> exibe nome da empresa + contato em vez do número, quando o telefone
+        bate com um cliente cadastrado. Normalização de telefone tolerante ao <strong>nono dígito</strong>.
+      </li>
+      <li><strong>Nova conversa</strong> a partir dos clientes cadastrados.</li>
+    </ul>
+    <h3>3.6 NFS-e (notas fiscais de serviço)</h3>
+    <p>Emissão e gestão de NFS-e pelo padrão nacional (nfse.gov.br / Sefin Nacional), com certificado digital.</p>
+    <ul>
+      <li>
+        <strong>NFS-e dos honorários (1 emitente):</strong> o escritório emite as notas dos seus honorários; config do
+        emitente + certificado A1 (cifrado) em Configurações → NFS-e (admin).
+      </li>
+      <li>
+        <strong>NFS-e dos clientes (multi-emitente):</strong> cada cliente emite as próprias notas como prestador —
+        config fiscal + certificado A1 por cliente (cifrado), numeração de DPS por cliente, tomador externo.
+      </li>
+      <li>
+        <strong>Emissão avulsa</strong> e <strong>emissão com o cliente como emitente</strong> (preenche o tomador a
+        partir do CNPJ).
+      </li>
+      <li><strong>Lote</strong> (<code>/nfse/lote</code>): emissão/gestão em lote por competência; cancelamento.</li>
+      <li>
+        <strong>Download em lote:</strong> botões para baixar todas em <strong>PDF</strong> e em <strong>XML</strong>,
+        com <strong>cache do DANFSe</strong> no Storage (baixas repetidas ficam instantâneas) e reprocessamento de
+        falhas.
+      </li>
+    </ul>
+    <h3>3.7 Cobrança</h3>
+    <p>Envio da cobrança ao cliente por dois caminhos, com respeito ao opt-out do cliente.</p>
+    <ul>
+      <li>
+        <strong>Cobrança por WhatsApp (NFS-e + PIX/TED):</strong> na tela de NFS-e em lote, painel que envia por
+        WhatsApp a <strong>NFS-e (PDF)</strong> + a <strong>mensagem de cobrança</strong> com dados de pagamento.
+        Seleção por lote com selo "já enviada", busca, progresso e reenvio de falhas. Mensagem configurável
+        (Configurações → Dados de pagamento) com marcadores tolerantes a maiúscula/acento/espaço: <code>{NOME}</code>,
+        <code>{EMPRESA}</code>, <code>{COMPETÊNCIA}</code>, <code>{VALOR}</code>, <code>{VENCIMENTO}</code>,
+        <code>{CHAVE PIX}</code>, <code>{RAZÃO SOCIAL}</code>, <code>{CNPJ}</code>, <code>{BANCO}</code>,
+        <code>{AG}</code>, <code>{CONTA}</code>, <code>{PAGAMENTO}</code>.
+      </li>
+      <li>
+        <strong>Régua de cobrança automática:</strong> etapas configuráveis (ex.: D-3 / D+1 / D+7 / D+15), opt-out por
+        cliente (LGPD), idempotência por (título, etapa). Motor server-side na rota protegida
+        <code>/api/cron/regua-cobranca</code> (Bearer <code>CRON_SECRET</code>),
+        <strong>agendada via pg_cron</strong> (execução diária), além do botão "Processar agora".
+      </li>
+      <li>
+        <strong>Boletos (construído; ativação pendente de conta no provedor):</strong> emissão de boleto por título, com
+        <strong>seletor de provedor</strong> (Configurações → Boletos, admin):
+        <strong>nenhum / Banco Inter / Asaas</strong>. Inter via OAuth2 + mTLS; Asaas via API key; credenciais cifradas
+        (AES-256-GCM, <code>BOLETO_CRIPTO_KEY</code>). Emissão, <strong>baixa por webhook</strong> de pagamento e envio
+        do boleto ao cliente. Exige uma conta ativa no provedor para operar em produção.
+      </li>
+    </ul>
+    <h3>3.8 Financeiro</h3>
+    <p>Módulo completo de gestão financeira do escritório (admin/financeiro).</p>
+    <ul>
+      <li>
+        <strong>Contas a receber</strong> e <strong>contas a pagar:</strong> títulos (RECEBER/PAGAR) com competência,
+        vencimento, categoria, centro de custo, fornecedor; <strong>baixas</strong> (recebimentos/pagamentos),
+        parcelamento, despesas recorrentes, <strong>estorno auditado</strong> (justificativa, não deleta).
+      </li>
+      <li>
+        <strong>Dashboard financeiro</strong> (<code>/financeiro/dashboard</code>): saldo em caixa, MRR, recebido/a
+        receber, inadimplência, previsão, aging de receber/pagar, fluxo de caixa (6 meses), maiores devedores, receita
+        por tipo.
+      </li>
+      <li>
+        <strong>Orçamento:</strong> grade editável (categorias × 12 meses) por ano, com totais e atalhos ("replicar nos
+        12 meses", "copiar do ano anterior").
+      </li>
+      <li>
+        <strong>Orçado × Realizado:</strong> dashboard comparativo por categoria, período ajustável
+        (mês/trimestre/semestre/ano) e base <strong>competência</strong> ou <strong>caixa</strong>; cartões de resumo,
+        barras por categoria, linha de evolução da receita e tabela estilo DRE.
+      </li>
+      <li><strong>Relatórios</strong> (<code>/financeiro/relatorios</code>) — hub com três relatórios:</li>
+      <ul class="nested">
+        <li>
+          <strong>DRE:</strong> Demonstração de Resultado por período (competência ou caixa), com resultado operacional
+          e líquido; imprimível.
+        </li>
+        <li>
+          <strong>Extrato / movimentações:</strong> alternador <strong>Lançamentos</strong> (títulos) ×
+          <strong>Baixas</strong>, com filtros (período, tipo, categoria, busca por cliente) e
+          <strong>exportação em CSV</strong>.
+        </li>
+        <li>
+          <strong>Fluxo de caixa detalhado:</strong> matriz categoria × 12 meses combinando
+          <strong>realizado</strong> (baixas) e <strong>projetado</strong> (títulos em aberto por vencimento), com
+          <strong>saldo acumulado</strong> ao fim de cada mês, seletor de ano, exportação em CSV e impressão.
+        </li>
+      </ul>
+      <li>
+        <strong>Cadastros:</strong> plano de contas (categorias, natureza/DRE), centros de custo, contas bancárias,
+        fornecedores, serviços e contratos de honorários (com sincronização do honorário do cliente).
+      </li>
+    </ul>
+    <h3>3.9 Integração Domínio</h3>
+    <p>
+      Importação de contratos/dados a partir do sistema <strong>Domínio</strong> (admin/assistente): leitor
+      <code>.xls</code> próprio, prévia (novos/atualizados/pendências), reconciliação idempotente por CNPJ e auditoria.
+    </p>
+    <h3>3.10 Configurações (admin)</h3>
+    <p>Central de integrações e credenciais:</p>
+    <ul>
+      <li><strong>WhatsApp (Z-API):</strong> credenciais do provedor e teste de conexão.</li>
+      <li><strong>NFS-e (emitente):</strong> dados do emitente e certificado digital.</li>
+      <li><strong>Boletos:</strong> provedor (Inter / Asaas), credenciais cifradas, ambiente e conta bancária.</li>
+      <li><strong>Dados de pagamento (PIX/TED):</strong> conta e PIX enviados na cobrança.</li>
+      <li><strong>Template de onboarding:</strong> gerenciador de templates + interruptor de notificações de prazo.</li>
+    </ul>
+    <h3>3.11 Usuários (admin)</h3>
+    <p>
+      Gestão da equipe: convite de usuários, definição de papel e status (ativo/inativo). O papel real é definido
+      server-side (não confiável a partir do token).
+    </p>
+    <hr />
+    <h2>4. Integrações externas</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align: left">Integração</th>
+          <th style="text-align: left">Uso</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="text-align: left"><strong>Z-API</strong></td>
+          <td style="text-align: left">
+            WhatsApp não-oficial (envio/recepção de texto e mídia, status de entrega/leitura). Webhook em
+            <code>/api/webhooks/zapi/[secret]</code>.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><strong>Receita Federal</strong></td>
+          <td style="text-align: left">Consulta de CNPJ para preencher/atualizar cadastro.</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><strong>Sefin Nacional / provedor NFS-e</strong></td>
+          <td style="text-align: left">Emissão e download de NFS-e (DANFSe/XML), com certificado digital A1.</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><strong>Clicksign</strong></td>
+          <td style="text-align: left">
+            Assinatura eletrônica de documentos. Webhook em <code>/api/webhooks/clicksign</code>.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><strong>Banco Inter / Asaas</strong></td>
+          <td style="text-align: left">
+            Emissão e baixa de <strong>boletos</strong> (construído; ativação pendente de conta). Webhook em
+            <code>/api/webhooks/boleto/[secret]</code>.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><strong>Domínio</strong></td>
+          <td style="text-align: left">Importação de contratos/dados contábeis (via relatórios <code>.xls</code>).</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><strong>Gotenberg</strong></td>
+          <td style="text-align: left">Conversão Word → PDF (contratos) via LibreOffice headless.</td>
+        </tr>
+      </tbody>
+    </table>
+    <hr />
+    <h2>5. Infraestrutura e segurança</h2>
+    <ul>
+      <li>
+        <strong>Banco (Supabase/Postgres):</strong> schema versionado em <code>supabase/migrations/NNNN_*.sql</code>,
+        aplicado por um runner próprio (<code>npm run db:migrate</code>); <strong>Row-Level Security</strong> em todas
+        as tabelas sensíveis, por papel e por dono do cliente.
+      </li>
+      <li>
+        <strong>Storage (Supabase):</strong> documentos, DANFSe (cache), mídia de atendimento e anexos de onboarding,
+        com rotas de acesso controladas (URLs assinadas de curta duração).
+      </li>
+      <li>
+        <strong>Criptografia (AES-256-GCM):</strong> credenciais do WhatsApp, certificados NFS-e, o
+        <strong>cofre de acessos</strong> do onboarding e as credenciais de boleto são cifrados; chaves em variáveis de
+        ambiente (<code>WHATSAPP_CRIPTO_KEY</code>, <code>ONBOARDING_CRIPTO_KEY</code>, <code>BOLETO_CRIPTO_KEY</code>)
+        — definidas uma vez e <strong>nunca alteradas</strong> (mudar torna os dados cifrados irrecuperáveis).
+      </li>
+      <li>
+        <strong>Auditoria:</strong> acesso a documentos, revelação de senhas do cofre e estornos financeiros são
+        registrados (quem/quando), de forma não-forjável.
+      </li>
+      <li>
+        <strong>Cron:</strong> rota <code>/api/cron/regua-cobranca</code> protegida por <code>CRON_SECRET</code>,
+        agendada via <strong>pg_cron</strong> (Supabase) para a régua de cobrança diária.
+      </li>
+      <li>
+        <strong>Exportações CSV:</strong> neutralizam injeção de fórmula (células iniciadas por
+        <code>=</code>/<code>+</code>/<code>@</code> viram texto).
+      </li>
+      <li><strong>Saúde:</strong> <code>/api/health</code> para verificação de disponibilidade.</li>
+    </ul>
+    <hr />
+    <h2>6. APIs e webhooks</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align: left">Rota</th>
+          <th style="text-align: left">Função</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="text-align: left"><code>GET /api/health</code></td>
+          <td style="text-align: left">Healthcheck.</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><code>POST /api/webhooks/zapi/[secret]</code></td>
+          <td style="text-align: left">Recebe eventos do WhatsApp (mensagens, status).</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><code>POST /api/webhooks/clicksign</code></td>
+          <td style="text-align: left">Recebe eventos de assinatura de documentos.</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><code>POST /api/webhooks/boleto/[secret]</code></td>
+          <td style="text-align: left">Recebe eventos de pagamento de boleto (baixa automática).</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><code>POST /api/cron/regua-cobranca</code></td>
+          <td style="text-align: left">Execução agendada da régua de cobrança (Bearer <code>CRON_SECRET</code>).</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><code>GET /api/atendimento/midia/[id]</code></td>
+          <td style="text-align: left">Serve a mídia de atendimento (com controle de acesso).</td>
+        </tr>
+      </tbody>
+    </table>
+    <hr />
+    <h2>7. Estado por área</h2>
+    <p><strong>Concluído e em produção:</strong></p>
+    <ul>
+      <li>Comercial (funil Kanban, conversão, propostas, métricas).</li>
+      <li>Clientes (cadastro, RF, contratos, documentos, assinatura).</li>
+      <li>
+        Onboarding &amp; Legalização — motor de templates, cofre, regras de item, alertas in-app, gatilho de consultoria
+        (base RF-010 e ciclos A/B/C entregues).
+      </li>
+      <li>NFS-e (honorários + multi-emitente).</li>
+      <li>Atendimento WhatsApp (inbox bidirecional, mídia, read receipts).</li>
+      <li>
+        Financeiro (contas a pagar/receber, orçamento, orçado × realizado, dashboard,
+        <strong>trilogia de relatórios: DRE + Extrato/CSV + Fluxo de caixa detalhado</strong>).
+      </li>
+      <li>Cobrança por WhatsApp + régua automática agendada (pg_cron).</li>
+      <li>Integração Domínio; rebrand SALDO (design system) 100% aplicado.</li>
+    </ul>
+    <p><strong>Construído, ativação pendente:</strong></p>
+    <ul>
+      <li>
+        <strong>Boletos</strong> (Inter/Asaas) — código completo; aguarda conta ativa no provedor para operar em
+        produção.
+      </li>
+    </ul>
+    <p><strong>Em aberto / próximos:</strong></p>
+    <ul>
+      <li>
+        <strong>Onboarding — Legalização/societário (F2):</strong> processos por órgão e protocolos; templates por tipo
+        de serviço societário; comunicação automática de status; transferência de contabilidade (NBC PG 01).
+      </li>
+      <li><strong>Financeiro:</strong> conciliação bancária (importação OFX/CSV), aprovação de pagamento.</li>
+      <li>
+        <strong>Whitelabel/multi-tenant</strong> (comercialização) e
+        <strong>endurecimento de segurança/LGPD</strong> (marcos V9/V10 do <a href="../ROADMAP.md">ROADMAP</a>).
+      </li>
+    </ul>
+    <hr />
+    <h2>8. Convenções do projeto</h2>
+    <ul>
+      <li><strong>Migrations</strong> são imutáveis após aplicadas; mudança = nova migration idempotente.</li>
+      <li>
+        <strong>RBAC</strong> é fonte única (<code>usuarios.papel</code> via <code>auth_papel()</code>); nunca ler papel
+        do token.
+      </li>
+      <li>
+        <strong>Tabelas-filhas de cliente</strong> delegam o isolamento à RLS de <code>clientes</code> (via
+        <code>EXISTS</code>); tabelas pré-cliente usam RLS por papel.
+      </li>
+      <li>
+        <strong>Ciclo de trabalho:</strong> brainstorm → spec (<code>docs/superpowers/specs/</code>) → plano
+        (<code>docs/superpowers/plans/</code>) → execução, com TDD nos helpers puros.
+      </li>
+      <li>
+        Antes de cada entrega: <code>npm run lint</code>, <code>npm run typecheck</code>, <code>npm test</code>,
+        <code>npm run build</code>.
+      </li>
+    </ul>
 
-<hr>
-<p style="color:#5b6660;font-size:12px;">Gerado a partir de <code>DOCUMENTACAO.md</code> — SALDO · app.seusaldo.ai</p>
-</body></html>
+    <hr />
+    <p style="color: #5b6660; font-size: 12px">
+      Gerado a partir de <code>DOCUMENTACAO.md</code> — SALDO · app.seusaldo.ai
+    </p>
+  </body>
+</html>

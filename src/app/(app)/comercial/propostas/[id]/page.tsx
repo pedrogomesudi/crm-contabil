@@ -13,7 +13,9 @@ export default async function EditarPropostaPage({ params }: { params: Promise<{
   const proposta = await obterProposta(id);
   if (!proposta) notFound();
   const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const responsavelPadrao = { nome: perfil.nome, email: user?.email ?? "" };
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">

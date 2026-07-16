@@ -9,7 +9,10 @@ const mesAno = (iso: string) => `${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 
 export default async function PortalNotasPage() {
   const supabase = await createServerSupabase();
-  const { data } = await supabase.from("nfse").select("id, numero, competencia, valor, status, danfse_path").order("competencia", { ascending: false });
+  const { data } = await supabase
+    .from("nfse")
+    .select("id, numero, competencia, valor, status, danfse_path")
+    .order("competencia", { ascending: false });
   const notas = data ?? [];
 
   return (
@@ -37,7 +40,11 @@ export default async function PortalNotasPage() {
                   <td className="px-3 py-2 text-right tabular-nums">{brl(Number(n.valor))}</td>
                   <td className="px-3 py-2 text-cinza">{n.status as string}</td>
                   <td className="px-3 py-2 text-right">
-                    {n.danfse_path ? <BotaoBaixar id={n.id as string} acao={urlDanfse} rotulo="baixar DANFSe" /> : <span className="text-xs text-cinza">—</span>}
+                    {n.danfse_path ? (
+                      <BotaoBaixar id={n.id as string} acao={urlDanfse} rotulo="baixar DANFSe" />
+                    ) : (
+                      <span className="text-xs text-cinza">—</span>
+                    )}
                   </td>
                 </tr>
               ))}

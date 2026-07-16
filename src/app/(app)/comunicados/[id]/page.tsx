@@ -16,7 +16,9 @@ export default async function ComunicadoPage({ params }: { params: Promise<{ id:
 
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
-      <Link href="/comunicados" className="text-sm text-verde underline">← Comunicados</Link>
+      <Link href="/comunicados" className="text-sm text-verde underline">
+        ← Comunicados
+      </Link>
       <PageHeader
         titulo={comunicado.titulo}
         subtitulo={`${comunicado.canal === "email" ? "E-mail" : "WhatsApp"} · ${comunicado.filtroTexto} · ${comunicado.enviados} enviado(s), ${comunicado.erros} erro(s)`}
@@ -35,13 +37,19 @@ export default async function ComunicadoPage({ params }: { params: Promise<{ id:
           </thead>
           <tbody>
             {destinatarios.length === 0 ? (
-              <tr><td colSpan={3} className="px-3 py-4 text-cinza">Nenhum destinatário.</td></tr>
+              <tr>
+                <td colSpan={3} className="px-3 py-4 text-cinza">
+                  Nenhum destinatário.
+                </td>
+              </tr>
             ) : (
               destinatarios.map((d) => (
                 <tr key={d.id} className="border-b border-linha/60">
                   <td className="px-3 py-2 text-texto">
                     {d.clienteId ? (
-                      <Link href={`/clientes/${d.clienteId}`} className="text-verde underline">{d.nome}</Link>
+                      <Link href={`/clientes/${d.clienteId}`} className="text-verde underline">
+                        {d.nome}
+                      </Link>
                     ) : (
                       d.nome
                     )}

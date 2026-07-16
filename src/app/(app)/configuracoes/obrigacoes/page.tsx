@@ -10,10 +10,17 @@ import { listarMatriz, obterConfigEscalonamento, obterNotificacaoRiscos } from "
 export default async function MatrizPage() {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeGerenciarMatriz(perfil.papel)) redirect("/");
-  const [linhas, config, notificacaoRiscos] = await Promise.all([listarMatriz(), obterConfigEscalonamento(), obterNotificacaoRiscos()]);
+  const [linhas, config, notificacaoRiscos] = await Promise.all([
+    listarMatriz(),
+    obterConfigEscalonamento(),
+    obterNotificacaoRiscos(),
+  ]);
   return (
     <main className="mx-auto max-w-5xl space-y-5 p-4">
-      <PageHeader titulo="Matriz de obrigações" subtitulo="Obrigações e critérios de incidência usados na geração do calendário" />
+      <PageHeader
+        titulo="Matriz de obrigações"
+        subtitulo="Obrigações e critérios de incidência usados na geração do calendário"
+      />
       <ToggleNotificacoes ativoInicial={notificacaoRiscos} />
       <ConfigEscalonamento inicial={config} />
       <EditorMatriz linhas={linhas} />

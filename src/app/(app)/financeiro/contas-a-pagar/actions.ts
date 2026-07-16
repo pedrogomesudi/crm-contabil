@@ -17,7 +17,13 @@ export type TituloPagar = {
   somaBaixado: number;
   status: string;
 };
-export type Recorrente = { id: string; descricao: string; valor_mensal: number; dia_vencimento: number; ativa: boolean };
+export type Recorrente = {
+  id: string;
+  descricao: string;
+  valor_mensal: number;
+  dia_vencimento: number;
+  ativa: boolean;
+};
 export type Anexo = { id: string; nome: string; caminho_storage: string };
 const ROTA = "/financeiro/contas-a-pagar";
 
@@ -32,7 +38,9 @@ export async function listarTitulosPagar(competencia: string): Promise<TituloPag
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("titulo")
-    .select("id, origem, descricao, competencia, vencimento, valor, status, fornecedor(nome), baixa(valor_recebido, estornada)")
+    .select(
+      "id, origem, descricao, competencia, vencimento, valor, status, fornecedor(nome), baixa(valor_recebido, estornada)",
+    )
     .eq("tipo", "PAGAR")
     .eq("competencia", competencia)
     .order("vencimento");
@@ -70,8 +78,15 @@ export async function lancarDespesa(fd: FormData) {
   if (modo === "recorrente") {
     if (!(dia >= 1 && dia <= 28)) return { erro: "Dia de vencimento (1–28) obrigatório na recorrente." };
     const { error } = await supabase.from("despesa_recorrente").insert({
-      descricao, fornecedor_id, categoria_id, centro_custo_id, valor_mensal: valor, dia_vencimento: dia,
-      data_inicio: venc || new Date().toISOString().slice(0, 10), criado_por: perfil.id, atualizado_por: perfil.id,
+      descricao,
+      fornecedor_id,
+      categoria_id,
+      centro_custo_id,
+      valor_mensal: valor,
+      dia_vencimento: dia,
+      data_inicio: venc || new Date().toISOString().slice(0, 10),
+      criado_por: perfil.id,
+      atualizado_por: perfil.id,
     });
     if (error) return { erro: "Falha ao salvar a despesa recorrente." };
     revalidatePath(ROTA);
@@ -150,7 +165,12 @@ export async function estornarBaixaDoTitulo(tituloId: string, motivo: string) {
   const supabase = await createServerSupabase();
   const { error } = await supabase
     .from("baixa")
-    .update({ estornada: true, estorno_motivo: motivo.trim(), estorno_em: new Date().toISOString(), estorno_por: perfil.id })
+    .update({
+      estornada: true,
+      estorno_motivo: motivo.trim(),
+      estorno_em: new Date().toISOString(),
+      estorno_por: perfil.id,
+    })
     .eq("titulo_id", tituloId)
     .eq("estornada", false);
   if (error) return { erro: "Falha ao estornar." };
@@ -170,7 +190,9 @@ export async function anexar(fd: FormData) {
   const admin = createAdminSupabase();
   const up = await admin.storage.from("documentos").upload(caminho, file, { contentType: file.type });
   if (up.error) return { erro: "Falha no upload." };
-  const { error } = await admin.from("anexo_titulo").insert({ titulo_id: tituloId, nome: file.name, caminho_storage: caminho, criado_por: perfil.id });
+  const { error } = await admin
+    .from("anexo_titulo")
+    .insert({ titulo_id: tituloId, nome: file.name, caminho_storage: caminho, criado_por: perfil.id });
   if (error) {
     await admin.storage.from("documentos").remove([caminho]);
     return { erro: "Falha ao registrar o anexo." };
@@ -182,6 +204,10 @@ export async function anexar(fd: FormData) {
 export async function listarAnexos(tituloId: string): Promise<Anexo[]> {
   if (!(await gate())) return [];
   const supabase = await createServerSupabase();
-  const { data } = await supabase.from("anexo_titulo").select("id, nome, caminho_storage").eq("titulo_id", tituloId).order("criado_em");
+  const { data } = await supabase
+    .from("anexo_titulo")
+    .select("id, nome, caminho_storage")
+    .eq("titulo_id", tituloId)
+    .order("criado_em");
   return (data ?? []) as Anexo[];
 }

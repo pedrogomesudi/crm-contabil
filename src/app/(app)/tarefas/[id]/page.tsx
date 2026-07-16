@@ -16,11 +16,24 @@ export default async function TarefaPage({ params }: { params: Promise<{ id: str
   const perfil = await getPerfilAtual();
   if (!perfil || !podeGerenciarTarefas(perfil.papel)) redirect("/");
   const supabase = await createServerSupabase();
-  const { data: t } = await supabase.from("tarefa").select("id, titulo, descricao, responsavel_id, cliente_id, departamento, prioridade, prazo, status").eq("id", id).maybeSingle();
+  const { data: t } = await supabase
+    .from("tarefa")
+    .select("id, titulo, descricao, responsavel_id, cliente_id, departamento, prioridade, prazo, status")
+    .eq("id", id)
+    .maybeSingle();
   if (!t) notFound();
-  const { data: itens } = await supabase.from("tarefa_item").select("id, descricao, feito, ordem").eq("tarefa_id", id).order("ordem");
+  const { data: itens } = await supabase
+    .from("tarefa_item")
+    .select("id, descricao, feito, ordem")
+    .eq("tarefa_id", id)
+    .order("ordem");
   const colaboradores = await listarColaboradores();
-  const { data: clientes } = await supabase.from("clientes").select("id, razao_social").is("excluido_em", null).order("razao_social").limit(300);
+  const { data: clientes } = await supabase
+    .from("clientes")
+    .select("id, razao_social")
+    .is("excluido_em", null)
+    .order("razao_social")
+    .limit(300);
 
   // Horas: a RLS soma só o que o usuário pode ver (as suas; admin/financeiro veem todas).
   const { data: horas } = await supabase.from("apontamento").select("minutos").eq("tarefa_id", id);
@@ -37,13 +50,23 @@ export default async function TarefaPage({ params }: { params: Promise<{ id: str
     prioridade: t.prioridade as TarefaPrioridade,
     prazo: (t.prazo as string | null) ?? "",
     status: t.status as TarefaStatus,
-    itens: (itens ?? []).map((i) => ({ id: i.id as string, descricao: i.descricao as string, feito: i.feito as boolean })),
+    itens: (itens ?? []).map((i) => ({
+      id: i.id as string,
+      descricao: i.descricao as string,
+      feito: i.feito as boolean,
+    })),
   };
   return (
     <main className="mx-auto max-w-2xl space-y-5 p-4">
-      <Link href="/tarefas" className="text-sm text-verde underline">← Tarefas</Link>
+      <Link href="/tarefas" className="text-sm text-verde underline">
+        ← Tarefas
+      </Link>
       <PageHeader titulo="Tarefa" />
-      <EditorTarefa tarefa={tarefa} colaboradores={colaboradores} clientes={(clientes ?? []).map((c) => ({ id: c.id as string, nome: c.razao_social as string }))} />
+      <EditorTarefa
+        tarefa={tarefa}
+        colaboradores={colaboradores}
+        clientes={(clientes ?? []).map((c) => ({ id: c.id as string, nome: c.razao_social as string }))}
+      />
       <HorasDaTarefa
         tarefaId={id}
         minutosTotal={minutosTotal}

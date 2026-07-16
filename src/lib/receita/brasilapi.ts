@@ -111,7 +111,9 @@ async function consultarBrasilApi(doc: string): Promise<Interno> {
       return { dados: mapearReceita((await res.json()) as Record<string, unknown>) };
     });
   } catch (e) {
-    return { erro: e instanceof Error && e.name === "AbortError" ? "Tempo esgotado na consulta." : "Erro de rede na consulta." };
+    return {
+      erro: e instanceof Error && e.name === "AbortError" ? "Tempo esgotado na consulta." : "Erro de rede na consulta.",
+    };
   }
 }
 
@@ -122,14 +124,21 @@ async function consultarReceitaWs(doc: string): Promise<Interno> {
         signal,
         headers: { accept: "application/json", "user-agent": UA },
       });
-      if (res.status === 429) return { erro: "Limite de consultas atingido na fonte alternativa — tente novamente em instantes." };
+      if (res.status === 429)
+        return { erro: "Limite de consultas atingido na fonte alternativa — tente novamente em instantes." };
       if (!res.ok) return { erro: `Falha na consulta alternativa (HTTP ${res.status}).` };
       const d = (await res.json()) as Record<string, unknown>;
-      if (String(d.status ?? "").toUpperCase() !== "OK") return { erro: "CNPJ não encontrado na Receita.", naoEncontrado: true };
+      if (String(d.status ?? "").toUpperCase() !== "OK")
+        return { erro: "CNPJ não encontrado na Receita.", naoEncontrado: true };
       return { dados: mapearReceitaWs(d) };
     });
   } catch (e) {
-    return { erro: e instanceof Error && e.name === "AbortError" ? "Tempo esgotado na consulta alternativa." : "Erro de rede na consulta alternativa." };
+    return {
+      erro:
+        e instanceof Error && e.name === "AbortError"
+          ? "Tempo esgotado na consulta alternativa."
+          : "Erro de rede na consulta alternativa.",
+    };
   }
 }
 

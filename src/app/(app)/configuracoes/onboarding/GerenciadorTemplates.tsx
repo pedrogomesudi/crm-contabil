@@ -2,7 +2,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { criarTemplate, salvarTemplate, excluirTemplate, semearTemplatePadrao, type TemplateResumo } from "@/app/(app)/onboarding/template-actions";
+import {
+  criarTemplate,
+  salvarTemplate,
+  excluirTemplate,
+  semearTemplatePadrao,
+  type TemplateResumo,
+} from "@/app/(app)/onboarding/template-actions";
 import { Botao } from "@/components/ui/Botao";
 
 export function GerenciadorTemplates({ templates }: { templates: TemplateResumo[] }) {
@@ -58,19 +64,34 @@ export function GerenciadorTemplates({ templates }: { templates: TemplateResumo[
               {templates.map((t) => (
                 <tr key={t.id} className="border-b border-linha/60">
                   <td className="px-3 py-2">
-                    <Link href={`/configuracoes/onboarding/${t.id}`} className="font-medium text-texto underline decoration-linha hover:decoration-verde">
+                    <Link
+                      href={`/configuracoes/onboarding/${t.id}`}
+                      className="font-medium text-texto underline decoration-linha hover:decoration-verde"
+                    >
                       {t.nome}
                     </Link>
-                    {!t.ativo && <span className="ml-2 rounded bg-cinza/10 px-1.5 text-[10px] text-cinza">inativo</span>}
+                    {!t.ativo && (
+                      <span className="ml-2 rounded bg-cinza/10 px-1.5 text-[10px] text-cinza">inativo</span>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums">{t.blocos}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{t.itens}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{t.processos}</td>
                   <td className="px-3 py-2 text-right">
-                    <button type="button" onClick={() => chamar(() => salvarTemplate(t.id, t.nome, t.descricao, !t.ativo))} className="mr-3 text-xs text-cinza underline">
+                    <button
+                      type="button"
+                      onClick={() => chamar(() => salvarTemplate(t.id, t.nome, t.descricao, !t.ativo))}
+                      className="mr-3 text-xs text-cinza underline"
+                    >
                       {t.ativo ? "Desativar" : "Ativar"}
                     </button>
-                    <button type="button" onClick={() => { if (confirm(`Excluir "${t.nome}"?`)) void chamar(() => excluirTemplate(t.id)); }} className="text-xs text-negativo underline">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm(`Excluir "${t.nome}"?`)) void chamar(() => excluirTemplate(t.id));
+                      }}
+                      className="text-xs text-negativo underline"
+                    >
                       Excluir
                     </button>
                   </td>
@@ -87,11 +108,20 @@ export function GerenciadorTemplates({ templates }: { templates: TemplateResumo[
             <h3 className="font-display text-sm font-semibold text-texto">Novo template</h3>
             <label className="block text-xs text-cinza">
               Nome
-              <input value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm" />
+              <input
+                value={novo.nome}
+                onChange={(e) => setNovo({ ...novo, nome: e.target.value })}
+                className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+              />
             </label>
             <label className="block text-xs text-cinza">
               Descrição
-              <textarea value={novo.descricao} onChange={(e) => setNovo({ ...novo, descricao: e.target.value })} rows={2} className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm" />
+              <textarea
+                value={novo.descricao}
+                onChange={(e) => setNovo({ ...novo, descricao: e.target.value })}
+                rows={2}
+                className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+              />
             </label>
             <div className="flex justify-end gap-2 pt-1">
               <Botao variante="fantasma" onClick={() => setNovo(null)}>

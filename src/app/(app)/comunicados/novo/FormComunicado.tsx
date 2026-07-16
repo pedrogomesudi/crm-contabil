@@ -5,13 +5,7 @@ import { REGIMES } from "@/lib/tipos";
 import { DEPARTAMENTOS } from "@/lib/clientes/departamentos";
 import { VARIAVEIS } from "@/lib/email/template";
 import { TETO_WHATSAPP, descreverFiltro, type Filtro } from "@/lib/comunicados/segmento";
-import {
-  previa,
-  enviarTesteComunicado,
-  dispararComunicado,
-  type Canal,
-  type PreviaView,
-} from "../actions";
+import { previa, enviarTesteComunicado, dispararComunicado, type Canal, type PreviaView } from "../actions";
 
 const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
 const TIPOS = ["PJ", "PF", "MEI"];
@@ -80,7 +74,8 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
   async function disparar() {
     if (!prev || prev.total === 0) return;
     const canalTxt = canal === "email" ? "e-mail" : "WhatsApp";
-    if (!confirm(`Disparar este comunicado por ${canalTxt} para ${prev.total} cliente(s)? Não há como desfazer.`)) return;
+    if (!confirm(`Disparar este comunicado por ${canalTxt} para ${prev.total} cliente(s)? Não há como desfazer.`))
+      return;
     setOcupado(true);
     setErro(null);
     const r = await dispararComunicado({ titulo, assunto, corpo, canal, filtro });
@@ -101,7 +96,11 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
         <div className="flex flex-wrap gap-2">
           <label className="flex-1 text-xs text-cinza">
             Título interno (não vai ao cliente)
-            <input value={titulo} onChange={(e) => setTitulo(e.target.value)} className={`mt-0.5 block w-full ${cls}`} />
+            <input
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              className={`mt-0.5 block w-full ${cls}`}
+            />
           </label>
           <label className="text-xs text-cinza">
             Canal
@@ -121,15 +120,19 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
 
         {canal === "whatsapp" && (
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            <strong>Atenção:</strong> disparo em massa por WhatsApp é o gatilho clássico de banimento do número
-            pela Meta — e o canal é não oficial (Z-API). Perder o número derruba o <strong>atendimento</strong> e a{" "}
+            <strong>Atenção:</strong> disparo em massa por WhatsApp é o gatilho clássico de banimento do número pela
+            Meta — e o canal é não oficial (Z-API). Perder o número derruba o <strong>atendimento</strong> e a{" "}
             <strong>régua de cobrança</strong> de uma vez. Teto de {TETO_WHATSAPP} destinatários por comunicado.
           </p>
         )}
 
         <label className="block text-xs text-cinza">
           Assunto
-          <input value={assunto} onChange={(e) => setAssunto(e.target.value)} className={`mt-0.5 block w-full ${cls}`} />
+          <input
+            value={assunto}
+            onChange={(e) => setAssunto(e.target.value)}
+            className={`mt-0.5 block w-full ${cls}`}
+          />
         </label>
 
         <div>
@@ -151,7 +154,13 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
 
         <label className="block text-xs text-cinza">
           Mensagem
-          <textarea ref={corpoRef} value={corpo} onChange={(e) => setCorpo(e.target.value)} rows={7} className={`mt-0.5 block w-full ${cls}`} />
+          <textarea
+            ref={corpoRef}
+            value={corpo}
+            onChange={(e) => setCorpo(e.target.value)}
+            rows={7}
+            className={`mt-0.5 block w-full ${cls}`}
+          />
         </label>
       </section>
 
@@ -166,7 +175,12 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
           <p className="text-xs text-cinza">Regime</p>
           <div className="mt-1 flex flex-wrap gap-1.5">
             {REGIMES.map((r) => (
-              <button key={r} type="button" onClick={() => alternarLista("regimes", r)} className={chip(filtro.regimes?.includes(r) ?? false)}>
+              <button
+                key={r}
+                type="button"
+                onClick={() => alternarLista("regimes", r)}
+                className={chip(filtro.regimes?.includes(r) ?? false)}
+              >
                 {r}
               </button>
             ))}
@@ -177,7 +191,12 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
           <p className="text-xs text-cinza">Tipo</p>
           <div className="mt-1 flex flex-wrap gap-1.5">
             {TIPOS.map((t) => (
-              <button key={t} type="button" onClick={() => alternarLista("tipos", t)} className={chip(filtro.tipos?.includes(t) ?? false)}>
+              <button
+                key={t}
+                type="button"
+                onClick={() => alternarLista("tipos", t)}
+                className={chip(filtro.tipos?.includes(t) ?? false)}
+              >
                 {t}
               </button>
             ))}
@@ -188,7 +207,12 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
           <p className="text-xs text-cinza">Status</p>
           <div className="mt-1 flex flex-wrap gap-1.5">
             {STATUS.map((s) => (
-              <button key={s.valor} type="button" onClick={() => alternarLista("status", s.valor)} className={chip(filtro.status?.includes(s.valor) ?? false)}>
+              <button
+                key={s.valor}
+                type="button"
+                onClick={() => alternarLista("status", s.valor)}
+                className={chip(filtro.status?.includes(s.valor) ?? false)}
+              >
                 {s.rotulo}
               </button>
             ))}
@@ -198,31 +222,64 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
         <div className="flex flex-wrap gap-2">
           <label className="text-xs text-cinza">
             Cidade
-            <input value={filtro.cidade ?? ""} onChange={(e) => mudarFiltro({ cidade: e.target.value || null })} className={`mt-0.5 block w-48 ${cls}`} />
+            <input
+              value={filtro.cidade ?? ""}
+              onChange={(e) => mudarFiltro({ cidade: e.target.value || null })}
+              className={`mt-0.5 block w-48 ${cls}`}
+            />
           </label>
           <label className="text-xs text-cinza">
             UF
-            <input value={filtro.uf ?? ""} maxLength={2} onChange={(e) => mudarFiltro({ uf: e.target.value.toUpperCase() || null })} className={`mt-0.5 block w-20 ${cls}`} />
+            <input
+              value={filtro.uf ?? ""}
+              maxLength={2}
+              onChange={(e) => mudarFiltro({ uf: e.target.value.toUpperCase() || null })}
+              className={`mt-0.5 block w-20 ${cls}`}
+            />
           </label>
           <label className="text-xs text-cinza">
             Contador
-            <select value={filtro.contadorId ?? ""} onChange={(e) => mudarFiltro({ contadorId: e.target.value || null })} className={`mt-0.5 block ${cls}`}>
+            <select
+              value={filtro.contadorId ?? ""}
+              onChange={(e) => mudarFiltro({ contadorId: e.target.value || null })}
+              className={`mt-0.5 block ${cls}`}
+            >
               <option value="">Todos</option>
-              {contadores.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              {contadores.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
             </select>
           </label>
           <label className="text-xs text-cinza">
             Responsável
-            <select value={filtro.responsavelId ?? ""} onChange={(e) => mudarFiltro({ responsavelId: e.target.value || null })} className={`mt-0.5 block ${cls}`}>
+            <select
+              value={filtro.responsavelId ?? ""}
+              onChange={(e) => mudarFiltro({ responsavelId: e.target.value || null })}
+              className={`mt-0.5 block ${cls}`}
+            >
               <option value="">Todos</option>
-              {colaboradores.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              {colaboradores.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
             </select>
           </label>
           <label className="text-xs text-cinza">
             no departamento
-            <select value={filtro.departamento ?? ""} onChange={(e) => mudarFiltro({ departamento: e.target.value || null })} className={`mt-0.5 block ${cls}`}>
+            <select
+              value={filtro.departamento ?? ""}
+              onChange={(e) => mudarFiltro({ departamento: e.target.value || null })}
+              className={`mt-0.5 block ${cls}`}
+            >
               <option value="">qualquer</option>
-              {DEPARTAMENTOS.map((d) => <option key={d.valor} value={d.valor}>{d.rotulo}</option>)}
+              {DEPARTAMENTOS.map((d) => (
+                <option key={d.valor} value={d.valor}>
+                  {d.rotulo}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -233,10 +290,18 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
         <h2 className="font-display text-sm font-semibold text-texto">3. Conferir e disparar</h2>
 
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={verPrevia} disabled={ocupado} className="rounded-lg border border-linha px-3 py-1.5 text-cinza disabled:opacity-60">
+          <button
+            onClick={verPrevia}
+            disabled={ocupado}
+            className="rounded-lg border border-linha px-3 py-1.5 text-cinza disabled:opacity-60"
+          >
             Ver quem vai receber
           </button>
-          <button onClick={testar} disabled={ocupado || !assunto || !corpo} className="rounded-lg border border-linha px-3 py-1.5 text-cinza disabled:opacity-60">
+          <button
+            onClick={testar}
+            disabled={ocupado || !assunto || !corpo}
+            className="rounded-lg border border-linha px-3 py-1.5 text-cinza disabled:opacity-60"
+          >
             Enviar teste para mim
           </button>
           <button
@@ -250,12 +315,18 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
         </div>
 
         {msg && <p className="text-xs text-verde">{msg}</p>}
-        {erro && <p role="alert" className="text-xs text-negativo">{erro}</p>}
+        {erro && (
+          <p role="alert" className="text-xs text-negativo">
+            {erro}
+          </p>
+        )}
 
         {prev && (
           <div className="space-y-2">
             {prev.bloqueio && (
-              <p role="alert" className="rounded-lg bg-negativo/10 px-3 py-2 text-xs text-negativo">{prev.bloqueio}</p>
+              <p role="alert" className="rounded-lg bg-negativo/10 px-3 py-2 text-xs text-negativo">
+                {prev.bloqueio}
+              </p>
             )}
             <p className="text-xs text-cinza">
               <strong className="text-texto">{prev.total}</strong> receberão · {prev.excluidos.length} excluído(s)
@@ -265,7 +336,9 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
                 <p className="text-xs font-medium text-cinza">Vão receber</p>
                 <ul className="mt-1 space-y-0.5 text-xs text-texto">
                   {prev.destinatarios.map((d) => (
-                    <li key={d.id} className="truncate">{d.nome} <span className="text-cinza">· {d.para}</span></li>
+                    <li key={d.id} className="truncate">
+                      {d.nome} <span className="text-cinza">· {d.para}</span>
+                    </li>
                   ))}
                   {prev.destinatarios.length === 0 && <li className="text-cinza">Ninguém.</li>}
                 </ul>
@@ -274,7 +347,9 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
                 <p className="text-xs font-medium text-cinza">Excluídos (e por quê)</p>
                 <ul className="mt-1 space-y-0.5 text-xs text-cinza">
                   {prev.excluidos.map((e, i) => (
-                    <li key={i} className="truncate">{e.nome} <span className="text-cinza-claro">· {e.motivo}</span></li>
+                    <li key={i} className="truncate">
+                      {e.nome} <span className="text-cinza-claro">· {e.motivo}</span>
+                    </li>
                   ))}
                   {prev.excluidos.length === 0 && <li className="text-cinza-claro">Nenhum.</li>}
                 </ul>

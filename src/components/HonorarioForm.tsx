@@ -25,13 +25,9 @@ export function HonorarioForm({
 }) {
   const action = salvarHonorario.bind(null, clienteId);
   const [estado, formAction, pending] = useActionState<EstadoHonorario, FormData>(action, {});
-  const valorBR =
-    valorAtual != null ? valorAtual.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "";
+  const valorBR = valorAtual != null ? valorAtual.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "";
   return (
-    <form
-      action={formAction}
-      className="max-w-2xl space-y-3 rounded-lg border border-linha bg-white p-4"
-    >
+    <form action={formAction} className="max-w-2xl space-y-3 rounded-lg border border-linha bg-white p-4">
       <h2 className="text-sm font-semibold text-texto">Honorário</h2>
       <Campo label="Honorário mensal (R$)">
         <input
@@ -64,11 +60,7 @@ export function HonorarioForm({
           />
         </Campo>
         <Campo label="Faixa de faturamento">
-          <select
-            name="faixa_faturamento"
-            defaultValue={extensao.faixa_faturamento ?? ""}
-            className={inputCls}
-          >
+          <select name="faixa_faturamento" defaultValue={extensao.faixa_faturamento ?? ""} className={inputCls}>
             <option value="">—</option>
             {FAIXAS_FATURAMENTO.map((f) => (
               <option key={f} value={f}>
@@ -78,12 +70,7 @@ export function HonorarioForm({
           </select>
         </Campo>
         <Campo label="Data de saída">
-          <input
-            name="data_saida"
-            type="date"
-            defaultValue={extensao.data_saida ?? ""}
-            className={inputCls}
-          />
+          <input name="data_saida" type="date" defaultValue={extensao.data_saida ?? ""} className={inputCls} />
         </Campo>
         <Campo label="Índice de reajuste">
           <select

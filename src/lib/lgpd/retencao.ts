@@ -7,7 +7,7 @@ export function dentroDaRetencao(dataSaidaIso: string | null, meses: number, hoj
   if (!dataSaidaIso) return true;
   const [as, ms, ds] = dataSaidaIso.slice(0, 10).split("-").map(Number);
   // Data-limite = saída + `meses`.
-  const limite = new Date(Date.UTC((as ?? 1970), (ms ?? 1) - 1 + meses, ds ?? 1));
+  const limite = new Date(Date.UTC(as ?? 1970, (ms ?? 1) - 1 + meses, ds ?? 1));
   const [ah, mh, dh] = hojeIso.slice(0, 10).split("-").map(Number);
   const hoje = new Date(Date.UTC(ah ?? 1970, (mh ?? 1) - 1, dh ?? 1));
   return hoje.getTime() <= limite.getTime();

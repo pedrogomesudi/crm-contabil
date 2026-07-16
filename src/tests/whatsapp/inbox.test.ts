@@ -37,10 +37,14 @@ describe("extrairMensagemZapi", () => {
     expect(extrairMensagemZapi({ phone: "553400", messageId: "M2", message: "oi" })?.texto).toBe("oi");
   });
   it("mídia não suportada (vídeo) → marcador", () => {
-    expect(extrairMensagemZapi({ phone: "553400", messageId: "M3", video: { url: "x" } })?.texto).toBe("[mídia não suportada]");
+    expect(extrairMensagemZapi({ phone: "553400", messageId: "M3", video: { url: "x" } })?.texto).toBe(
+      "[mídia não suportada]",
+    );
   });
   it("fromMe (nossa saída) → null", () => {
-    expect(extrairMensagemZapi({ phone: "553400", messageId: "M4", fromMe: true, text: { message: "eco" } })).toBeNull();
+    expect(
+      extrairMensagemZapi({ phone: "553400", messageId: "M4", fromMe: true, text: { message: "eco" } }),
+    ).toBeNull();
   });
   it("evento sem mensagem (status) → null", () => {
     expect(extrairMensagemZapi({ phone: "553400", messageId: "M5", status: "DELIVERED" })).toBeNull();
@@ -51,9 +55,48 @@ describe("extrairMensagemZapi", () => {
 describe("agruparConversas", () => {
   it("agrupa por telefone, conta não-lidas, ordena por recência", () => {
     const msgs: MsgConversa[] = [
-      { id: "1", telefone: "551", texto: "a1", direcao: "IN", lida: false, criado_em: "2026-07-01T10:00:00Z", cliente: "ACME", status: "RECEBIDO", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
-      { id: "2", telefone: "551", texto: "a2", direcao: "OUT", lida: true, criado_em: "2026-07-01T11:00:00Z", cliente: "ACME", status: "ENVIADO", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
-      { id: "3", telefone: "552", texto: "b1", direcao: "IN", lida: false, criado_em: "2026-07-02T09:00:00Z", cliente: null, status: "RECEBIDO", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
+      {
+        id: "1",
+        telefone: "551",
+        texto: "a1",
+        direcao: "IN",
+        lida: false,
+        criado_em: "2026-07-01T10:00:00Z",
+        cliente: "ACME",
+        status: "RECEBIDO",
+        midiaTipo: null,
+        midiaPath: null,
+        midiaNome: null,
+        midiaMime: null,
+      },
+      {
+        id: "2",
+        telefone: "551",
+        texto: "a2",
+        direcao: "OUT",
+        lida: true,
+        criado_em: "2026-07-01T11:00:00Z",
+        cliente: "ACME",
+        status: "ENVIADO",
+        midiaTipo: null,
+        midiaPath: null,
+        midiaNome: null,
+        midiaMime: null,
+      },
+      {
+        id: "3",
+        telefone: "552",
+        texto: "b1",
+        direcao: "IN",
+        lida: false,
+        criado_em: "2026-07-02T09:00:00Z",
+        cliente: null,
+        status: "RECEBIDO",
+        midiaTipo: null,
+        midiaPath: null,
+        midiaNome: null,
+        midiaMime: null,
+      },
     ];
     const convs = agruparConversas(msgs);
     expect(convs.map((c) => c.telefone)).toEqual(["552", "551"]); // 552 mais recente
@@ -179,7 +222,11 @@ describe("extrairMensagemZapi mídia", () => {
     });
   });
   it("áudio → midia audio, texto vazio", () => {
-    const r = extrairMensagemZapi({ phone: "553400", messageId: "M2", audio: { audioUrl: "https://z/a.ogg", mimeType: "audio/ogg" } });
+    const r = extrairMensagemZapi({
+      phone: "553400",
+      messageId: "M2",
+      audio: { audioUrl: "https://z/a.ogg", mimeType: "audio/ogg" },
+    });
     expect(r?.midia).toEqual({ tipo: "audio", url: "https://z/a.ogg", mime: "audio/ogg", nome: null, caption: "" });
   });
   it("documento → midia document com nome", () => {
@@ -188,7 +235,13 @@ describe("extrairMensagemZapi mídia", () => {
       messageId: "M3",
       document: { documentUrl: "https://z/d.pdf", mimeType: "application/pdf", fileName: "nota.pdf" },
     });
-    expect(r?.midia).toEqual({ tipo: "document", url: "https://z/d.pdf", mime: "application/pdf", nome: "nota.pdf", caption: "" });
+    expect(r?.midia).toEqual({
+      tipo: "document",
+      url: "https://z/d.pdf",
+      mime: "application/pdf",
+      nome: "nota.pdf",
+      caption: "",
+    });
   });
   it("mídia sem url → marcador, midia null", () => {
     const r = extrairMensagemZapi({ phone: "553400", messageId: "M4", image: { caption: "x" } });
@@ -215,16 +268,55 @@ describe("extensaoPorMime", () => {
 
 describe("agruparConversas meta", () => {
   const msgs: MsgConversa[] = [
-    { id: "1", telefone: "111", texto: "a", direcao: "IN", lida: true, criado_em: "2026-07-06T10:00:00Z", status: "RECEBIDO", cliente: "DA MENSAGEM", midiaTipo: null, midiaPath: null, midiaNome: null, midiaMime: null },
+    {
+      id: "1",
+      telefone: "111",
+      texto: "a",
+      direcao: "IN",
+      lida: true,
+      criado_em: "2026-07-06T10:00:00Z",
+      status: "RECEBIDO",
+      cliente: "DA MENSAGEM",
+      midiaTipo: null,
+      midiaPath: null,
+      midiaNome: null,
+      midiaMime: null,
+    },
   ];
   it("sem meta → cliente vem da mensagem; contato null; defaults", () => {
     const [c] = agruparConversas(msgs);
-    expect(c).toMatchObject({ cliente: "DA MENSAGEM", contato: null, favorita: false, status: "aberta", atendenteId: null, atendenteNome: null });
+    expect(c).toMatchObject({
+      cliente: "DA MENSAGEM",
+      contato: null,
+      favorita: false,
+      status: "aberta",
+      atendenteId: null,
+      atendenteNome: null,
+    });
   });
   it("com meta → sobrepõe cliente/contato/favorita/status/atendente", () => {
-    const meta = new Map([["111", { cliente: "DO CADASTRO", contato: "Breno", favorita: true, status: "pendente" as const, atendenteId: "u1", atendenteNome: "Pedro" }]]);
+    const meta = new Map([
+      [
+        "111",
+        {
+          cliente: "DO CADASTRO",
+          contato: "Breno",
+          favorita: true,
+          status: "pendente" as const,
+          atendenteId: "u1",
+          atendenteNome: "Pedro",
+        },
+      ],
+    ]);
     const [c] = agruparConversas(msgs, meta);
-    expect(c).toMatchObject({ cliente: "DO CADASTRO", contato: "Breno", favorita: true, status: "pendente", atendenteId: "u1", atendenteNome: "Pedro" });
+    expect(c).toMatchObject({
+      cliente: "DO CADASTRO",
+      contato: "Breno",
+      favorita: true,
+      status: "pendente",
+      atendenteId: "u1",
+      atendenteNome: "Pedro",
+    });
   });
 });
 

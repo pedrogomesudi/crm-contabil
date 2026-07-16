@@ -6,7 +6,13 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { validarTemplate } from "@/lib/comercial/gerar-proposta";
 import { TAGS_DISPONIVEIS } from "@/lib/comercial/proposta-template";
 
-export type EstadoProposta = { erro?: string; ok?: boolean; tagsOk?: string[]; tagsDesconhecidas?: string[]; avisos?: string[] };
+export type EstadoProposta = {
+  erro?: string;
+  ok?: boolean;
+  tagsOk?: string[];
+  tagsDesconhecidas?: string[];
+  avisos?: string[];
+};
 
 async function exigirAdmin(): Promise<boolean> {
   const p = await getPerfilAtual();
@@ -35,14 +41,22 @@ export async function enviarTemplateProposta(_prev: EstadoProposta, fd: FormData
 
   const admin = createAdminSupabase();
   const supabase = await createServerSupabase();
-  const { data: atual } = await supabase.from("escritorio_config").select("proposta_template_path").eq("id", 1).maybeSingle();
+  const { data: atual } = await supabase
+    .from("escritorio_config")
+    .select("proposta_template_path")
+    .eq("id", 1)
+    .maybeSingle();
 
   const path = `marca/proposta-template.${val.tipo}`;
-  const contentType = val.tipo === "docx" ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "text/html";
+  const contentType =
+    val.tipo === "docx" ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "text/html";
   const { error: upErr } = await admin.storage.from("documentos").upload(path, bytes, { contentType, upsert: true });
   if (upErr) return { erro: "Falha ao enviar o modelo." };
 
-  const { error } = await supabase.from("escritorio_config").update({ proposta_template_path: path, proposta_template_tipo: val.tipo }).eq("id", 1);
+  const { error } = await supabase
+    .from("escritorio_config")
+    .update({ proposta_template_path: path, proposta_template_tipo: val.tipo })
+    .eq("id", 1);
   if (error) return { erro: "Falha ao salvar o modelo." };
   // se o tipo mudou (troca docx<->html), remove o arquivo anterior de tipo diferente
   const anterior = (atual?.proposta_template_path as string | null) ?? null;

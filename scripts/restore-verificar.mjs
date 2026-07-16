@@ -19,7 +19,12 @@ if (!dbUrl) {
   process.exit(1);
 }
 
-const JOBS = ["gerar-mensalidades-mensal", "regua-cobranca-diaria", "gerar-obrigacoes-mensal", "tarefas-recorrentes-diaria"];
+const JOBS = [
+  "gerar-mensalidades-mensal",
+  "regua-cobranca-diaria",
+  "gerar-obrigacoes-mensal",
+  "tarefas-recorrentes-diaria",
+];
 
 const db = new pg.Client({
   connectionString: dbUrl,
@@ -44,7 +49,8 @@ try {
   // 2) Extensões (o restore NÃO as recria sozinho).
   const ext = await db.query("select extname from pg_extension where extname in ('pg_cron','pg_net')");
   const nomesExt = ext.rows.map((r) => r.extname);
-  for (const e of ["pg_cron", "pg_net"]) check(nomesExt.includes(e), `extensão ${e}`, nomesExt.includes(e) ? "" : "rode o runbook");
+  for (const e of ["pg_cron", "pg_net"])
+    check(nomesExt.includes(e), `extensão ${e}`, nomesExt.includes(e) ? "" : "rode o runbook");
 
   // 3) Jobs de cron (após o cron:bootstrap do runbook).
   let temCron = true;
@@ -73,7 +79,9 @@ try {
   } else {
     try {
       const w = await db.query("select dek_cifrado from chave_dados where dominio='whatsapp'");
-      const amostra = await db.query("select token_cifrado from whatsapp_config where token_cifrado is not null limit 1");
+      const amostra = await db.query(
+        "select token_cifrado from whatsapp_config where token_cifrado is not null limit 1",
+      );
       if (w.rowCount && amostra.rowCount) {
         const dekW = desembrulhar(w.rows[0].dek_cifrado, master);
         decifrar(amostra.rows[0].token_cifrado, dekW); // lança se algo estiver errado
@@ -89,7 +97,11 @@ try {
   await db.end();
 } catch (e) {
   console.error(`ERRO ao conectar/verificar: ${e.message}`);
-  try { await db.end(); } catch { /* já caiu */ }
+  try {
+    await db.end();
+  } catch {
+    /* já caiu */
+  }
   process.exit(1);
 }
 

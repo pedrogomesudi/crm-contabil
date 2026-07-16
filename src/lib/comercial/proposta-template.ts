@@ -4,12 +4,31 @@ export type DadosTags = {
   proposta: { numero: number; validade: string | null; observacoes: string | null };
   cliente: { nome: string; contato: string | null };
   itens: { descricao: string; valor: number; recorrencia: "mensal" | "unico" }[];
-  marca: { nome: string | null; cnpj: string | null; email: string | null; telefone: string | null; endereco: Record<string, string> | null };
+  marca: {
+    nome: string | null;
+    cnpj: string | null;
+    email: string | null;
+    telefone: string | null;
+    endereco: Record<string, string> | null;
+  };
   responsavel: { nome: string | null; email: string | null; telefone: string | null };
   hoje: string; // ISO yyyy-mm-dd (calculado server-side)
 };
 
-const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+const MESES = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
 
 export function formatarBRL(v: number): string {
   // Intl insere espaço não-quebrável após "R$"; normaliza p/ espaço comum (previsível no template/PDF).
@@ -36,7 +55,10 @@ export function formatarEnderecoLinha(e: Record<string, string> | null): string 
   return [rua, e.bairro, cidadeUf, e.cep].filter(Boolean).join(" · ");
 }
 
-export function montarMapaTags(d: DadosTags): { mapa: Record<string, string>; itens: { descricao: string; recorrencia: string; valor: string }[] } {
+export function montarMapaTags(d: DadosTags): {
+  mapa: Record<string, string>;
+  itens: { descricao: string; recorrencia: string; valor: string }[];
+} {
   const t = totaisProposta(d.itens);
   const itens = d.itens.map((i) => ({
     descricao: i.descricao,

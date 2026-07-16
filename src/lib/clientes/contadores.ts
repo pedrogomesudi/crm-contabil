@@ -23,12 +23,7 @@ export async function listarContadores(): Promise<{ id: string; nome: string }[]
 // Filtra papel=contador: se contador_id apontar p/ não-contador, não retorna.
 export async function contadorPorId(id: string): Promise<{ id: string; nome: string } | null> {
   const admin = createAdminSupabase();
-  const { data } = await admin
-    .from("usuarios")
-    .select("id, nome")
-    .eq("id", id)
-    .eq("papel", "contador")
-    .maybeSingle();
+  const { data } = await admin.from("usuarios").select("id, nome").eq("id", id).eq("papel", "contador").maybeSingle();
   return data ?? null;
 }
 

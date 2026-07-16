@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { valorAssinadoBaixa, saldoTitulo, candidatosMovimento, autoCasar, type BaixaDisp, type TituloAberto, type MovPendente } from "@/lib/conciliacao/casar";
+import {
+  valorAssinadoBaixa,
+  saldoTitulo,
+  candidatosMovimento,
+  autoCasar,
+  type BaixaDisp,
+  type TituloAberto,
+  type MovPendente,
+} from "@/lib/conciliacao/casar";
 
 describe("valorAssinadoBaixa / saldoTitulo", () => {
   it("assina pela natureza do título", () => {
@@ -38,7 +46,10 @@ describe("candidatosMovimento", () => {
 
 describe("autoCasar", () => {
   it("casa o 1:1 inequívoco", () => {
-    const movs: MovPendente[] = [{ id: "m1", valor: 300, data: "2026-08-21" }, { id: "m2", valor: 500, data: "2026-08-11" }];
+    const movs: MovPendente[] = [
+      { id: "m1", valor: 300, data: "2026-08-21" },
+      { id: "m2", valor: 500, data: "2026-08-11" },
+    ];
     const r = autoCasar(movs, baixas, titulos);
     expect(r).toEqual([
       { movimentoId: "m1", alvo: "baixa", alvoId: "b1" },
@@ -46,7 +57,10 @@ describe("autoCasar", () => {
     ]);
   });
   it("não casa quando dois movimentos disputam o mesmo alvo", () => {
-    const movs: MovPendente[] = [{ id: "m1", valor: 300, data: "2026-08-21" }, { id: "m1b", valor: 300, data: "2026-08-22" }];
+    const movs: MovPendente[] = [
+      { id: "m1", valor: 300, data: "2026-08-21" },
+      { id: "m1b", valor: 300, data: "2026-08-22" },
+    ];
     expect(autoCasar(movs, baixas, titulos)).toEqual([]);
   });
 });

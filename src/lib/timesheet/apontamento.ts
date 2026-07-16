@@ -16,7 +16,9 @@ export function formatarHoras(minutos: number): string {
 
 // Aceita os formatos que a pessoa realmente digita: "1h30", "1:30", "90".
 export function parseDuracao(txt: string): number | null {
-  const s = String(txt ?? "").trim().toLowerCase();
+  const s = String(txt ?? "")
+    .trim()
+    .toLowerCase();
   if (!s) return null;
 
   const hm = /^(\d+)\s*[h:]\s*(\d{1,2})?$/.exec(s);

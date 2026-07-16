@@ -70,13 +70,7 @@ describe("paraCsv", () => {
       colunas: [{ chave: "c", rotulo: "C", formato: "texto" }],
       linhas: [{ c: "=SUM(A1)" }, { c: "+55" }, { c: "@cmd" }, { c: "-cmd" }, { c: "-12,50" }],
     });
-    expect(csv.slice(BOM.length).split("\n").slice(1)).toEqual([
-      "'=SUM(A1)",
-      "'+55",
-      "'@cmd",
-      "'-cmd",
-      "-12,50",
-    ]);
+    expect(csv.slice(BOM.length).split("\n").slice(1)).toEqual(["'=SUM(A1)", "'+55", "'@cmd", "'-cmd", "-12,50"]);
   });
 
   it("escapa separador, aspas e quebra de linha com aspas duplas", () => {

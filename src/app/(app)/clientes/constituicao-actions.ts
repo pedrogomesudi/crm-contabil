@@ -7,7 +7,9 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { normalizarConstituicao, validarAtivacao } from "@/lib/clientes/constituicao";
 import { iniciarProcesso } from "@/app/(app)/legalizacao/actions";
 
-export async function criarEmpresaConstituicao(formData: FormData): Promise<{ id?: string; processoId?: string; erro?: string }> {
+export async function criarEmpresaConstituicao(
+  formData: FormData,
+): Promise<{ id?: string; processoId?: string; erro?: string }> {
   const perfil = await getPerfilAtual();
   if (!perfil?.ativo || !podeCriarCliente(perfil.papel)) return { erro: "Sem permissão." };
   const dados = normalizarConstituicao(formData);
@@ -15,19 +17,23 @@ export async function criarEmpresaConstituicao(formData: FormData): Promise<{ id
 
   const supabase = await createServerSupabase();
   const contadorId = String(formData.get("contador_id") ?? "") || null;
-  const { data: cli, error } = await supabase.from("clientes").insert({
-    tipo_pessoa: "PJ",
-    razao_social: dados.razaoSocial,
-    nome_fantasia: dados.nomeFantasia,
-    cpf_cnpj: null,
-    regime_tributario: dados.regime,
-    endereco: dados.endereco,
-    observacoes: dados.observacoes,
-    socios: dados.socios,
-    representante: dados.representante,
-    contador_id: contadorId,
-    status: "em_constituicao",
-  }).select("id").single();
+  const { data: cli, error } = await supabase
+    .from("clientes")
+    .insert({
+      tipo_pessoa: "PJ",
+      razao_social: dados.razaoSocial,
+      nome_fantasia: dados.nomeFantasia,
+      cpf_cnpj: null,
+      regime_tributario: dados.regime,
+      endereco: dados.endereco,
+      observacoes: dados.observacoes,
+      socios: dados.socios,
+      representante: dados.representante,
+      contador_id: contadorId,
+      status: "em_constituicao",
+    })
+    .select("id")
+    .single();
   if (error || !cli) return { erro: "Falha ao criar a empresa (verifique os dados)." };
   const clienteId = cli.id as string;
 
@@ -41,7 +47,13 @@ export async function criarEmpresaConstituicao(formData: FormData): Promise<{ id
       const caminho = `${clienteId}/${crypto.randomUUID()}-formulario-constituicao.pdf`;
       const up = await admin.storage.from("documentos").upload(caminho, buf, { contentType: "application/pdf" });
       if (!up.error) {
-        await admin.from("documentos").insert({ cliente_id: clienteId, nome: "Formulário de constituição", tipo: "constituição", caminho_storage: caminho, enviado_por: perfil.id });
+        await admin.from("documentos").insert({
+          cliente_id: clienteId,
+          nome: "Formulário de constituição",
+          tipo: "constituição",
+          caminho_storage: caminho,
+          enviado_por: perfil.id,
+        });
       }
     }
   }
@@ -66,14 +78,17 @@ export async function ativarEmpresa(clienteId: string, formData: FormData): Prom
   if (v.erro) return { erro: v.erro };
   const digits = cpfCnpj.replace(/\D/g, "");
   const supabase = await createServerSupabase();
-  const { error } = await supabase.from("clientes").update({
-    cpf_cnpj: digits,
-    regime_tributario: regime,
-    inscricao_estadual: String(formData.get("inscricao_estadual") ?? "").trim() || null,
-    inscricao_municipal: String(formData.get("inscricao_municipal") ?? "").trim() || null,
-    status: "ativo",
-    atualizado_em: new Date().toISOString(),
-  }).eq("id", clienteId);
+  const { error } = await supabase
+    .from("clientes")
+    .update({
+      cpf_cnpj: digits,
+      regime_tributario: regime,
+      inscricao_estadual: String(formData.get("inscricao_estadual") ?? "").trim() || null,
+      inscricao_municipal: String(formData.get("inscricao_municipal") ?? "").trim() || null,
+      status: "ativo",
+      atualizado_em: new Date().toISOString(),
+    })
+    .eq("id", clienteId);
   if (error) return { erro: "Falha ao ativar (CNPJ já cadastrado?)." };
   revalidatePath(`/clientes/${clienteId}`);
   return { ok: true };

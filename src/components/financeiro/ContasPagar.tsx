@@ -29,7 +29,10 @@ export function ContasPagar({
   const [pend, start] = useTransition();
   const competencia = mes ? `${mes}-01` : "";
 
-  const carregar = () => start(async () => { if (competencia) setTitulos(await listarTitulosPagar(competencia)); });
+  const carregar = () =>
+    start(async () => {
+      if (competencia) setTitulos(await listarTitulosPagar(competencia));
+    });
   const gerar = () =>
     start(async () => {
       const r = await gerarDespesasRecorrentes(competencia);
@@ -59,32 +62,84 @@ export function ContasPagar({
           <input name="descricao" placeholder="Descrição" required className="rounded border border-linha p-2" />
           <select name="fornecedor_id" required className="rounded border border-linha p-2">
             <option value="">Fornecedor…</option>
-            {fornecedores.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
+            {fornecedores.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.nome}
+              </option>
+            ))}
           </select>
           <select name="categoria_id" className="rounded border border-linha p-2">
             <option value="">Categoria (despesa)…</option>
-            {categorias.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            {categorias.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nome}
+              </option>
+            ))}
           </select>
-          <input name="valor" type="number" step="0.01" placeholder="Valor total" required className="rounded border border-linha p-2" />
+          <input
+            name="valor"
+            type="number"
+            step="0.01"
+            placeholder="Valor total"
+            required
+            className="rounded border border-linha p-2"
+          />
           {modo !== "recorrente" ? (
             <input name="vencimento" type="date" required className="rounded border border-linha p-2" />
           ) : (
-            <input name="dia_vencimento" type="number" min={1} max={28} placeholder="Dia venc. (1–28)" required className="rounded border border-linha p-2" />
+            <input
+              name="dia_vencimento"
+              type="number"
+              min={1}
+              max={28}
+              placeholder="Dia venc. (1–28)"
+              required
+              className="rounded border border-linha p-2"
+            />
           )}
           {modo === "parcelada" && (
-            <input name="total_parcelas" type="number" min={2} placeholder="Nº de parcelas" required className="rounded border border-linha p-2" />
+            <input
+              name="total_parcelas"
+              type="number"
+              min={2}
+              placeholder="Nº de parcelas"
+              required
+              className="rounded border border-linha p-2"
+            />
           )}
         </div>
-        <button type="submit" className="rounded-lg bg-verde px-3 py-2 text-sm font-medium text-white hover:brightness-105">Lançar</button>
+        <button
+          type="submit"
+          className="rounded-lg bg-verde px-3 py-2 text-sm font-medium text-white hover:brightness-105"
+        >
+          Lançar
+        </button>
       </form>
 
       <div className="flex flex-wrap items-end gap-2">
         <label>
           Competência
-          <input type="month" value={mes} onChange={(e) => setMes(e.target.value)} className="ml-2 rounded border border-linha px-2 py-1" />
+          <input
+            type="month"
+            value={mes}
+            onChange={(e) => setMes(e.target.value)}
+            className="ml-2 rounded border border-linha px-2 py-1"
+          />
         </label>
-        <button onClick={carregar} disabled={!competencia || pend} className="rounded border border-linha px-3 py-1 disabled:opacity-60">Carregar</button>
-        <button onClick={gerar} disabled={!competencia || pend} className="rounded-lg bg-verde px-3 py-1 font-medium text-white hover:brightness-105 disabled:opacity-60">Gerar despesas do mês</button>
+        <button
+          onClick={carregar}
+          disabled={!competencia || pend}
+          className="rounded border border-linha px-3 py-1 disabled:opacity-60"
+        >
+          Carregar
+        </button>
+        <button
+          onClick={gerar}
+          disabled={!competencia || pend}
+          className="rounded-lg bg-verde px-3 py-1 font-medium text-white hover:brightness-105 disabled:opacity-60"
+        >
+          Gerar despesas do mês
+        </button>
       </div>
       {msg && <p className="text-cinza">{msg}</p>}
 
@@ -112,10 +167,14 @@ export function ContasPagar({
                     <td className="p-2">{formatarData(t.vencimento)}</td>
                     <td className="p-2">{formatarMoeda(t.valor)}</td>
                     <td className="p-2">{formatarMoeda(saldo)}</td>
-                    <td className="p-2"><Badge variante={badgeStatusTitulo(t.status)}>{t.status}</Badge></td>
+                    <td className="p-2">
+                      <Badge variante={badgeStatusTitulo(t.status)}>{t.status}</Badge>
+                    </td>
                     <td className="p-2 text-right">
                       {saldo > 0 ? (
-                        <button type="button" className="text-blue-600 underline" onClick={() => setPagando(t.id)}>Pagar</button>
+                        <button type="button" className="text-blue-600 underline" onClick={() => setPagando(t.id)}>
+                          Pagar
+                        </button>
                       ) : (
                         <span className="text-cinza-claro">pago</span>
                       )}
@@ -143,19 +202,41 @@ export function ContasPagar({
         >
           <p className="text-sm font-medium">Registrar pagamento</p>
           <div className="grid grid-cols-2 gap-2">
-            <input name="valor_recebido" type="number" step="0.01" placeholder="Valor pago" required className="rounded border border-linha p-2" />
+            <input
+              name="valor_recebido"
+              type="number"
+              step="0.01"
+              placeholder="Valor pago"
+              required
+              className="rounded border border-linha p-2"
+            />
             <input name="data_recebimento" type="date" required className="rounded border border-linha p-2" />
             <select name="conta_bancaria_id" required className="rounded border border-linha p-2">
               <option value="">Conta de saída…</option>
-              {contas.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              {contas.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
             </select>
             <select name="forma_pagamento" required className="rounded border border-linha p-2">
-              {["PIX", "BOLETO", "CARTAO", "TRANSFERENCIA", "DINHEIRO"].map((f) => <option key={f} value={f}>{f}</option>)}
+              {["PIX", "BOLETO", "CARTAO", "TRANSFERENCIA", "DINHEIRO"].map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
             </select>
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="rounded-lg bg-verde px-3 py-2 text-sm font-medium text-white hover:brightness-105">Confirmar</button>
-            <button type="button" onClick={() => setPagando(null)} className="rounded border border-linha px-3 py-2">Cancelar</button>
+            <button
+              type="submit"
+              className="rounded-lg bg-verde px-3 py-2 text-sm font-medium text-white hover:brightness-105"
+            >
+              Confirmar
+            </button>
+            <button type="button" onClick={() => setPagando(null)} className="rounded border border-linha px-3 py-2">
+              Cancelar
+            </button>
           </div>
         </form>
       )}

@@ -3,7 +3,17 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { EscalonamentoView } from "@/app/(app)/obrigacoes/escalonamento/EscalonamentoView";
 import type { ItemEscalado } from "@/app/(app)/obrigacoes/escalonamento-actions";
 
-const itens: ItemEscalado[] = [{ id: "1", clienteNome: "ACME LTDA", obrigacaoNome: "PGDAS-D", vencimentoInterno: "2026-07-01", diasAtraso: 20, nivel: 2, responsavelNome: "Maria" }];
+const itens: ItemEscalado[] = [
+  {
+    id: "1",
+    clienteNome: "ACME LTDA",
+    obrigacaoNome: "PGDAS-D",
+    vencimentoInterno: "2026-07-01",
+    diasAtraso: 20,
+    nivel: 2,
+    responsavelNome: "Maria",
+  },
+];
 
 describe("EscalonamentoView", () => {
   it("lista o item escalado com responsável e nível", () => {

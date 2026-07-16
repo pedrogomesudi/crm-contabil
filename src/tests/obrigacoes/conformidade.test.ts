@@ -4,15 +4,25 @@ import { classificarConformidade, resumirConformidade } from "@/lib/obrigacoes/c
 const hoje = "2026-07-15";
 describe("classificarConformidade", () => {
   it("entregue no dia = no prazo; depois = com atraso", () => {
-    expect(classificarConformidade({ status: "pendente", entregueEm: "2026-07-10", vencimentoLegal: "2026-07-10" }, hoje)).toBe("no_prazo");
-    expect(classificarConformidade({ status: "pendente", entregueEm: "2026-07-12", vencimentoLegal: "2026-07-10" }, hoje)).toBe("com_atraso");
+    expect(
+      classificarConformidade({ status: "pendente", entregueEm: "2026-07-10", vencimentoLegal: "2026-07-10" }, hoje),
+    ).toBe("no_prazo");
+    expect(
+      classificarConformidade({ status: "pendente", entregueEm: "2026-07-12", vencimentoLegal: "2026-07-10" }, hoje),
+    ).toBe("com_atraso");
   });
   it("pendente vencida vs no prazo", () => {
-    expect(classificarConformidade({ status: "pendente", entregueEm: null, vencimentoLegal: "2026-07-14" }, hoje)).toBe("pendente_vencida");
-    expect(classificarConformidade({ status: "pendente", entregueEm: null, vencimentoLegal: "2026-07-16" }, hoje)).toBe("pendente_no_prazo");
+    expect(classificarConformidade({ status: "pendente", entregueEm: null, vencimentoLegal: "2026-07-14" }, hoje)).toBe(
+      "pendente_vencida",
+    );
+    expect(classificarConformidade({ status: "pendente", entregueEm: null, vencimentoLegal: "2026-07-16" }, hoje)).toBe(
+      "pendente_no_prazo",
+    );
   });
   it("dispensada", () => {
-    expect(classificarConformidade({ status: "dispensada", entregueEm: null, vencimentoLegal: "2026-07-01" }, hoje)).toBe("dispensada");
+    expect(
+      classificarConformidade({ status: "dispensada", entregueEm: null, vencimentoLegal: "2026-07-01" }, hoje),
+    ).toBe("dispensada");
   });
 });
 
@@ -33,6 +43,9 @@ describe("resumirConformidade", () => {
     expect(r.pctConformidade).toBe(33); // 1 / (4-1)
   });
   it("base zero → 100", () => {
-    expect(resumirConformidade([{ status: "dispensada", entregueEm: null, vencimentoLegal: "2026-01-01" }], hoje).pctConformidade).toBe(100);
+    expect(
+      resumirConformidade([{ status: "dispensada", entregueEm: null, vencimentoLegal: "2026-01-01" }], hoje)
+        .pctConformidade,
+    ).toBe(100);
   });
 });

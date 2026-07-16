@@ -10,7 +10,15 @@ describe("BoletoTitulo", () => {
     expect(html).toContain("Emitir boleto");
   });
   it("com boleto → linha digitável", () => {
-    const b: BoletoView = { id: "b1", numero: 7, provedor: "asaas", linhaDigitavel: "34191790010104351004791020150008291070026000", pixCopiaCola: "pix", urlPdf: null, status: "emitido" };
+    const b: BoletoView = {
+      id: "b1",
+      numero: 7,
+      provedor: "asaas",
+      linhaDigitavel: "34191790010104351004791020150008291070026000",
+      pixCopiaCola: "pix",
+      urlPdf: null,
+      status: "emitido",
+    };
     const html = renderToStaticMarkup(<BoletoTitulo tituloId="t1" boleto={b} onMudou={() => {}} />);
     expect(html).toContain("Linha digitável");
     expect(html).toContain("#7");

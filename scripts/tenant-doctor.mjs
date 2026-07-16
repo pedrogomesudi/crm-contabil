@@ -33,7 +33,17 @@ if (escritorios.length === 0) {
 }
 
 async function diagnosticar(e) {
-  const linha = { slug: e.slug, problemas: [], avisos: [], migracoes: "—", jobs: "—", admins: "—", chaves: "—", envelope: "—", app: "—" };
+  const linha = {
+    slug: e.slug,
+    problemas: [],
+    avisos: [],
+    migracoes: "—",
+    jobs: "—",
+    admins: "—",
+    chaves: "—",
+    envelope: "—",
+    app: "—",
+  };
 
   const caminho = envDoTenant(e.slug);
   if (!existsSync(caminho)) {
@@ -59,7 +69,9 @@ async function diagnosticar(e) {
   if (!existsSync(dirBackup) || readdirSync(dirBackup).filter((n) => n.endsWith(".sql.gz")).length === 0) {
     linha.avisos.push("sem dump local (rode backup:dump)");
   } else {
-    const arqs = readdirSync(dirBackup).filter((n) => n.endsWith(".sql.gz")).map((n) => statSync(join(dirBackup, n)).mtimeMs);
+    const arqs = readdirSync(dirBackup)
+      .filter((n) => n.endsWith(".sql.gz"))
+      .map((n) => statSync(join(dirBackup, n)).mtimeMs);
     const maisRecente = Math.max(...arqs);
     const dias = (Date.now() - maisRecente) / 86_400_000;
     if (dias > 8) linha.avisos.push(`dump local com ${Math.floor(dias)} dias (rode backup:dump)`);
@@ -81,7 +93,9 @@ async function diagnosticar(e) {
       const aplicadas = m.rows[0].n;
       linha.migracoes = `${aplicadas}/${migrationsNoRepo.length}`;
       if (aplicadas < migrationsNoRepo.length) {
-        linha.problemas.push(`${migrationsNoRepo.length - aplicadas} migration(s) pendente(s) — rode db:migrate:all ANTES do deploy`);
+        linha.problemas.push(
+          `${migrationsNoRepo.length - aplicadas} migration(s) pendente(s) — rode db:migrate:all ANTES do deploy`,
+        );
       }
 
       const j = await db.query("select jobname from cron.job");
@@ -98,7 +112,8 @@ async function diagnosticar(e) {
       try {
         const dek = await db.query("select count(*)::int n from chave_dados");
         linha.envelope = `${dek.rows[0].n}/5`;
-        if (dek.rows[0].n < 5) linha.problemas.push(`envelope incompleto (${dek.rows[0].n}/5 DEKs) — rode cripto:migrar`);
+        if (dek.rows[0].n < 5)
+          linha.problemas.push(`envelope incompleto (${dek.rows[0].n}/5 DEKs) — rode cripto:migrar`);
       } catch {
         linha.envelope = "sem tabela";
         linha.problemas.push("chave_dados ausente — migration 0097 não aplicada?");
@@ -107,7 +122,11 @@ async function diagnosticar(e) {
       await db.end();
     } catch (err) {
       linha.problemas.push(`banco inacessível: ${String(err.message).slice(0, 80)}`);
-      try { await db.end(); } catch { /* já caiu */ }
+      try {
+        await db.end();
+      } catch {
+        /* já caiu */
+      }
     }
   }
 

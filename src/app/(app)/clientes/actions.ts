@@ -8,11 +8,7 @@ import { formatarDocumento, parseValorBR } from "@/lib/format";
 import { aplicarBusca } from "@/lib/clientes/busca";
 import { normalizarFiltro, aplicarFiltroStatus } from "@/lib/clientes/filtroStatus";
 import { exportar } from "@/app/(app)/exportar/actions";
-import type {
-  ArquivoExportado,
-  FormatoExportacao,
-  RelatorioExportavel,
-} from "@/lib/exportar/tipos";
+import type { ArquivoExportado, FormatoExportacao, RelatorioExportavel } from "@/lib/exportar/tipos";
 import { ehContadorValido } from "@/lib/clientes/contadores";
 import { podeExcluirCliente } from "@/lib/clientes/permissoes";
 import { normalizarExtensaoFinanceira } from "@/lib/financeiro/extensaoCliente";
@@ -197,10 +193,7 @@ export async function salvarHonorario(
   // atualizado_em são preenchidos pelo trigger no banco (autoria não-forjável).
   const { data, error } = await supabase
     .from("clientes_financeiro")
-    .upsert(
-      { cliente_id: clienteId, honorario_mensal: valor, ...ext },
-      { onConflict: "cliente_id" },
-    )
+    .upsert({ cliente_id: clienteId, honorario_mensal: valor, ...ext }, { onConflict: "cliente_id" })
     .select("cliente_id");
   if (error || !data || data.length === 0) {
     return { erro: "Sem permissão para alterar honorário." };
@@ -286,9 +279,7 @@ export async function exportarClientes(
 
   const relatorio: RelatorioExportavel = {
     titulo: "Lista de clientes",
-    subtitulo: [q && `busca: ${q}`, normalizarFiltro(filtros.status) || "todos os status"]
-      .filter(Boolean)
-      .join(" · "),
+    subtitulo: [q && `busca: ${q}`, normalizarFiltro(filtros.status) || "todos os status"].filter(Boolean).join(" · "),
     colunas: [
       { chave: "razao_social", rotulo: "Cliente", formato: "texto" },
       { chave: "cpf_cnpj", rotulo: "CPF/CNPJ", formato: "texto" },

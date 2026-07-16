@@ -112,7 +112,11 @@ export function PainelTimesheet({
               Rodando há <strong>{formatarHoras(sessao.minutos)}</strong>
               {sessao.tarefaTitulo && <span className="text-cinza"> · {sessao.tarefaTitulo}</span>}
             </span>
-            <button onClick={() => parar()} disabled={ocupado} className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60">
+            <button
+              onClick={() => parar()}
+              disabled={ocupado}
+              className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60"
+            >
               Parar e apontar
             </button>
             {sessao.suspeita && (
@@ -122,7 +126,11 @@ export function PainelTimesheet({
         ) : (
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-cinza">Nenhum cronômetro em andamento.</span>
-            <button onClick={iniciar} disabled={ocupado} className="rounded-lg border border-linha px-3 py-1.5 text-cinza disabled:opacity-60">
+            <button
+              onClick={iniciar}
+              disabled={ocupado}
+              className="rounded-lg border border-linha px-3 py-1.5 text-cinza disabled:opacity-60"
+            >
               Iniciar (usa o cliente/tarefa selecionados abaixo)
             </button>
           </div>
@@ -148,7 +156,9 @@ export function PainelTimesheet({
               >
                 Gravar
               </button>
-              <button onClick={() => setConfirmar(null)} className="text-xs text-cinza underline">cancelar</button>
+              <button onClick={() => setConfirmar(null)} className="text-xs text-cinza underline">
+                cancelar
+              </button>
             </div>
           </div>
         )}
@@ -160,31 +170,57 @@ export function PainelTimesheet({
         <div className="flex flex-wrap gap-2">
           <label className="text-xs text-cinza">
             Data
-            <input type="date" value={data} onChange={(e) => setData(e.target.value)} className={`mt-0.5 block ${cls}`} />
+            <input
+              type="date"
+              value={data}
+              onChange={(e) => setData(e.target.value)}
+              className={`mt-0.5 block ${cls}`}
+            />
           </label>
           <label className="text-xs text-cinza">
             Duração
-            <input value={duracao} onChange={(e) => setDuracao(e.target.value)} placeholder="1h30" className={`mt-0.5 block w-24 ${cls}`} />
+            <input
+              value={duracao}
+              onChange={(e) => setDuracao(e.target.value)}
+              placeholder="1h30"
+              className={`mt-0.5 block w-24 ${cls}`}
+            />
           </label>
           <label className="text-xs text-cinza">
             Cliente
             <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} className={`mt-0.5 block ${cls}`}>
               <option value="">— interna —</option>
-              {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              {clientes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
             </select>
           </label>
           <label className="text-xs text-cinza">
             Tarefa
             <select value={tarefaId} onChange={(e) => setTarefaId(e.target.value)} className={`mt-0.5 block ${cls}`}>
               <option value="">—</option>
-              {tarefas.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+              {tarefas.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.nome}
+                </option>
+              ))}
             </select>
           </label>
           <label className="flex-1 text-xs text-cinza">
             O que foi feito
-            <input value={descricao} onChange={(e) => setDescricao(e.target.value)} className={`mt-0.5 block w-full ${cls}`} />
+            <input
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              className={`mt-0.5 block w-full ${cls}`}
+            />
           </label>
-          <button onClick={apontar} disabled={ocupado || !duracao} className="mt-5 rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60">
+          <button
+            onClick={apontar}
+            disabled={ocupado || !duracao}
+            className="mt-5 rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60"
+          >
             Apontar
           </button>
         </div>
@@ -192,7 +228,11 @@ export function PainelTimesheet({
           Apontar numa tarefa herda o cliente dela. Sem cliente, a hora é interna (não entra no custo de nenhum
           cliente).
         </p>
-        {erro && <p role="alert" className="text-xs text-negativo">{erro}</p>}
+        {erro && (
+          <p role="alert" className="text-xs text-negativo">
+            {erro}
+          </p>
+        )}
       </section>
 
       {/* Lista */}
@@ -211,7 +251,11 @@ export function PainelTimesheet({
               Colaborador
               <select name="usuarioId" defaultValue={filtros.usuarioId ?? ""} className={`mt-0.5 block ${cls}`}>
                 <option value="">Todos</option>
-                {colaboradores.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                {colaboradores.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
               </select>
             </label>
           )}
@@ -231,7 +275,9 @@ export function PainelTimesheet({
                   <span className="font-medium text-texto">{formatarHoras(a.minutos)}</span>
                   <span className="text-cinza"> · {formatarData(a.data)}</span>
                   {a.clienteId ? (
-                    <Link href={`/clientes/${a.clienteId}`} className="ml-1 text-verde underline">{a.clienteNome}</Link>
+                    <Link href={`/clientes/${a.clienteId}`} className="ml-1 text-verde underline">
+                      {a.clienteNome}
+                    </Link>
                   ) : (
                     <span className="ml-1 text-cinza">(interna)</span>
                   )}
@@ -242,7 +288,11 @@ export function PainelTimesheet({
                     {a.origem === "cronometro" && " · cronômetro"}
                   </span>
                 </span>
-                <button disabled={ocupado} onClick={() => excluir(a.id)} className="text-xs text-negativo underline disabled:opacity-60">
+                <button
+                  disabled={ocupado}
+                  onClick={() => excluir(a.id)}
+                  className="text-xs text-negativo underline disabled:opacity-60"
+                >
                   excluir
                 </button>
               </li>

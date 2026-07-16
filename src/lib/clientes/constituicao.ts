@@ -25,7 +25,10 @@ export type DadosConstituicao = {
 };
 
 export function normalizarConstituicao(fd: FormData): DadosConstituicao | { erro: string } {
-  const t = (k: string, max = 200) => String(fd.get(k) ?? "").trim().slice(0, max);
+  const t = (k: string, max = 200) =>
+    String(fd.get(k) ?? "")
+      .trim()
+      .slice(0, max);
   const razaoSocial = t("razao_social");
   if (!razaoSocial) return { erro: "Informe a razão social pretendida." };
   const regime = t("regime");
@@ -48,7 +51,12 @@ export function normalizarConstituicao(fd: FormData): DadosConstituicao | { erro
           nome: String(s.nome).trim().slice(0, 160),
           cpf: s.cpf ? String(s.cpf).replace(/\D/g, "") || null : null,
           participacao: s.participacao ? String(s.participacao).slice(0, 20) : null,
-          papelSocietario: s.papelSocietario === "administrador" ? "administrador" : s.papelSocietario === "quotista" ? "quotista" : null,
+          papelSocietario:
+            s.papelSocietario === "administrador"
+              ? "administrador"
+              : s.papelSocietario === "quotista"
+                ? "quotista"
+                : null,
           nascimento: s.nascimento ?? null,
           identidade: s.identidade ?? null,
           estadoCivil: s.estadoCivil ?? null,

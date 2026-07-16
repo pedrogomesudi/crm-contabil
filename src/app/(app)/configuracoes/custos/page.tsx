@@ -17,7 +17,9 @@ export default async function CustosPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
-      <Link href="/configuracoes" className="text-sm text-verde underline">← Configurações</Link>
+      <Link href="/configuracoes" className="text-sm text-verde underline">
+        ← Configurações
+      </Link>
       <PageHeader
         titulo="Custo por colaborador"
         subtitulo="Base do custo de atendimento — visível apenas para o admin"

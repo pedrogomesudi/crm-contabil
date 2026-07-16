@@ -3,13 +3,7 @@ import { useState } from "react";
 import { BotaoExportar } from "@/components/ui/BotaoExportar";
 import { formatarData } from "@/lib/format";
 import type { RelatorioExportavel } from "@/lib/exportar/tipos";
-import {
-  listarLancamentos,
-  listarBaixas,
-  type LancamentoRow,
-  type BaixaRow,
-  type TipoFiltro,
-} from "./extrato-actions";
+import { listarLancamentos, listarBaixas, type LancamentoRow, type BaixaRow, type TipoFiltro } from "./extrato-actions";
 
 type Visao = "lancamentos" | "baixas";
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -123,33 +117,15 @@ export function Extrato({
             Baixas
           </button>
         </div>
-        <input
-          type="date"
-          value={inicio}
-          onChange={(e) => recarregar({ inicio: e.target.value })}
-          className={inp}
-        />
-        <input
-          type="date"
-          value={fim}
-          onChange={(e) => recarregar({ fim: e.target.value })}
-          className={inp}
-        />
-        <select
-          value={tipo}
-          onChange={(e) => recarregar({ tipo: e.target.value as TipoFiltro })}
-          className={inp}
-        >
+        <input type="date" value={inicio} onChange={(e) => recarregar({ inicio: e.target.value })} className={inp} />
+        <input type="date" value={fim} onChange={(e) => recarregar({ fim: e.target.value })} className={inp} />
+        <select value={tipo} onChange={(e) => recarregar({ tipo: e.target.value as TipoFiltro })} className={inp}>
           <option value="todos">Todos</option>
           <option value="RECEBER">Receber</option>
           <option value="PAGAR">Pagar</option>
         </select>
         {visao === "lancamentos" && (
-          <select
-            value={categoriaId}
-            onChange={(e) => recarregar({ categoriaId: e.target.value })}
-            className={inp}
-          >
+          <select value={categoriaId} onChange={(e) => recarregar({ categoriaId: e.target.value })} className={inp}>
             <option value="">Toda categoria</option>
             {categorias.map((c) => (
               <option key={c.id} value={c.id}>
@@ -158,12 +134,7 @@ export function Extrato({
             ))}
           </select>
         )}
-        <input
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar cliente"
-          className={inp}
-        />
+        <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar cliente" className={inp} />
         <div className="ml-auto">
           <BotaoExportar relatorio={relatorio} />
         </div>

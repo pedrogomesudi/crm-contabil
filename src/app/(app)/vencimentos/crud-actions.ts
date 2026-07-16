@@ -40,11 +40,7 @@ async function gravar(
   return { ok: true };
 }
 
-export async function salvarCertificado(
-  clienteId: string,
-  _prev: EstadoVenc,
-  formData: FormData,
-): Promise<EstadoVenc> {
+export async function salvarCertificado(clienteId: string, _prev: EstadoVenc, formData: FormData): Promise<EstadoVenc> {
   if (!(await permitido())) return { erro: "Sem permissão." };
   const tipo = texto(formData, "tipo", 2);
   if (tipo !== "A1" && tipo !== "A3") return { erro: "Tipo deve ser A1 ou A3." };
@@ -71,11 +67,7 @@ export async function salvarCertificado(
   );
 }
 
-export async function salvarProcuracao(
-  clienteId: string,
-  _prev: EstadoVenc,
-  formData: FormData,
-): Promise<EstadoVenc> {
+export async function salvarProcuracao(clienteId: string, _prev: EstadoVenc, formData: FormData): Promise<EstadoVenc> {
   if (!(await permitido())) return { erro: "Sem permissão." };
   const orgao = texto(formData, "orgao");
   if (!orgao) return { erro: "Informe o órgão." };

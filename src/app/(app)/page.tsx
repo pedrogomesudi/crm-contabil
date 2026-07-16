@@ -79,9 +79,7 @@ export default async function Dashboard() {
         >
           <span className="text-texto">
             <strong>{fila.minhaFila}</strong> solicitação(ões) interna(s) na sua fila
-            {fila.vencidas > 0 && (
-              <span className="text-negativo"> · {fila.vencidas} com SLA vencido</span>
-            )}
+            {fila.vencidas > 0 && <span className="text-negativo"> · {fila.vencidas} com SLA vencido</span>}
           </span>
         </Link>
       )}
@@ -93,15 +91,11 @@ export default async function Dashboard() {
       ) : total === 0 ? (
         <Card className="p-8 text-center">
           <p className="text-cinza">
-            {ehContador
-              ? "Você ainda não tem clientes atribuídos."
-              : "Nenhum cliente cadastrado ainda."}
+            {ehContador ? "Você ainda não tem clientes atribuídos." : "Nenhum cliente cadastrado ainda."}
           </p>
           {podeCriar && (
             <Link href="/clientes/novo" className="mt-3 inline-block">
-              <Botao variante="primario">
-                {ehContador ? "Cadastrar um cliente" : "Cadastrar o primeiro cliente"}
-              </Botao>
+              <Botao variante="primario">{ehContador ? "Cadastrar um cliente" : "Cadastrar o primeiro cliente"}</Botao>
             </Link>
           )}
         </Card>
@@ -123,9 +117,7 @@ export default async function Dashboard() {
               {REGIMES.map((regime) => (
                 <div key={regime} className="rounded-lg border border-linha bg-creme p-3">
                   <dt className="text-xs text-cinza">{regime}</dt>
-                  <dd className="font-display text-lg font-semibold text-texto">
-                    {nf.format(porRegime[regime] ?? 0)}
-                  </dd>
+                  <dd className="font-display text-lg font-semibold text-texto">{nf.format(porRegime[regime] ?? 0)}</dd>
                 </div>
               ))}
             </dl>

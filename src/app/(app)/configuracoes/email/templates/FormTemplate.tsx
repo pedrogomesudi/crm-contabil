@@ -83,15 +83,26 @@ export function FormTemplate({ templates }: { templates: TemplateView[] }) {
       ) : (
         <ul className="space-y-2">
           {templates.map((t) => (
-            <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-linha bg-white p-3 text-sm">
+            <li
+              key={t.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-linha bg-white p-3 text-sm"
+            >
               <span>
                 <span className="font-medium text-texto">{t.nome}</span>
                 {!t.ativo && <span className="ml-2 text-xs text-cinza">(inativo)</span>}
                 <span className="block text-xs text-cinza">{t.assunto}</span>
               </span>
               <span className="flex gap-3 text-xs">
-                <button onClick={() => abrir(t)} className="text-verde underline">editar</button>
-                <button disabled={ocupado} onClick={() => excluir(t.id)} className="text-negativo underline disabled:opacity-60">excluir</button>
+                <button onClick={() => abrir(t)} className="text-verde underline">
+                  editar
+                </button>
+                <button
+                  disabled={ocupado}
+                  onClick={() => excluir(t.id)}
+                  className="text-negativo underline disabled:opacity-60"
+                >
+                  excluir
+                </button>
               </span>
             </li>
           ))}
@@ -108,7 +119,11 @@ export function FormTemplate({ templates }: { templates: TemplateView[] }) {
             </label>
             <label className="flex-1 text-xs text-cinza">
               Assunto
-              <input value={assunto} onChange={(e) => setAssunto(e.target.value)} className={`mt-0.5 block w-full ${cls}`} />
+              <input
+                value={assunto}
+                onChange={(e) => setAssunto(e.target.value)}
+                className={`mt-0.5 block w-full ${cls}`}
+              />
             </label>
             <label className="mt-5 flex items-center gap-1.5 text-xs text-cinza">
               <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} /> Ativo
@@ -134,7 +149,13 @@ export function FormTemplate({ templates }: { templates: TemplateView[] }) {
 
           <label className="block text-xs text-cinza">
             Corpo
-            <textarea ref={corpoRef} value={corpo} onChange={(e) => setCorpo(e.target.value)} rows={8} className={`mt-0.5 block w-full ${cls}`} />
+            <textarea
+              ref={corpoRef}
+              value={corpo}
+              onChange={(e) => setCorpo(e.target.value)}
+              rows={8}
+              className={`mt-0.5 block w-full ${cls}`}
+            />
           </label>
 
           <div className="rounded-lg bg-creme p-3">
@@ -144,11 +165,21 @@ export function FormTemplate({ templates }: { templates: TemplateView[] }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button disabled={ocupado} onClick={salvar} className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60">
+            <button
+              disabled={ocupado}
+              onClick={salvar}
+              className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60"
+            >
               {ocupado ? "Salvando…" : "Salvar"}
             </button>
-            <button type="button" onClick={() => setAberto(false)} className="text-xs text-cinza underline">cancelar</button>
-            {erro && <span role="alert" className="text-xs text-negativo">{erro}</span>}
+            <button type="button" onClick={() => setAberto(false)} className="text-xs text-cinza underline">
+              cancelar
+            </button>
+            {erro && (
+              <span role="alert" className="text-xs text-negativo">
+                {erro}
+              </span>
+            )}
           </div>
         </div>
       )}

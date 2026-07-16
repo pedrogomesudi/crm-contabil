@@ -5,7 +5,17 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { FormBoletos } from "@/app/(app)/configuracoes/boletos/FormBoletos";
 import type { ConfigBoletoView } from "@/lib/boleto/config";
 
-const base: ConfigBoletoView = { provedor: "asaas", asaasAmbiente: "producao", interContaCorrente: null, contaBancariaId: null, asaasApiKeyDefinida: true, interClientIdDefinido: false, interClientSecretDefinido: false, interCertDefinido: false, interKeyDefinida: false };
+const base: ConfigBoletoView = {
+  provedor: "asaas",
+  asaasAmbiente: "producao",
+  interContaCorrente: null,
+  contaBancariaId: null,
+  asaasApiKeyDefinida: true,
+  interClientIdDefinido: false,
+  interClientSecretDefinido: false,
+  interCertDefinido: false,
+  interKeyDefinida: false,
+};
 
 describe("FormBoletos", () => {
   it("mostra seletor e campos do provedor ativo (asaas)", () => {
@@ -14,7 +24,12 @@ describe("FormBoletos", () => {
     expect(html).toContain("API key");
   });
   it("inter mostra certificado", () => {
-    const html = renderToStaticMarkup(<FormBoletos config={{ ...base, provedor: "inter", asaasApiKeyDefinida: false }} contas={[{ id: "cb1", nome: "Inter PJ" }]} />);
+    const html = renderToStaticMarkup(
+      <FormBoletos
+        config={{ ...base, provedor: "inter", asaasApiKeyDefinida: false }}
+        contas={[{ id: "cb1", nome: "Inter PJ" }]}
+      />,
+    );
     expect(html).toContain("Certificado");
   });
 });

@@ -22,11 +22,18 @@ export async function listarContas(): Promise<{ id: string; nome: string }[]> {
 export async function jaImportados(contaId: string, hashes: string[]): Promise<string[]> {
   if (!(await gate()) || hashes.length === 0) return [];
   const supabase = await createServerSupabase();
-  const { data } = await supabase.from("movimento_bancario").select("dedup_hash").eq("conta_bancaria_id", contaId).in("dedup_hash", hashes);
+  const { data } = await supabase
+    .from("movimento_bancario")
+    .select("dedup_hash")
+    .eq("conta_bancaria_id", contaId)
+    .in("dedup_hash", hashes);
   return (data ?? []).map((r) => r.dedup_hash as string);
 }
 
-export async function importarMovimentos(contaId: string, movimentos: MovimentoBruto[]): Promise<{ inseridos: number; ignorados: number } | { erro: string }> {
+export async function importarMovimentos(
+  contaId: string,
+  movimentos: MovimentoBruto[],
+): Promise<{ inseridos: number; ignorados: number } | { erro: string }> {
   const perfil = await gate();
   if (!perfil) return { erro: "Sem permissão." };
   if (!contaId) return { erro: "Selecione a conta." };
@@ -39,7 +46,15 @@ export async function importarMovimentos(contaId: string, movimentos: MovimentoB
   for (const { m, hash } of comHash) {
     if (existentes.has(hash) || vistos.has(hash)) continue;
     vistos.add(hash);
-    rows.push({ conta_bancaria_id: contaId, data: m.data, valor: m.valor, descricao: m.descricao || null, fitid: m.fitid, dedup_hash: hash, importado_por: perfil.id });
+    rows.push({
+      conta_bancaria_id: contaId,
+      data: m.data,
+      valor: m.valor,
+      descricao: m.descricao || null,
+      fitid: m.fitid,
+      dedup_hash: hash,
+      importado_por: perfil.id,
+    });
   }
   if (rows.length > 0) {
     const { error } = await supabase.from("movimento_bancario").insert(rows);
@@ -48,11 +63,28 @@ export async function importarMovimentos(contaId: string, movimentos: MovimentoB
   return { inseridos: rows.length, ignorados: movimentos.length - rows.length };
 }
 
-export async function listarMovimentos(contaId: string, inicio: string, fim: string, status: string): Promise<MovimentoView[]> {
+export async function listarMovimentos(
+  contaId: string,
+  inicio: string,
+  fim: string,
+  status: string,
+): Promise<MovimentoView[]> {
   if (!(await gate()) || !contaId) return [];
   const supabase = await createServerSupabase();
-  let q = supabase.from("movimento_bancario").select("id, data, descricao, valor, status").eq("conta_bancaria_id", contaId).gte("data", inicio).lte("data", fim).order("data");
+  let q = supabase
+    .from("movimento_bancario")
+    .select("id, data, descricao, valor, status")
+    .eq("conta_bancaria_id", contaId)
+    .gte("data", inicio)
+    .lte("data", fim)
+    .order("data");
   if (status) q = q.eq("status", status);
   const { data } = await q;
-  return (data ?? []).map((r) => ({ id: r.id as string, data: r.data as string, descricao: (r.descricao as string | null) ?? "", valor: Number(r.valor), status: r.status as string }));
+  return (data ?? []).map((r) => ({
+    id: r.id as string,
+    data: r.data as string,
+    descricao: (r.descricao as string | null) ?? "",
+    valor: Number(r.valor),
+    status: r.status as string,
+  }));
 }

@@ -36,7 +36,13 @@ describe("montarDadosContrato", () => {
   it("normaliza endereço todo em maiúsculas para Title Case", () => {
     const upper: ClienteContrato = {
       ...completo,
-      endereco: { logradouro: "R BELKINA DE CARVALHO", numero: "130", bairro: "MORADA DA COLINA", cidade: "UBERLANDIA", uf: "MG" },
+      endereco: {
+        logradouro: "R BELKINA DE CARVALHO",
+        numero: "130",
+        bairro: "MORADA DA COLINA",
+        cidade: "UBERLANDIA",
+        uf: "MG",
+      },
     };
     const { dados } = montarDadosContrato(upper, 1500, "2026-07-01", "2026-06-30");
     expect(dados.endereco).toBe("R Belkina De Carvalho, 130, Morada Da Colina, Uberlandia/MG");

@@ -7,10 +7,26 @@ export function classificarConformidade(inst: Inst, hoje: string): StatusConform
   return inst.vencimentoLegal < hoje ? "pendente_vencida" : "pendente_no_prazo";
 }
 
-export type ResumoConformidade = { total: number; noPrazo: number; comAtraso: number; pendenteVencida: number; pendenteNoPrazo: number; dispensada: number; pctConformidade: number };
+export type ResumoConformidade = {
+  total: number;
+  noPrazo: number;
+  comAtraso: number;
+  pendenteVencida: number;
+  pendenteNoPrazo: number;
+  dispensada: number;
+  pctConformidade: number;
+};
 
 export function resumirConformidade(itens: Inst[], hoje: string): ResumoConformidade {
-  const r: ResumoConformidade = { total: itens.length, noPrazo: 0, comAtraso: 0, pendenteVencida: 0, pendenteNoPrazo: 0, dispensada: 0, pctConformidade: 100 };
+  const r: ResumoConformidade = {
+    total: itens.length,
+    noPrazo: 0,
+    comAtraso: 0,
+    pendenteVencida: 0,
+    pendenteNoPrazo: 0,
+    dispensada: 0,
+    pctConformidade: 100,
+  };
   for (const it of itens) {
     const c = classificarConformidade(it, hoje);
     if (c === "no_prazo") r.noPrazo += 1;

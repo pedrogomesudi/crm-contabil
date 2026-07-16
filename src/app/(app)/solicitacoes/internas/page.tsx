@@ -43,7 +43,9 @@ export default async function InternasPage({ searchParams }: { searchParams: Pro
   return (
     <main className="mx-auto max-w-5xl space-y-5 p-4">
       <div className="flex gap-1 text-sm">
-        <Link href="/solicitacoes" className="rounded-lg border border-linha px-3 py-1.5 text-cinza">Do cliente</Link>
+        <Link href="/solicitacoes" className="rounded-lg border border-linha px-3 py-1.5 text-cinza">
+          Do cliente
+        </Link>
         <span className="rounded-lg border border-verde bg-verde/10 px-3 py-1.5 text-verde">Internas</span>
       </div>
 
@@ -56,19 +58,33 @@ export default async function InternasPage({ searchParams }: { searchParams: Pro
       />
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <Link href={link({ destino: undefined })} className={chip(!sp.destino)}>Todos os destinos</Link>
+        <Link href={link({ destino: undefined })} className={chip(!sp.destino)}>
+          Todos os destinos
+        </Link>
         {DEPARTAMENTOS.map((d) => (
-          <Link key={d.valor} href={link({ destino: d.valor })} className={chip(sp.destino === d.valor)}>{d.rotulo}</Link>
+          <Link key={d.valor} href={link({ destino: d.valor })} className={chip(sp.destino === d.valor)}>
+            {d.rotulo}
+          </Link>
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
-        <Link href={link({ status: undefined })} className={chip(!sp.status)}>Todos os status</Link>
+        <Link href={link({ status: undefined })} className={chip(!sp.status)}>
+          Todos os status
+        </Link>
         {SOLIC_INTERNA_STATUS.map((s) => (
-          <Link key={s.valor} href={link({ status: s.valor })} className={chip(sp.status === s.valor)}>{s.rotulo}</Link>
+          <Link key={s.valor} href={link({ status: s.valor })} className={chip(sp.status === s.valor)}>
+            {s.rotulo}
+          </Link>
         ))}
-        <Link href={link({ vencidas: sp.vencidas === "1" ? undefined : "1" })} className={chip(sp.vencidas === "1")}>SLA vencido</Link>
-        <Link href={link({ minhas: sp.minhas === "1" ? undefined : "1" })} className={chip(sp.minhas === "1")}>Só as minhas</Link>
-        <Link href={link({ semDono: sp.semDono === "1" ? undefined : "1" })} className={chip(sp.semDono === "1")}>Sem responsável</Link>
+        <Link href={link({ vencidas: sp.vencidas === "1" ? undefined : "1" })} className={chip(sp.vencidas === "1")}>
+          SLA vencido
+        </Link>
+        <Link href={link({ minhas: sp.minhas === "1" ? undefined : "1" })} className={chip(sp.minhas === "1")}>
+          Só as minhas
+        </Link>
+        <Link href={link({ semDono: sp.semDono === "1" ? undefined : "1" })} className={chip(sp.semDono === "1")}>
+          Sem responsável
+        </Link>
       </div>
 
       {fila.length === 0 ? (

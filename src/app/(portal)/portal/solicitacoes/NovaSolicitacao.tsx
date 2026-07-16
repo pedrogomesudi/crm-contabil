@@ -34,24 +34,37 @@ export function NovaSolicitacao() {
     <form onSubmit={enviar} className="space-y-2 rounded-2xl border border-linha bg-white p-4 text-sm">
       <h2 className="font-display text-sm font-semibold text-texto">Nova solicitação</h2>
       <div className="flex flex-wrap gap-2">
-        <label className="text-xs text-cinza">Categoria
+        <label className="text-xs text-cinza">
+          Categoria
           <select name="categoria" defaultValue="duvida" className={`mt-0.5 block ${cls}`}>
-            {SOLICITACAO_CATEGORIAS.map((c) => <option key={c.valor} value={c.valor}>{c.rotulo}</option>)}
+            {SOLICITACAO_CATEGORIAS.map((c) => (
+              <option key={c.valor} value={c.valor}>
+                {c.rotulo}
+              </option>
+            ))}
           </select>
         </label>
-        <label className="flex-1 text-xs text-cinza">Assunto
+        <label className="flex-1 text-xs text-cinza">
+          Assunto
           <input name="assunto" required className={`mt-0.5 block w-full ${cls}`} />
         </label>
       </div>
-      <label className="block text-xs text-cinza">Descrição
+      <label className="block text-xs text-cinza">
+        Descrição
         <textarea name="mensagem" required rows={4} className={`mt-0.5 block w-full ${cls}`} />
       </label>
       <div className="flex items-center gap-3">
         <button disabled={ocupado} className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60">
           {ocupado ? "Abrindo…" : "Abrir solicitação"}
         </button>
-        <button type="button" onClick={() => setAberto(false)} className="text-xs text-cinza underline">cancelar</button>
-        {erro && <span role="alert" className="text-xs text-negativo">{erro}</span>}
+        <button type="button" onClick={() => setAberto(false)} className="text-xs text-cinza underline">
+          cancelar
+        </button>
+        {erro && (
+          <span role="alert" className="text-xs text-negativo">
+            {erro}
+          </span>
+        )}
       </div>
     </form>
   );

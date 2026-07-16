@@ -25,7 +25,15 @@ export function parseResposta(status: number, corpo: Record<string, unknown>): R
   }
   // A Sefin pode devolver erros em formatos diferentes; tentamos os conhecidos e,
   // por fim, incluímos o corpo cru para diagnóstico.
-  type Erro = { codigo?: string; Codigo?: string; code?: string; descricao?: string; Descricao?: string; mensagem?: string; message?: string };
+  type Erro = {
+    codigo?: string;
+    Codigo?: string;
+    code?: string;
+    descricao?: string;
+    Descricao?: string;
+    mensagem?: string;
+    message?: string;
+  };
   const lista =
     (Array.isArray(corpo.erros) && (corpo.erros as Erro[])) ||
     (Array.isArray(corpo.mensagens) && (corpo.mensagens as Erro[])) ||
@@ -101,11 +109,6 @@ export async function enviarDps(
   cert: { pfx: Buffer; senha: string },
   ambiente: "homologacao" | "producao",
 ): Promise<ResultadoEmissao> {
-  const { status, json } = await postJsonMtls(
-    "/nfse",
-    { dpsXmlGZipB64: montarCorpoDps(xmlAssinado) },
-    cert,
-    ambiente,
-  );
+  const { status, json } = await postJsonMtls("/nfse", { dpsXmlGZipB64: montarCorpoDps(xmlAssinado) }, cert, ambiente);
   return parseResposta(status, json);
 }

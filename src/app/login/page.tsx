@@ -9,11 +9,7 @@ const AVISOS: Record<string, string> = {
   conta_inativa: "Sua conta está inativa. Procure um administrador do escritório.",
 };
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ erro?: string }>;
-}) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   const supabase = await createServerSupabase();
   const {
     data: { user },
@@ -21,11 +17,7 @@ export default async function LoginPage({
   if (user) {
     // Só manda ao app se o perfil existir e estiver ativo. Checagem simétrica à
     // do layout (app) — evita loop de redirect com perfil ausente/inativo.
-    const { data: perfil } = await supabase
-      .from("usuarios")
-      .select("ativo")
-      .eq("id", user.id)
-      .single();
+    const { data: perfil } = await supabase.from("usuarios").select("ativo").eq("id", user.id).single();
     if (perfil?.ativo) redirect("/");
   }
   const { erro } = await searchParams;

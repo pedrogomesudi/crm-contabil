@@ -5,7 +5,11 @@ export type ZapiConfig = { instance: string; token: string; clientToken: string 
 const BASE = "https://api.z-api.io";
 
 // Monta a requisição de envio de texto (puro, testável).
-export function montarEnvio(cfg: ZapiConfig, telefone: string, texto: string): {
+export function montarEnvio(
+  cfg: ZapiConfig,
+  telefone: string,
+  texto: string,
+): {
   url: string;
   headers: Record<string, string>;
   body: string;

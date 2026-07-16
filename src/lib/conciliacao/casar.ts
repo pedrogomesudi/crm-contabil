@@ -6,15 +6,38 @@ export function saldoTitulo(t: { valor: number; baixado: number }): number {
 }
 
 export type MovPendente = { id: string; valor: number; data: string };
-export type BaixaDisp = { baixaId: string; valorRecebido: number; tipoTitulo: "RECEBER" | "PAGAR"; data: string; clienteNome: string };
-export type TituloAberto = { tituloId: string; valor: number; baixado: number; tipo: "RECEBER" | "PAGAR"; vencimento: string; descricao: string };
+export type BaixaDisp = {
+  baixaId: string;
+  valorRecebido: number;
+  tipoTitulo: "RECEBER" | "PAGAR";
+  data: string;
+  clienteNome: string;
+};
+export type TituloAberto = {
+  tituloId: string;
+  valor: number;
+  baixado: number;
+  tipo: "RECEBER" | "PAGAR";
+  vencimento: string;
+  descricao: string;
+};
 export type CandBaixa = { baixaId: string; data: string; clienteNome: string };
-export type CandTitulo = { tituloId: string; vencimento: string; descricao: string; tipo: "RECEBER" | "PAGAR"; saldo: number };
+export type CandTitulo = {
+  tituloId: string;
+  vencimento: string;
+  descricao: string;
+  tipo: "RECEBER" | "PAGAR";
+  saldo: number;
+};
 
 const igual = (x: number, y: number) => Math.abs(x - y) < 0.005;
 const dist = (a: string, b: string) => Math.abs(Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`));
 
-export function candidatosMovimento(mov: MovPendente, baixas: BaixaDisp[], titulos: TituloAberto[]): { baixas: CandBaixa[]; titulos: CandTitulo[] } {
+export function candidatosMovimento(
+  mov: MovPendente,
+  baixas: BaixaDisp[],
+  titulos: TituloAberto[],
+): { baixas: CandBaixa[]; titulos: CandTitulo[] } {
   const cb = baixas
     .filter((b) => igual(valorAssinadoBaixa(b), mov.valor))
     .sort((a, b) => dist(a.data, mov.data) - dist(b.data, mov.data))
@@ -23,7 +46,13 @@ export function candidatosMovimento(mov: MovPendente, baixas: BaixaDisp[], titul
   const ct = titulos
     .filter((t) => t.tipo === tipoAlvo && igual(saldoTitulo(t), Math.abs(mov.valor)))
     .sort((a, b) => dist(a.vencimento, mov.data) - dist(b.vencimento, mov.data))
-    .map((t) => ({ tituloId: t.tituloId, vencimento: t.vencimento, descricao: t.descricao, tipo: t.tipo, saldo: saldoTitulo(t) }));
+    .map((t) => ({
+      tituloId: t.tituloId,
+      vencimento: t.vencimento,
+      descricao: t.descricao,
+      tipo: t.tipo,
+      saldo: saldoTitulo(t),
+    }));
   return { baixas: cb, titulos: ct };
 }
 

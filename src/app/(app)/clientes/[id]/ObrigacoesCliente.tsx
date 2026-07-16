@@ -6,7 +6,19 @@ import { GerarRetroativo } from "@/app/(app)/obrigacoes/GerarRetroativo";
 
 const dataBR = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 
-export function ObrigacoesCliente({ clienteId, ano, mes, instancias: iniList, podeGerar }: { clienteId: string; ano: number; mes: number; instancias: InstanciaView[]; podeGerar: boolean }) {
+export function ObrigacoesCliente({
+  clienteId,
+  ano,
+  mes,
+  instancias: iniList,
+  podeGerar,
+}: {
+  clienteId: string;
+  ano: number;
+  mes: number;
+  instancias: InstanciaView[];
+  podeGerar: boolean;
+}) {
   const [lista, setLista] = useState<InstanciaView[]>(iniList);
   const [carregando, setCarregando] = useState(false);
   async function recarregar() {
@@ -24,7 +36,9 @@ export function ObrigacoesCliente({ clienteId, ano, mes, instancias: iniList, po
         <h2 className="font-display text-lg font-semibold text-texto">Obrigações da competência</h2>
         {podeGerar && (
           <div className="flex items-center gap-2">
-            <button type="button" onClick={gerar} className="rounded-lg border border-linha px-3 py-1.5 text-sm">Gerar para este cliente</button>
+            <button type="button" onClick={gerar} className="rounded-lg border border-linha px-3 py-1.5 text-sm">
+              Gerar para este cliente
+            </button>
             <GerarRetroativo clienteId={clienteId} anoAtual={ano} onDone={recarregar} />
           </div>
         )}
@@ -42,7 +56,9 @@ export function ObrigacoesCliente({ clienteId, ano, mes, instancias: iniList, po
           <tbody>
             {lista.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-3 py-3 text-cinza">{carregando ? "Carregando…" : "Sem obrigações nesta competência."}</td>
+                <td colSpan={4} className="px-3 py-3 text-cinza">
+                  {carregando ? "Carregando…" : "Sem obrigações nesta competência."}
+                </td>
               </tr>
             )}
             {lista.map((r) => (
@@ -50,7 +66,9 @@ export function ObrigacoesCliente({ clienteId, ano, mes, instancias: iniList, po
                 <td className="px-3 py-1.5 text-texto">{r.obrigacaoNome}</td>
                 <td className="px-3 py-1.5">{dataBR(r.vencimentoInterno)}</td>
                 <td className="px-3 py-1.5">{dataBR(r.vencimentoLegal)}</td>
-                <td className="px-3 py-1.5"><AcoesInstancia inst={r} onDone={recarregar} /></td>
+                <td className="px-3 py-1.5">
+                  <AcoesInstancia inst={r} onDone={recarregar} />
+                </td>
               </tr>
             ))}
           </tbody>

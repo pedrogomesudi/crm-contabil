@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
-  montarMapaTags, tagsNoTexto, formatarMesAno, formatarEnderecoLinha, formatarBRL, type DadosTags,
+  montarMapaTags,
+  tagsNoTexto,
+  formatarMesAno,
+  formatarEnderecoLinha,
+  formatarBRL,
+  type DadosTags,
 } from "@/lib/comercial/proposta-template";
 
 const base: DadosTags = {
@@ -10,7 +15,13 @@ const base: DadosTags = {
     { descricao: "Contábil", valor: 1000, recorrencia: "mensal" },
     { descricao: "Abertura", valor: 500, recorrencia: "unico" },
   ],
-  marca: { nome: "Elevare", cnpj: "11222333000181", email: "c@e.com", telefone: "3433001774", endereco: { cidade: "Uberlândia", uf: "MG" } },
+  marca: {
+    nome: "Elevare",
+    cnpj: "11222333000181",
+    email: "c@e.com",
+    telefone: "3433001774",
+    endereco: { cidade: "Uberlândia", uf: "MG" },
+  },
   responsavel: { nome: "Pedro", email: "p@e.com", telefone: "34999" },
   hoje: "2026-07-11",
 };
@@ -67,10 +78,18 @@ describe("tagsNoTexto", () => {
 });
 
 describe("helpers", () => {
-  it("formatarMesAno em pt-BR", () => { expect(formatarMesAno("2026-07-11")).toBe("Julho/2026"); });
-  it("formatarEnderecoLinha junta partes", () => {
-    expect(formatarEnderecoLinha({ logradouro: "Rua A", numero: "10", cidade: "Uberlândia", uf: "MG" })).toBe("Rua A, 10 · Uberlândia/MG");
+  it("formatarMesAno em pt-BR", () => {
+    expect(formatarMesAno("2026-07-11")).toBe("Julho/2026");
   });
-  it("formatarEnderecoLinha vazio", () => { expect(formatarEnderecoLinha(null)).toBe(""); });
-  it("formatarBRL", () => { expect(formatarBRL(1234.5)).toBe("R$ 1.234,50"); });
+  it("formatarEnderecoLinha junta partes", () => {
+    expect(formatarEnderecoLinha({ logradouro: "Rua A", numero: "10", cidade: "Uberlândia", uf: "MG" })).toBe(
+      "Rua A, 10 · Uberlândia/MG",
+    );
+  });
+  it("formatarEnderecoLinha vazio", () => {
+    expect(formatarEnderecoLinha(null)).toBe("");
+  });
+  it("formatarBRL", () => {
+    expect(formatarBRL(1234.5)).toBe("R$ 1.234,50");
+  });
 });

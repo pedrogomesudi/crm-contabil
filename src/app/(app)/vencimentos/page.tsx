@@ -157,9 +157,7 @@ export default async function VencimentosPage({
             {!visiveis.length && (
               <tr>
                 <td colSpan={5} className="p-4 text-center text-cinza">
-                  {itens.length
-                    ? "Nenhum item para este filtro."
-                    : "Nada vencendo nos próximos 60 dias."}
+                  {itens.length ? "Nenhum item para este filtro." : "Nada vencendo nos próximos 60 dias."}
                 </td>
               </tr>
             )}

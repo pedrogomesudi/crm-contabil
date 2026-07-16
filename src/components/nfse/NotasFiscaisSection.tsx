@@ -72,11 +72,7 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
                         homologação
                       </span>
                     )}
-                    {n.avulsa && (
-                      <span className="ml-1 rounded bg-creme px-1.5 py-0.5 text-xs text-cinza">
-                        avulsa
-                      </span>
-                    )}
+                    {n.avulsa && <span className="ml-1 rounded bg-creme px-1.5 py-0.5 text-xs text-cinza">avulsa</span>}
                     {n.status === "rejeitada" && Array.isArray(n.mensagens) && (
                       <span className="block text-xs text-negativo">
                         {(n.mensagens as { descricao?: string }[]).map((m) => m.descricao).join("; ")}

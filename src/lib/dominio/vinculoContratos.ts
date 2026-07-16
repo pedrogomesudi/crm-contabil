@@ -29,10 +29,7 @@ export type VinculoContratos = {
 // CNPJ a partir da lista de empresas. O elo final é o CNPJ (exato e seguro);
 // só o passo contrato->empresa é por nome. Homônimos (mesma chave, CNPJs
 // diferentes) NÃO são vinculados — melhor deixar manual do que errar o cliente.
-export function vincularContratosPorNome(
-  contratos: ContratoDominio[],
-  empresas: Empresa[],
-): VinculoContratos {
+export function vincularContratosPorNome(contratos: ContratoDominio[], empresas: Empresa[]): VinculoContratos {
   // chave -> cnpj; valor null marca chave ambígua (>1 CNPJ com o mesmo nome).
   const chaveParaCnpj = new Map<string, string | null>();
   for (const e of empresas) {

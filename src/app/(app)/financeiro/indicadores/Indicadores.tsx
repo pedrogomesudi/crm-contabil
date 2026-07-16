@@ -62,34 +62,23 @@ export function Indicadores({ resumo }: { resumo: ResumoMetricas }) {
                   )}
                 </td>
                 <td className="px-3 py-1.5 text-right tabular-nums">{m.base}</td>
-                <td className="px-3 py-1.5 text-right tabular-nums text-verde">
-                  {m.novos ? `+${m.novos}` : "0"}
-                </td>
-                <td className="px-3 py-1.5 text-right tabular-nums text-negativo">
-                  {m.churn ? `-${m.churn}` : "0"}
-                </td>
-                <td className="px-3 py-1.5 text-right tabular-nums">
-                  {m.liquido > 0 ? `+${m.liquido}` : m.liquido}
-                </td>
+                <td className="px-3 py-1.5 text-right tabular-nums text-verde">{m.novos ? `+${m.novos}` : "0"}</td>
+                <td className="px-3 py-1.5 text-right tabular-nums text-negativo">{m.churn ? `-${m.churn}` : "0"}</td>
+                <td className="px-3 py-1.5 text-right tabular-nums">{m.liquido > 0 ? `+${m.liquido}` : m.liquido}</td>
                 <td className="px-3 py-1.5 text-right tabular-nums">{m.ativosFim}</td>
                 <td className="px-3 py-1.5 text-right tabular-nums">{pct(m.churnPct)}</td>
-                <td className="px-3 py-1.5 text-right tabular-nums">
-                  {formatarMoeda(m.churnReceita)}
-                </td>
+                <td className="px-3 py-1.5 text-right tabular-nums">{formatarMoeda(m.churnReceita)}</td>
                 <td className="px-3 py-1.5 text-right tabular-nums">{formatarMoeda(m.mrr)}</td>
-                <td className="px-3 py-1.5 text-right tabular-nums">
-                  {formatarMoeda(m.ticketMedio)}
-                </td>
+                <td className="px-3 py-1.5 text-right tabular-nums">{formatarMoeda(m.ticketMedio)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       <p className="text-xs text-cinza">
-        O MRR de cada mês usa o <strong>honorário vigente naquele mês</strong>. Os meses marcados
-        com <strong>*</strong> contêm algum honorário <strong>estimado</strong> — não há registro do
-        valor da época, e o sistema não finge saber o que não sabe. O histórico real começa nas
-        mudanças registradas a partir de julho/2026.
+        O MRR de cada mês usa o <strong>honorário vigente naquele mês</strong>. Os meses marcados com <strong>*</strong>{" "}
+        contêm algum honorário <strong>estimado</strong> — não há registro do valor da época, e o sistema não finge
+        saber o que não sabe. O histórico real começa nas mudanças registradas a partir de julho/2026.
       </p>
     </div>
   );

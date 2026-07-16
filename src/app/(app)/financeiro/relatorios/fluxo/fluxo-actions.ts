@@ -55,7 +55,10 @@ export async function relatorioFluxo(ano: number): Promise<{ fluxo: FluxoCaixa; 
     const cat = t.categoria_id as string | undefined;
     const tipo = t.tipo as "RECEBER" | "PAGAR" | undefined;
     if (!cat || !tipo) continue;
-    const bxs = (Array.isArray(t.baixa) ? t.baixa : t.baixa ? [t.baixa] : []) as { valor_recebido: number; estornada: boolean }[];
+    const bxs = (Array.isArray(t.baixa) ? t.baixa : t.baixa ? [t.baixa] : []) as {
+      valor_recebido: number;
+      estornada: boolean;
+    }[];
     const baixado = bxs.filter((x) => !x.estornada).reduce((s, x) => s + Number(x.valor_recebido), 0);
     const saldo = Number(t.valor) - baixado;
     if (saldo <= 0) continue;

@@ -28,7 +28,9 @@ export function etapaAdjacente(e: EtapaOportunidade, dir: "anterior" | "proxima"
   return ETAPAS_ATIVAS[j]!.chave;
 }
 
-export function resumoFunil(ops: { etapa: EtapaOportunidade; valorEstimado: number | null }[]): Record<string, { qtd: number; total: number }> {
+export function resumoFunil(
+  ops: { etapa: EtapaOportunidade; valorEstimado: number | null }[],
+): Record<string, { qtd: number; total: number }> {
   const r: Record<string, { qtd: number; total: number }> = {};
   for (const { chave } of ETAPAS_ATIVAS) r[chave] = { qtd: 0, total: 0 };
   for (const o of ops) {

@@ -47,9 +47,7 @@ export default async function UsuariosPage({
       {feedback && (
         <p
           role={ehErro ? "alert" : "status"}
-          className={`rounded px-3 py-2 text-sm ${
-            ehErro ? "bg-negativo/10 text-negativo" : "bg-verde/10 text-verde"
-          }`}
+          className={`rounded px-3 py-2 text-sm ${ehErro ? "bg-negativo/10 text-negativo" : "bg-verde/10 text-verde"}`}
         >
           {feedback}
         </p>
@@ -129,7 +127,10 @@ export default async function UsuariosPage({
                             </option>
                           ))}
                         </select>
-                        <BotaoAcao className="rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme" rotulo={`Salvar departamento de ${u.nome}`}>
+                        <BotaoAcao
+                          className="rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme"
+                          rotulo={`Salvar departamento de ${u.nome}`}
+                        >
                           Salvar
                         </BotaoAcao>
                       </form>
@@ -154,7 +155,10 @@ export default async function UsuariosPage({
                                 </option>
                               ))}
                           </select>
-                          <BotaoAcao className="rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme" rotulo={`Salvar superior de ${u.nome}`}>
+                          <BotaoAcao
+                            className="rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme"
+                            rotulo={`Salvar superior de ${u.nome}`}
+                          >
                             Salvar
                           </BotaoAcao>
                         </form>
@@ -166,15 +170,9 @@ export default async function UsuariosPage({
                       ) : (
                         <form action={definirAtivo.bind(null, u.id)}>
                           <BotaoAcao
-                            className={`rounded px-2 py-1 ${
-                              u.ativo ? "bg-creme text-cinza" : "bg-verde text-white"
-                            }`}
+                            className={`rounded px-2 py-1 ${u.ativo ? "bg-creme text-cinza" : "bg-verde text-white"}`}
                             rotulo={`${u.ativo ? "Desativar" : "Ativar"} ${u.nome}`}
-                            confirmar={
-                              u.ativo
-                                ? `Desativar ${u.nome}? Ele perderá o acesso imediatamente.`
-                                : undefined
-                            }
+                            confirmar={u.ativo ? `Desativar ${u.nome}? Ele perderá o acesso imediatamente.` : undefined}
                           >
                             {u.ativo ? "Desativar" : "Ativar"}
                           </BotaoAcao>

@@ -53,18 +53,36 @@ export function FormCustos({
             Colaborador
             <select value={usuarioId} onChange={(e) => setUsuarioId(e.target.value)} className={`mt-0.5 block ${cls}`}>
               <option value="">— escolher —</option>
-              {colaboradores.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              {colaboradores.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
             </select>
           </label>
           <label className="text-xs text-cinza">
             Custo por hora (R$)
-            <input value={custoHora} onChange={(e) => setCustoHora(e.target.value)} placeholder="65,00" className={`mt-0.5 block w-28 ${cls}`} />
+            <input
+              value={custoHora}
+              onChange={(e) => setCustoHora(e.target.value)}
+              placeholder="65,00"
+              className={`mt-0.5 block w-28 ${cls}`}
+            />
           </label>
           <label className="text-xs text-cinza">
             Vigente a partir de
-            <input type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} className={`mt-0.5 block ${cls}`} />
+            <input
+              type="date"
+              value={inicio}
+              onChange={(e) => setInicio(e.target.value)}
+              className={`mt-0.5 block ${cls}`}
+            />
           </label>
-          <button disabled={ocupado || !usuarioId || !custoHora} onClick={salvar} className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60">
+          <button
+            disabled={ocupado || !usuarioId || !custoHora}
+            onClick={salvar}
+            className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60"
+          >
             Salvar
           </button>
         </div>
@@ -72,7 +90,11 @@ export function FormCustos({
           A nova vigência <strong>fecha a anterior</strong> automaticamente. O relatório sempre usa o custo
           <strong> vigente na data do apontamento</strong> — um aumento não reescreve a rentabilidade passada.
         </p>
-        {erro && <p role="alert" className="text-xs text-negativo">{erro}</p>}
+        {erro && (
+          <p role="alert" className="text-xs text-negativo">
+            {erro}
+          </p>
+        )}
       </section>
 
       {custos.length === 0 ? (
@@ -97,7 +119,11 @@ export function FormCustos({
                     {formatarData(c.vigenciaInicio)} → {c.vigenciaFim ? formatarData(c.vigenciaFim) : "atual"}
                   </td>
                   <td className="px-3 py-2 text-right">
-                    <button disabled={ocupado} onClick={() => excluir(c.id)} className="text-xs text-negativo underline disabled:opacity-60">
+                    <button
+                      disabled={ocupado}
+                      onClick={() => excluir(c.id)}
+                      className="text-xs text-negativo underline disabled:opacity-60"
+                    >
                       excluir
                     </button>
                   </td>

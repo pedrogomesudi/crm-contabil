@@ -86,7 +86,12 @@ export function BaixarNotasZip() {
         }
         if (ok) adicionadas++;
         else falhou.push(nota);
-        setProg((p) => ({ feitas: p.feitas + 1, total: p.total, ok: p.ok + (ok ? 1 : 0), falha: p.falha + (ok ? 0 : 1) }));
+        setProg((p) => ({
+          feitas: p.feitas + 1,
+          total: p.total,
+          ok: p.ok + (ok ? 1 : 0),
+          falha: p.falha + (ok ? 0 : 1),
+        }));
       }
     }
     await Promise.all(Array.from({ length: CONCORRENCIA }, worker));
@@ -112,9 +117,9 @@ export function BaixarNotasZip() {
       <div>
         <h2 className="font-display text-sm font-semibold text-texto">Baixar notas do mês (ZIP)</h2>
         <p className="text-xs text-cinza">
-          Baixa as NFS-e autorizadas da competência, nomeadas pela razão social do cliente. <strong>PDF (DANFSe)</strong>{" "}
-          e <strong>XML</strong> em botões separados. Os PDFs ficam em cache — a 1ª baixa do mês busca no ADN nacional
-          (com retentativa); as seguintes são instantâneas.
+          Baixa as NFS-e autorizadas da competência, nomeadas pela razão social do cliente.{" "}
+          <strong>PDF (DANFSe)</strong> e <strong>XML</strong> em botões separados. Os PDFs ficam em cache — a 1ª baixa
+          do mês busca no ADN nacional (com retentativa); as seguintes são instantâneas.
         </p>
       </div>
 

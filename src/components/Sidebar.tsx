@@ -4,11 +4,30 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Papel } from "@/lib/tipos";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
-import { podeAtender, podeAtenderSolicitacoes, podeCriarCliente, podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
+import {
+  podeAtender,
+  podeAtenderSolicitacoes,
+  podeCriarCliente,
+  podeGerenciarVencimentos,
+} from "@/lib/clientes/permissoes";
 import { sair } from "@/app/login/actions";
 import { LogoSaldo } from "@/components/marca/LogoSaldo";
 
-export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes = 0, escalonamento = 0, vencimentos = 0 }: { papel: Papel; nome: string; alertasOnboarding?: number; riscosObrigacoes?: number; escalonamento?: number; vencimentos?: number }) {
+export function Sidebar({
+  papel,
+  nome,
+  alertasOnboarding = 0,
+  riscosObrigacoes = 0,
+  escalonamento = 0,
+  vencimentos = 0,
+}: {
+  papel: Papel;
+  nome: string;
+  alertasOnboarding?: number;
+  riscosObrigacoes?: number;
+  escalonamento?: number;
+  vencimentos?: number;
+}) {
   const pathname = usePathname();
   const [aberto, setAberto] = useState(false);
   // Obrigações, Escalonamento e Vencimentos saíram do menu (agora vivem dentro de Clientes).
@@ -67,7 +86,9 @@ export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes =
           >
             <span className="flex items-center justify-between gap-2">
               {it.label}
-              {it.badge ? <span className="rounded-full bg-negativo px-1.5 text-[10px] font-semibold text-white">{it.badge}</span> : null}
+              {it.badge ? (
+                <span className="rounded-full bg-negativo px-1.5 text-[10px] font-semibold text-white">{it.badge}</span>
+              ) : null}
             </span>
           </Link>
         );
@@ -123,7 +144,10 @@ export function Sidebar({ papel, nome, alertasOnboarding = 0, riscosObrigacoes =
         <p className="truncate font-mono text-xs text-mono-muted">{nome}</p>
         {nav}
         <form action={sair} className="mt-auto">
-          <button type="submit" className="rounded-lg px-3 py-2 text-sm text-texto-claro hover:bg-tinta-2 hover:text-white">
+          <button
+            type="submit"
+            className="rounded-lg px-3 py-2 text-sm text-texto-claro hover:bg-tinta-2 hover:text-white"
+          >
             Sair
           </button>
         </form>

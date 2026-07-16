@@ -185,11 +185,7 @@ export async function dispararComunicado(
   let erros = 0;
 
   for (const c of destinatarios) {
-    const vars = variaveisDoCliente(
-      { razaoSocial: c.razaoSocial, cnpj: c.cpfCnpj, email: c.email },
-      escritorio,
-      hoje,
-    );
+    const vars = variaveisDoCliente({ razaoSocial: c.razaoSocial, cnpj: c.cpfCnpj, email: c.email }, escritorio, hoje);
 
     let ok = false;
     let msgErro: string | null = null;
@@ -327,7 +323,9 @@ export async function detalheComunicado(
 }
 
 // Reprocessa SÓ os que falharam. Quem já recebeu não recebe de novo (índice único).
-export async function reenviarFalhas(comunicadoId: string): Promise<{ enviados?: number; erros?: number; erro?: string }> {
+export async function reenviarFalhas(
+  comunicadoId: string,
+): Promise<{ enviados?: number; erros?: number; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
   const { data: com } = await supabase

@@ -38,7 +38,10 @@ describe("mapearEvento", () => {
 
   it("normaliza o e-mail do signatário para lowercase", () => {
     expect(
-      mapearEvento({ event: { name: "sign", data: { signer: { email: " Joao@Empresa.COM " } } }, document: { key: "d" } }),
+      mapearEvento({
+        event: { name: "sign", data: { signer: { email: " Joao@Empresa.COM " } } },
+        document: { key: "d" },
+      }),
     ).toEqual({ tipo: "assinou", documentKey: "d", email: "joao@empresa.com" });
   });
 });

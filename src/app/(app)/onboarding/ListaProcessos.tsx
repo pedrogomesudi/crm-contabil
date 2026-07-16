@@ -2,7 +2,13 @@
 import Link from "next/link";
 import type { ResumoProcesso } from "./processos-actions";
 
-const PERFIL_LABEL: Record<string, string> = { mei: "MEI", simples_sem_func: "Simples s/ func", simples_com_func: "Simples c/ func", presumido_real: "Presumido/Real", pf: "PF" };
+const PERFIL_LABEL: Record<string, string> = {
+  mei: "MEI",
+  simples_sem_func: "Simples s/ func",
+  simples_com_func: "Simples c/ func",
+  presumido_real: "Presumido/Real",
+  pf: "PF",
+};
 
 export function ListaProcessos({ itens, hoje }: { itens: ResumoProcesso[]; hoje: string }) {
   if (itens.length === 0) return <p className="text-sm text-cinza">Nenhum onboarding em andamento.</p>;
@@ -23,7 +29,10 @@ export function ListaProcessos({ itens, hoje }: { itens: ResumoProcesso[]; hoje:
             return (
               <tr key={o.processoId} className="border-b border-linha/60">
                 <td className="px-3 py-2">
-                  <Link href={`/onboarding/${o.clienteId}`} className="text-texto underline decoration-linha hover:decoration-verde">
+                  <Link
+                    href={`/onboarding/${o.clienteId}`}
+                    className="text-texto underline decoration-linha hover:decoration-verde"
+                  >
                     {o.razaoSocial}
                   </Link>
                 </td>
@@ -31,12 +40,17 @@ export function ListaProcessos({ itens, hoje }: { itens: ResumoProcesso[]; hoje:
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-24 overflow-hidden rounded-full bg-linha">
-                      <div className={`h-full rounded-full ${o.concluido ? "bg-verde" : "bg-verde/60"}`} style={{ width: `${o.pct}%` }} />
+                      <div
+                        className={`h-full rounded-full ${o.concluido ? "bg-verde" : "bg-verde/60"}`}
+                        style={{ width: `${o.pct}%` }}
+                      />
                     </div>
                     <span className="text-xs tabular-nums text-cinza">{o.pct}%</span>
                   </div>
                 </td>
-                <td className={`px-3 py-2 text-right tabular-nums ${atrasado ? "font-semibold text-negativo" : ""}`}>{o.proximoPrazo ? `${o.proximoPrazo.slice(8, 10)}/${o.proximoPrazo.slice(5, 7)}` : "—"}</td>
+                <td className={`px-3 py-2 text-right tabular-nums ${atrasado ? "font-semibold text-negativo" : ""}`}>
+                  {o.proximoPrazo ? `${o.proximoPrazo.slice(8, 10)}/${o.proximoPrazo.slice(5, 7)}` : "—"}
+                </td>
               </tr>
             );
           })}

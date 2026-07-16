@@ -15,7 +15,10 @@ export default async function ExtratoPage() {
   const ultimo = new Date(Date.UTC(ano, mes, 0)).getUTCDate();
   const inicio = `${hoje.slice(0, 7)}-01`;
   const fim = `${hoje.slice(0, 7)}-${String(ultimo).padStart(2, "0")}`;
-  const [categorias, lancamentosIni] = await Promise.all([listarCategoriasFiltro(), listarLancamentos(inicio, fim, "todos", null)]);
+  const [categorias, lancamentosIni] = await Promise.all([
+    listarCategoriasFiltro(),
+    listarLancamentos(inicio, fim, "todos", null),
+  ]);
   return (
     <main className="mx-auto max-w-5xl space-y-5 p-4">
       <Voltar href="/financeiro/relatorios" />

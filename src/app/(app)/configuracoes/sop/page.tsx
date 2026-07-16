@@ -15,7 +15,9 @@ export default async function SopPage() {
 
   return (
     <main className="mx-auto max-w-4xl space-y-5 p-4">
-      <Link href="/configuracoes" className="text-sm text-verde underline">← Configurações</Link>
+      <Link href="/configuracoes" className="text-sm text-verde underline">
+        ← Configurações
+      </Link>
       <PageHeader
         titulo="Modelos de processo (SOPs)"
         subtitulo="Etapas que viram tarefas — em ondas paralelas e sequenciais"

@@ -1,10 +1,6 @@
 "use client";
 import { useActionState } from "react";
-import {
-  salvarEmitente,
-  salvarCertificadoCliente,
-  type EstadoEmitente,
-} from "@/app/(app)/clientes/[id]/nfse-emitente";
+import { salvarEmitente, salvarCertificadoCliente, type EstadoEmitente } from "@/app/(app)/clientes/[id]/nfse-emitente";
 import { certificadoValido } from "@/lib/nfse/emitente";
 
 type EmitenteDefaults = {
@@ -31,10 +27,7 @@ export function EmitenteConfig({
   emitente: EmitenteDefaults;
   certificadoValidade: string | null;
 }) {
-  const [estado, action, pend] = useActionState<EstadoEmitente, FormData>(
-    salvarEmitente.bind(null, clienteId),
-    {},
-  );
+  const [estado, action, pend] = useActionState<EstadoEmitente, FormData>(salvarEmitente.bind(null, clienteId), {});
   const [estadoCert, actionCert, pendCert] = useActionState<EstadoEmitente, FormData>(
     salvarCertificadoCliente.bind(null, clienteId),
     {},
@@ -150,7 +143,10 @@ export function EmitenteConfig({
           Optante do Simples Nacional
         </label>
         <div className="col-span-2 flex items-center gap-3">
-          <button disabled={pend} className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60">
+          <button
+            disabled={pend}
+            className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
+          >
             {pend ? "Salvando…" : "Salvar dados do emitente"}
           </button>
           {estado.ok && <span className="text-xs text-verde">Salvo ✓</span>}
@@ -169,7 +165,11 @@ export function EmitenteConfig({
         </label>
         <label className="block">
           Senha
-          <input type="password" name="senha" className="mt-1 rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto focus:border-verde" />
+          <input
+            type="password"
+            name="senha"
+            className="mt-1 rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto focus:border-verde"
+          />
         </label>
         <button disabled={pendCert} className="rounded border px-3 py-1 disabled:opacity-60">
           {pendCert ? "Enviando…" : "Enviar certificado"}

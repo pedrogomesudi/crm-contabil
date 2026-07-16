@@ -73,7 +73,10 @@ export async function excluirTratamento(id: string): Promise<{ ok?: boolean; err
 }
 
 // ----------------------------------------------------------------- Config
-export async function salvarConfigLgpd(input: { retencaoMeses: number; encarregado: string }): Promise<{ ok?: boolean; erro?: string }> {
+export async function salvarConfigLgpd(input: {
+  retencaoMeses: number;
+  encarregado: string;
+}): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await exigirAdmin())) return { erro: "Apenas admin." };
   if (!Number.isInteger(input.retencaoMeses) || input.retencaoMeses < 0 || input.retencaoMeses > 600) {
     return { erro: "Retenção inválida (0 a 600 meses)." };
@@ -187,7 +190,10 @@ export async function anonimizarTitular(
   const { data: portais } = await admin.from("usuarios").select("id").eq("cliente_id", clienteId);
   const anonimizadosPortal: string[] = [];
   for (const u of portais ?? []) {
-    await admin.from("usuarios").update({ ativo: false, nome: "[anonimizado]" }).eq("id", u.id as string);
+    await admin
+      .from("usuarios")
+      .update({ ativo: false, nome: "[anonimizado]" })
+      .eq("id", u.id as string);
     anonimizadosPortal.push(u.id as string);
   }
 

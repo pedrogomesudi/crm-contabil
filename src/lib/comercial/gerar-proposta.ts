@@ -23,8 +23,15 @@ const CONHECIDAS = new Set([...TAGS_DISPONIVEIS.map((t) => t.tag), "descricao", 
 const EXTERNO = /(?:src|href)\s*=\s*["']https?:\/\//i;
 const ZIP_SIG = [0x50, 0x4b, 0x03, 0x04];
 
-export function validarTemplate(nome: string, bytes: Uint8Array): {
-  tipo: "docx" | "html"; erro?: string; tagsOk?: string[]; tagsDesconhecidas?: string[]; avisos?: string[];
+export function validarTemplate(
+  nome: string,
+  bytes: Uint8Array,
+): {
+  tipo: "docx" | "html";
+  erro?: string;
+  tagsOk?: string[];
+  tagsDesconhecidas?: string[];
+  avisos?: string[];
 } {
   const n = nome.toLowerCase();
   const ext = n.endsWith(".docx") ? "docx" : n.endsWith(".html") || n.endsWith(".htm") ? "html" : null;
@@ -42,7 +49,9 @@ export function validarTemplate(nome: string, bytes: Uint8Array): {
   const tagsDesconhecidas = tags.filter((t) => !CONHECIDAS.has(t));
   const avisos: string[] = [];
   if (EXTERNO.test(texto)) {
-    avisos.push("O HTML referencia um recurso externo (http). Embuta imagens/estilos como data URI — recursos externos não são carregados na geração.");
+    avisos.push(
+      "O HTML referencia um recurso externo (http). Embuta imagens/estilos como data URI — recursos externos não são carregados na geração.",
+    );
   }
   return { tipo: "html", tagsOk, tagsDesconhecidas, avisos };
 }

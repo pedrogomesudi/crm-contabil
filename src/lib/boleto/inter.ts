@@ -2,12 +2,18 @@ import type { DadosEmissao, BoletoEmitido, EventoPagamento, ProvedorBoleto } fro
 import { Agent } from "undici";
 
 export function baseUrlInter(ambiente: "sandbox" | "producao"): { oauth: string; cobranca: string } {
-  const host = ambiente === "producao" ? "https://cdpj.partners.bancointer.com.br" : "https://cdpj-sandbox.partners.uatinter.co";
+  const host =
+    ambiente === "producao" ? "https://cdpj.partners.bancointer.com.br" : "https://cdpj-sandbox.partners.uatinter.co";
   return { oauth: `${host}/oauth/v2/token`, cobranca: `${host}/cobranca/v3` };
 }
 
 export function corpoTokenInter(clientId: string, clientSecret: string): Record<string, string> {
-  return { grant_type: "client_credentials", client_id: clientId, client_secret: clientSecret, scope: "boleto-cobranca.read boleto-cobranca.write" };
+  return {
+    grant_type: "client_credentials",
+    client_id: clientId,
+    client_secret: clientSecret,
+    scope: "boleto-cobranca.read boleto-cobranca.write",
+  };
 }
 
 export function tipoPessoaPorDoc(documento: string): "FISICA" | "JURIDICA" {
@@ -28,14 +34,26 @@ export function corpoCobrancaInter(dados: DadosEmissao): Record<string, unknown>
     uf: e?.uf ?? "",
   };
   if (dados.pagadorEmail) pagador.email = dados.pagadorEmail;
-  return { seuNumero: dados.seuNumero, valorNominal: dados.valor, dataVencimento: dados.vencimento, numDiasAgenda: 60, pagador };
+  return {
+    seuNumero: dados.seuNumero,
+    valorNominal: dados.valor,
+    dataVencimento: dados.vencimento,
+    numDiasAgenda: 60,
+    pagador,
+  };
 }
 
 const str = (v: unknown): string | null => (typeof v === "string" && v.length > 0 ? v : null);
 
 export function parsearConsultaInter(codigoSolicitacao: string, consulta: Record<string, unknown>): BoletoEmitido {
-  const boleto = (typeof consulta.boleto === "object" && consulta.boleto !== null ? consulta.boleto : {}) as Record<string, unknown>;
-  const pix = (typeof consulta.pix === "object" && consulta.pix !== null ? consulta.pix : {}) as Record<string, unknown>;
+  const boleto = (typeof consulta.boleto === "object" && consulta.boleto !== null ? consulta.boleto : {}) as Record<
+    string,
+    unknown
+  >;
+  const pix = (typeof consulta.pix === "object" && consulta.pix !== null ? consulta.pix : {}) as Record<
+    string,
+    unknown
+  >;
   return {
     provedorBoletoId: codigoSolicitacao,
     nossoNumero: str(boleto.nossoNumero),
@@ -58,7 +76,14 @@ export function interpretarWebhookInter(payload: unknown): EventoPagamento | nul
   };
 }
 
-export function criarAdaptadorInter(clientId: string, clientSecret: string, contaCorrente: string, certPem: string, keyPem: string, ambiente: "sandbox" | "producao"): ProvedorBoleto {
+export function criarAdaptadorInter(
+  clientId: string,
+  clientSecret: string,
+  contaCorrente: string,
+  certPem: string,
+  keyPem: string,
+  ambiente: "sandbox" | "producao",
+): ProvedorBoleto {
   const urls = baseUrlInter(ambiente);
   const dispatcher = new Agent({ connect: { cert: certPem, key: keyPem } });
   let token: { valor: string; expiraEm: number } | null = null;
@@ -67,7 +92,12 @@ export function criarAdaptadorInter(clientId: string, clientSecret: string, cont
     const agora = Date.now();
     if (token && token.expiraEm > agora + 30000) return token.valor;
     const body = new URLSearchParams(corpoTokenInter(clientId, clientSecret)).toString();
-    const r = await fetch(urls.oauth, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body, dispatcher } as RequestInit & { dispatcher: Agent });
+    const r = await fetch(urls.oauth, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+      dispatcher,
+    } as RequestInit & { dispatcher: Agent });
     const j = (await r.json().catch(() => ({}))) as Record<string, unknown>;
     if (!r.ok) throw new Error(`Inter token ${r.status}: ${JSON.stringify(j)}`);
     const exp = typeof j.expires_in === "number" ? j.expires_in : 3600;
@@ -75,8 +105,18 @@ export function criarAdaptadorInter(clientId: string, clientSecret: string, cont
     return token.valor;
   }
 
-  async function req(method: "GET" | "POST", path: string, tk: string, body?: unknown): Promise<Record<string, unknown>> {
-    const r = await fetch(`${urls.cobranca}${path}`, { method, headers: { Authorization: `Bearer ${tk}`, "Content-Type": "application/json", "x-conta-corrente": contaCorrente }, body: body === undefined ? undefined : JSON.stringify(body), dispatcher } as RequestInit & { dispatcher: Agent });
+  async function req(
+    method: "GET" | "POST",
+    path: string,
+    tk: string,
+    body?: unknown,
+  ): Promise<Record<string, unknown>> {
+    const r = await fetch(`${urls.cobranca}${path}`, {
+      method,
+      headers: { Authorization: `Bearer ${tk}`, "Content-Type": "application/json", "x-conta-corrente": contaCorrente },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      dispatcher,
+    } as RequestInit & { dispatcher: Agent });
     const j = (await r.json().catch(() => ({}))) as Record<string, unknown>;
     if (!r.ok) throw new Error(`Inter ${r.status}: ${JSON.stringify(j)}`);
     return j;

@@ -13,7 +13,11 @@ export default async function AlertasPage() {
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
       <PageHeader titulo="Alertas de prazo" subtitulo="Itens do onboarding vencendo ou vencidos" />
-      {!ativos && <p className="rounded-lg bg-creme px-3 py-2 text-sm text-cinza">Notificações de prazo desativadas nas configurações.</p>}
+      {!ativos && (
+        <p className="rounded-lg bg-creme px-3 py-2 text-sm text-cinza">
+          Notificações de prazo desativadas nas configurações.
+        </p>
+      )}
       <AlertasView alertas={alertas} />
     </main>
   );

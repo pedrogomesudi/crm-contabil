@@ -4,16 +4,36 @@ import { criarAdaptadorAsaas } from "./asaas";
 import { criarAdaptadorInter } from "./inter";
 import type { ProvedorBoleto } from "./tipos";
 
-export async function adaptadorAtivo(): Promise<{ adaptador: ProvedorBoleto; provedor: "inter" | "asaas" } | { erro: string }> {
+export async function adaptadorAtivo(): Promise<
+  { adaptador: ProvedorBoleto; provedor: "inter" | "asaas" } | { erro: string }
+> {
   const supabase = await createServerSupabase();
-  const { data } = await supabase.from("boleto_config").select("provedor, asaas_api_key_cifrada, asaas_ambiente, inter_client_id_cifrado, inter_client_secret_cifrado, inter_conta_corrente, inter_cert_cifrado, inter_key_cifrado").eq("id", 1).maybeSingle();
+  const { data } = await supabase
+    .from("boleto_config")
+    .select(
+      "provedor, asaas_api_key_cifrada, asaas_ambiente, inter_client_id_cifrado, inter_client_secret_cifrado, inter_conta_corrente, inter_cert_cifrado, inter_key_cifrado",
+    )
+    .eq("id", 1)
+    .maybeSingle();
   if (!data || data.provedor === "nenhum") return { erro: "Nenhum provedor de boleto configurado." };
   try {
     if (data.provedor === "asaas") {
       if (!data.asaas_api_key_cifrada) return { erro: "Asaas sem API key configurada." };
-      return { adaptador: criarAdaptadorAsaas(await decifrarCredencial(data.asaas_api_key_cifrada as string), data.asaas_ambiente as "sandbox" | "producao"), provedor: "asaas" };
+      return {
+        adaptador: criarAdaptadorAsaas(
+          await decifrarCredencial(data.asaas_api_key_cifrada as string),
+          data.asaas_ambiente as "sandbox" | "producao",
+        ),
+        provedor: "asaas",
+      };
     }
-    if (!data.inter_client_id_cifrado || !data.inter_client_secret_cifrado || !data.inter_cert_cifrado || !data.inter_key_cifrado || !data.inter_conta_corrente) {
+    if (
+      !data.inter_client_id_cifrado ||
+      !data.inter_client_secret_cifrado ||
+      !data.inter_cert_cifrado ||
+      !data.inter_key_cifrado ||
+      !data.inter_conta_corrente
+    ) {
       return { erro: "Banco Inter com credenciais incompletas." };
     }
     return {

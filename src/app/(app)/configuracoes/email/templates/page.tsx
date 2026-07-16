@@ -15,7 +15,9 @@ export default async function TemplatesEmailPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
-      <Link href="/configuracoes/email" className="text-sm text-verde underline">← E-mail</Link>
+      <Link href="/configuracoes/email" className="text-sm text-verde underline">
+        ← E-mail
+      </Link>
       <PageHeader titulo="Templates de e-mail" subtitulo="Modelos com variáveis de personalização" />
       <FormTemplate templates={templates} />
     </main>

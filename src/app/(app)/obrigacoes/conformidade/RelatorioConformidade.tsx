@@ -90,9 +90,7 @@ export function RelatorioConformidade({
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
         <div className={card}>
-          <div className={`text-2xl font-bold ${corPct(g.pctConformidade)}`}>
-            {g.pctConformidade}%
-          </div>
+          <div className={`text-2xl font-bold ${corPct(g.pctConformidade)}`}>{g.pctConformidade}%</div>
           <div className="text-xs text-cinza">Conformidade</div>
         </div>
         <div className={card}>
@@ -146,9 +144,7 @@ export function RelatorioConformidade({
                 <td className="px-3 py-1.5 text-right tabular-nums">{l.resumo.comAtraso}</td>
                 <td className="px-3 py-1.5 text-right tabular-nums">{l.resumo.pendenteVencida}</td>
                 <td className="px-3 py-1.5 text-right tabular-nums">{l.resumo.dispensada}</td>
-                <td
-                  className={`px-3 py-1.5 text-right font-medium tabular-nums ${corPct(l.resumo.pctConformidade)}`}
-                >
+                <td className={`px-3 py-1.5 text-right font-medium tabular-nums ${corPct(l.resumo.pctConformidade)}`}>
                   {l.resumo.pctConformidade}%
                 </td>
               </tr>

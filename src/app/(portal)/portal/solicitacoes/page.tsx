@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { rotuloCategoria, rotuloStatus, type SolicitacaoCategoria, type SolicitacaoStatus } from "@/lib/solicitacoes/solicitacao";
+import {
+  rotuloCategoria,
+  rotuloStatus,
+  type SolicitacaoCategoria,
+  type SolicitacaoStatus,
+} from "@/lib/solicitacoes/solicitacao";
 import { NovaSolicitacao } from "./NovaSolicitacao";
 
 export const metadata = { title: "Solicitações" };
@@ -26,7 +31,10 @@ export default async function PortalSolicitacoesPage() {
         <ul className="space-y-2">
           {lista.map((s) => (
             <li key={s.id as string}>
-              <Link href={`/portal/solicitacoes/${s.id}`} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-linha bg-white p-3 text-sm hover:bg-creme">
+              <Link
+                href={`/portal/solicitacoes/${s.id}`}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-linha bg-white p-3 text-sm hover:bg-creme"
+              >
                 <span className="font-medium text-texto">
                   <span className="font-mono text-xs text-cinza">#{String(s.numero)}</span> {s.assunto as string}
                 </span>

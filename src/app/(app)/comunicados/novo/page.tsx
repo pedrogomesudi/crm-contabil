@@ -17,7 +17,9 @@ export default async function NovoComunicadoPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
-      <Link href="/comunicados" className="text-sm text-verde underline">← Comunicados</Link>
+      <Link href="/comunicados" className="text-sm text-verde underline">
+        ← Comunicados
+      </Link>
       <PageHeader titulo="Novo comunicado" subtitulo="Escreva, segmente, confira a prévia e dispare" />
       <FormComunicado contadores={contadores} colaboradores={colaboradores} />
     </main>

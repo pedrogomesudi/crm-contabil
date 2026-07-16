@@ -25,7 +25,10 @@ export function ToggleNotificacoes({ ativoInicial }: { ativoInicial: boolean }) 
         <input type="checkbox" checked={ativo} disabled={ocupado} onChange={(e) => mudar(e.target.checked)} />
         Badge de riscos no menu {ativo ? "ligado" : "desligado"}
       </label>
-      <p className="text-xs text-cinza">Liga/desliga o contador vermelho no item “Obrigações” do menu lateral. Não afeta o painel de riscos nem a geração do calendário.</p>
+      <p className="text-xs text-cinza">
+        Liga/desliga o contador vermelho no item “Obrigações” do menu lateral. Não afeta o painel de riscos nem a
+        geração do calendário.
+      </p>
     </section>
   );
 }

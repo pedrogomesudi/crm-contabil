@@ -105,11 +105,16 @@ export function CadastroCrud({
           <thead>
             <tr className="border-b border-linha bg-creme/60 text-left">
               {campos.map((c) => (
-                <th key={c.nome} className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
+                <th
+                  key={c.nome}
+                  className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro"
+                >
                   {c.label}
                 </th>
               ))}
-              <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">Status</th>
+              <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
+                Status
+              </th>
               <th className="px-4 py-3" />
             </tr>
           </thead>

@@ -34,7 +34,9 @@ export default async function PortalLayout({ children }: { children: React.React
       <header className="border-b border-linha bg-white">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 p-4">
           <div>
-            <p className="font-display text-base font-bold text-texto">{(marca?.nome as string) ?? "Portal do cliente"}</p>
+            <p className="font-display text-base font-bold text-texto">
+              {(marca?.nome as string) ?? "Portal do cliente"}
+            </p>
             <p className="text-xs text-cinza">{(cliente?.razao_social as string) ?? perfil.nome}</p>
           </div>
           <form action={sair}>

@@ -13,11 +13,7 @@ export function ConviteForm() {
     if (estado.ok) formRef.current?.reset();
   }, [estado.ok]);
   return (
-    <form
-      ref={formRef}
-      action={action}
-      className="space-y-3 rounded-lg border border-linha bg-white p-4"
-    >
+    <form ref={formRef} action={action} className="space-y-3 rounded-lg border border-linha bg-white p-4">
       <h2 className="text-sm font-semibold text-texto">Convidar usuário</h2>
       <div className="grid gap-3 sm:grid-cols-3">
         <Campo label="Nome">

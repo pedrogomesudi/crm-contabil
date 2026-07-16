@@ -2,7 +2,14 @@
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
-import { mesesDoPeriodo, montarComparativo, type TipoPeriodo, type CategoriaRef, type LancRealizado, type Comparativo } from "@/lib/financeiro/orcado-realizado";
+import {
+  mesesDoPeriodo,
+  montarComparativo,
+  type TipoPeriodo,
+  type CategoriaRef,
+  type LancRealizado,
+  type Comparativo,
+} from "@/lib/financeiro/orcado-realizado";
 import type { MapaValores } from "@/lib/financeiro/orcamento";
 
 export type BaseRegime = "competencia" | "caixa";
@@ -48,7 +55,12 @@ export async function dashboardOrcadoRealizado(
       .lte("competencia", fim);
     for (const t of data ?? []) {
       const comp = t.competencia as string;
-      realizado.push({ categoriaId: t.categoria_id as string, ano: anoDe(comp), mes: mesDe(comp), valor: Number(t.valor) });
+      realizado.push({
+        categoriaId: t.categoria_id as string,
+        ano: anoDe(comp),
+        mes: mesDe(comp),
+        valor: Number(t.valor),
+      });
     }
   } else {
     const { data } = await supabase

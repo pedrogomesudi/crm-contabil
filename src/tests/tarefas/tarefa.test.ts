@@ -8,7 +8,11 @@ describe("tarefa", () => {
     expect(TAREFA_PRIORIDADE.length).toBe(4);
   });
   it("progressoChecklist", () => {
-    expect(progressoChecklist([{ feito: true }, { feito: false }, { feito: true }])).toEqual({ total: 3, feitos: 2, pct: 67 });
+    expect(progressoChecklist([{ feito: true }, { feito: false }, { feito: true }])).toEqual({
+      total: 3,
+      feitos: 2,
+      pct: 67,
+    });
     expect(progressoChecklist([])).toEqual({ total: 0, feitos: 0, pct: 0 });
   });
   it("ordemPrioridade urgente primeiro", () => {

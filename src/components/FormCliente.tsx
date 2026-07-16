@@ -40,8 +40,7 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
   const [estado, formAction, pending] = useActionState<EstadoCliente, FormData>(action, {});
   const c = cliente ?? {};
   const end = c.endereco ?? {};
-  const nomeContadorAtual =
-    contadores.find((ct) => ct.id === c.contador_id)?.nome ?? "— sem atribuição —";
+  const nomeContadorAtual = contadores.find((ct) => ct.id === c.contador_id)?.nome ?? "— sem atribuição —";
 
   // Campos controlados: os que a busca na Receita preenche.
   const [tipoPessoa, setTipoPessoa] = useState(c.tipo_pessoa ?? "");
@@ -57,8 +56,7 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
     uf: end.uf ?? "",
     cep: end.cep ?? "",
   });
-  const set = (k: keyof typeof f) => (e: ChangeEvent<HTMLInputElement>) =>
-    setF((s) => ({ ...s, [k]: e.target.value }));
+  const set = (k: keyof typeof f) => (e: ChangeEvent<HTMLInputElement>) => setF((s) => ({ ...s, [k]: e.target.value }));
   const ehCnpj = tipoPessoa === "PJ" || tipoPessoa === "MEI";
 
   const [buscando, setBuscando] = useState(false);
@@ -159,12 +157,7 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
           <input name="nome_fantasia" value={f.nome_fantasia} onChange={set("nome_fantasia")} className={inputCls} />
         </Campo>
         <Campo label="Regime tributário *">
-          <select
-            name="regime_tributario"
-            required
-            defaultValue={c.regime_tributario ?? ""}
-            className={inputCls}
-          >
+          <select name="regime_tributario" required defaultValue={c.regime_tributario ?? ""} className={inputCls}>
             <option value="" disabled>
               Selecione
             </option>
@@ -177,18 +170,10 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
         </Campo>
         <div className="grid grid-cols-2 gap-3">
           <Campo label="Inscrição estadual">
-            <input
-              name="inscricao_estadual"
-              defaultValue={c.inscricao_estadual ?? ""}
-              className={inputCls}
-            />
+            <input name="inscricao_estadual" defaultValue={c.inscricao_estadual ?? ""} className={inputCls} />
           </Campo>
           <Campo label="Inscrição municipal">
-            <input
-              name="inscricao_municipal"
-              defaultValue={c.inscricao_municipal ?? ""}
-              className={inputCls}
-            />
+            <input name="inscricao_municipal" defaultValue={c.inscricao_municipal ?? ""} className={inputCls} />
           </Campo>
         </div>
       </fieldset>
@@ -204,11 +189,7 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
           </Campo>
         </div>
         <Campo label="Responsável (contato)">
-          <input
-            name="responsavel_nome"
-            defaultValue={c.responsavel_nome ?? ""}
-            className={inputCls}
-          />
+          <input name="responsavel_nome" defaultValue={c.responsavel_nome ?? ""} className={inputCls} />
         </Campo>
         <div className="grid grid-cols-2 gap-3">
           <Campo label="Logradouro">
@@ -243,9 +224,7 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
       </fieldset>
 
       <fieldset className="space-y-3 rounded-lg border border-linha bg-white p-4">
-        <legend className="px-1 text-sm font-semibold text-texto">
-          Representante legal (contrato)
-        </legend>
+        <legend className="px-1 text-sm font-semibold text-texto">Representante legal (contrato)</legend>
         <div className="grid grid-cols-2 gap-3">
           <Campo label="Nacionalidade">
             <input
@@ -262,21 +241,13 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
             />
           </Campo>
           <Campo label="Profissão">
-            <input
-              name="rep_profissao"
-              defaultValue={(c.representante ?? {}).profissao ?? ""}
-              className={inputCls}
-            />
+            <input name="rep_profissao" defaultValue={(c.representante ?? {}).profissao ?? ""} className={inputCls} />
           </Campo>
           <Campo label="RG">
             <input name="rep_rg" defaultValue={(c.representante ?? {}).rg ?? ""} className={inputCls} />
           </Campo>
           <Campo label="CPF do representante">
-            <input
-              name="rep_cpf"
-              defaultValue={(c.representante ?? {}).cpf ?? ""}
-              className={inputCls}
-            />
+            <input name="rep_cpf" defaultValue={(c.representante ?? {}).cpf ?? ""} className={inputCls} />
           </Campo>
         </div>
       </fieldset>
@@ -295,19 +266,12 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
             </select>
           ) : (
             // Não editável: o trigger congela contador_id p/ não-admin. Mostra read-only.
-            <p className="rounded border border-linha bg-creme px-3 py-2 text-cinza">
-              {nomeContadorAtual}
-            </p>
+            <p className="rounded border border-linha bg-creme px-3 py-2 text-cinza">{nomeContadorAtual}</p>
           )}
         </Campo>
         <div className="grid grid-cols-2 gap-3">
           <Campo label="Início do contrato">
-            <input
-              name="data_inicio"
-              type="date"
-              defaultValue={c.data_inicio ?? ""}
-              className={inputCls}
-            />
+            <input name="data_inicio" type="date" defaultValue={c.data_inicio ?? ""} className={inputCls} />
           </Campo>
           {modo === "editar" && (
             <Campo label="Status">

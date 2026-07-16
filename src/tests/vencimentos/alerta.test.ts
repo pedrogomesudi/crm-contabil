@@ -1,10 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  classificarVencimento,
-  ordemSeveridade,
-  montarPainel,
-  type ItemVencimento,
-} from "@/lib/vencimentos/alerta";
+import { classificarVencimento, ordemSeveridade, montarPainel, type ItemVencimento } from "@/lib/vencimentos/alerta";
 
 const HOJE = "2026-07-09";
 

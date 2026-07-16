@@ -18,8 +18,7 @@ export function validarCNPJ(valor: string): boolean {
   if (cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false;
   const dig = (i: number) => cnpj.charCodeAt(i) - 48;
   const calc = (fim: number) => {
-    const pesos =
-      fim === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const pesos = fim === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
     const soma = pesos.reduce((acc, peso, i) => acc + peso * dig(i), 0);
     const resto = soma % 11;
     return resto < 2 ? 0 : 11 - resto;

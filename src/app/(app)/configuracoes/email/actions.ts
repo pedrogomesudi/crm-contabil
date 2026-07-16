@@ -62,8 +62,9 @@ export async function salvarConfigEmail(_prev: EstadoEmail, fd: FormData): Promi
 
   const remetenteEmail = String(fd.get("remetente_email") ?? "").trim();
   if (!emailValido(remetenteEmail)) return { erro: "E-mail do remetente inválido." };
-  const remetenteNome = String(fd.get("remetente_nome") ?? "").trim().slice(0, 120);
-
+  const remetenteNome = String(fd.get("remetente_nome") ?? "")
+    .trim()
+    .slice(0, 120);
 
   const dados: Record<string, unknown> = {
     provedor,

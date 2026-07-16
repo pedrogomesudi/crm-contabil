@@ -39,7 +39,7 @@ function tituloCaso(s: string): string {
 function enderecoLinha(e: Record<string, string> | null): string {
   if (!e) return "";
   const uf = (e.uf ?? "").toUpperCase();
-  const cidadeUf = e.cidade && uf ? `${tituloCaso(e.cidade)}/${uf}` : (tituloCaso(e.cidade ?? "") || uf);
+  const cidadeUf = e.cidade && uf ? `${tituloCaso(e.cidade)}/${uf}` : tituloCaso(e.cidade ?? "") || uf;
   return [
     tituloCaso(e.logradouro ?? ""),
     e.numero ?? "",

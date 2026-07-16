@@ -17,21 +17,15 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
         <div>
           <h2 className="font-display text-sm font-semibold text-texto">Canal de envio</h2>
           <p className="text-xs text-cinza">
-            Os e-mails saem do <strong>seu</strong> domínio, com a sua credencial. Ela é cifrada e nunca volta
-            para a tela.
+            Os e-mails saem do <strong>seu</strong> domínio, com a sua credencial. Ela é cifrada e nunca volta para a
+            tela.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-4 text-sm">
           {(["smtp", "api"] as const).map((p) => (
             <label key={p} className="flex items-center gap-1.5">
-              <input
-                type="radio"
-                name="provedor"
-                value={p}
-                checked={provedor === p}
-                onChange={() => setProvedor(p)}
-              />
+              <input type="radio" name="provedor" value={p} checked={provedor === p} onChange={() => setProvedor(p)} />
               {p === "smtp" ? "SMTP (e-mail que você já tem)" : "API (Resend ou SendGrid)"}
             </label>
           ))}
@@ -40,11 +34,23 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
         <div className="flex flex-wrap gap-2">
           <label className="text-xs text-cinza">
             Nome do remetente
-            <input name="remetente_nome" defaultValue={status.remetenteNome} placeholder="Escritório Contábil" className={`mt-0.5 block ${cls}`} />
+            <input
+              name="remetente_nome"
+              defaultValue={status.remetenteNome}
+              placeholder="Escritório Contábil"
+              className={`mt-0.5 block ${cls}`}
+            />
           </label>
           <label className="text-xs text-cinza">
             E-mail do remetente
-            <input name="remetente_email" type="email" required defaultValue={status.remetenteEmail} placeholder="contato@seudominio.com.br" className={`mt-0.5 block w-64 ${cls}`} />
+            <input
+              name="remetente_email"
+              type="email"
+              required
+              defaultValue={status.remetenteEmail}
+              placeholder="contato@seudominio.com.br"
+              className={`mt-0.5 block w-64 ${cls}`}
+            />
           </label>
         </div>
 
@@ -52,11 +58,21 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
           <div className="flex flex-wrap gap-2">
             <label className="text-xs text-cinza">
               Host
-              <input name="smtp_host" defaultValue={status.smtpHost} placeholder="smtp.gmail.com" className={`mt-0.5 block w-56 ${cls}`} />
+              <input
+                name="smtp_host"
+                defaultValue={status.smtpHost}
+                placeholder="smtp.gmail.com"
+                className={`mt-0.5 block w-56 ${cls}`}
+              />
             </label>
             <label className="text-xs text-cinza">
               Porta
-              <input name="smtp_porta" type="number" defaultValue={status.smtpPorta} className={`mt-0.5 block w-24 ${cls}`} />
+              <input
+                name="smtp_porta"
+                type="number"
+                defaultValue={status.smtpPorta}
+                className={`mt-0.5 block w-24 ${cls}`}
+              />
             </label>
             <label className="mt-5 flex items-center gap-1.5 text-xs text-cinza">
               <input type="checkbox" name="smtp_seguro" defaultChecked={status.smtpSeguro} /> TLS
@@ -67,7 +83,13 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
             </label>
             <label className="text-xs text-cinza">
               Senha
-              <input name="smtp_senha" type="password" autoComplete="new-password" placeholder={status.temSenha ? "•••••• (configurada)" : ""} className={`mt-0.5 block w-56 ${cls}`} />
+              <input
+                name="smtp_senha"
+                type="password"
+                autoComplete="new-password"
+                placeholder={status.temSenha ? "•••••• (configurada)" : ""}
+                className={`mt-0.5 block w-56 ${cls}`}
+              />
               <span className="mt-0.5 block text-[11px] text-cinza-claro">
                 {status.temSenha
                   ? "Em branco mantém a atual — mas se você trocar o host ou o usuário, informe a senha do novo servidor."
@@ -79,14 +101,24 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
           <div className="flex flex-wrap gap-2">
             <label className="text-xs text-cinza">
               Provedor
-              <select name="api_provedor" defaultValue={status.apiProvedor ?? "resend"} className={`mt-0.5 block ${cls}`}>
+              <select
+                name="api_provedor"
+                defaultValue={status.apiProvedor ?? "resend"}
+                className={`mt-0.5 block ${cls}`}
+              >
                 <option value="resend">Resend</option>
                 <option value="sendgrid">SendGrid</option>
               </select>
             </label>
             <label className="text-xs text-cinza">
               Chave de API
-              <input name="api_chave" type="password" autoComplete="new-password" placeholder={status.temChave ? "•••••• (configurada)" : "re_..."} className={`mt-0.5 block w-72 ${cls}`} />
+              <input
+                name="api_chave"
+                type="password"
+                autoComplete="new-password"
+                placeholder={status.temChave ? "•••••• (configurada)" : "re_..."}
+                className={`mt-0.5 block w-72 ${cls}`}
+              />
               <span className="mt-0.5 block text-[11px] text-cinza-claro">
                 {status.temChave
                   ? "Em branco mantém a atual — mas se você trocar de provedor, informe a nova chave."
@@ -101,7 +133,11 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
             {pend ? "Salvando…" : "Salvar"}
           </button>
           {est.ok && <span className="text-xs text-verde">Configuração salva.</span>}
-          {est.erro && <span role="alert" className="text-xs text-negativo">{est.erro}</span>}
+          {est.erro && (
+            <span role="alert" className="text-xs text-negativo">
+              {est.erro}
+            </span>
+          )}
         </div>
       </form>
 
@@ -122,8 +158,8 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
           Usar e-mail como fallback da régua
         </label>
         <p className="text-xs text-cinza">
-          A cobrança sai por e-mail quando o WhatsApp não entrega: canal não configurado, cliente sem telefone,
-          opt-out de WhatsApp ou erro do provedor. O cliente nunca recebe pelos dois.
+          A cobrança sai por e-mail quando o WhatsApp não entrega: canal não configurado, cliente sem telefone, opt-out
+          de WhatsApp ou erro do provedor. O cliente nunca recebe pelos dois.
         </p>
       </div>
 
@@ -137,12 +173,19 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
             Enviar para
             <input name="para" type="email" defaultValue={emailAdmin} className={`mt-0.5 block w-64 ${cls}`} />
           </label>
-          <button disabled={pendTeste} className="rounded-lg border border-linha px-3 py-1.5 text-sm text-cinza disabled:opacity-60">
+          <button
+            disabled={pendTeste}
+            className="rounded-lg border border-linha px-3 py-1.5 text-sm text-cinza disabled:opacity-60"
+          >
             {pendTeste ? "Enviando…" : "Enviar teste"}
           </button>
         </div>
         {estTeste.enviado && <p className="text-xs text-verde">E-mail enviado. Confira a caixa de entrada.</p>}
-        {estTeste.erro && <p role="alert" className="text-xs text-negativo">{estTeste.erro}</p>}
+        {estTeste.erro && (
+          <p role="alert" className="text-xs text-negativo">
+            {estTeste.erro}
+          </p>
+        )}
       </form>
     </div>
   );

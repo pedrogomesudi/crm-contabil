@@ -2,7 +2,15 @@
 import { useState } from "react";
 import { emitirBoleto, type BoletoView } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
 
-export function BoletoTitulo({ tituloId, boleto, onMudou }: { tituloId: string; boleto: BoletoView | null; onMudou: () => void }) {
+export function BoletoTitulo({
+  tituloId,
+  boleto,
+  onMudou,
+}: {
+  tituloId: string;
+  boleto: BoletoView | null;
+  onMudou: () => void;
+}) {
   const [ocupado, setOcupado] = useState(false);
   async function emitir() {
     setOcupado(true);
@@ -34,9 +42,13 @@ export function BoletoTitulo({ tituloId, boleto, onMudou }: { tituloId: string; 
         </button>
       )}
       {boleto.urlPdf && (
-        <a href={boleto.urlPdf} target="_blank" rel="noreferrer" className="block underline">PDF</a>
+        <a href={boleto.urlPdf} target="_blank" rel="noreferrer" className="block underline">
+          PDF
+        </a>
       )}
-      <span className="block">Boleto #{boleto.numero} · {boleto.status}</span>
+      <span className="block">
+        Boleto #{boleto.numero} · {boleto.status}
+      </span>
     </div>
   );
 }

@@ -1,11 +1,7 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
-import {
-  podeCriarCliente,
-  podeVerHonorario,
-  podeGerenciarResponsaveis,
-} from "@/lib/clientes/permissoes";
+import { podeCriarCliente, podeVerHonorario, podeGerenciarResponsaveis } from "@/lib/clientes/permissoes";
 import { normalizarFiltro, aplicarFiltroStatus } from "@/lib/clientes/filtroStatus";
 import { aplicarBusca } from "@/lib/clientes/busca";
 import { BotaoExportar } from "@/components/ui/BotaoExportar";
@@ -71,11 +67,7 @@ export default async function ClientesPage({
     <div className="space-y-5">
       <PageHeader
         titulo="Clientes"
-        subtitulo={
-          clientes
-            ? `${clientes.length}${clientes.length === LIMITE ? "+" : ""} na carteira`
-            : undefined
-        }
+        subtitulo={clientes ? `${clientes.length}${clientes.length === LIMITE ? "+" : ""} na carteira` : undefined}
         acoes={
           <>
             {/* A tela lista até LIMITE; a exportação refaz a busca sem limite. */}
@@ -177,28 +169,19 @@ export default async function ClientesPage({
             </thead>
             <tbody>
               {clientes?.map((cl) => (
-                <tr
-                  key={cl.id}
-                  className="border-b border-linha/70 transition last:border-0 hover:bg-creme"
-                >
+                <tr key={cl.id} className="border-b border-linha/70 transition last:border-0 hover:bg-creme">
                   <td className="px-4 py-3">
                     <Link href={`/clientes/${cl.id}`} className="flex items-center gap-3">
                       <Iniciais nome={cl.razao_social} />
                       <span className="min-w-0">
-                        <span className="block truncate font-medium text-texto">
-                          {cl.razao_social}
-                        </span>
-                        <span className="block font-mono text-xs text-cinza-claro">
-                          {cl.cpf_cnpj ?? "— sem CNPJ"}
-                        </span>
+                        <span className="block truncate font-medium text-texto">{cl.razao_social}</span>
+                        <span className="block font-mono text-xs text-cinza-claro">{cl.cpf_cnpj ?? "— sem CNPJ"}</span>
                       </span>
                     </Link>
                   </td>
                   <td className="px-4 py-3">
                     {cl.regime_tributario ? (
-                      <Badge variante={badgeRegime(cl.regime_tributario)}>
-                        {cl.regime_tributario}
-                      </Badge>
+                      <Badge variante={badgeRegime(cl.regime_tributario)}>{cl.regime_tributario}</Badge>
                     ) : (
                       <span className="text-cinza-claro">—</span>
                     )}
@@ -226,14 +209,7 @@ export default async function ClientesPage({
                       aria-label={`Abrir ${cl.razao_social}`}
                       className="text-cinza-claro"
                     >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="m9 6 6 6-6 6" />
                       </svg>
                     </Link>

@@ -12,7 +12,10 @@ export default async function ModelosLegalizacaoPage() {
   const modelos = await listarModelos();
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
-      <PageHeader titulo="Modelos de legalização" subtitulo="Processos societários e de legalização — etapas por órgão" />
+      <PageHeader
+        titulo="Modelos de legalização"
+        subtitulo="Processos societários e de legalização — etapas por órgão"
+      />
       <ModelosLista modelos={modelos} />
     </main>
   );

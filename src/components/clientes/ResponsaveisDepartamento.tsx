@@ -4,7 +4,12 @@ import { useRouter } from "next/navigation";
 import { definirResponsavel } from "@/app/(app)/clientes/[id]/responsaveis-actions";
 import { DEPARTAMENTOS, type Departamento } from "@/lib/clientes/departamentos";
 
-export function ResponsaveisDepartamento({ clienteId, colaboradores, atuais, editavel }: {
+export function ResponsaveisDepartamento({
+  clienteId,
+  colaboradores,
+  atuais,
+  editavel,
+}: {
   clienteId: string;
   colaboradores: { id: string; nome: string }[];
   atuais: Record<Departamento, string | null>;
@@ -38,7 +43,9 @@ export function ResponsaveisDepartamento({ clienteId, colaboradores, atuais, edi
               >
                 <option value="">— sem responsável</option>
                 {colaboradores.map((c) => (
-                  <option key={c.id} value={c.id}>{c.nome}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
                 ))}
               </select>
             ) : (

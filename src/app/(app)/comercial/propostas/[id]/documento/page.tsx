@@ -17,7 +17,11 @@ export default async function DocumentoPage({ params }: { params: Promise<{ id: 
   if (!proposta) notFound();
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
   const supabase = await createServerSupabase();
-  const { data: cfg } = await supabase.from("escritorio_config").select("nome, cnpj, endereco").eq("id", 1).maybeSingle();
+  const { data: cfg } = await supabase
+    .from("escritorio_config")
+    .select("nome, cnpj, endereco")
+    .eq("id", 1)
+    .maybeSingle();
   const marca = {
     nome: (cfg?.nome as string | null) ?? null,
     cnpj: (cfg?.cnpj as string | null) ?? null,
@@ -27,7 +31,9 @@ export default async function DocumentoPage({ params }: { params: Promise<{ id: 
   return (
     <main className="min-h-screen bg-white p-4">
       <div className="mx-auto mb-3 flex max-w-2xl items-center justify-between print:hidden">
-        <Link href={`/comercial/propostas/${id}`} className="text-sm text-verde underline">← Editar</Link>
+        <Link href={`/comercial/propostas/${id}`} className="text-sm text-verde underline">
+          ← Editar
+        </Link>
         <ImprimirBtn />
       </div>
       <DocumentoProposta proposta={proposta} hoje={hoje} marca={marca} logoUrl={logoUrl} />

@@ -25,23 +25,34 @@ export async function listarAcessosPortal(clienteId: string): Promise<AcessoPort
     .eq("papel", "cliente")
     .eq("cliente_id", clienteId)
     .order("nome");
-  return (data ?? []).map((u) => ({ id: u.id as string, nome: u.nome as string, email: u.email as string, ativo: u.ativo as boolean }));
+  return (data ?? []).map((u) => ({
+    id: u.id as string,
+    nome: u.nome as string,
+    email: u.email as string,
+    ativo: u.ativo as boolean,
+  }));
 }
 
-export async function convidarClientePortal(clienteId: string, formData: FormData): Promise<{ ok?: boolean; erro?: string }> {
+export async function convidarClientePortal(
+  clienteId: string,
+  formData: FormData,
+): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
-  const emailBruto = String(formData.get("email") ?? "").trim().toLowerCase();
-  const nome = String(formData.get("nome") ?? "").trim().slice(0, 160);
+  const emailBruto = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+  const nome = String(formData.get("nome") ?? "")
+    .trim()
+    .slice(0, 160);
   if (!emailBruto || !nome) return { erro: "Informe e-mail e nome." };
   const email = emailSchema.safeParse(emailBruto);
   if (!email.success) return { erro: "E-mail inválido." };
 
   const admin = createAdminSupabase();
   const site = required(process.env.NEXT_PUBLIC_SITE_URL, "NEXT_PUBLIC_SITE_URL");
-  const { data: convidado, error: errConvite } = await admin.auth.admin.inviteUserByEmail(
-    email.data,
-    { redirectTo: `${site}/auth/confirmar` },
-  );
+  const { data: convidado, error: errConvite } = await admin.auth.admin.inviteUserByEmail(email.data, {
+    redirectTo: `${site}/auth/confirmar`,
+  });
   if (errConvite || !convidado?.user) {
     const jaExiste = /exist|registered|already/i.test(errConvite?.message ?? "");
     if (!jaExiste) console.error("convidarClientePortal (invite):", errConvite?.message);
@@ -64,7 +75,10 @@ export async function convidarClientePortal(clienteId: string, formData: FormDat
   return { ok: true };
 }
 
-export async function revogarAcessoPortal(usuarioId: string, clienteId: string): Promise<{ ok?: boolean; erro?: string }> {
+export async function revogarAcessoPortal(
+  usuarioId: string,
+  clienteId: string,
+): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const admin = createAdminSupabase();
   // Desativa (não apaga): preserva a trilha e já corta o acesso — auth_cliente_id()

@@ -5,7 +5,11 @@ import { listarRiscos } from "../actions";
 import type { PainelRiscos } from "@/lib/obrigacoes/risco";
 
 const dataBR = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
-const SELO: Record<string, string> = { em_breve: "bg-creme text-texto", vencido: "bg-negativo/10 text-negativo", critico: "bg-negativo text-white" };
+const SELO: Record<string, string> = {
+  em_breve: "bg-creme text-texto",
+  vencido: "bg-negativo/10 text-negativo",
+  critico: "bg-negativo text-white",
+};
 
 function Card({ titulo, n, cor }: { titulo: string; n: number; cor?: string }) {
   return (
@@ -31,12 +35,21 @@ export function PainelRiscosView({ painel: ini, hoje }: { painel: PainelRiscos; 
           <Card titulo="Vencidas" n={painel.resumo.vencidas} cor="text-negativo" />
           <Card titulo="Sem responsável" n={painel.resumo.semResponsavel} />
         </div>
-        <label className="flex items-center gap-1 text-sm text-cinza"><input type="checkbox" checked={soMeus} onChange={(e) => recarregar(e.target.checked)} />só os meus</label>
+        <label className="flex items-center gap-1 text-sm text-cinza">
+          <input type="checkbox" checked={soMeus} onChange={(e) => recarregar(e.target.checked)} />
+          só os meus
+        </label>
       </div>
-      {painel.grupos.length === 0 && <p className="rounded-2xl border border-linha bg-white px-3 py-4 text-sm text-cinza">Nenhuma obrigação em aberto.</p>}
+      {painel.grupos.length === 0 && (
+        <p className="rounded-2xl border border-linha bg-white px-3 py-4 text-sm text-cinza">
+          Nenhuma obrigação em aberto.
+        </p>
+      )}
       {painel.grupos.map((g) => (
         <div key={g.responsavelId ?? "nulo"} className="space-y-1">
-          <h3 className={`text-sm font-semibold ${g.responsavelId === null ? "text-negativo" : "text-texto"}`}>{g.responsavelNome ?? "Sem responsável"}</h3>
+          <h3 className={`text-sm font-semibold ${g.responsavelId === null ? "text-negativo" : "text-texto"}`}>
+            {g.responsavelNome ?? "Sem responsável"}
+          </h3>
           <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
             <table className="min-w-full text-sm">
               <tbody>
@@ -47,7 +60,11 @@ export function PainelRiscosView({ painel: ini, hoje }: { painel: PainelRiscos; 
                       <td className="px-3 py-1.5 text-texto">{it.clienteNome}</td>
                       <td className="px-3 py-1.5">{it.obrigacaoNome}</td>
                       <td className="px-3 py-1.5">{dataBR(it.vencimentoInterno)}</td>
-                      <td className="px-3 py-1.5">{sev ? <span className={`rounded px-1.5 py-0.5 text-xs ${SELO[sev]}`}>{sev.replace("_", " ")}</span> : null}</td>
+                      <td className="px-3 py-1.5">
+                        {sev ? (
+                          <span className={`rounded px-1.5 py-0.5 text-xs ${SELO[sev]}`}>{sev.replace("_", " ")}</span>
+                        ) : null}
+                      </td>
                     </tr>
                   );
                 })}

@@ -13,7 +13,9 @@ export default async function EditarModeloPage({ params }: { params: Promise<{ i
   if (!modelo) notFound();
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
-      <Link href="/configuracoes/legalizacao" className="text-sm text-verde underline">← Modelos de legalização</Link>
+      <Link href="/configuracoes/legalizacao" className="text-sm text-verde underline">
+        ← Modelos de legalização
+      </Link>
       <PageHeader titulo={modelo.nome} subtitulo="Metadados e etapas do modelo" />
       <EditorModelo modelo={modelo} />
     </main>
