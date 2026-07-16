@@ -17,6 +17,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
   é definido **server-side via service_role** após `createUser` (bootstrap e convites/Task 12). O
   `app_metadata.papel` é decorativo/desatualizado — não confiar nele.
 - **Comandos:** `npm run lint`, `npm run typecheck`, `npm test`, `npm run format`, `npm run build`. Rode todos antes de commitar.
+  O CI (`.github/workflows/ci.yml`, job **`verify`**) roda exatamente esses + `format:check`, em todo push
+  para `main`/`develop` e em todo PR. O que falha aqui falha lá — rodar antes é o barato.
+- **Git — o `main` é protegido:** não aceita push direto (**nem de admin**), force-push nem deleção.
+  Trabalhe em `develop` (ou `feat/*` a partir dela); **nunca** `git push origin main` — o GitHub
+  responde `GH006` e a entrega vai por **PR** com o `verify` verde:
+  `git push origin develop` → `gh pr create --base main --head develop` → `gh pr checks --watch` →
+  `gh pr merge --merge`. A **tag vem depois** do merge, apontando para o merge commit já no `main`.
+  Passo a passo do marco e do hotfix em [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md).
 - **Scripts `scripts/*.mjs`:** ferramental de banco (JS puro, deliberadamente não-tipado). São
   cobertos por ESLint, mas **fora** do `tsc --noEmit` (não estão no `include` do tsconfig). Não
   adicionar lógica de app aqui.
