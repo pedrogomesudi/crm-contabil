@@ -6,11 +6,10 @@ import { Textarea } from "@/components/ui/Textarea";
 import { inputCls } from "@/components/ui/Campo";
 
 describe("controles de formulário", () => {
-  it("os três usam a MESMA classe base (era copiada em 4 arquivos)", () => {
-    const base = inputCls.split(" ")[0];
-    expect(renderToStaticMarkup(<Input name="a" />)).toContain(base);
-    expect(renderToStaticMarkup(<Select name="b" />)).toContain(base);
-    expect(renderToStaticMarkup(<Textarea name="c" />)).toContain(base);
+  it("os três usam a MESMA classe base, inteira (era copiada em 4 arquivos, e uma cópia já tinha divergido)", () => {
+    expect(renderToStaticMarkup(<Input name="a" />)).toContain(inputCls);
+    expect(renderToStaticMarkup(<Select name="b" />)).toContain(inputCls);
+    expect(renderToStaticMarkup(<Textarea name="c" />)).toContain(inputCls);
   });
 
   it("className extra continua sendo somada, não substituindo", () => {
