@@ -17,6 +17,14 @@
   --color-mono-muted: #78827c;
   --color-texto-claro: #b4bcb6;
 
+  /* Atenção — o Badge usava amber do Tailwind, fora do brand kit. */
+  --color-atencao: #8a5a00;
+  --color-atencao-fundo: #fdf3e0;
+
+  /* Elevação: o sistema é hairline sobre creme; a sombra dá camada sem pesar. */
+  --shadow-card: 0 1px 2px rgb(16 22 20 / 0.04), 0 1px 3px rgb(16 22 20 / 0.06);
+  --shadow-flutuante: 0 4px 12px rgb(16 22 20 / 0.08), 0 2px 4px rgb(16 22 20 / 0.04);
+
   --font-display: var(--font-space-grotesk), sans-serif;
   --font-sans: var(--font-plex-sans), Arial, Helvetica, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
