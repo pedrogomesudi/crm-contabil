@@ -8,6 +8,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.4.0] — 2026-07-16
+
 ### Adicionado
 
 - **Exportação de relatórios (RF-075):** camada única que transforma qualquer relatório tabular em **XLSX**,
@@ -17,26 +19,6 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   não soma nem ordena), via `exceljs` server-only; PDF reusa o Gotenberg e degrada para HTML sem
   `GOTENBERG_URL`; CSV com `;` + BOM UTF-8. Exporta o que **está na tela** (as linhas filtradas) — exceto a
   Lista de clientes, truncada em 100 na tela, cuja exportação refaz a busca **sem limite**, sob RLS.
-
-- **Backup e teste de restauração (RNF-06) — fecha o V10:** dump próprio do schema `public`
-  (**`backup:dump`**) com retenção 7 diários + 4 semanais e envio a bucket S3-compatível (SigV4 próprio, sem
-  SDK); **verificador pós-restore** (**`restore:verificar`**) que prova, contra um banco restaurado, que
-  dados, extensões, crons, admin, as 5 DEKs e a cripto voltaram; runbook de restauração (ensaio num projeto
-  descartável) no DEPLOY.md; o `tenant:doctor` avisa quando o dump local está velho ou ausente. O dump
-  próprio é **redundância do negócio** — auth/storage seguem cobertos pelo backup do Supabase.
-
-- **Envelope encryption (V10-B):** rotação de chave sem re-cifrar dado. Uma **chave-mestra**
-  (`MASTER_CRIPTO_KEY`) cifra 5 **DEKs** (uma por domínio) em `chave_dados`; cada DEK é o valor da chave
-  atual, então o ciphertext existente decifra sem tocar. `cifrarDominio`/`decifrarDominio` com **fallback**
-  para o env na transição. Scripts **`cripto:migrar`** e **`cripto:rotacionar`** com **auto-teste em dado
-  real** (rollback se a DEK não decifrar). Provisionador gera a mestra e migra; `tenant:doctor` confere as
-  5 DEKs. `chave_dados` é service_role-only.
-
-- **LGPD (V10-A):** conformidade com a Lei Geral de Proteção de Dados. **Relatório de dados por titular**
-  (direito de acesso em PDF + portabilidade em JSON), **registro de tratamentos (ROPA)** pré-semeado e
-  editável, **histórico de consentimento** (cada mudança de opt-in vira evento) e **exclusão por
-  anonimização** que respeita a guarda fiscal — anonimiza os dados pessoais não-fiscais e preserva o
-  esqueleto fiscal, com a retenção documentada. Tabelas admin-only.
 
 ### Corrigido
 
@@ -49,7 +31,39 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - **`lib/financeiro/csv` e os CSV ad-hoc das telas**, substituídos pela camada de exportação do RF-075. A
   neutralização de injeção de fórmula que morava ali foi portada para o núcleo novo, com teste.
 
-## [6.0.0] — 2026-07-15
+## [6.3.0] — 2026-07-15
+
+### Adicionado
+
+- **Backup e teste de restauração (RNF-06) — fecha o V10:** dump próprio do schema `public`
+  (**`backup:dump`**) com retenção 7 diários + 4 semanais e envio a bucket S3-compatível (SigV4 próprio, sem
+  SDK); **verificador pós-restore** (**`restore:verificar`**) que prova, contra um banco restaurado, que
+  dados, extensões, crons, admin, as 5 DEKs e a cripto voltaram; runbook de restauração (ensaio num projeto
+  descartável) no DEPLOY.md; o `tenant:doctor` avisa quando o dump local está velho ou ausente. O dump
+  próprio é **redundância do negócio** — auth/storage seguem cobertos pelo backup do Supabase.
+
+## [6.2.0] — 2026-07-15
+
+### Adicionado
+
+- **Envelope encryption (V10-B):** rotação de chave sem re-cifrar dado. Uma **chave-mestra**
+  (`MASTER_CRIPTO_KEY`) cifra 5 **DEKs** (uma por domínio) em `chave_dados`; cada DEK é o valor da chave
+  atual, então o ciphertext existente decifra sem tocar. `cifrarDominio`/`decifrarDominio` com **fallback**
+  para o env na transição. Scripts **`cripto:migrar`** e **`cripto:rotacionar`** com **auto-teste em dado
+  real** (rollback se a DEK não decifrar). Provisionador gera a mestra e migra; `tenant:doctor` confere as
+  5 DEKs. `chave_dados` é service_role-only.
+
+## [6.1.0] — 2026-07-14
+
+### Adicionado
+
+- **LGPD (V10-A):** conformidade com a Lei Geral de Proteção de Dados. **Relatório de dados por titular**
+  (direito de acesso em PDF + portabilidade em JSON), **registro de tratamentos (ROPA)** pré-semeado e
+  editável, **histórico de consentimento** (cada mudança de opt-in vira evento) e **exclusão por
+  anonimização** que respeita a guarda fiscal — anonimiza os dados pessoais não-fiscais e preserva o
+  esqueleto fiscal, com a retenção documentada. Tabelas admin-only.
+
+## [6.0.0] — 2026-07-14
 
 ### Adicionado
 
