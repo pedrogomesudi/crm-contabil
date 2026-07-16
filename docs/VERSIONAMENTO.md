@@ -34,7 +34,13 @@ Toda mudança relevante é registrada em [`CHANGELOG.md`](../CHANGELOG.md) (form
 
 1. Durante o desenvolvimento, acumule itens na seção **[Não lançado]**.
 2. Ao lançar, renomeie **[Não lançado]** para a versão + data e crie nova seção **[Não lançado]** vazia.
-3. Crie a tag e a release apontando para esse commit.
+3. Suba o `version` do `package.json` para a mesma versão (`npm version X.Y.Z --no-git-tag-version`).
+4. Crie a tag e a release apontando para esse commit.
+
+> O passo 2 foi esquecido em **três releases seguidas** (6.1.0 a 6.3.0 ficaram listadas como "não
+> lançadas" mesmo já tagueadas), então o passo 3 não fica no lembrete: o **`src/tests/versao.test.ts`**
+> exige que o `package.json` bata com a última versão do CHANGELOG, e o CI barra o PR se divergirem.
+> A versão vale porque o **`/api/health` a devolve** — é como se sabe qual release está no ar.
 
 ## Estratégia de branches
 
@@ -61,14 +67,19 @@ git switch -c feat/dominio-export        # uma tarefa
 git switch develop && git merge feat/dominio-export
 git push origin develop                  # o CI também roda em develop
 
-# ao concluir o marco — o main é protegido, então a entrega vai por PR:
+# ao concluir o marco, ainda em develop — os dois juntos, num passo só:
+#   1. CHANGELOG: renomeie [Não lançado] para [2.0.0] — AAAA-MM-DD e abra uma nova vazia
+#   2. package.json: npm version 2.0.0 --no-git-tag-version
+# (o `versao.test.ts` exige que os dois batam — esquecer um quebra o CI, de propósito)
+
+# o main é protegido, então a entrega vai por PR:
 gh pr create --base main --head develop --title "v2.0.0 — Integração com o Domínio Sistemas"
 gh pr checks --watch                     # espera o verify ficar verde
 gh pr merge --merge                      # cria o merge commit no main
 
 # a tag aponta para o merge commit JÁ no main (só depois do merge):
 git switch main && git pull
-git tag -a v2.0.0 -m "v2.0.0 — Integração com o Domínio Sistemas"
+npm run release:tag                      # lê a versão do package.json e confere onde você está
 git push origin v2.0.0
 gh release create v2.0.0 --notes-from-tag
 ```

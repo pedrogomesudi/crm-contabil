@@ -23,8 +23,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
   Trabalhe em `develop` (ou `feat/*` a partir dela); **nunca** `git push origin main` — o GitHub
   responde `GH006` e a entrega vai por **PR** com o `verify` verde:
   `git push origin develop` → `gh pr create --base main --head develop` → `gh pr checks --watch` →
-  `gh pr merge --merge`. A **tag vem depois** do merge, apontando para o merge commit já no `main`.
-  Passo a passo do marco e do hotfix em [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md).
+  `gh pr merge --merge`. A **tag vem depois** do merge (`npm run release:tag`, que lê a versão do
+  `package.json`). Passo a passo do marco e do hotfix em [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md).
+- **Versão:** `package.json.version` **não** é decorativo — o `/api/health` o devolve, e é assim que se
+  sabe qual release está no ar (o EasyPanel faz auto-deploy do `main`). Ao lançar, ele sobe junto com o
+  CHANGELOG; `src/tests/versao.test.ts` exige que os dois batam, então divergir quebra o CI.
 - **Scripts `scripts/*.mjs`:** ferramental de banco (JS puro, deliberadamente não-tipado). São
   cobertos por ESLint, mas **fora** do `tsc --noEmit` (não estão no `include` do tsconfig). Não
   adicionar lógica de app aqui.

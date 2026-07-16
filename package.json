@@ -1,6 +1,6 @@
 {
   "name": "crm-contabil",
-  "version": "0.1.0",
+  "version": "6.4.0",
   "private": true,
   "packageManager": "npm@11.16.0",
   "engines": {
@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "release:tag": "node scripts/release-tag.mjs",
     "db:migrate": "node --env-file=.env.local scripts/db-migrate.mjs",
     "db:test": "node --env-file=.env.local scripts/db-test-rls.mjs",
     "admin:bootstrap": "node --env-file=.env.local scripts/bootstrap-admin.mjs",
