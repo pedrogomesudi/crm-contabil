@@ -63,6 +63,22 @@ describe("paraCsv", () => {
     const sem = paraCsv({ ...rel, totais: undefined });
     expect(sem.slice(BOM.length).split("\n")).toHaveLength(3);
   });
+  it("neutraliza injeção de fórmula, preservando negativos", () => {
+    // Nome de cliente vem do banco: "=cmd|..." em razao_social viraria execução ao abrir no Excel.
+    const csv = paraCsv({
+      titulo: "T",
+      colunas: [{ chave: "c", rotulo: "C", formato: "texto" }],
+      linhas: [{ c: "=SUM(A1)" }, { c: "+55" }, { c: "@cmd" }, { c: "-cmd" }, { c: "-12,50" }],
+    });
+    expect(csv.slice(BOM.length).split("\n").slice(1)).toEqual([
+      "'=SUM(A1)",
+      "'+55",
+      "'@cmd",
+      "'-cmd",
+      "-12,50",
+    ]);
+  });
+
   it("escapa separador, aspas e quebra de linha com aspas duplas", () => {
     const csv = paraCsv({
       titulo: "T",

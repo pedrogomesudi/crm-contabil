@@ -5,9 +5,18 @@ import type { RelatorioExportavel } from "@/lib/exportar/tipos";
 export const BOM = "﻿";
 const SEP = ";"; // separador do Excel em pt-BR (a vírgula é decimal)
 
+// Neutraliza injeção de fórmula (CSV/Excel): células iniciadas por = + @ (ou tab/CR) são
+// interpretadas como fórmula ao abrir na planilha. Prefixa com ' para forçar texto. Números
+// negativos (-12,50) são preservados; só neutraliza "-" seguido de não-dígito.
+function neutralizarFormula(v: string): string {
+  if (/^[=+@\t\r]/.test(v) || (v.startsWith("-") && !/^-\d/.test(v))) return "'" + v;
+  return v;
+}
+
 // Aspas duplas quando o campo tem o separador, aspas ou quebra de linha (RFC 4180).
 function escapar(texto: string): string {
-  return /[;"\n\r]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto;
+  const v = neutralizarFormula(texto);
+  return /[;"\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
 }
 
 export function paraCsv(rel: RelatorioExportavel): string {
