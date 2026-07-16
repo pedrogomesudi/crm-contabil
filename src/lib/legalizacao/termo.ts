@@ -33,8 +33,13 @@ export function montarTermoHtml(d: DadosTermo): string {
   const verbo = entrada
     ? "recebido do cliente abaixo identificado, ou da contabilidade anterior,"
     : "entregue ao cliente abaixo identificado, ou à contabilidade sucessora,";
-  const itens = d.itens.filter((i) => i.trim()).map((i) => `<li>${esc(i.trim())}</li>`).join("");
-  const marcaLinha = [d.marca.cnpj && `CNPJ ${esc(d.marca.cnpj)}`, esc(d.marca.enderecoLinha)].filter(Boolean).join(" · ");
+  const itens = d.itens
+    .filter((i) => i.trim())
+    .map((i) => `<li>${esc(i.trim())}</li>`)
+    .join("");
+  const marcaLinha = [d.marca.cnpj && `CNPJ ${esc(d.marca.cnpj)}`, esc(d.marca.enderecoLinha)]
+    .filter(Boolean)
+    .join(" · ");
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <style>
   body{font-family:-apple-system,system-ui,Arial,sans-serif;color:#111;max-width:720px;margin:32px auto;padding:0 16px;line-height:1.5}

@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { feriadosNacionais, ehDiaUtil, diaUtilAnterior, subtraiDiasUteis, calcularVencimento, type RegraPrazo } from "@/lib/obrigacoes/prazo";
+import {
+  feriadosNacionais,
+  ehDiaUtil,
+  diaUtilAnterior,
+  subtraiDiasUteis,
+  calcularVencimento,
+  type RegraPrazo,
+} from "@/lib/obrigacoes/prazo";
 
 describe("feriadosNacionais", () => {
   it("inclui fixos e móveis (2026: Páscoa 05/04)", () => {
@@ -30,7 +37,15 @@ describe("dias úteis", () => {
 });
 
 describe("calcularVencimento", () => {
-  const base: RegraPrazo = { periodicidade: "mensal", vencDia: 20, vencMesOffset: 1, vencMes: null, vencAnoOffset: 1, prazoInternoDiasUteis: 0, antecipa: true };
+  const base: RegraPrazo = {
+    periodicidade: "mensal",
+    vencDia: 20,
+    vencMesOffset: 1,
+    vencMes: null,
+    vencAnoOffset: 1,
+    prazoInternoDiasUteis: 0,
+    antecipa: true,
+  };
   it("mensal: dia 20 do mês seguinte à competência", () => {
     expect(calcularVencimento(base, "2026-07-01").legal).toBe("2026-08-20");
   });
@@ -44,7 +59,15 @@ describe("calcularVencimento", () => {
     expect(calcularVencimento(r, "2026-02-01").legal).toBe("2026-02-27");
   });
   it("anual: 31/05 do ano seguinte", () => {
-    const r: RegraPrazo = { periodicidade: "anual", vencDia: 31, vencMesOffset: 1, vencMes: 5, vencAnoOffset: 1, prazoInternoDiasUteis: 0, antecipa: true };
+    const r: RegraPrazo = {
+      periodicidade: "anual",
+      vencDia: 31,
+      vencMesOffset: 1,
+      vencMes: 5,
+      vencAnoOffset: 1,
+      prazoInternoDiasUteis: 0,
+      antecipa: true,
+    };
     expect(calcularVencimento(r, "2026-01-01").legal).toBe("2027-05-31"); // segunda, útil
   });
   it("prazo interno = N dias úteis antes do legal", () => {

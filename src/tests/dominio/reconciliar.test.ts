@@ -22,8 +22,22 @@ const norm = (over: Partial<ClienteNormalizado>): ClienteNormalizado => ({
 describe("reconciliarClientes", () => {
   it("classifica novo / atualizado / inalterado / pendencia", () => {
     const existentes: ClienteExistente[] = [
-      { cpf_cnpj: "11222333000181", razao_social: "ACME LTDA", regime_tributario: "Simples", status: "ativo", email: "old@ex.com", telefone: null },
-      { cpf_cnpj: "11222333000262", razao_social: "BETA", regime_tributario: "Presumido", status: "ativo", email: null, telefone: null },
+      {
+        cpf_cnpj: "11222333000181",
+        razao_social: "ACME LTDA",
+        regime_tributario: "Simples",
+        status: "ativo",
+        email: "old@ex.com",
+        telefone: null,
+      },
+      {
+        cpf_cnpj: "11222333000262",
+        razao_social: "BETA",
+        regime_tributario: "Presumido",
+        status: "ativo",
+        email: null,
+        telefone: null,
+      },
     ];
     const novos = [
       norm({ cpf_cnpj: "11222333000181", email: "new@ex.com" }), // atualizado (email)

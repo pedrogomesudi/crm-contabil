@@ -3,7 +3,15 @@ import { useState } from "react";
 
 // Abre a URL assinada numa nova aba. A action decide (via RLS) se o arquivo é mesmo
 // do cliente logado — o id sozinho nunca é suficiente.
-export function BotaoBaixar({ id, acao, rotulo = "baixar" }: { id: string; acao: (id: string) => Promise<{ url?: string; erro?: string }>; rotulo?: string }) {
+export function BotaoBaixar({
+  id,
+  acao,
+  rotulo = "baixar",
+}: {
+  id: string;
+  acao: (id: string) => Promise<{ url?: string; erro?: string }>;
+  rotulo?: string;
+}) {
   const [ocupado, setOcupado] = useState(false);
   async function baixar() {
     setOcupado(true);

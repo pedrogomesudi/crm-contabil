@@ -1,4 +1,11 @@
-export type LegTipo = "abertura_simples" | "abertura_presumido" | "alteracao_quadro" | "transformacao" | "baixa" | "transferencia_entrada" | "transferencia_saida";
+export type LegTipo =
+  | "abertura_simples"
+  | "abertura_presumido"
+  | "alteracao_quadro"
+  | "transformacao"
+  | "baixa"
+  | "transferencia_entrada"
+  | "transferencia_saida";
 export type LegOrgao = "junta" | "receita" | "prefeitura" | "sefaz" | "bombeiros" | "vigilancia" | "outro";
 export type LegProcStatus = "em_andamento" | "concluido" | "cancelado";
 export type LegEtapaStatus = "pendente" | "em_andamento" | "concluido" | "isenta";

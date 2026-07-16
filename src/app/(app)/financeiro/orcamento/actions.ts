@@ -35,7 +35,10 @@ export async function listarOrcamento(ano: number): Promise<{ categorias: Catego
   return { categorias, valores };
 }
 
-export async function salvarOrcamento(ano: number, celulas: CelulaOrcamento[]): Promise<{ ok?: boolean; erro?: string }> {
+export async function salvarOrcamento(
+  ano: number,
+  celulas: CelulaOrcamento[],
+): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   if (celulas.length === 0) return { ok: true };
   const supabase = await createServerSupabase();

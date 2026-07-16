@@ -78,7 +78,12 @@ export function GradeOrcamento({
           <td className="sticky left-0 z-10 bg-white px-2 py-1">
             <div className="flex items-center gap-1">
               <span className="truncate">{cat.nome}</span>
-              <button type="button" onClick={() => replicar(cat.id)} title="Replicar Jan nos 12 meses" className="text-cinza-claro hover:text-verde">
+              <button
+                type="button"
+                onClick={() => replicar(cat.id)}
+                title="Replicar Jan nos 12 meses"
+                className="text-cinza-claro hover:text-verde"
+              >
                 ⇉
               </button>
             </div>
@@ -95,17 +100,27 @@ export function GradeOrcamento({
               />
             </td>
           ))}
-          <td className="px-2 py-1 text-right font-mono text-xs tabular-nums text-texto">{formatarMoeda(somaLinha(valores, cat.id))}</td>
+          <td className="px-2 py-1 text-right font-mono text-xs tabular-nums text-texto">
+            {formatarMoeda(somaLinha(valores, cat.id))}
+          </td>
         </tr>
       ))}
       <tr className="border-b-2 border-linha bg-white font-medium">
         <td className="sticky left-0 bg-white px-2 py-1 text-xs">Total {titulo.toLowerCase()}</td>
         {Array.from({ length: 12 }, (_, i) => i + 1).map((mes) => (
           <td key={mes} className="px-1 py-1 text-right font-mono text-[11px] tabular-nums">
-            {formatarMoeda(somaColuna(valores, cats.map((c) => c.id), mes))}
+            {formatarMoeda(
+              somaColuna(
+                valores,
+                cats.map((c) => c.id),
+                mes,
+              ),
+            )}
           </td>
         ))}
-        <td className="px-2 py-1 text-right font-mono text-xs">{formatarMoeda(cats.reduce((s, c) => s + somaLinha(valores, c.id), 0))}</td>
+        <td className="px-2 py-1 text-right font-mono text-xs">
+          {formatarMoeda(cats.reduce((s, c) => s + somaLinha(valores, c.id), 0))}
+        </td>
       </tr>
     </>
   );
@@ -115,7 +130,12 @@ export function GradeOrcamento({
       <div className="flex flex-wrap items-center gap-2">
         <label className="text-sm text-cinza">
           Ano
-          <select value={ano} onChange={(e) => trocarAno(Number(e.target.value))} disabled={ocupado} className="ml-2 rounded-lg border border-linha bg-white px-2 py-1 text-sm">
+          <select
+            value={ano}
+            onChange={(e) => trocarAno(Number(e.target.value))}
+            disabled={ocupado}
+            className="ml-2 rounded-lg border border-linha bg-white px-2 py-1 text-sm"
+          >
             {anos.map((a) => (
               <option key={a} value={a}>
                 {a}

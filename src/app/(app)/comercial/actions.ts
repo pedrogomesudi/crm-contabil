@@ -5,8 +5,36 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import type { EtapaOportunidade } from "@/lib/comercial/funil";
 
-export type OportunidadeView = { id: string; prospectNome: string; contatoNome: string | null; contatoTelefone: string | null; contatoEmail: string | null; origem: string | null; servicoInteresse: string | null; valorEstimado: number | null; responsavelId: string | null; responsavelNome: string | null; etapa: EtapaOportunidade; observacoes: string | null; motivoPerda: string | null; clienteId: string | null; meu: boolean; criadoEm: string; fechadoEm: string | null };
-export type OportunidadeInput = { prospectNome: string; contatoNome: string | null; contatoTelefone: string | null; contatoEmail: string | null; origem: string | null; servicoInteresse: string | null; valorEstimado: number | null; responsavelId: string | null; observacoes: string | null };
+export type OportunidadeView = {
+  id: string;
+  prospectNome: string;
+  contatoNome: string | null;
+  contatoTelefone: string | null;
+  contatoEmail: string | null;
+  origem: string | null;
+  servicoInteresse: string | null;
+  valorEstimado: number | null;
+  responsavelId: string | null;
+  responsavelNome: string | null;
+  etapa: EtapaOportunidade;
+  observacoes: string | null;
+  motivoPerda: string | null;
+  clienteId: string | null;
+  meu: boolean;
+  criadoEm: string;
+  fechadoEm: string | null;
+};
+export type OportunidadeInput = {
+  prospectNome: string;
+  contatoNome: string | null;
+  contatoTelefone: string | null;
+  contatoEmail: string | null;
+  origem: string | null;
+  servicoInteresse: string | null;
+  valorEstimado: number | null;
+  responsavelId: string | null;
+  observacoes: string | null;
+};
 
 function paraColunas(input: OportunidadeInput) {
   return {
@@ -26,7 +54,12 @@ export async function listarOportunidades(): Promise<OportunidadeView[]> {
   const p = await getPerfilAtual();
   if (!p?.ativo || !podeCriarCliente(p.papel)) return [];
   const supabase = await createServerSupabase();
-  const { data } = await supabase.from("oportunidade").select("id, prospect_nome, contato_nome, contato_telefone, contato_email, origem, servico_interesse, valor_estimado, responsavel_id, etapa, observacoes, motivo_perda, cliente_id, criado_em, fechado_em").order("criado_em", { ascending: false });
+  const { data } = await supabase
+    .from("oportunidade")
+    .select(
+      "id, prospect_nome, contato_nome, contato_telefone, contato_email, origem, servico_interesse, valor_estimado, responsavel_id, etapa, observacoes, motivo_perda, cliente_id, criado_em, fechado_em",
+    )
+    .order("criado_em", { ascending: false });
   const rows = data ?? [];
   const respIds = [...new Set(rows.map((r) => r.responsavel_id as string | null).filter((x): x is string => !!x))];
   const usMap = new Map<string, string>();
@@ -66,18 +99,28 @@ export async function criarOportunidade(input: OportunidadeInput): Promise<{ ok?
   return { ok: true };
 }
 
-export async function salvarOportunidade(id: string, input: OportunidadeInput): Promise<{ ok?: boolean; erro?: string }> {
+export async function salvarOportunidade(
+  id: string,
+  input: OportunidadeInput,
+): Promise<{ ok?: boolean; erro?: string }> {
   const p = await getPerfilAtual();
   if (!p?.ativo || !podeCriarCliente(p.papel)) return { erro: "Sem permissão." };
   if (!input.prospectNome.trim()) return { erro: "Informe o prospect." };
   const supabase = await createServerSupabase();
-  const { error } = await supabase.from("oportunidade").update({ ...paraColunas(input), atualizado_em: new Date().toISOString() }).eq("id", id);
+  const { error } = await supabase
+    .from("oportunidade")
+    .update({ ...paraColunas(input), atualizado_em: new Date().toISOString() })
+    .eq("id", id);
   if (error) return { erro: "Falha ao salvar." };
   revalidatePath("/comercial");
   return { ok: true };
 }
 
-export async function definirEtapa(id: string, etapa: EtapaOportunidade, motivo?: string | null): Promise<{ ok?: boolean; erro?: string }> {
+export async function definirEtapa(
+  id: string,
+  etapa: EtapaOportunidade,
+  motivo?: string | null,
+): Promise<{ ok?: boolean; erro?: string }> {
   const p = await getPerfilAtual();
   if (!p?.ativo || !podeCriarCliente(p.papel)) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();

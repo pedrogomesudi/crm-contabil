@@ -8,13 +8,7 @@ export type CategoriaNatureza = (typeof CATEGORIA_NATUREZAS)[number];
 export const CATEGORIA_GRUPOS = ["OPERACIONAL", "NAO_OPERACIONAL"] as const;
 export type CategoriaGrupo = (typeof CATEGORIA_GRUPOS)[number];
 
-export const FAIXAS_FATURAMENTO = [
-  "ATE_81K",
-  "ATE_360K",
-  "ATE_4_8MI",
-  "ATE_78MI",
-  "ACIMA_78MI",
-] as const;
+export const FAIXAS_FATURAMENTO = ["ATE_81K", "ATE_360K", "ATE_4_8MI", "ATE_78MI", "ACIMA_78MI"] as const;
 export type FaixaFaturamento = (typeof FAIXAS_FATURAMENTO)[number];
 
 export const FAIXA_LABEL: Record<FaixaFaturamento, string> = {

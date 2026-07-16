@@ -33,8 +33,7 @@ describe("enviarParaAssinatura", () => {
         if (url.endsWith("/signers")) return respJson({ data: { id: "sig-" + calls.length } });
         if (url.endsWith("/requirements")) return respJson({ data: { id: "req" } });
         if (url.endsWith("/notifications")) return respJson({ data: { id: "notif" } });
-        if (init.method === "PATCH")
-          return respJson({ data: { id: "env1", attributes: { status: "running" } } }, 200);
+        if (init.method === "PATCH") return respJson({ data: { id: "env1", attributes: { status: "running" } } }, 200);
         return respJson({}, 200);
       }),
     );
@@ -51,9 +50,9 @@ describe("enviarParaAssinatura", () => {
     expect(out.signatarios).toHaveLength(2);
     expect(out.signatarios[0]!.clicksignKey).toMatch(/^sig-/);
     const docCall = calls.find((c) => c.url.endsWith("/documents"))!;
-    expect((docCall.body as { data: { attributes: { content_base64: string } } }).data.attributes.content_base64).toMatch(
-      /^data:application\/pdf;base64,/,
-    );
+    expect(
+      (docCall.body as { data: { attributes: { content_base64: string } } }).data.attributes.content_base64,
+    ).toMatch(/^data:application\/pdf;base64,/);
     expect(calls.some((c) => c.method === "PATCH")).toBe(true);
     // dispara as notificações (senão os e-mails não saem)
     expect(calls.some((c) => c.url.endsWith("/notifications"))).toBe(true);

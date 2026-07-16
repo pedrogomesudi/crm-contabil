@@ -40,7 +40,8 @@ export default async function SolicitacoesPage({
   let lista = data ?? [];
   if (sp.vencidas === "1") {
     lista = lista.filter(
-      (s) => contaPrazo(s.status as SolicitacaoStatus) && (s.prazo as string | null) !== null && (s.prazo as string) < hoje,
+      (s) =>
+        contaPrazo(s.status as SolicitacaoStatus) && (s.prazo as string | null) !== null && (s.prazo as string) < hoje,
     );
   }
 
@@ -48,7 +49,9 @@ export default async function SolicitacoesPage({
   const { data: clientes } = cliIds.length
     ? await supabase.from("clientes").select("id, razao_social").in("id", cliIds)
     : { data: [] };
-  const nomeCli = new Map<string, string>((clientes ?? []).map((c) => [c.id as string, (c.razao_social as string) ?? "—"]));
+  const nomeCli = new Map<string, string>(
+    (clientes ?? []).map((c) => [c.id as string, (c.razao_social as string) ?? "—"]),
+  );
 
   const link = (extra: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
@@ -72,15 +75,23 @@ export default async function SolicitacoesPage({
       <PageHeader titulo="Solicitações" subtitulo="Pedidos abertos pelos clientes no portal" />
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <Link href={link({ status: undefined })} className={chip(!sp.status)}>Todos os status</Link>
+        <Link href={link({ status: undefined })} className={chip(!sp.status)}>
+          Todos os status
+        </Link>
         {SOLICITACAO_STATUS.map((s) => (
-          <Link key={s.valor} href={link({ status: s.valor })} className={chip(sp.status === s.valor)}>{s.rotulo}</Link>
+          <Link key={s.valor} href={link({ status: s.valor })} className={chip(sp.status === s.valor)}>
+            {s.rotulo}
+          </Link>
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
-        <Link href={link({ categoria: undefined })} className={chip(!sp.categoria)}>Todas as categorias</Link>
+        <Link href={link({ categoria: undefined })} className={chip(!sp.categoria)}>
+          Todas as categorias
+        </Link>
         {SOLICITACAO_CATEGORIAS.map((c) => (
-          <Link key={c.valor} href={link({ categoria: c.valor })} className={chip(sp.categoria === c.valor)}>{c.rotulo}</Link>
+          <Link key={c.valor} href={link({ categoria: c.valor })} className={chip(sp.categoria === c.valor)}>
+            {c.rotulo}
+          </Link>
         ))}
         <Link href={link({ vencidas: sp.vencidas === "1" ? undefined : "1" })} className={chip(sp.vencidas === "1")}>
           SLA vencido

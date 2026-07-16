@@ -11,8 +11,14 @@ export function BarrasCategoria({ linhas }: { linhas: LinhaComparativo[] }) {
           <div key={l.categoriaId} className="grid grid-cols-[110px_1fr] items-center gap-2">
             <span className="truncate text-xs text-texto">{l.nome}</span>
             <div className="relative h-5">
-              <div className="absolute left-0 top-0 h-2 rounded bg-[#d8d4ca]" style={{ width: `${(l.orcado / max) * 100}%` }} />
-              <div className={`absolute left-0 top-2.5 h-2 rounded ${ruim ? "bg-negativo" : "bg-verde"}`} style={{ width: `${(l.realizado / max) * 100}%` }} />
+              <div
+                className="absolute left-0 top-0 h-2 rounded bg-[#d8d4ca]"
+                style={{ width: `${(l.orcado / max) * 100}%` }}
+              />
+              <div
+                className={`absolute left-0 top-2.5 h-2 rounded ${ruim ? "bg-negativo" : "bg-verde"}`}
+                style={{ width: `${(l.realizado / max) * 100}%` }}
+              />
             </div>
           </div>
         );

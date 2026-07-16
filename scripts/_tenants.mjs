@@ -63,9 +63,7 @@ export function exigirIgnoradoPeloGit(caminho) {
   try {
     execFileSync("git", ["check-ignore", "-q", caminho], { cwd: RAIZ });
   } catch {
-    throw new Error(
-      `ABORTADO: "${caminho}" NÃO está no .gitignore. Não escrevo segredo em caminho versionável.`,
-    );
+    throw new Error(`ABORTADO: "${caminho}" NÃO está no .gitignore. Não escrevo segredo em caminho versionável.`);
   }
 }
 

@@ -56,12 +56,25 @@ export function ContasReceber({
       <div className="flex flex-wrap items-end gap-2">
         <label>
           Competência
-          <input type="month" value={mes} onChange={(e) => setMes(e.target.value)} className="ml-2 rounded border border-linha px-2 py-1" />
+          <input
+            type="month"
+            value={mes}
+            onChange={(e) => setMes(e.target.value)}
+            className="ml-2 rounded border border-linha px-2 py-1"
+          />
         </label>
-        <button onClick={carregar} disabled={!competencia || pend} className="rounded border border-linha px-3 py-1 disabled:opacity-60">
+        <button
+          onClick={carregar}
+          disabled={!competencia || pend}
+          className="rounded border border-linha px-3 py-1 disabled:opacity-60"
+        >
           Carregar
         </button>
-        <button onClick={gerar} disabled={!competencia || pend} className="rounded-lg bg-verde px-3 py-1 font-medium text-white hover:brightness-105 disabled:opacity-60">
+        <button
+          onClick={gerar}
+          disabled={!competencia || pend}
+          className="rounded-lg bg-verde px-3 py-1 font-medium text-white hover:brightness-105 disabled:opacity-60"
+        >
           Gerar mensalidades do mês
         </button>
         <label className="flex items-center gap-2">
@@ -103,7 +116,9 @@ export function ContasReceber({
                     <td className="p-2">{formatarData(t.vencimento)}</td>
                     <td className="p-2">{formatarMoeda(t.valor)}</td>
                     <td className="p-2">{formatarMoeda(saldo)}</td>
-                    <td className="p-2"><Badge variante={badgeStatusTitulo(status)}>{LABEL_STATUS[status] ?? status}</Badge></td>
+                    <td className="p-2">
+                      <Badge variante={badgeStatusTitulo(status)}>{LABEL_STATUS[status] ?? status}</Badge>
+                    </td>
                     <td className="p-2 text-right">
                       {t.somaBaixado > 0 ? (
                         <button
@@ -140,7 +155,11 @@ export function ContasReceber({
                         </button>
                       )}
                       <div className="mt-1">
-                        <BoletoTitulo tituloId={t.id} boleto={boletos[t.id] ?? null} onMudou={() => start(async () => setBoletos(await listarBoletosDaCompetencia(competencia)))} />
+                        <BoletoTitulo
+                          tituloId={t.id}
+                          boleto={boletos[t.id] ?? null}
+                          onMudou={() => start(async () => setBoletos(await listarBoletosDaCompetencia(competencia)))}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -166,23 +185,41 @@ export function ContasReceber({
         >
           <p className="text-sm font-medium">Registrar baixa</p>
           <div className="grid grid-cols-2 gap-2">
-            <input name="valor_recebido" type="number" step="0.01" placeholder="Valor recebido" required className="rounded border border-linha p-2" />
+            <input
+              name="valor_recebido"
+              type="number"
+              step="0.01"
+              placeholder="Valor recebido"
+              required
+              className="rounded border border-linha p-2"
+            />
             <input name="data_recebimento" type="date" required className="rounded border border-linha p-2" />
             <select name="conta_bancaria_id" required className="rounded border border-linha p-2">
               <option value="">Conta bancária…</option>
               {contas.map((c) => (
-                <option key={c.id} value={c.id}>{c.nome}</option>
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
               ))}
             </select>
             <select name="forma_pagamento" required className="rounded border border-linha p-2">
               {["PIX", "BOLETO", "CARTAO", "TRANSFERENCIA", "DINHEIRO"].map((f) => (
-                <option key={f} value={f}>{f}</option>
+                <option key={f} value={f}>
+                  {f}
+                </option>
               ))}
             </select>
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="rounded-lg bg-verde px-3 py-2 text-sm font-medium text-white hover:brightness-105">Confirmar baixa</button>
-            <button type="button" onClick={() => setBaixando(null)} className="rounded border border-linha px-3 py-2">Cancelar</button>
+            <button
+              type="submit"
+              className="rounded-lg bg-verde px-3 py-2 text-sm font-medium text-white hover:brightness-105"
+            >
+              Confirmar baixa
+            </button>
+            <button type="button" onClick={() => setBaixando(null)} className="rounded border border-linha px-3 py-2">
+              Cancelar
+            </button>
           </div>
         </form>
       )}

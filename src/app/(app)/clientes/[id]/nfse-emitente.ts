@@ -131,11 +131,7 @@ export async function emitirNfseDoCliente(
   if (!perfil?.ativo || !podeVerHonorario(perfil.papel)) return { status: "erro", motivo: "Sem permissão." };
   const supabase = await createServerSupabase();
 
-  const { data: emitente } = await supabase
-    .from("nfse_emitente")
-    .select("*")
-    .eq("cliente_id", clienteId)
-    .maybeSingle();
+  const { data: emitente } = await supabase.from("nfse_emitente").select("*").eq("cliente_id", clienteId).maybeSingle();
   if (!emitente?.codigo_municipio || !emitente.codigo_servico_nacional)
     return { status: "erro", motivo: "Emitente sem configuração fiscal completa." };
 
@@ -213,7 +209,9 @@ export async function emitirNfseDoCliente(
     }
   } catch (e) {
     console.error("emitirNfseDoCliente:", e instanceof Error ? e.message : e);
-    await supabase.from("nfse").insert({ ...baseRow, status: "erro", mensagens: [{ descricao: "Falha de comunicação" }] });
+    await supabase
+      .from("nfse")
+      .insert({ ...baseRow, status: "erro", mensagens: [{ descricao: "Falha de comunicação" }] });
     return { status: "erro", motivo: "Falha de comunicação com a Sefin." };
   }
 
@@ -249,7 +247,10 @@ export async function emitirComoEmitente(
       numero: String(formData.get("tom_numero") ?? "").trim(),
       bairro: String(formData.get("tom_bairro") ?? "").trim(),
       cidade: String(formData.get("tom_cidade") ?? "").trim(),
-      uf: String(formData.get("tom_uf") ?? "").trim().toUpperCase().slice(0, 2),
+      uf: String(formData.get("tom_uf") ?? "")
+        .trim()
+        .toUpperCase()
+        .slice(0, 2),
       cMun: String(formData.get("tom_cmun") ?? "").trim(),
     },
     descricaoServico: String(formData.get("descricao_servico") ?? "").trim(),

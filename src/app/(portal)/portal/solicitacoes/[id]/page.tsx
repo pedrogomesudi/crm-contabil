@@ -2,7 +2,12 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { rotuloCategoria, rotuloStatus, type SolicitacaoCategoria, type SolicitacaoStatus } from "@/lib/solicitacoes/solicitacao";
+import {
+  rotuloCategoria,
+  rotuloStatus,
+  type SolicitacaoCategoria,
+  type SolicitacaoStatus,
+} from "@/lib/solicitacoes/solicitacao";
 import { Thread } from "./Thread";
 
 const dataBR = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "—");
@@ -34,13 +39,16 @@ export default async function PortalSolicitacaoPage({ params }: { params: Promis
 
   return (
     <div className="space-y-4">
-      <Link href="/portal/solicitacoes" className="text-sm text-verde underline">← Solicitações</Link>
+      <Link href="/portal/solicitacoes" className="text-sm text-verde underline">
+        ← Solicitações
+      </Link>
       <div>
         <h1 className="font-display text-xl font-bold text-texto">
           <span className="font-mono text-sm text-cinza">#{String(s.numero)}</span> {s.assunto as string}
         </h1>
         <p className="text-xs text-cinza">
-          {rotuloCategoria(s.categoria as SolicitacaoCategoria)} · {rotuloStatus(s.status as SolicitacaoStatus)} · prazo {dataBR(s.prazo as string | null)}
+          {rotuloCategoria(s.categoria as SolicitacaoCategoria)} · {rotuloStatus(s.status as SolicitacaoStatus)} · prazo{" "}
+          {dataBR(s.prazo as string | null)}
         </p>
       </div>
       <Thread solicitacaoId={id} mensagens={mensagens} />

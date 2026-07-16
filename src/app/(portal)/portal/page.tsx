@@ -24,7 +24,9 @@ export default async function PortalInicioPage() {
   return (
     <div className="space-y-4">
       <h1 className="font-display text-xl font-bold text-texto">Bem-vindo</h1>
-      <p className="text-sm text-cinza">Aqui você consulta e baixa os seus documentos, notas fiscais, guias e boletos.</p>
+      <p className="text-sm text-cinza">
+        Aqui você consulta e baixa os seus documentos, notas fiscais, guias e boletos.
+      </p>
       <div className="grid gap-3 sm:grid-cols-2">
         {cards.map((c) => (
           <Link key={c.href} href={c.href} className="rounded-2xl border border-linha bg-white p-4 hover:bg-creme">

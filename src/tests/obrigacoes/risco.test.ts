@@ -2,7 +2,18 @@ import { describe, it, expect } from "vitest";
 import { classificarRisco, montarPainel, type ItemRisco } from "@/lib/obrigacoes/risco";
 
 const hoje = "2026-07-15";
-const item = (over: Partial<ItemRisco>): ItemRisco => ({ id: "x", clienteNome: "C", obrigacaoNome: "O", competencia: "2026-06-01", periodicidade: "mensal", vencimentoInterno: hoje, vencimentoLegal: hoje, responsavelId: "u1", responsavelNome: "Ana", ...over });
+const item = (over: Partial<ItemRisco>): ItemRisco => ({
+  id: "x",
+  clienteNome: "C",
+  obrigacaoNome: "O",
+  competencia: "2026-06-01",
+  periodicidade: "mensal",
+  vencimentoInterno: hoje,
+  vencimentoLegal: hoje,
+  responsavelId: "u1",
+  responsavelNome: "Ana",
+  ...over,
+});
 
 describe("classificarRisco", () => {
   it("classifica nas fronteiras", () => {

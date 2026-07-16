@@ -4,13 +4,7 @@ import { useRouter } from "next/navigation";
 import { excluirCliente, restaurarCliente } from "@/app/(app)/clientes/actions";
 import { formatarData } from "@/lib/format";
 
-export function AcoesExclusaoCliente({
-  clienteId,
-  excluidoEm,
-}: {
-  clienteId: string;
-  excluidoEm: string | null;
-}) {
+export function AcoesExclusaoCliente({ clienteId, excluidoEm }: { clienteId: string; excluidoEm: string | null }) {
   const router = useRouter();
   const [confirmando, setConfirmando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);

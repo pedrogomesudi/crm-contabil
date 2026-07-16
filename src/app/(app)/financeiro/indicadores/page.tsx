@@ -33,7 +33,11 @@ export default async function IndicadoresPage() {
             <Cartao titulo="MRR" valor={formatarMoeda(resumo.atual.mrr)} />
             <Cartao titulo="Ticket médio" valor={formatarMoeda(resumo.atual.ticketMedio)} />
             <Cartao titulo="Clientes ativos" valor={String(resumo.atual.ativos)} />
-            <Cartao titulo="Churn do mês" valor={`${resumo.atual.churnPct.toFixed(1).replace(".", ",")}%`} detalhe={`${formatarMoeda(resumo.atual.churnReceita)} em receita`} />
+            <Cartao
+              titulo="Churn do mês"
+              valor={`${resumo.atual.churnPct.toFixed(1).replace(".", ",")}%`}
+              detalhe={`${formatarMoeda(resumo.atual.churnReceita)} em receita`}
+            />
           </div>
           <Indicadores resumo={resumo} />
         </>

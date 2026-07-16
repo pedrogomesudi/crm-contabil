@@ -3,11 +3,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
 import { hojeEmSaoPaulo } from "@/lib/vencimentos/hoje";
-import {
-  montarPainel,
-  type ItemVencimento,
-  type ResumoVencimentos,
-} from "@/lib/vencimentos/alerta";
+import { montarPainel, type ItemVencimento, type ResumoVencimentos } from "@/lib/vencimentos/alerta";
 import { montarItens } from "@/lib/vencimentos/montar";
 
 const VAZIO: { resumo: ResumoVencimentos; itens: ItemVencimento[] } = {
@@ -35,17 +31,13 @@ export async function listarVencimentos(): Promise<{
   const [certs, procs, nfse] = await Promise.all([
     supabase
       .from("certificado_digital")
-      .select(
-        "id, tipo, titular, validade, cliente_id, clientes!inner(razao_social, status, excluido_em)",
-      )
+      .select("id, tipo, titular, validade, cliente_id, clientes!inner(razao_social, status, excluido_em)")
       .eq("ativo", true)
       .eq("clientes.status", "ativo")
       .is("clientes.excluido_em", null),
     supabase
       .from("procuracao")
-      .select(
-        "id, orgao, outorgante, validade, cliente_id, clientes!inner(razao_social, status, excluido_em)",
-      )
+      .select("id, orgao, outorgante, validade, cliente_id, clientes!inner(razao_social, status, excluido_em)")
       .eq("ativo", true)
       .eq("clientes.status", "ativo")
       .is("clientes.excluido_em", null),

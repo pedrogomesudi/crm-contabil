@@ -44,7 +44,10 @@ export function tipoPessoaPorDoc(doc: string): TipoPessoa | null {
 // Garante um par tipo_pessoa × regime_tributario VÁLIDO segundo o CHECK do banco
 // (PJ→Simples/Presumido/Real, PF→Isento/PF, MEI→MEI). Documento inválido ou
 // regime sem equivalente geram pendência (não viram INSERT).
-function classificar(doc: string, regimeDominio: string): {
+function classificar(
+  doc: string,
+  regimeDominio: string,
+): {
   tipo_pessoa: TipoPessoa;
   regime_tributario: RegimeTributario | null;
   pendencias: string[];

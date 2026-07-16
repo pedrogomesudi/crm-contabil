@@ -67,10 +67,7 @@ export async function relatorioRentabilidade(de: string, ate: string): Promise<R
     const t = Array.isArray(b.titulo) ? b.titulo[0] : b.titulo;
     const tit = t as { cliente_id?: string; tipo?: string } | null;
     if (!tit?.cliente_id || tit.tipo !== "RECEBER") continue;
-    recebidoPorCliente.set(
-      tit.cliente_id,
-      (recebidoPorCliente.get(tit.cliente_id) ?? 0) + Number(b.valor_recebido),
-    );
+    recebidoPorCliente.set(tit.cliente_id, (recebidoPorCliente.get(tit.cliente_id) ?? 0) + Number(b.valor_recebido));
   }
 
   const minutosPorCliente = new Map<string, number>();

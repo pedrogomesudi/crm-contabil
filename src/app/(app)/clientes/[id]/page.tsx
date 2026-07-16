@@ -3,7 +3,13 @@ import { notFound, redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { listarContadores, contadorPorId } from "@/lib/clientes/contadores";
-import { podeAtribuirContador, podeVerHonorario, podeExcluirCliente, podeCriarCliente, podeGerenciarResponsaveis } from "@/lib/clientes/permissoes";
+import {
+  podeAtribuirContador,
+  podeVerHonorario,
+  podeExcluirCliente,
+  podeCriarCliente,
+  podeGerenciarResponsaveis,
+} from "@/lib/clientes/permissoes";
 import { ResponsaveisDepartamento } from "@/components/clientes/ResponsaveisDepartamento";
 import { listarColaboradores } from "@/lib/clientes/colaboradores";
 import { DEPARTAMENTOS, type Departamento } from "@/lib/clientes/departamentos";
@@ -97,14 +103,24 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
 
   // Responsáveis por departamento (camada nova; não altera a RLS/visibilidade).
   const respEditavel = podeGerenciarResponsaveis(papel) || (papel === "contador" && cliente.contador_id === perfil.id);
-  const { data: respRows } = await supabase.from("cliente_responsavel").select("departamento, usuario_id").eq("cliente_id", id);
-  const atuaisResp = Object.fromEntries(DEPARTAMENTOS.map((d) => [d.valor, null])) as Record<Departamento, string | null>;
+  const { data: respRows } = await supabase
+    .from("cliente_responsavel")
+    .select("departamento, usuario_id")
+    .eq("cliente_id", id);
+  const atuaisResp = Object.fromEntries(DEPARTAMENTOS.map((d) => [d.valor, null])) as Record<
+    Departamento,
+    string | null
+  >;
   for (const r of respRows ?? []) atuaisResp[r.departamento as Departamento] = (r.usuario_id as string) ?? null;
   const colaboradores = await listarColaboradores();
 
   // Legalização / societário — processos do cliente.
   const podeLegalizacao = podeGerenciarLegalizacao(papel);
-  const { data: procs } = await supabase.from("legalizacao_processo").select("id, tipo, titulo, status").eq("cliente_id", id).order("criado_em", { ascending: false });
+  const { data: procs } = await supabase
+    .from("legalizacao_processo")
+    .select("id, tipo, titulo, status")
+    .eq("cliente_id", id)
+    .order("criado_em", { ascending: false });
   const procIds = (procs ?? []).map((p) => p.id as string);
   const { data: etapasProc } = procIds.length
     ? await supabase.from("legalizacao_etapa").select("processo_id, status, prazo").in("processo_id", procIds)
@@ -117,9 +133,19 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   }
   const processosLeg = (procs ?? []).map((p) => {
     const pr = progressoProcesso(etapasPorProc.get(p.id as string) ?? []);
-    return { id: p.id as string, titulo: (p.titulo as string) || rotuloTipo(p.tipo as LegTipo), status: p.status as string, pct: pr.pct, proximoPrazo: pr.proximoPrazo };
+    return {
+      id: p.id as string,
+      titulo: (p.titulo as string) || rotuloTipo(p.tipo as LegTipo),
+      status: p.status as string,
+      pct: pr.pct,
+      proximoPrazo: pr.proximoPrazo,
+    };
   });
-  const { data: modelosLeg } = await supabase.from("legalizacao_template").select("id, nome").eq("ativo", true).order("nome");
+  const { data: modelosLeg } = await supabase
+    .from("legalizacao_template")
+    .select("id, nome")
+    .eq("ativo", true)
+    .order("nome");
 
   // Tarefas do cliente.
   const tarefasCliente = await listarTarefas({ cliente: id });
@@ -145,7 +171,9 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   if (mostrarHonorario) {
     const { data: fin } = await supabase
       .from("clientes_financeiro")
-      .select("honorario_mensal, dia_vencimento, qtd_funcionarios, faixa_faturamento, data_saida, cobranca_whatsapp, cobranca_email, indice_reajuste, percentual_reajuste")
+      .select(
+        "honorario_mensal, dia_vencimento, qtd_funcionarios, faixa_faturamento, data_saida, cobranca_whatsapp, cobranca_email, indice_reajuste, percentual_reajuste",
+      )
       .eq("cliente_id", id)
       .maybeSingle();
     valorHonorario = fin?.honorario_mensal != null ? Number(fin.honorario_mensal) : null;
@@ -168,21 +196,26 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
   const hojeObrigacoes = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
   const anoObrigacoes = Number(hojeObrigacoes.slice(0, 4));
   const mesObrigacoes = Number(hojeObrigacoes.slice(5, 7));
-  const obrigacoesDoMes = podeCriarCliente(papel) ? await listarInstancias(anoObrigacoes, mesObrigacoes, { clienteId: id }) : [];
+  const obrigacoesDoMes = podeCriarCliente(papel)
+    ? await listarInstancias(anoObrigacoes, mesObrigacoes, { clienteId: id })
+    : [];
 
   const emConstituicao = cliente.status === "em_constituicao";
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="font-display text-2xl font-bold tracking-tight text-texto">{cliente.razao_social}</h1>
-        {emConstituicao && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Em constituição</span>}
+        {emConstituicao && (
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+            Em constituição
+          </span>
+        )}
       </div>
-      {emConstituicao && (
-        <AtivarEmpresa clienteId={id} regimeAtual={cliente.regime_tributario as string} />
-      )}
+      {emConstituicao && <AtivarEmpresa clienteId={id} regimeAtual={cliente.regime_tributario as string} />}
       {(cliente as { competencia_inicial: string | null }).competencia_inicial && (
         <p className="-mt-4 text-sm text-cinza">
-          Competência inicial: {(cliente as { competencia_inicial: string }).competencia_inicial.slice(5, 7)}/{(cliente as { competencia_inicial: string }).competencia_inicial.slice(0, 4)}
+          Competência inicial: {(cliente as { competencia_inicial: string }).competencia_inicial.slice(5, 7)}/
+          {(cliente as { competencia_inicial: string }).competencia_inicial.slice(0, 4)}
         </p>
       )}
       {podeCriarCliente(papel) && (
@@ -191,15 +224,11 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         </Link>
       )}
       {podeExcluirCliente(papel) && (
-        <AcoesExclusaoCliente
-          clienteId={id}
-          excluidoEm={(cliente as { excluido_em: string | null }).excluido_em}
-        />
+        <AcoesExclusaoCliente clienteId={id} excluidoEm={(cliente as { excluido_em: string | null }).excluido_em} />
       )}
-      {["admin", "assistente"].includes(papel) &&
-        String(cliente.cpf_cnpj ?? "").replace(/\D/g, "").length === 14 && (
-          <BotaoAtualizarReceita cpfCnpj={cliente.cpf_cnpj} />
-        )}
+      {["admin", "assistente"].includes(papel) && String(cliente.cpf_cnpj ?? "").replace(/\D/g, "").length === 14 && (
+        <BotaoAtualizarReceita cpfCnpj={cliente.cpf_cnpj} />
+      )}
       <FormCliente
         key={cliente.atualizado_em}
         action={atualizarCliente.bind(null, id)}
@@ -208,9 +237,7 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
         modo="editar"
         contadorEditavel={contadorEditavel}
       />
-      {mostrarHonorario && (
-        <HonorarioForm clienteId={id} valorAtual={valorHonorario} extensao={extensaoFinanceira} />
-      )}
+      {mostrarHonorario && <HonorarioForm clienteId={id} valorAtual={valorHonorario} extensao={extensaoFinanceira} />}
       {mostrarHonorario && <LinhaTempoVigencias clienteId={id} papel={papel} />}
       {mostrarHonorario && <ContratosSection clienteId={id} contratos={contratos} />}
       {mostrarHonorario && (
@@ -258,7 +285,12 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
       )}
       <VencimentosSection clienteId={id} papel={papel} />
       {podeCriarCliente(papel) && (
-        <ResponsaveisDepartamento clienteId={id} colaboradores={colaboradores} atuais={atuaisResp} editavel={respEditavel} />
+        <ResponsaveisDepartamento
+          clienteId={id}
+          colaboradores={colaboradores}
+          atuais={atuaisResp}
+          editavel={respEditavel}
+        />
       )}
       {podeCriarCliente(papel) && (
         <LegalizacaoSection

@@ -54,9 +54,7 @@ export function montarPainel(itens: ItemVencimento[]): {
     else if (i.severidade === "aviso") resumo.avisos++;
   }
   relevantes.sort(
-    (a, b) =>
-      ordemSeveridade(a.severidade) - ordemSeveridade(b.severidade) ||
-      a.validade.localeCompare(b.validade),
+    (a, b) => ordemSeveridade(a.severidade) - ordemSeveridade(b.severidade) || a.validade.localeCompare(b.validade),
   );
   return { resumo, itens: relevantes };
 }

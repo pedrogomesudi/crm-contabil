@@ -89,11 +89,29 @@ export function calcularMetricas(clientes: ClienteMetrica[], meses: string[]): R
     churnReceita = cent(churnReceita);
     const churnPct = base > 0 ? pct1(churn / base) : 0;
     const ticketMedio = ativosFim > 0 ? cent(mrr / ativosFim) : 0;
-    return { mes, base, novos, churn, liquido: novos - churn, ativosFim, churnPct, churnReceita, mrr, ticketMedio, estimado };
+    return {
+      mes,
+      base,
+      novos,
+      churn,
+      liquido: novos - churn,
+      ativosFim,
+      churnPct,
+      churnReceita,
+      mrr,
+      ticketMedio,
+      estimado,
+    };
   });
   const u = serie[serie.length - 1];
   const atual = u
-    ? { mrr: u.mrr, ticketMedio: u.ticketMedio, ativos: u.ativosFim, churnPct: u.churnPct, churnReceita: u.churnReceita }
+    ? {
+        mrr: u.mrr,
+        ticketMedio: u.ticketMedio,
+        ativos: u.ativosFim,
+        churnPct: u.churnPct,
+        churnReceita: u.churnReceita,
+      }
     : { mrr: 0, ticketMedio: 0, ativos: 0, churnPct: 0, churnReceita: 0 };
   return { serie, atual };
 }

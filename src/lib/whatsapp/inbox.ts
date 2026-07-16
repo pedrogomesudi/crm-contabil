@@ -69,12 +69,24 @@ export function extrairMensagemZapi(
   if (img) {
     const url = str(img.imageUrl) ?? str(img.url);
     const caption = str(img.caption) ?? "";
-    if (url) return { telefone, zId, texto: caption, midia: { tipo: "image", url, mime: str(img.mimeType) ?? "image/jpeg", nome: null, caption } };
+    if (url)
+      return {
+        telefone,
+        zId,
+        texto: caption,
+        midia: { tipo: "image", url, mime: str(img.mimeType) ?? "image/jpeg", nome: null, caption },
+      };
   }
   const aud = p.audio as Record<string, unknown> | undefined;
   if (aud) {
     const url = str(aud.audioUrl) ?? str(aud.url);
-    if (url) return { telefone, zId, texto: "", midia: { tipo: "audio", url, mime: str(aud.mimeType) ?? "audio/ogg", nome: null, caption: "" } };
+    if (url)
+      return {
+        telefone,
+        zId,
+        texto: "",
+        midia: { tipo: "audio", url, mime: str(aud.mimeType) ?? "audio/ogg", nome: null, caption: "" },
+      };
   }
   const doc = p.document as Record<string, unknown> | undefined;
   if (doc) {
@@ -223,7 +235,12 @@ export function filtrarConversas(convs: Conversa[], aba: FiltroAba, busca: strin
 }
 
 // Contadores para as abas.
-export function contadores(convs: Conversa[]): { abertas: number; pendentes: number; finalizadas: number; favoritos: number } {
+export function contadores(convs: Conversa[]): {
+  abertas: number;
+  pendentes: number;
+  finalizadas: number;
+  favoritos: number;
+} {
   return {
     abertas: convs.filter((c) => c.status === "aberta").length,
     pendentes: convs.filter((c) => c.status === "pendente").length,

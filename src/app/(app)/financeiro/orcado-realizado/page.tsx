@@ -18,7 +18,14 @@ export default async function OrcadoRealizadoPage() {
       <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Orçado × Realizado" subtitulo="Comparativo do orçamento com o realizado" />
       {dados ? (
-        <DashboardComparativo ano={ano} tipo="mes" indice={indice} base="competencia" categorias={dados.categorias} comparativo={dados.comparativo} />
+        <DashboardComparativo
+          ano={ano}
+          tipo="mes"
+          indice={indice}
+          base="competencia"
+          categorias={dados.categorias}
+          comparativo={dados.comparativo}
+        />
       ) : (
         <p className="text-sm text-cinza">Sem acesso ao financeiro.</p>
       )}

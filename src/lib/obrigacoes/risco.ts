@@ -5,9 +5,22 @@ export function classificarRisco(vencimentoInterno: string, hoje: string): Risco
   return "no_prazo";
 }
 
-export type ItemRisco = { id: string; clienteNome: string; obrigacaoNome: string; competencia: string; periodicidade: string; vencimentoInterno: string; vencimentoLegal: string; responsavelId: string | null; responsavelNome: string | null };
+export type ItemRisco = {
+  id: string;
+  clienteNome: string;
+  obrigacaoNome: string;
+  competencia: string;
+  periodicidade: string;
+  vencimentoInterno: string;
+  vencimentoLegal: string;
+  responsavelId: string | null;
+  responsavelNome: string | null;
+};
 export type GrupoRisco = { responsavelId: string | null; responsavelNome: string | null; itens: ItemRisco[] };
-export type PainelRiscos = { resumo: { vencendoHoje: number; vencidas: number; semResponsavel: number }; grupos: GrupoRisco[] };
+export type PainelRiscos = {
+  resumo: { vencendoHoje: number; vencidas: number; semResponsavel: number };
+  grupos: GrupoRisco[];
+};
 
 export function montarPainel(itens: ItemRisco[], hoje: string): PainelRiscos {
   let vencendoHoje = 0;

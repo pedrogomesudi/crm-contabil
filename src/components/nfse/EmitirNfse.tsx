@@ -43,11 +43,7 @@ export function EmitirNfse({
       </label>
       <label className="block">
         Descrição do serviço
-        <input
-          name="descricao"
-          placeholder="Honorarios"
-          className="ml-2 w-64 rounded border border-linha px-2 py-1"
-        />
+        <input name="descricao" placeholder="Honorarios" className="ml-2 w-64 rounded border border-linha px-2 py-1" />
       </label>
       <label className="flex items-center gap-2">
         <input type="checkbox" name="avulsa" />

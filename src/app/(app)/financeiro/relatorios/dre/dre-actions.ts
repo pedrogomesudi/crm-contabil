@@ -14,10 +14,18 @@ async function gate() {
   return p;
 }
 
-export async function relatorioDRE(ano: number, tipo: TipoPeriodo, indice: number, base: "competencia" | "caixa"): Promise<{ dre: DRE } | null> {
+export async function relatorioDRE(
+  ano: number,
+  tipo: TipoPeriodo,
+  indice: number,
+  base: "competencia" | "caixa",
+): Promise<{ dre: DRE } | null> {
   if (!(await gate())) return null;
   const supabase = await createServerSupabase();
-  const { data: cats } = await supabase.from("categoria").select("id, nome, natureza, grupo, ordem_dre").eq("ativa", true);
+  const { data: cats } = await supabase
+    .from("categoria")
+    .select("id, nome, natureza, grupo, ordem_dre")
+    .eq("ativa", true);
   const categorias: CategoriaDRE[] = (cats ?? []).map((c) => ({
     id: c.id as string,
     nome: c.nome as string,
@@ -30,13 +38,23 @@ export async function relatorioDRE(ano: number, tipo: TipoPeriodo, indice: numbe
   const fim = `${ano}-12-31`;
   const lanc: { categoriaId: string; ano: number; mes: number; valor: number }[] = [];
   if (base === "competencia") {
-    const { data } = await supabase.from("titulo").select("categoria_id, competencia, valor").not("categoria_id", "is", null).gte("competencia", ini).lte("competencia", fim);
+    const { data } = await supabase
+      .from("titulo")
+      .select("categoria_id, competencia, valor")
+      .not("categoria_id", "is", null)
+      .gte("competencia", ini)
+      .lte("competencia", fim);
     for (const t of data ?? []) {
       const comp = t.competencia as string;
       lanc.push({ categoriaId: t.categoria_id as string, ano: anoDe(comp), mes: mesDe(comp), valor: Number(t.valor) });
     }
   } else {
-    const { data } = await supabase.from("baixa").select("valor_recebido, data_recebimento, estornada, titulo:titulo_id(categoria_id)").eq("estornada", false).gte("data_recebimento", ini).lte("data_recebimento", fim);
+    const { data } = await supabase
+      .from("baixa")
+      .select("valor_recebido, data_recebimento, estornada, titulo:titulo_id(categoria_id)")
+      .eq("estornada", false)
+      .gte("data_recebimento", ini)
+      .lte("data_recebimento", fim);
     for (const b of data ?? []) {
       const tit = Array.isArray(b.titulo) ? b.titulo[0] : b.titulo;
       const cat = tit?.categoria_id as string | undefined;

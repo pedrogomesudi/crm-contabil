@@ -39,7 +39,15 @@ export default async function CadastrosHubPage() {
               className="flex items-center justify-between rounded-2xl border border-linha bg-white p-4 transition hover:border-cinza-claro hover:shadow-sm"
             >
               <span className="font-medium text-texto">{i.label}</span>
-              <svg className="text-cinza-claro" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                className="text-cinza-claro"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="m9 6 6 6-6 6" />
               </svg>
             </Link>

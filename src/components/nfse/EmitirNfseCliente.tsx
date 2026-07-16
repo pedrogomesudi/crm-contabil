@@ -1,10 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
-import {
-  emitirComoEmitente,
-  consultarCnpjTomador,
-  type EstadoEmitente,
-} from "@/app/(app)/clientes/[id]/nfse-emitente";
+import { emitirComoEmitente, consultarCnpjTomador, type EstadoEmitente } from "@/app/(app)/clientes/[id]/nfse-emitente";
 import { mesAnteriorDeHoje } from "@/lib/financeiro/competencia";
 
 const inputCls =
@@ -23,10 +19,7 @@ type CamposTomador = {
 };
 
 export function EmitirNfseCliente({ clienteId, ambiente }: { clienteId: string; ambiente: string }) {
-  const [estado, action, pend] = useActionState<EstadoEmitente, FormData>(
-    emitirComoEmitente.bind(null, clienteId),
-    {},
-  );
+  const [estado, action, pend] = useActionState<EstadoEmitente, FormData>(emitirComoEmitente.bind(null, clienteId), {});
   const [aberto, setAberto] = useState(false);
   const [mes, setMes] = useState(mesAnteriorDeHoje());
   const [f, setF] = useState<CamposTomador>({
@@ -107,21 +100,37 @@ export function EmitirNfseCliente({ clienteId, ambiente }: { clienteId: string; 
       </div>
       {msgBusca && <p className={`text-xs ${msgBusca.ok ? "text-verde" : "text-negativo"}`}>{msgBusca.texto}</p>}
       <div className="grid grid-cols-2 gap-2">
-        <input name="tomador_razao_social" value={f.razao} onChange={set("razao")} placeholder="Razão social" required className={inputCls} />
+        <input
+          name="tomador_razao_social"
+          value={f.razao}
+          onChange={set("razao")}
+          placeholder="Razão social"
+          required
+          className={inputCls}
+        />
         <input name="tom_cep" value={f.cep} onChange={set("cep")} placeholder="CEP" required className={inputCls} />
-        <input name="tom_logradouro" value={f.logradouro} onChange={set("logradouro")} placeholder="Logradouro" required className={inputCls} />
+        <input
+          name="tom_logradouro"
+          value={f.logradouro}
+          onChange={set("logradouro")}
+          placeholder="Logradouro"
+          required
+          className={inputCls}
+        />
         <input name="tom_numero" value={f.numero} onChange={set("numero")} placeholder="Número" className={inputCls} />
         <input name="tom_bairro" value={f.bairro} onChange={set("bairro")} placeholder="Bairro" className={inputCls} />
         <input name="tom_cidade" value={f.cidade} onChange={set("cidade")} placeholder="Cidade" className={inputCls} />
         <input name="tom_uf" value={f.uf} onChange={set("uf")} placeholder="UF" maxLength={2} className={inputCls} />
-        <input name="tom_cmun" value={f.cmun} onChange={set("cmun")} placeholder="Cód. município (IBGE)" className={inputCls} />
+        <input
+          name="tom_cmun"
+          value={f.cmun}
+          onChange={set("cmun")}
+          placeholder="Cód. município (IBGE)"
+          className={inputCls}
+        />
       </div>
       <p className="font-medium text-cinza">Serviço</p>
-      <input
-        name="descricao_servico"
-        placeholder="Descrição do serviço"
-        className={`w-full ${inputCls}`}
-      />
+      <input name="descricao_servico" placeholder="Descrição do serviço" className={`w-full ${inputCls}`} />
       <label className="block text-cinza">
         Valor (R$)
         <input type="number" name="valor" step="0.01" min="0" required className={`ml-2 w-32 ${inputCls}`} />

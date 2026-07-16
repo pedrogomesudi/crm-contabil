@@ -157,9 +157,7 @@ export async function responderInterna(id: string, corpo: string): Promise<{ ok?
   const texto = corpo.trim().slice(0, 4000);
   if (!texto) return { erro: "Escreva a mensagem." };
   const supabase = await createServerSupabase();
-  const { error } = await supabase
-    .from("solicitacao_interna_mensagem")
-    .insert({ solicitacao_id: id, corpo: texto });
+  const { error } = await supabase.from("solicitacao_interna_mensagem").insert({ solicitacao_id: id, corpo: texto });
   if (error) return { erro: "Falha ao enviar a mensagem." };
   await supabase
     .from("solicitacao_interna")
@@ -223,10 +221,7 @@ export async function converterEmTarefaInterna(id: string): Promise<{ tarefaId?:
     .single();
   if (error || !tarefa) return { erro: "Falha ao criar a tarefa." };
 
-  await supabase
-    .from("solicitacao_interna")
-    .update({ tarefa_id: tarefa.id, status: "em_andamento" })
-    .eq("id", id);
+  await supabase.from("solicitacao_interna").update({ tarefa_id: tarefa.id, status: "em_andamento" }).eq("id", id);
 
   revalidatePath(`${ROTA}/${id}`);
   revalidatePath("/tarefas");
@@ -253,9 +248,7 @@ export async function contadoresFila(): Promise<{ minhaFila: number; vencidas: n
 
   // "Minha fila": o que é meu + o que está sem dono no meu departamento.
   const minhaFila = abertas.filter(
-    (s) =>
-      s.responsavel_id === perfil.id ||
-      (s.responsavel_id === null && depto !== null && s.destino === depto),
+    (s) => s.responsavel_id === perfil.id || (s.responsavel_id === null && depto !== null && s.destino === depto),
   ).length;
 
   const vencidas = abertas.filter((s) =>

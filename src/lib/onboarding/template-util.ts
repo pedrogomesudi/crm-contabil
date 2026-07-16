@@ -7,7 +7,11 @@ export function slugify(nome: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-export function alvoTroca(itens: { id: string; ordem: number }[], id: string, direcao: "cima" | "baixo"): string | null {
+export function alvoTroca(
+  itens: { id: string; ordem: number }[],
+  id: string,
+  direcao: "cima" | "baixo",
+): string | null {
   const ord = [...itens].sort((a, b) => a.ordem - b.ordem);
   const idx = ord.findIndex((i) => i.id === id);
   if (idx < 0) return null;

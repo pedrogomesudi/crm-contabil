@@ -41,7 +41,13 @@ export async function montarRelatorio(clienteId: string, hojeIso: string): Promi
         },
       ],
     },
-    { titulo: "Financeiro", linhas: await uma("clientes_financeiro", "honorario_mensal, dia_vencimento, data_saida, cobranca_whatsapp, cobranca_email") },
+    {
+      titulo: "Financeiro",
+      linhas: await uma(
+        "clientes_financeiro",
+        "honorario_mensal, dia_vencimento, data_saida, cobranca_whatsapp, cobranca_email",
+      ),
+    },
     { titulo: "Documentos", linhas: await uma("documentos", "nome, tipo, origem, enviado_em") },
     { titulo: "Notas fiscais (NFS-e)", linhas: await uma("nfse", "numero, competencia, valor, criado_em") },
     { titulo: "Títulos", linhas: await uma("titulo", "tipo, valor, vencimento, status, competencia") },

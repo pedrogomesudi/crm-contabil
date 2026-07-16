@@ -20,8 +20,22 @@ describe("criarAdaptadorAsaas.emitir", () => {
     ]);
     vi.stubGlobal("fetch", fm);
     const adap = criarAdaptadorAsaas("key", "sandbox");
-    const r = await adap.emitir({ valor: 100, vencimento: "2026-08-01", pagadorNome: "ACME", pagadorDocumento: "123", pagadorEmail: null, descricao: "Honorário", seuNumero: "T-1" });
-    expect(r).toEqual({ provedorBoletoId: "pay_1", nossoNumero: "999", linhaDigitavel: "12345", pixCopiaCola: "pixcopia", urlPdf: "http://slip" });
+    const r = await adap.emitir({
+      valor: 100,
+      vencimento: "2026-08-01",
+      pagadorNome: "ACME",
+      pagadorDocumento: "123",
+      pagadorEmail: null,
+      descricao: "Honorário",
+      seuNumero: "T-1",
+    });
+    expect(r).toEqual({
+      provedorBoletoId: "pay_1",
+      nossoNumero: "999",
+      linhaDigitavel: "12345",
+      pixCopiaCola: "pixcopia",
+      urlPdf: "http://slip",
+    });
     expect(fm).toHaveBeenCalledTimes(4);
     expect((fm.mock.calls[0] as unknown[])[0]).toBe("https://api-sandbox.asaas.com/v3/customers");
   });
@@ -32,6 +46,16 @@ describe("criarAdaptadorAsaas.emitir", () => {
     ]);
     vi.stubGlobal("fetch", fm);
     const adap = criarAdaptadorAsaas("key", "producao");
-    await expect(adap.emitir({ valor: 1, vencimento: "2026-08-01", pagadorNome: "X", pagadorDocumento: "1", pagadorEmail: null, descricao: "d", seuNumero: "n" })).rejects.toThrow(/Asaas 400/);
+    await expect(
+      adap.emitir({
+        valor: 1,
+        vencimento: "2026-08-01",
+        pagadorNome: "X",
+        pagadorDocumento: "1",
+        pagadorEmail: null,
+        descricao: "d",
+        seuNumero: "n",
+      }),
+    ).rejects.toThrow(/Asaas 400/);
   });
 });

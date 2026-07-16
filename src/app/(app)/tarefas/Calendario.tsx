@@ -47,13 +47,22 @@ export function Calendario({
           {NOMES_MES[mes - 1]} de {ano}
         </h2>
         <span className="flex gap-1 text-xs">
-          <Link href={link({ ano: String(ant.ano), mes: String(ant.mes) })} className="rounded-lg border border-linha px-2 py-1 text-cinza">
+          <Link
+            href={link({ ano: String(ant.ano), mes: String(ant.mes) })}
+            className="rounded-lg border border-linha px-2 py-1 text-cinza"
+          >
             ← anterior
           </Link>
-          <Link href={link({ ano: undefined, mes: undefined })} className="rounded-lg border border-linha px-2 py-1 text-cinza">
+          <Link
+            href={link({ ano: undefined, mes: undefined })}
+            className="rounded-lg border border-linha px-2 py-1 text-cinza"
+          >
             hoje
           </Link>
-          <Link href={link({ ano: String(seg.ano), mes: String(seg.mes) })} className="rounded-lg border border-linha px-2 py-1 text-cinza">
+          <Link
+            href={link({ ano: String(seg.ano), mes: String(seg.mes) })}
+            className="rounded-lg border border-linha px-2 py-1 text-cinza"
+          >
             próximo →
           </Link>
         </span>
@@ -63,7 +72,9 @@ export function Calendario({
         <div className="min-w-[42rem] rounded-2xl border border-linha bg-white">
           <div className="grid grid-cols-7 border-b border-linha text-xs text-cinza">
             {DIAS_SEMANA_CURTO.map((d) => (
-              <div key={d} className="px-2 py-1.5 text-center font-medium">{d}</div>
+              <div key={d} className="px-2 py-1.5 text-center font-medium">
+                {d}
+              </div>
             ))}
           </div>
           <div className="grid grid-cols-7">
@@ -75,7 +86,9 @@ export function Calendario({
                   key={c.data}
                   className={`min-h-24 border-b border-r border-linha/60 p-1.5 ${c.doMes ? "" : "bg-creme/50"}`}
                 >
-                  <div className={`mb-1 text-xs ${ehHoje ? "font-bold text-verde" : c.doMes ? "text-texto" : "text-cinza-claro"}`}>
+                  <div
+                    className={`mb-1 text-xs ${ehHoje ? "font-bold text-verde" : c.doMes ? "text-texto" : "text-cinza-claro"}`}
+                  >
                     {Number(c.data.slice(8, 10))}
                   </div>
                   <ul className="space-y-0.5">
@@ -88,15 +101,17 @@ export function Calendario({
                             className={`flex items-center gap-1 ${vencida ? "text-negativo" : "text-texto"} hover:underline`}
                             title={t.titulo}
                           >
-                            <span className={`inline-block size-1.5 shrink-0 rounded-full ${PRIO_PONTO[t.prioridade]}`} />
-                            <span className={`truncate ${t.status === "concluida" ? "line-through opacity-60" : ""}`}>{t.titulo}</span>
+                            <span
+                              className={`inline-block size-1.5 shrink-0 rounded-full ${PRIO_PONTO[t.prioridade]}`}
+                            />
+                            <span className={`truncate ${t.status === "concluida" ? "line-through opacity-60" : ""}`}>
+                              {t.titulo}
+                            </span>
                           </Link>
                         </li>
                       );
                     })}
-                    {doDia.length > 3 && (
-                      <li className="text-xs text-cinza">+{doDia.length - 3} mais</li>
-                    )}
+                    {doDia.length > 3 && <li className="text-xs text-cinza">+{doDia.length - 3} mais</li>}
                   </ul>
                 </div>
               );
@@ -114,7 +129,10 @@ export function Calendario({
           <ul className="mt-1 flex flex-wrap gap-2">
             {semPrazo.map((t) => (
               <li key={t.id}>
-                <Link href={`/tarefas/${t.id}`} className="rounded-lg border border-linha px-2 py-1 text-xs text-texto hover:bg-creme">
+                <Link
+                  href={`/tarefas/${t.id}`}
+                  className="rounded-lg border border-linha px-2 py-1 text-xs text-texto hover:bg-creme"
+                >
                   {t.titulo}
                 </Link>
               </li>

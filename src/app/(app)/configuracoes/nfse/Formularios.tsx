@@ -22,7 +22,12 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
         </label>
         <label className="block">
           Código do município (IBGE)
-          <input name="codigo_municipio" defaultValue={String(inicial.codigo_municipio)} required className={inputCls} />
+          <input
+            name="codigo_municipio"
+            defaultValue={String(inicial.codigo_municipio)}
+            required
+            className={inputCls}
+          />
         </label>
         <label className="block">
           UF
@@ -86,7 +91,10 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
         </p>
       )}
       {estado.ok && <p className="text-verde">Configuração salva ✓</p>}
-      <button disabled={pend} className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60">
+      <button
+        disabled={pend}
+        className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
+      >
         {pend ? "Salvando..." : "Salvar configuração"}
       </button>
     </form>
@@ -111,7 +119,10 @@ export function FormCertificado() {
         </p>
       )}
       {estado.ok && <p className="text-verde">Certificado salvo ✓</p>}
-      <button disabled={pend} className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60">
+      <button
+        disabled={pend}
+        className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
+      >
         {pend ? "Enviando..." : "Salvar certificado"}
       </button>
     </form>

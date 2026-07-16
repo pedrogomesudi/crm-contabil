@@ -22,7 +22,7 @@ function extrairScript(tipo) {
 const templateRaw = extrairScript("__bundler/template");
 const manifestRaw = extrairScript("__bundler/manifest");
 if (!templateRaw) {
-  console.error("Não encontrei <script type=\"__bundler/template\"> — o arquivo não é um bundle reconhecido.");
+  console.error('Não encontrei <script type="__bundler/template"> — o arquivo não é um bundle reconhecido.');
   process.exit(1);
 }
 

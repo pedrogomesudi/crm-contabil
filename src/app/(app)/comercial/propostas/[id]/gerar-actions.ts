@@ -8,7 +8,9 @@ import { montarMapaTags } from "@/lib/comercial/proposta-template";
 import { gerarDocx, converterPdf, converterPdfHtml } from "@/lib/contrato/gerar";
 import { renderHtml, sanitizarHtml } from "@/lib/comercial/gerar-proposta";
 
-export async function gerarDocumentoProposta(id: string): Promise<{ erro?: string; modelo?: "padrao"; pdfBase64?: string; nome?: string }> {
+export async function gerarDocumentoProposta(
+  id: string,
+): Promise<{ erro?: string; modelo?: "padrao"; pdfBase64?: string; nome?: string }> {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeCriarCliente(perfil.papel)) return { erro: "Sem permissão." };
 

@@ -24,7 +24,15 @@ function fmt(v: unknown): string {
   return v === null || v === undefined || v === "" ? "—" : String(v);
 }
 
-function Secao({ titulo, itens, render }: { titulo: string; itens: ItemPrevia[]; render: (i: ItemPrevia) => React.ReactNode }) {
+function Secao({
+  titulo,
+  itens,
+  render,
+}: {
+  titulo: string;
+  itens: ItemPrevia[];
+  render: (i: ItemPrevia) => React.ReactNode;
+}) {
   if (itens.length === 0) return null;
   return (
     <details className="rounded-md border border-gray-200">
@@ -66,11 +74,7 @@ export function PreviaImportacao({ resumo }: { resumo: ResumoPrevia }) {
     <div className="space-y-3 rounded-lg border border-gray-200 p-4">
       <h2 className="text-sm font-semibold">Prévia da importação</h2>
       {resumo.avisos?.map((a, i) => (
-        <p
-          key={i}
-          role="alert"
-          className="rounded border border-red-300 bg-negativo/10 px-3 py-2 text-sm text-red-800"
-        >
+        <p key={i} role="alert" className="rounded border border-red-300 bg-negativo/10 px-3 py-2 text-sm text-red-800">
           ⚠️ {a}
         </p>
       ))}
@@ -106,7 +110,10 @@ export function PreviaImportacao({ resumo }: { resumo: ResumoPrevia }) {
               <span className="font-medium">{i.razao_social}</span>
               <span className="block text-xs text-gray-600">
                 {Object.entries(i.diff)
-                  .map(([campo, [antigo, novo]]) => `${LABEL_CAMPO[campo] ?? campo}: mantém "${fmt(antigo)}" (Domínio traz "${fmt(novo)}")`)
+                  .map(
+                    ([campo, [antigo, novo]]) =>
+                      `${LABEL_CAMPO[campo] ?? campo}: mantém "${fmt(antigo)}" (Domínio traz "${fmt(novo)}")`,
+                  )
                   .join(" · ")}
               </span>
             </>

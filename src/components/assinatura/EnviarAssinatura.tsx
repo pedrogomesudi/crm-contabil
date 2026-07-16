@@ -65,9 +65,19 @@ export function EnviarAssinatura({
       {testemunhas && (
         <div className="space-y-2">
           <input name="t1_nome" placeholder="Testemunha 1 — nome" className="w-full rounded border px-2 py-1" />
-          <input name="t1_email" type="email" placeholder="Testemunha 1 — e-mail" className="w-full rounded border px-2 py-1" />
+          <input
+            name="t1_email"
+            type="email"
+            placeholder="Testemunha 1 — e-mail"
+            className="w-full rounded border px-2 py-1"
+          />
           <input name="t2_nome" placeholder="Testemunha 2 — nome" className="w-full rounded border px-2 py-1" />
-          <input name="t2_email" type="email" placeholder="Testemunha 2 — e-mail" className="w-full rounded border px-2 py-1" />
+          <input
+            name="t2_email"
+            type="email"
+            placeholder="Testemunha 2 — e-mail"
+            className="w-full rounded border px-2 py-1"
+          />
         </div>
       )}
       {estado.erro && (

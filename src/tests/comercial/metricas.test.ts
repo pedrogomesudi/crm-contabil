@@ -37,9 +37,27 @@ describe("metricasFunil", () => {
   const ops = [
     { etapa: "novo" as const, valorEstimado: 300, responsavelNome: "Ana", motivoPerda: null, fechadoEm: null },
     { etapa: "proposta" as const, valorEstimado: 500, responsavelNome: "Ana", motivoPerda: null, fechadoEm: null },
-    { etapa: "ganho" as const, valorEstimado: 1000, responsavelNome: "Ana", motivoPerda: null, fechadoEm: "2026-07-10T00:00:00.000Z" },
-    { etapa: "perdido" as const, valorEstimado: 200, responsavelNome: "Beto", motivoPerda: "Preço", fechadoEm: "2026-07-12T00:00:00.000Z" },
-    { etapa: "ganho" as const, valorEstimado: 400, responsavelNome: "Beto", motivoPerda: null, fechadoEm: "2026-06-30T00:00:00.000Z" },
+    {
+      etapa: "ganho" as const,
+      valorEstimado: 1000,
+      responsavelNome: "Ana",
+      motivoPerda: null,
+      fechadoEm: "2026-07-10T00:00:00.000Z",
+    },
+    {
+      etapa: "perdido" as const,
+      valorEstimado: 200,
+      responsavelNome: "Beto",
+      motivoPerda: "Preço",
+      fechadoEm: "2026-07-12T00:00:00.000Z",
+    },
+    {
+      etapa: "ganho" as const,
+      valorEstimado: 400,
+      responsavelNome: "Beto",
+      motivoPerda: null,
+      fechadoEm: "2026-06-30T00:00:00.000Z",
+    },
   ];
   const m = metricasFunil(ops, "2026-07-01T00:00:00.000Z", "2026-08-01T00:00:00.000Z");
   it("pipeline ignora período", () => {

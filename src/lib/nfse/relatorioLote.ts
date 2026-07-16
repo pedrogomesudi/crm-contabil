@@ -1,15 +1,6 @@
 import type { LinhaRelatorio } from "./tipos";
 
-const CABECALHO = [
-  "Cliente",
-  "CNPJ/CPF",
-  "Competência",
-  "Valor",
-  "Resultado",
-  "Número",
-  "Chave de acesso",
-  "Motivo",
-];
+const CABECALHO = ["Cliente", "CNPJ/CPF", "Competência", "Valor", "Resultado", "Número", "Chave de acesso", "Motivo"];
 
 // Gatilhos de fórmula (Excel/Sheets): valor começando com estes executaria fórmula.
 const FORMULA = /^[=+\-@\t\r]/;

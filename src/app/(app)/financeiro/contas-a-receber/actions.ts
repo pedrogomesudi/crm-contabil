@@ -33,7 +33,9 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("titulo")
-    .select("id, origem, competencia, vencimento, valor, status, clientes(razao_social, telefone), baixa(valor_recebido, estornada)")
+    .select(
+      "id, origem, competencia, vencimento, valor, status, clientes(razao_social, telefone), baixa(valor_recebido, estornada)",
+    )
     .eq("competencia", competencia)
     .order("vencimento");
   return (data ?? []).map((t) => {
@@ -90,7 +92,6 @@ export async function registrarBaixa(fd: FormData) {
   revalidatePath(ROTA);
   return { ok: true };
 }
-
 
 export async function lerAutomacao(): Promise<boolean> {
   if (!(await gateVer())) return false;

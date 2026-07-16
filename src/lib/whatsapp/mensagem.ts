@@ -26,6 +26,5 @@ export const TEMPLATES = {
   cobranca:
     "Olá {nome}! Consta em aberto o valor de {valor}, com vencimento em {vencimento}. " +
     "Se já efetuou o pagamento, por favor desconsidere. Qualquer dúvida, estamos à disposição.",
-  aviso_vencimento:
-    "Olá {nome}! Lembrete: o honorário de {valor} vence em {vencimento}. Obrigado!",
+  aviso_vencimento: "Olá {nome}! Lembrete: o honorário de {valor} vence em {vencimento}. Obrigado!",
 };

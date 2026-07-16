@@ -1,4 +1,10 @@
-export function mesesAte(anoIni: number, mesIni: number, anoFim: number, mesFim: number, max = 24): { ano: number; mes: number }[] {
+export function mesesAte(
+  anoIni: number,
+  mesIni: number,
+  anoFim: number,
+  mesFim: number,
+  max = 24,
+): { ano: number; mes: number }[] {
   let a = anoIni;
   let m = mesIni;
   if (a * 12 + m > anoFim * 12 + mesFim) {

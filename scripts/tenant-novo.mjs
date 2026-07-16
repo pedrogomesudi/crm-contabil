@@ -181,11 +181,10 @@ async function habilitarExtensoes(dbUrl) {
 // ---------------------------------------------------------------- passos locais
 function rodar(script, envExtra = {}) {
   console.log(`• ${script}…`);
-  const r = spawnSync(
-    process.execPath,
-    [`--env-file=${caminhoEnv}`, `scripts/${script}.mjs`],
-    { stdio: "inherit", env: { ...process.env, ...envExtra } },
-  );
+  const r = spawnSync(process.execPath, [`--env-file=${caminhoEnv}`, `scripts/${script}.mjs`], {
+    stdio: "inherit",
+    env: { ...process.env, ...envExtra },
+  });
   if (r.status !== 0) throw new Error(`"${script}" falhou (código ${r.status}). Corrija e rode com --retomar.`);
 }
 
@@ -262,7 +261,9 @@ try {
       console.error("\nFalta a string de conexão do banco.");
       console.error("No painel do Supabase → Project Settings → Database → Connection string → **Session pooler**,");
       console.error("copie a URI (se a senha se perdeu, use 'Reset database password' antes) e rode:");
-      console.error(`  npm run tenant:novo -- --slug ${slug} --nome "${nome}" --email ${email} --retomar --db-url "<a URI>"`);
+      console.error(
+        `  npm run tenant:novo -- --slug ${slug} --nome "${nome}" --email ${email} --retomar --db-url "<a URI>"`,
+      );
       process.exit(1);
     }
     console.log("• Testando a conexão com o banco…");
@@ -274,7 +275,9 @@ try {
         // senha errada. Aspas SIMPLES na --db-url passam o valor literal ao script.
         console.error("\nA senha foi recusada. Se ela tem $ ! ` ou aspas, o shell pode tê-la");
         console.error("corrompido. Rode de novo com ASPAS SIMPLES em volta da --db-url:");
-        console.error(`  npm run tenant:novo -- --slug ${slug} --nome "${nome}" --email ${email} --retomar --db-url 'a-URI-COM-A-SENHA'`);
+        console.error(
+          `  npm run tenant:novo -- --slug ${slug} --nome "${nome}" --email ${email} --retomar --db-url 'a-URI-COM-A-SENHA'`,
+        );
       }
       throw e;
     }

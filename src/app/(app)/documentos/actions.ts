@@ -32,11 +32,7 @@ export async function anexarDocumento(
 
   const supabase = await createServerSupabase();
   // Confirma que o usuário ENXERGA o cliente (RLS) antes de subir.
-  const { data: cli } = await supabase
-    .from("clientes")
-    .select("id")
-    .eq("id", clienteId)
-    .maybeSingle();
+  const { data: cli } = await supabase.from("clientes").select("id").eq("id", clienteId).maybeSingle();
   if (!cli) return { erro: "Cliente não encontrado ou sem permissão." };
 
   const file = formData.get("arquivo");
@@ -48,9 +44,7 @@ export async function anexarDocumento(
   // UUID garante unicidade (evita colisão do índice UNIQUE em uploads simultâneos).
   const caminho = `${clienteId}/${crypto.randomUUID()}-${nomeSeguro(file.name)}`;
   const admin = createAdminSupabase();
-  const up = await admin.storage
-    .from("documentos")
-    .upload(caminho, file, { contentType: file.type });
+  const up = await admin.storage.from("documentos").upload(caminho, file, { contentType: file.type });
   if (up.error) {
     console.error("anexarDocumento (upload):", up.error.message);
     return { erro: "Falha no upload do arquivo." };
@@ -83,11 +77,7 @@ export async function gerarLinkDownload(documentoId: string): Promise<ResultadoD
 
   const supabase = await createServerSupabase();
   // RLS garante que só vê documento de cliente visível ao usuário.
-  const { data: doc } = await supabase
-    .from("documentos")
-    .select("caminho_storage")
-    .eq("id", documentoId)
-    .maybeSingle();
+  const { data: doc } = await supabase.from("documentos").select("caminho_storage").eq("id", documentoId).maybeSingle();
   if (!doc) return { erro: "Documento não encontrado ou sem permissão." };
 
   const admin = createAdminSupabase();
@@ -109,21 +99,14 @@ export async function gerarLinkDownload(documentoId: string): Promise<ResultadoD
   return { url: signed.signedUrl };
 }
 
-export async function excluirDocumento(
-  documentoId: string,
-  clienteId: string,
-): Promise<ResultadoExcluir> {
+export async function excluirDocumento(documentoId: string, clienteId: string): Promise<ResultadoExcluir> {
   const perfil = await getPerfilAtual();
   if (!perfil || !perfil.ativo || perfil.papel !== "admin") {
     return { erro: "Apenas administradores ativos excluem documentos." };
   }
 
   const admin = createAdminSupabase();
-  const { data: doc } = await admin
-    .from("documentos")
-    .select("caminho_storage")
-    .eq("id", documentoId)
-    .maybeSingle();
+  const { data: doc } = await admin.from("documentos").select("caminho_storage").eq("id", documentoId).maybeSingle();
   if (doc) {
     // Ordem: DB primeiro (fonte da listagem/RLS), depois Storage. Se o registro
     // não sai, abortamos sem tocar no arquivo. O log sobrevive (ON DELETE SET NULL).

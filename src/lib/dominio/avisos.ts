@@ -3,10 +3,7 @@
 // CNPJ), isso indica que o relatório "Regime de Empresas" está ausente ou que os
 // nomes não batem. Sem vínculo, nenhum honorário é importado e honorários já
 // cadastrados podem ser zerados na aplicação. Vínculo parcial NÃO alerta aqui.
-export function avisoContratosNaoVinculados(
-  clientesComContrato: number,
-  clientesVinculados: number,
-): string | null {
+export function avisoContratosNaoVinculados(clientesComContrato: number, clientesVinculados: number): string | null {
   if (clientesComContrato > 0 && clientesVinculados === 0) {
     return (
       `O arquivo de contratos traz ${clientesComContrato} cliente(s) com contrato, mas NENHUM foi vinculado. ` +
@@ -28,11 +25,12 @@ export function avisoContratosNaoCasados(naoCasados: string[], ambiguos: string[
     partes.push(`${naoCasados.length} contrato(s) sem empresa correspondente pelo nome: ${lista}`);
   }
   if (ambiguos.length) {
-    partes.push(`${ambiguos.length} nome(s) ambíguo(s) (mais de uma empresa com a mesma razão social): ${ambiguos.join("; ")}`);
+    partes.push(
+      `${ambiguos.length} nome(s) ambíguo(s) (mais de uma empresa com a mesma razão social): ${ambiguos.join("; ")}`,
+    );
   }
   if (!partes.length) return null;
   return (
-    partes.join(" — ") +
-    ". Esses clientes ficarão sem honorário nesta importação; confira a razão social no Domínio."
+    partes.join(" — ") + ". Esses clientes ficarão sem honorário nesta importação; confira a razão social no Domínio."
   );
 }

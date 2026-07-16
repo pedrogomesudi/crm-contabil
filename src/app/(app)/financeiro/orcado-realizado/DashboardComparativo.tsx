@@ -55,7 +55,8 @@ export function DashboardComparativo({
     const a = next.ano ?? ano;
     const t = next.tipo ?? tipo;
     let i = next.indice ?? indice;
-    if (next.tipo && next.tipo !== "mes" && i > (next.tipo === "trimestre" ? 4 : next.tipo === "semestre" ? 2 : 1)) i = 1;
+    if (next.tipo && next.tipo !== "mes" && i > (next.tipo === "trimestre" ? 4 : next.tipo === "semestre" ? 2 : 1))
+      i = 1;
     const b = next.base ?? base;
     setAno(a);
     setTipo(t);
@@ -76,7 +77,12 @@ export function DashboardComparativo({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <select value={ano} onChange={(e) => recarregar({ ano: Number(e.target.value) })} disabled={carregando} className="rounded-lg border border-linha bg-white px-2 py-1.5 text-sm">
+        <select
+          value={ano}
+          onChange={(e) => recarregar({ ano: Number(e.target.value) })}
+          disabled={carregando}
+          className="rounded-lg border border-linha bg-white px-2 py-1.5 text-sm"
+        >
           {anos.map((a) => (
             <option key={a} value={a}>
               {a}
@@ -85,13 +91,24 @@ export function DashboardComparativo({
         </select>
         <div className="inline-flex overflow-hidden rounded-lg border border-linha">
           {TIPOS.map((t) => (
-            <button key={t.id} type="button" onClick={() => recarregar({ tipo: t.id })} disabled={carregando} className={`px-3 py-1.5 text-sm ${tipo === t.id ? "bg-verde font-semibold text-white" : "bg-white text-cinza"}`}>
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => recarregar({ tipo: t.id })}
+              disabled={carregando}
+              className={`px-3 py-1.5 text-sm ${tipo === t.id ? "bg-verde font-semibold text-white" : "bg-white text-cinza"}`}
+            >
               {t.label}
             </button>
           ))}
         </div>
         {idxOpts.length > 0 && (
-          <select value={indice} onChange={(e) => recarregar({ indice: Number(e.target.value) })} disabled={carregando} className="rounded-lg border border-linha bg-white px-2 py-1.5 text-sm">
+          <select
+            value={indice}
+            onChange={(e) => recarregar({ indice: Number(e.target.value) })}
+            disabled={carregando}
+            className="rounded-lg border border-linha bg-white px-2 py-1.5 text-sm"
+          >
             {idxOpts.map((o) => (
               <option key={o.valor} value={o.valor}>
                 {o.label}
@@ -101,7 +118,13 @@ export function DashboardComparativo({
         )}
         <div className="ml-auto inline-flex overflow-hidden rounded-full border border-linha">
           {(["competencia", "caixa"] as BaseRegime[]).map((b) => (
-            <button key={b} type="button" onClick={() => recarregar({ base: b })} disabled={carregando} className={`px-3 py-1.5 text-xs ${base === b ? "bg-texto text-white" : "bg-white text-cinza"}`}>
+            <button
+              key={b}
+              type="button"
+              onClick={() => recarregar({ base: b })}
+              disabled={carregando}
+              className={`px-3 py-1.5 text-xs ${base === b ? "bg-texto text-white" : "bg-white text-cinza"}`}
+            >
               {b === "competencia" ? "Competência" : "Caixa"}
             </button>
           ))}
@@ -109,9 +132,34 @@ export function DashboardComparativo({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        {rec && <Cartao titulo="Receitas" natureza="RECEITA" orcado={rec.totalOrcado} realizado={rec.totalRealizado} varAbs={rec.varAbs} varPct={rec.varPct} />}
-        {des && <Cartao titulo="Despesas" natureza="DESPESA" orcado={des.totalOrcado} realizado={des.totalRealizado} varAbs={des.varAbs} varPct={des.varPct} />}
-        <Cartao titulo="Resultado" natureza="RECEITA" orcado={comp.resultado.orcado} realizado={comp.resultado.realizado} varAbs={comp.resultado.varAbs} varPct={comp.resultado.varPct} />
+        {rec && (
+          <Cartao
+            titulo="Receitas"
+            natureza="RECEITA"
+            orcado={rec.totalOrcado}
+            realizado={rec.totalRealizado}
+            varAbs={rec.varAbs}
+            varPct={rec.varPct}
+          />
+        )}
+        {des && (
+          <Cartao
+            titulo="Despesas"
+            natureza="DESPESA"
+            orcado={des.totalOrcado}
+            realizado={des.totalRealizado}
+            varAbs={des.varAbs}
+            varPct={des.varPct}
+          />
+        )}
+        <Cartao
+          titulo="Resultado"
+          natureza="RECEITA"
+          orcado={comp.resultado.orcado}
+          realizado={comp.resultado.realizado}
+          varAbs={comp.resultado.varAbs}
+          varPct={comp.resultado.varPct}
+        />
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
@@ -145,8 +193,16 @@ export function DashboardComparativo({
               <td className="px-3 py-2">Resultado</td>
               <td className="px-3 py-2 text-right tabular-nums">{formatarMoeda(comp.resultado.orcado)}</td>
               <td className="px-3 py-2 text-right tabular-nums">{formatarMoeda(comp.resultado.realizado)}</td>
-              <td className={`px-3 py-2 text-right tabular-nums ${favoravel("RECEITA", comp.resultado.varAbs) ? "text-verde" : "text-negativo"}`}>{formatarMoeda(comp.resultado.varAbs)}</td>
-              <td className={`px-3 py-2 text-right tabular-nums ${favoravel("RECEITA", comp.resultado.varAbs) ? "text-verde" : "text-negativo"}`}>{pctTxt(comp.resultado.varPct)}</td>
+              <td
+                className={`px-3 py-2 text-right tabular-nums ${favoravel("RECEITA", comp.resultado.varAbs) ? "text-verde" : "text-negativo"}`}
+              >
+                {formatarMoeda(comp.resultado.varAbs)}
+              </td>
+              <td
+                className={`px-3 py-2 text-right tabular-nums ${favoravel("RECEITA", comp.resultado.varAbs) ? "text-verde" : "text-negativo"}`}
+              >
+                {pctTxt(comp.resultado.varPct)}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -155,14 +211,30 @@ export function DashboardComparativo({
   );
 }
 
-function Cartao({ titulo, natureza, orcado, realizado, varAbs, varPct }: { titulo: string; natureza: "RECEITA" | "DESPESA"; orcado: number; realizado: number; varAbs: number; varPct: number | null }) {
+function Cartao({
+  titulo,
+  natureza,
+  orcado,
+  realizado,
+  varAbs,
+  varPct,
+}: {
+  titulo: string;
+  natureza: "RECEITA" | "DESPESA";
+  orcado: number;
+  realizado: number;
+  varAbs: number;
+  varPct: number | null;
+}) {
   const bom = favoravel(natureza, varAbs);
   return (
     <div className="rounded-2xl border border-linha bg-white p-4">
       <div className="text-[11px] uppercase tracking-wide text-cinza">{titulo}</div>
       <div className="my-1 text-2xl font-bold tabular-nums text-texto">{formatarMoeda(realizado)}</div>
       <div className="text-xs text-cinza">orçado {formatarMoeda(orcado)}</div>
-      <span className={`mt-2 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${bom ? "bg-verde/10 text-verde" : "bg-negativo/10 text-negativo"}`}>
+      <span
+        className={`mt-2 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${bom ? "bg-verde/10 text-verde" : "bg-negativo/10 text-negativo"}`}
+      >
         {varAbs >= 0 ? "▲" : "▼"} {pctTxt(varPct)} vs orçado
       </span>
     </div>
@@ -174,7 +246,10 @@ function FragmentoGrupo({ grupo }: { grupo: Comparativo["grupos"][number] }) {
   return (
     <>
       <tr className="bg-creme">
-        <td colSpan={5} className="px-3 py-1.5 font-display text-[11px] font-semibold uppercase tracking-wide text-texto">
+        <td
+          colSpan={5}
+          className="px-3 py-1.5 font-display text-[11px] font-semibold uppercase tracking-wide text-texto"
+        >
           {grupo.natureza === "RECEITA" ? "Receitas" : "Despesas"}
         </td>
       </tr>
@@ -185,8 +260,12 @@ function FragmentoGrupo({ grupo }: { grupo: Comparativo["grupos"][number] }) {
             <td className="px-3 py-2 text-texto">{l.nome}</td>
             <td className="px-3 py-2 text-right tabular-nums">{formatarMoeda(l.orcado)}</td>
             <td className="px-3 py-2 text-right tabular-nums">{formatarMoeda(l.realizado)}</td>
-            <td className={`px-3 py-2 text-right tabular-nums ${bom ? "text-verde" : "text-negativo"}`}>{formatarMoeda(l.varAbs)}</td>
-            <td className={`px-3 py-2 text-right tabular-nums ${bom ? "text-verde" : "text-negativo"}`}>{pctTxt(l.varPct)}</td>
+            <td className={`px-3 py-2 text-right tabular-nums ${bom ? "text-verde" : "text-negativo"}`}>
+              {formatarMoeda(l.varAbs)}
+            </td>
+            <td className={`px-3 py-2 text-right tabular-nums ${bom ? "text-verde" : "text-negativo"}`}>
+              {pctTxt(l.varPct)}
+            </td>
           </tr>
         );
       })}
@@ -194,8 +273,12 @@ function FragmentoGrupo({ grupo }: { grupo: Comparativo["grupos"][number] }) {
         <td className="px-3 py-2">Total {grupo.natureza === "RECEITA" ? "receitas" : "despesas"}</td>
         <td className="px-3 py-2 text-right tabular-nums">{formatarMoeda(grupo.totalOrcado)}</td>
         <td className="px-3 py-2 text-right tabular-nums">{formatarMoeda(grupo.totalRealizado)}</td>
-        <td className={`px-3 py-2 text-right tabular-nums ${bomGrupo ? "text-verde" : "text-negativo"}`}>{formatarMoeda(grupo.varAbs)}</td>
-        <td className={`px-3 py-2 text-right tabular-nums ${bomGrupo ? "text-verde" : "text-negativo"}`}>{pctTxt(grupo.varPct)}</td>
+        <td className={`px-3 py-2 text-right tabular-nums ${bomGrupo ? "text-verde" : "text-negativo"}`}>
+          {formatarMoeda(grupo.varAbs)}
+        </td>
+        <td className={`px-3 py-2 text-right tabular-nums ${bomGrupo ? "text-verde" : "text-negativo"}`}>
+          {pctTxt(grupo.varPct)}
+        </td>
       </tr>
     </>
   );

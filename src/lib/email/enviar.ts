@@ -8,8 +8,7 @@ export type Resultado = { ok: true } | { ok: false; erro: string };
 export type { Anexo, Msg } from "./payload";
 
 async function viaApi(cfg: ConfigEmail, api: NonNullable<ConfigEmail["api"]>, msg: Msg): Promise<Resultado> {
-  const url =
-    api.provedor === "resend" ? "https://api.resend.com/emails" : "https://api.sendgrid.com/v3/mail/send";
+  const url = api.provedor === "resend" ? "https://api.resend.com/emails" : "https://api.sendgrid.com/v3/mail/send";
   const body = api.provedor === "resend" ? payloadResend(cfg, msg) : payloadSendgrid(cfg, msg);
   try {
     const r = await fetch(url, {

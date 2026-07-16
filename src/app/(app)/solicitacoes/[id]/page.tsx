@@ -53,7 +53,9 @@ export default async function SolicitacaoPage({ params }: { params: Promise<{ id
 
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
-      <Link href="/solicitacoes" className="text-sm text-verde underline">← Solicitações</Link>
+      <Link href="/solicitacoes" className="text-sm text-verde underline">
+        ← Solicitações
+      </Link>
       <PageHeader
         titulo={`#${String(s.numero)} — ${s.assunto as string}`}
         subtitulo={`${(cliente?.razao_social as string) ?? "—"} · ${rotuloCategoria(s.categoria as SolicitacaoCategoria)} · prazo ${dataBR(s.prazo as string | null)}`}

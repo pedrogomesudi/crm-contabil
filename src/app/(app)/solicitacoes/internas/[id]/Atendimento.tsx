@@ -66,7 +66,11 @@ export function Atendimento({
             onChange={(e) => executar(() => definirStatusInterna(id, e.target.value as SolicInternaStatus))}
             className={`mt-0.5 block ${cls}`}
           >
-            {SOLIC_INTERNA_STATUS.map((s) => <option key={s.valor} value={s.valor}>{s.rotulo}</option>)}
+            {SOLIC_INTERNA_STATUS.map((s) => (
+              <option key={s.valor} value={s.valor}>
+                {s.rotulo}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -79,13 +83,19 @@ export function Atendimento({
             className={`mt-0.5 block ${cls}`}
           >
             <option value="">— na fila —</option>
-            {colaboradores.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            {colaboradores.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nome}
+              </option>
+            ))}
           </select>
         </label>
 
         <div className="ml-auto text-xs">
           {tarefaId ? (
-            <Link href={`/tarefas/${tarefaId}`} className="text-verde underline">Ver tarefa vinculada</Link>
+            <Link href={`/tarefas/${tarefaId}`} className="text-verde underline">
+              Ver tarefa vinculada
+            </Link>
           ) : (
             <button
               disabled={pendente}
@@ -105,7 +115,9 @@ export function Atendimento({
             className={`max-w-[85%] rounded-2xl p-3 text-sm ${m.minha ? "ml-auto bg-verde/15" : "border border-linha bg-white"}`}
           >
             <p className="whitespace-pre-wrap text-texto">{m.corpo}</p>
-            <p className="mt-1 text-xs text-cinza">{m.autor} · {quando(m.criadoEm)}</p>
+            <p className="mt-1 text-xs text-cinza">
+              {m.autor} · {quando(m.criadoEm)}
+            </p>
           </div>
         ))}
       </div>
@@ -132,7 +144,11 @@ export function Atendimento({
           Enviar
         </button>
       </div>
-      {erro && <p role="alert" className="text-xs text-negativo">{erro}</p>}
+      {erro && (
+        <p role="alert" className="text-xs text-negativo">
+          {erro}
+        </p>
+      )}
     </div>
   );
 }

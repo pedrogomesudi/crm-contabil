@@ -16,7 +16,9 @@ export default async function ConfigOnboardingPage() {
       <PageHeader titulo="Template de onboarding" subtitulo="Modelos de processo de entrada de clientes" />
       <section className="rounded-2xl border border-linha bg-white p-4">
         <h3 className="font-display text-sm font-semibold text-texto">Notificações de prazo</h3>
-        <p className="mb-2 text-xs text-cinza">Liga/desliga o badge no menu e a tela de alertas de prazo do onboarding.</p>
+        <p className="mb-2 text-xs text-cinza">
+          Liga/desliga o badge no menu e a tela de alertas de prazo do onboarding.
+        </p>
         <ToggleAlertas ativoInicial={alertasAtivos} />
       </section>
       <GerenciadorTemplates templates={templates} />

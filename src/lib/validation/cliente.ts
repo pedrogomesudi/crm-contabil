@@ -1,12 +1,6 @@
 import { z } from "zod";
 import { validarDocumento } from "./documento";
-import {
-  TIPOS_PESSOA,
-  REGIMES,
-  STATUS_CLIENTE,
-  type TipoPessoa,
-  type RegimeTributario,
-} from "@/lib/tipos";
+import { TIPOS_PESSOA, REGIMES, STATUS_CLIENTE, type TipoPessoa, type RegimeTributario } from "@/lib/tipos";
 
 const combinacoes: Record<TipoPessoa, RegimeTributario[]> = {
   PJ: ["Simples", "Presumido", "Real"],
@@ -36,9 +30,7 @@ export const clienteSchema = z
     observacoes: z.string().max(2000).optional(),
     // Campos persistidos que vêm do formulário — sem eles o Zod os descartaria.
     contador_id: z.union([z.uuid("Selecione um contador"), z.literal("")]).optional(),
-    data_inicio: z
-      .union([z.string().refine(ehDataValida, "Data inválida"), z.literal("")])
-      .optional(),
+    data_inicio: z.union([z.string().refine(ehDataValida, "Data inválida"), z.literal("")]).optional(),
     status: z.enum(STATUS_CLIENTE).optional(),
     // endereco (jsonb) é montado à parte na action a partir de campos planos do form.
   })

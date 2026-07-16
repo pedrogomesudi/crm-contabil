@@ -1,7 +1,16 @@
 import { somarDias } from "@/lib/onboarding/processo";
 import { etapaConcluida, type LegOrgao, type LegEtapaStatus } from "@/lib/legalizacao/tipos";
 
-export type EtapaTemplate = { ordem: number; titulo: string; descricao: string | null; orgao: LegOrgao; prazoDias: number | null; responsavelPapel: string | null; anexoObrigatorio: boolean; avisarCliente: boolean };
+export type EtapaTemplate = {
+  ordem: number;
+  titulo: string;
+  descricao: string | null;
+  orgao: LegOrgao;
+  prazoDias: number | null;
+  responsavelPapel: string | null;
+  anexoObrigatorio: boolean;
+  avisarCliente: boolean;
+};
 export type EtapaSeed = EtapaTemplate & { prazo: string | null };
 
 export function materializarEtapas(etapas: EtapaTemplate[], dataInicio: string): EtapaSeed[] {
@@ -11,11 +20,20 @@ export function materializarEtapas(etapas: EtapaTemplate[], dataInicio: string):
     .map((e) => ({ ...e, prazo: e.prazoDias == null ? null : somarDias(dataInicio, e.prazoDias) }));
 }
 
-export function progressoProcesso(etapas: { status: LegEtapaStatus; prazo: string | null }[]): { total: number; concluidas: number; pct: number; concluido: boolean; proximoPrazo: string | null } {
+export function progressoProcesso(etapas: { status: LegEtapaStatus; prazo: string | null }[]): {
+  total: number;
+  concluidas: number;
+  pct: number;
+  concluido: boolean;
+  proximoPrazo: string | null;
+} {
   const total = etapas.length;
   const concluidas = etapas.filter((e) => etapaConcluida(e.status)).length;
   const pct = total === 0 ? 0 : Math.round((concluidas / total) * 100);
-  const prazos = etapas.filter((e) => !etapaConcluida(e.status) && e.prazo).map((e) => e.prazo as string).sort();
+  const prazos = etapas
+    .filter((e) => !etapaConcluida(e.status) && e.prazo)
+    .map((e) => e.prazo as string)
+    .sort();
   return { total, concluidas, pct, concluido: total > 0 && concluidas === total, proximoPrazo: prazos[0] ?? null };
 }
 

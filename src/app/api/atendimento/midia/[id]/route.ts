@@ -21,7 +21,8 @@ const INLINE_SEGURO = new Set([
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   const perfil = await getPerfilAtual();
-  if (!perfil?.ativo || !podeAtender(perfil.papel)) return NextResponse.json({ erro: "não autorizado" }, { status: 401 });
+  if (!perfil?.ativo || !podeAtender(perfil.papel))
+    return NextResponse.json({ erro: "não autorizado" }, { status: 401 });
   const { id } = await ctx.params;
   // RLS garante que só retorna a mensagem se o usuário a vê.
   const supabase = await createServerSupabase();

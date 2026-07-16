@@ -37,7 +37,16 @@ describe("montarCsv", () => {
 
   it("neutraliza fórmula (CSV injection) prefixando com aspa simples", () => {
     const csv = montarCsv([
-      { cliente: "=1+1", documento: "x", competencia: "2026-07-01", valor: 0, resultado: "@SUM(A1)", numero: "", chave: "", motivo: "-2+3" },
+      {
+        cliente: "=1+1",
+        documento: "x",
+        competencia: "2026-07-01",
+        valor: 0,
+        resultado: "@SUM(A1)",
+        numero: "",
+        chave: "",
+        motivo: "-2+3",
+      },
     ]);
     const l = csv.trim().split("\n")[1]!;
     expect(l).toContain("'=1+1");

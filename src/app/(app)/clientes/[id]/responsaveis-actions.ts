@@ -8,7 +8,11 @@ import type { Departamento } from "@/lib/clientes/departamentos";
 
 const DEPTOS = new Set<Departamento>(["contabil", "fiscal", "pessoal", "societario"]);
 
-export async function definirResponsavel(clienteId: string, departamento: Departamento, usuarioId: string | null): Promise<{ ok?: boolean; erro?: string }> {
+export async function definirResponsavel(
+  clienteId: string,
+  departamento: Departamento,
+  usuarioId: string | null,
+): Promise<{ ok?: boolean; erro?: string }> {
   const perfil = await getPerfilAtual();
   if (!perfil?.ativo) return { erro: "Sem permissão." };
   if (!DEPTOS.has(departamento)) return { erro: "Departamento inválido." };
@@ -23,14 +27,20 @@ export async function definirResponsavel(clienteId: string, departamento: Depart
   if (!autorizado) return { erro: "Sem permissão." };
 
   if (usuarioId === null) {
-    const { error } = await supabase.from("cliente_responsavel").delete().eq("cliente_id", clienteId).eq("departamento", departamento);
+    const { error } = await supabase
+      .from("cliente_responsavel")
+      .delete()
+      .eq("cliente_id", clienteId)
+      .eq("departamento", departamento);
     if (error) return { erro: "Falha ao remover responsável." };
   } else {
     if (!(await ehColaboradorValido(usuarioId))) return { erro: "Colaborador inválido." };
-    const { error } = await supabase.from("cliente_responsavel").upsert(
-      { cliente_id: clienteId, departamento, usuario_id: usuarioId },
-      { onConflict: "cliente_id,departamento" },
-    );
+    const { error } = await supabase
+      .from("cliente_responsavel")
+      .upsert(
+        { cliente_id: clienteId, departamento, usuario_id: usuarioId },
+        { onConflict: "cliente_id,departamento" },
+      );
     if (error) return { erro: "Falha ao salvar responsável." };
   }
   revalidatePath(`/clientes/${clienteId}`);

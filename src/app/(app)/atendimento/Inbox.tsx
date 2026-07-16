@@ -41,7 +41,9 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
   const [conversas, setConversas] = useState<Conversa[]>(inicial);
   const [aba, setAba] = useState<FiltroAba>("abertas");
   const [atendentes, setAtendentes] = useState<{ id: string; nome: string }[]>([]);
-  const [clientesConv, setClientesConv] = useState<{ razaoSocial: string; contato: string | null; telefone: string }[]>([]);
+  const [clientesConv, setClientesConv] = useState<{ razaoSocial: string; contato: string | null; telefone: string }[]>(
+    [],
+  );
   const [buscaCliente, setBuscaCliente] = useState("");
   const [busca, setBusca] = useState("");
   const [ativa, setAtiva] = useState<string | null>(null);
@@ -370,7 +372,14 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
                 }}
                 className={`shrink-0 ${c.favorita ? "text-verde" : "text-cinza-claro hover:text-cinza"}`}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill={c.favorita ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill={c.favorita ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5L2.6 9.8l6.5-.9Z" />
                 </svg>
               </button>

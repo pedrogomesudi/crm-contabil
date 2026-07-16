@@ -10,9 +10,7 @@ import type { FluxoCaixa } from "@/lib/financeiro/fluxo-caixa";
 const fluxo: FluxoCaixa = {
   entradas: {
     titulo: "Entradas",
-    linhas: [
-      { categoriaId: "r1", nome: "Honorários", valores: [1000, ...Array(11).fill(0)], total: 1000 },
-    ],
+    linhas: [{ categoriaId: "r1", nome: "Honorários", valores: [1000, ...Array(11).fill(0)], total: 1000 }],
     totais: [1000, ...Array(11).fill(0)],
     total: 1000,
   },

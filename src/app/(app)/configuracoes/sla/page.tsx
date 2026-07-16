@@ -17,7 +17,9 @@ export default async function SlaPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
-      <Link href="/configuracoes" className="text-sm text-verde underline">← Configurações</Link>
+      <Link href="/configuracoes" className="text-sm text-verde underline">
+        ← Configurações
+      </Link>
       <PageHeader titulo="SLA por departamento" subtitulo="Prazo-alvo das solicitações internas, por destino" />
       <FormSlaDepto slas={slas} />
     </main>

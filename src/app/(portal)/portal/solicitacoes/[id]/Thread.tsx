@@ -29,9 +29,14 @@ export function Thread({ solicitacaoId, mensagens }: { solicitacaoId: string; me
     <div className="space-y-3">
       <div className="space-y-2">
         {mensagens.map((m) => (
-          <div key={m.id} className={`max-w-[85%] rounded-2xl p-3 text-sm ${m.minha ? "ml-auto bg-verde/15" : "bg-white border border-linha"}`}>
+          <div
+            key={m.id}
+            className={`max-w-[85%] rounded-2xl p-3 text-sm ${m.minha ? "ml-auto bg-verde/15" : "bg-white border border-linha"}`}
+          >
             <p className="whitespace-pre-wrap text-texto">{m.corpo}</p>
-            <p className="mt-1 text-xs text-cinza">{m.minha ? "Você" : "Escritório"} · {quando(m.criadoEm)}</p>
+            <p className="mt-1 text-xs text-cinza">
+              {m.minha ? "Você" : "Escritório"} · {quando(m.criadoEm)}
+            </p>
           </div>
         ))}
       </div>
@@ -43,7 +48,11 @@ export function Thread({ solicitacaoId, mensagens }: { solicitacaoId: string; me
           placeholder="Escreva uma mensagem…"
           className="flex-1 rounded-lg border border-linha px-2 py-1.5 text-sm"
         />
-        <button disabled={ocupado || !corpo.trim()} onClick={enviar} className="rounded-lg bg-verde px-3 py-1.5 text-sm text-white disabled:opacity-60">
+        <button
+          disabled={ocupado || !corpo.trim()}
+          onClick={enviar}
+          className="rounded-lg bg-verde px-3 py-1.5 text-sm text-white disabled:opacity-60"
+        >
           Enviar
         </button>
       </div>

@@ -17,8 +17,12 @@ export default async function DashboardFinanceiroPage() {
       <Voltar href="/financeiro/cadastros" />
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Dashboard financeiro</h1>
       <div className="flex gap-3">
-        <Link href="/financeiro/relatorios" className="text-sm text-verde underline">Relatórios</Link>
-        <Link href="/financeiro/conciliacao" className="text-sm text-verde underline">Conciliação</Link>
+        <Link href="/financeiro/relatorios" className="text-sm text-verde underline">
+          Relatórios
+        </Link>
+        <Link href="/financeiro/conciliacao" className="text-sm text-verde underline">
+          Conciliação
+        </Link>
       </div>
       {dados ? (
         <DashboardFinanceiro mesInicial={mes} dadosIniciais={dados} />

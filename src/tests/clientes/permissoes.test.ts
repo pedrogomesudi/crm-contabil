@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  podeExcluirCliente,
-  podeConfigurarNfse,
-  podeGerenciarVencimentos,
-} from "@/lib/clientes/permissoes";
+import { podeExcluirCliente, podeConfigurarNfse, podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
 
 describe("podeExcluirCliente", () => {
   it("permite apenas admin", () => {

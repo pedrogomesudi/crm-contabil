@@ -7,7 +7,15 @@
 //   npm run tenant:adotar -- --slug gomes --nome "Gomes Contabilidade" \
 //     --url https://app.seusaldo.ai --de .env.local
 import { copyFileSync, chmodSync, existsSync } from "node:fs";
-import { CHAVES_CRIPTO, envDoTenant, exigirIgnoradoPeloGit, lerEnv, lerRegistry, salvarRegistry, SLUG_RE } from "./_tenants.mjs";
+import {
+  CHAVES_CRIPTO,
+  envDoTenant,
+  exigirIgnoradoPeloGit,
+  lerEnv,
+  lerRegistry,
+  salvarRegistry,
+  SLUG_RE,
+} from "./_tenants.mjs";
 
 const args = process.argv.slice(2);
 const opt = (n, p = null) => {
@@ -44,7 +52,13 @@ const faltando = [...CHAVES_CRIPTO, "SUPABASE_DB_URL", "SUPABASE_SERVICE_ROLE_KE
 const reg = lerRegistry();
 reg.escritorios = [
   ...reg.escritorios.filter((e) => e.slug !== slug),
-  { slug, nome, appUrl: url, projectRef: env.SUPABASE_PROJECT_REF ?? null, criadoEm: new Date().toISOString().slice(0, 10) },
+  {
+    slug,
+    nome,
+    appUrl: url,
+    projectRef: env.SUPABASE_PROJECT_REF ?? null,
+    criadoEm: new Date().toISOString().slice(0, 10),
+  },
 ].sort((a, b) => a.slug.localeCompare(b.slug));
 salvarRegistry(reg);
 

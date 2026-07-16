@@ -14,10 +14,7 @@ async function gate() {
 
 export async function listarTemplates(): Promise<TemplateView[]> {
   const supabase = await createServerSupabase();
-  const { data } = await supabase
-    .from("email_template")
-    .select("id, nome, assunto, corpo, ativo")
-    .order("nome");
+  const { data } = await supabase.from("email_template").select("id, nome, assunto, corpo, ativo").order("nome");
   return (data ?? []).map((t) => ({
     id: t.id as string,
     nome: t.nome as string,

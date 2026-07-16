@@ -84,9 +84,7 @@ await db.connect();
 
 try {
   // As extensões precisam existir; criá-las exige privilégio que não assumimos aqui.
-  const { rows: exts } = await db.query(
-    "select extname from pg_extension where extname in ('pg_cron','pg_net')",
-  );
+  const { rows: exts } = await db.query("select extname from pg_extension where extname in ('pg_cron','pg_net')");
   const nomes = exts.map((e) => e.extname);
   for (const ext of ["pg_cron", "pg_net"]) {
     if (!nomes.includes(ext)) abort(`Extensão "${ext}" ausente. Habilite-a no Supabase antes de rodar.`);
@@ -119,9 +117,7 @@ try {
   if (dryRun) {
     console.log(`\n[dry-run] Nada foi gravado. ${mudancas} job(s) seriam alterados.`);
   } else {
-    const { rows: depois } = await db.query(
-      "select jobid, jobname, schedule, active from cron.job order by jobid",
-    );
+    const { rows: depois } = await db.query("select jobid, jobname, schedule, active from cron.job order by jobid");
     console.log("\nEstado final de cron.job:");
     for (const j of depois) {
       console.log(`  jobid ${j.jobid}  ${j.jobname}  [${j.schedule}]  ativo: ${j.active}`);

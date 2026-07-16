@@ -77,9 +77,7 @@ export function ReajusteLote() {
 
       {aviso && <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{aviso}</p>}
       {feito != null && (
-        <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
-          {feito} honorário(s) reajustado(s).
-        </p>
+        <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">{feito} honorário(s) reajustado(s).</p>
       )}
 
       {linhas.length > 0 && (

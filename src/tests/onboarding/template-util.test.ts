@@ -10,7 +10,11 @@ describe("slugify", () => {
 });
 
 describe("alvoTroca", () => {
-  const itens = [{ id: "a", ordem: 1 }, { id: "b", ordem: 5 }, { id: "c", ordem: 9 }];
+  const itens = [
+    { id: "a", ordem: 1 },
+    { id: "b", ordem: 5 },
+    { id: "c", ordem: 9 },
+  ];
   it("meio: cima/baixo", () => {
     expect(alvoTroca(itens, "b", "cima")).toBe("a");
     expect(alvoTroca(itens, "b", "baixo")).toBe("c");

@@ -15,7 +15,10 @@ export default async function ObrigacoesPage() {
   const instancias = await listarInstancias(ano, mes);
   return (
     <main className="mx-auto max-w-6xl space-y-5 p-4">
-      <PageHeader titulo="Obrigações" subtitulo="Calendário de obrigações por competência (o vencimento aparece em cada linha)" />
+      <PageHeader
+        titulo="Obrigações"
+        subtitulo="Calendário de obrigações por competência (o vencimento aparece em cada linha)"
+      />
       <Calendario ano={ano} mes={mes} instancias={instancias} podeGerar={podeGerenciarMatriz(perfil.papel)} />
     </main>
   );

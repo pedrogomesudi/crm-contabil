@@ -34,7 +34,11 @@ export function EnviarDocumento() {
         </button>
       </div>
       {ok && <p className="text-xs text-verde">Documento enviado ✓</p>}
-      {erro && <p role="alert" className="text-xs text-negativo">{erro}</p>}
+      {erro && (
+        <p role="alert" className="text-xs text-negativo">
+          {erro}
+        </p>
+      )}
     </form>
   );
 }

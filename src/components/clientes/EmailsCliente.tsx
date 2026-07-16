@@ -51,9 +51,7 @@ export function EmailsCliente({
 
   function alternarAnexo(a: Anexavel, marcado: boolean) {
     setAnexos((prev) =>
-      marcado
-        ? [...prev, { tipo: a.tipo, id: a.id }]
-        : prev.filter((x) => !(x.tipo === a.tipo && x.id === a.id)),
+      marcado ? [...prev, { tipo: a.tipo, id: a.id }] : prev.filter((x) => !(x.tipo === a.tipo && x.id === a.id)),
     );
   }
 
@@ -91,10 +89,16 @@ export function EmailsCliente({
             {templates.length > 0 && (
               <label className="text-xs text-cinza">
                 Modelo
-                <select defaultValue="" onChange={(e) => usarTemplate(e.target.value)} className={`mt-0.5 block ${cls}`}>
+                <select
+                  defaultValue=""
+                  onChange={(e) => usarTemplate(e.target.value)}
+                  className={`mt-0.5 block ${cls}`}
+                >
                   <option value="">— escolher —</option>
                   {templates.map((t) => (
-                    <option key={t.id} value={t.id}>{t.nome}</option>
+                    <option key={t.id} value={t.id}>
+                      {t.nome}
+                    </option>
                   ))}
                 </select>
               </label>
@@ -102,11 +106,20 @@ export function EmailsCliente({
           </div>
           <label className="block text-xs text-cinza">
             Assunto
-            <input value={assunto} onChange={(e) => setAssunto(e.target.value)} className={`mt-0.5 block w-full ${cls}`} />
+            <input
+              value={assunto}
+              onChange={(e) => setAssunto(e.target.value)}
+              className={`mt-0.5 block w-full ${cls}`}
+            />
           </label>
           <label className="block text-xs text-cinza">
             Mensagem
-            <textarea value={corpo} onChange={(e) => setCorpo(e.target.value)} rows={7} className={`mt-0.5 block w-full ${cls}`} />
+            <textarea
+              value={corpo}
+              onChange={(e) => setCorpo(e.target.value)}
+              rows={7}
+              className={`mt-0.5 block w-full ${cls}`}
+            />
           </label>
 
           {anexaveis.length > 0 && (
@@ -124,11 +137,21 @@ export function EmailsCliente({
           )}
 
           <div className="flex items-center gap-3">
-            <button disabled={ocupado} onClick={enviar} className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60">
+            <button
+              disabled={ocupado}
+              onClick={enviar}
+              className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60"
+            >
               {ocupado ? "Enviando…" : "Enviar"}
             </button>
-            <button type="button" onClick={() => setAberto(false)} className="text-xs text-cinza underline">cancelar</button>
-            {erro && <span role="alert" className="text-xs text-negativo">{erro}</span>}
+            <button type="button" onClick={() => setAberto(false)} className="text-xs text-cinza underline">
+              cancelar
+            </button>
+            {erro && (
+              <span role="alert" className="text-xs text-negativo">
+                {erro}
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -138,7 +161,10 @@ export function EmailsCliente({
       ) : (
         <ul className="space-y-1.5">
           {emails.map((e) => (
-            <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-linha pb-1.5 text-sm last:border-0">
+            <li
+              key={e.id}
+              className="flex flex-wrap items-center justify-between gap-2 border-b border-linha pb-1.5 text-sm last:border-0"
+            >
               <span className="text-texto">
                 {e.assunto}
                 <span className="block text-xs text-cinza">

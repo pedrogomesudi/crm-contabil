@@ -10,7 +10,9 @@ const base = {
 };
 
 describe("ACERVO_PADRAO", () => {
-  it("tem itens", () => { expect(ACERVO_PADRAO.length).toBeGreaterThan(3); });
+  it("tem itens", () => {
+    expect(ACERVO_PADRAO.length).toBeGreaterThan(3);
+  });
 });
 
 describe("montarTermoHtml", () => {

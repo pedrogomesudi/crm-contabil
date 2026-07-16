@@ -25,21 +25,35 @@ export function AtivarEmpresa({ clienteId, regimeAtual }: { clienteId: string; r
       <h2 className="font-display text-sm font-semibold text-texto">Ativar empresa</h2>
       <p className="mt-0.5 text-xs text-cinza">Quando o CNPJ for emitido, informe os dados para ativar o cliente.</p>
       <form onSubmit={enviar} className="mt-2 grid grid-cols-2 gap-2 text-sm">
-        <label className="block">CNPJ<input name="cpf_cnpj" required className={input} /></label>
-        <label className="block">Regime
+        <label className="block">
+          CNPJ
+          <input name="cpf_cnpj" required className={input} />
+        </label>
+        <label className="block">
+          Regime
           <select name="regime_tributario" defaultValue={regimeAtual} className={input}>
             <option value="Simples">Simples</option>
             <option value="Presumido">Presumido</option>
             <option value="Real">Real</option>
           </select>
         </label>
-        <label className="block">Inscrição estadual<input name="inscricao_estadual" className={input} /></label>
-        <label className="block">Inscrição municipal<input name="inscricao_municipal" className={input} /></label>
+        <label className="block">
+          Inscrição estadual
+          <input name="inscricao_estadual" className={input} />
+        </label>
+        <label className="block">
+          Inscrição municipal
+          <input name="inscricao_municipal" className={input} />
+        </label>
         <div className="col-span-2 flex items-center gap-3">
           <button disabled={ocupado} className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60">
             {ocupado ? "Ativando…" : "Ativar empresa"}
           </button>
-          {erro && <span role="alert" className="text-xs text-negativo">{erro}</span>}
+          {erro && (
+            <span role="alert" className="text-xs text-negativo">
+              {erro}
+            </span>
+          )}
         </div>
       </form>
     </section>

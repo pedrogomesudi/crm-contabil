@@ -37,11 +37,7 @@ export async function listarContratos(clienteId: string): Promise<Contrato[]> {
   return (data ?? []) as Contrato[];
 }
 
-export async function salvarContrato(
-  clienteId: string,
-  _prev: EstadoContrato,
-  fd: FormData,
-): Promise<EstadoContrato> {
+export async function salvarContrato(clienteId: string, _prev: EstadoContrato, fd: FormData): Promise<EstadoContrato> {
   const perfil = await gate();
   if (!perfil) return { erro: "Sem permissão." };
   const descricao = String(fd.get("descricao") ?? "").trim();

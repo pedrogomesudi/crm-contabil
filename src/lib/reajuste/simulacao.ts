@@ -20,10 +20,7 @@ export type LinhaReajuste = {
 
 // Monta as linhas da simulação. `percentuais` traz índice -> % (buscado do BACEN pela action).
 // PERCENTUAL_FIXO usa o percentual do cadastro. Percentual 0 (índice indisponível) desmarca a linha.
-export function montarSimulacao(
-  clientes: ClienteReajuste[],
-  percentuais: Record<string, number>,
-): LinhaReajuste[] {
+export function montarSimulacao(clientes: ClienteReajuste[], percentuais: Record<string, number>): LinhaReajuste[] {
   return clientes.map((c) => {
     const pct = c.indice === "PERCENTUAL_FIXO" ? (c.percentualFixo ?? 0) : (percentuais[c.indice] ?? 0);
     return {

@@ -47,9 +47,7 @@ export async function LinhaTempoVigencias({ clienteId, papel }: { clienteId: str
               <li key={v.vigente_de} className="flex items-center gap-2">
                 <span className="tabular-nums text-cinza">{mesAno(v.vigente_de)}</span>
                 <span className="text-texto">{formatarMoeda(Number(v.valor))}</span>
-                {v.estimada && (
-                  <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-cinza">estimada</span>
-                )}
+                {v.estimada && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-cinza">estimada</span>}
               </li>
             ))}
             {!hon?.length && <li className="text-sm text-cinza">Sem histórico.</li>}
@@ -62,9 +60,7 @@ export async function LinhaTempoVigencias({ clienteId, papel }: { clienteId: str
               <li key={v.vigente_de} className="flex items-center gap-2">
                 <span className="tabular-nums text-cinza">{mesAno(v.vigente_de)}</span>
                 <span className="text-texto">{v.regime}</span>
-                {v.estimada && (
-                  <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-cinza">estimada</span>
-                )}
+                {v.estimada && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-cinza">estimada</span>}
               </li>
             ))}
             {!reg?.length && <li className="text-sm text-cinza">Sem histórico.</li>}
@@ -89,8 +85,8 @@ export async function LinhaTempoVigencias({ clienteId, papel }: { clienteId: str
         </div>
       )}
       <p className="text-xs text-cinza">
-        As vigências são registradas automaticamente a cada mudança. As marcadas como{" "}
-        <strong>estimada</strong> vêm da carga inicial — não há registro do valor da época.
+        As vigências são registradas automaticamente a cada mudança. As marcadas como <strong>estimada</strong> vêm da
+        carga inicial — não há registro do valor da época.
       </p>
     </section>
   );

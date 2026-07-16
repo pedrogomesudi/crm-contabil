@@ -8,21 +8,62 @@ import { PageHeader } from "@/components/ui/PageHeader";
 // passou a viver nesta seção; sem isso ele perderia o acesso.
 const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] = [
   { href: "/usuarios", label: "Usuários", desc: "Convite, papel, departamento, superior e status da equipe." },
-  { href: "/integracoes/dominio", label: "Integração Domínio", desc: "Importação e conciliação com o sistema Domínio.", papeis: ["admin", "assistente"] },
-  { href: "/configuracoes/marca", label: "Marca do escritório", desc: "Nome, CNPJ, endereço e logo usados na proposta." },
+  {
+    href: "/integracoes/dominio",
+    label: "Integração Domínio",
+    desc: "Importação e conciliação com o sistema Domínio.",
+    papeis: ["admin", "assistente"],
+  },
+  {
+    href: "/configuracoes/marca",
+    label: "Marca do escritório",
+    desc: "Nome, CNPJ, endereço e logo usados na proposta.",
+  },
   { href: "/configuracoes/whatsapp", label: "WhatsApp (Z-API)", desc: "Credenciais do provedor e teste de conexão." },
   { href: "/configuracoes/email", label: "E-mail", desc: "Canal de envio (SMTP ou API), remetente e teste." },
-  { href: "/configuracoes/email/templates", label: "Templates de e-mail", desc: "Modelos com variáveis de personalização." },
+  {
+    href: "/configuracoes/email/templates",
+    label: "Templates de e-mail",
+    desc: "Modelos com variáveis de personalização.",
+  },
   { href: "/configuracoes/nfse", label: "NFS-e (emitente)", desc: "Dados do emitente e certificado digital." },
-  { href: "/configuracoes/pagamento", label: "Dados de pagamento (PIX/TED)", desc: "Conta e PIX enviados ao cliente com a NFS-e." },
+  {
+    href: "/configuracoes/pagamento",
+    label: "Dados de pagamento (PIX/TED)",
+    desc: "Conta e PIX enviados ao cliente com a NFS-e.",
+  },
   { href: "/configuracoes/boletos", label: "Boletos", desc: "Provedor de emissão (Inter ou Asaas) e credenciais." },
-  { href: "/configuracoes/onboarding", label: "Template de onboarding", desc: "Blocos e itens do processo de entrada." },
-  { href: "/configuracoes/sop", label: "Modelos de processo (SOPs)", desc: "Etapas que viram tarefas, em ondas paralelas e sequenciais." },
-  { href: "/configuracoes/custos", label: "Custo por colaborador", desc: "Custo/hora com vigência — base da rentabilidade. Só admin." },
-  { href: "/configuracoes/sla", label: "SLA por departamento", desc: "Prazo-alvo das solicitações internas, por departamento de destino." },
+  {
+    href: "/configuracoes/onboarding",
+    label: "Template de onboarding",
+    desc: "Blocos e itens do processo de entrada.",
+  },
+  {
+    href: "/configuracoes/sop",
+    label: "Modelos de processo (SOPs)",
+    desc: "Etapas que viram tarefas, em ondas paralelas e sequenciais.",
+  },
+  {
+    href: "/configuracoes/custos",
+    label: "Custo por colaborador",
+    desc: "Custo/hora com vigência — base da rentabilidade. Só admin.",
+  },
+  {
+    href: "/configuracoes/sla",
+    label: "SLA por departamento",
+    desc: "Prazo-alvo das solicitações internas, por departamento de destino.",
+  },
   { href: "/lgpd", label: "LGPD", desc: "Tratamentos (ROPA), consentimento, retenção e direitos do titular." },
-  { href: "/configuracoes/legalizacao", label: "Modelos de legalização", desc: "Processos societários e de legalização (etapas por órgão)." },
-  { href: "/configuracoes/obrigacoes", label: "Matriz de obrigações", desc: "Obrigações e critérios de incidência do calendário." },
+  {
+    href: "/configuracoes/legalizacao",
+    label: "Modelos de legalização",
+    desc: "Processos societários e de legalização (etapas por órgão).",
+  },
+  {
+    href: "/configuracoes/obrigacoes",
+    label: "Matriz de obrigações",
+    desc: "Obrigações e critérios de incidência do calendário.",
+  },
 ];
 
 export default async function ConfiguracoesHubPage() {
@@ -44,7 +85,15 @@ export default async function ConfiguracoesHubPage() {
                 <span className="block font-medium text-texto">{i.label}</span>
                 <span className="mt-0.5 block text-xs text-cinza">{i.desc}</span>
               </span>
-              <svg className="mt-1 shrink-0 text-cinza-claro" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                className="mt-1 shrink-0 text-cinza-claro"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="m9 6 6 6-6 6" />
               </svg>
             </Link>

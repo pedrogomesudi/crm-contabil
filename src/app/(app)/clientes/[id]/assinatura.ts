@@ -12,7 +12,9 @@ export type EstadoAssinatura = { erro?: string; ok?: boolean };
 function sig(formData: FormData, prefixo: string, papel: SignatarioInput["papel"]): SignatarioInput | null {
   const nome = String(formData.get(`${prefixo}_nome`) ?? "").trim();
   // e-mail normalizado (lowercase) para casar com o que a Clicksign devolve no webhook.
-  const email = String(formData.get(`${prefixo}_email`) ?? "").trim().toLowerCase();
+  const email = String(formData.get(`${prefixo}_email`) ?? "")
+    .trim()
+    .toLowerCase();
   if (!nome || !email) return null;
   return { nome, email, papel };
 }

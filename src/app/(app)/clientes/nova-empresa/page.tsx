@@ -25,7 +25,10 @@ export default async function NovaEmpresaPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
-      <PageHeader titulo="Nova empresa em constituição" subtitulo="Cadastro da empresa nova (sem CNPJ) e início do processo de abertura" />
+      <PageHeader
+        titulo="Nova empresa em constituição"
+        subtitulo="Cadastro da empresa nova (sem CNPJ) e início do processo de abertura"
+      />
       <FormConstituicao
         contadores={contadores}
         contadorEditavel={contadores.length > 0}

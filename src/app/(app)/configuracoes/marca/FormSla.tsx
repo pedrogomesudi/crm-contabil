@@ -28,7 +28,11 @@ export function FormSla({ dias }: { dias: number }) {
           {pendente ? "Salvando…" : "Salvar"}
         </button>
         {estado.ok && <span className="text-xs text-verde">Salvo.</span>}
-        {estado.erro && <span role="alert" className="text-xs text-negativo">{estado.erro}</span>}
+        {estado.erro && (
+          <span role="alert" className="text-xs text-negativo">
+            {estado.erro}
+          </span>
+        )}
       </div>
     </form>
   );

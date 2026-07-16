@@ -46,11 +46,7 @@ export function FluxoCaixaView({
   // fechamentos viram linhas comuns e o saldo acumulado — o fecho de fato — vai em `totais`.
   // Seu total fica vazio de propósito: saldo acumulado não se soma (é o mesmo "—" da tela).
   const linhaFluxo = (categoria: string, valores: number[], total: number | null): LinhaRelatorio =>
-    Object.fromEntries([
-      ["categoria", categoria],
-      ...valores.map((v, i) => [`m${i}`, v] as const),
-      ["total", total],
-    ]);
+    Object.fromEntries([["categoria", categoria], ...valores.map((v, i) => [`m${i}`, v] as const), ["total", total]]);
 
   const relatorio: RelatorioExportavel = {
     titulo: "Fluxo de caixa",
@@ -78,10 +74,7 @@ export function FluxoCaixaView({
     return (
       <>
         <tr>
-          <td
-            colSpan={14}
-            className="px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide text-cinza"
-          >
+          <td colSpan={14} className="px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide text-cinza">
             {grupo.titulo}
           </td>
         </tr>
@@ -156,11 +149,8 @@ export function FluxoCaixaView({
                 {MES.map((m, i) => (
                   <th key={m} className={th(i + 1)}>
                     {m}
-                    {(mesAtual >= 1 && mesAtual <= 12 && i + 1 === mesAtual + 1) ||
-                    (mesAtual >= 13 && i === 0) ? (
-                      <span className="block text-[9px] font-normal normal-case text-verde">
-                        projetado →
-                      </span>
+                    {(mesAtual >= 1 && mesAtual <= 12 && i + 1 === mesAtual + 1) || (mesAtual >= 13 && i === 0) ? (
+                      <span className="block text-[9px] font-normal normal-case text-verde">projetado →</span>
                     ) : null}
                   </th>
                 ))}

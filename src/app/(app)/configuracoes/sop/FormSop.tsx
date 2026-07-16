@@ -131,15 +131,26 @@ export function FormSop({ templates }: { templates: SopTemplateView[] }) {
       ) : (
         <ul className="space-y-2">
           {templates.map((t) => (
-            <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-linha bg-white p-3 text-sm">
+            <li
+              key={t.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-linha bg-white p-3 text-sm"
+            >
               <span>
                 <span className="font-medium text-texto">{t.nome}</span>
                 {!t.ativo && <span className="ml-2 text-xs text-cinza">(inativo)</span>}
                 <span className="block text-xs text-cinza">{resumoFluxo(t.etapas)}</span>
               </span>
               <span className="flex gap-3 text-xs">
-                <button onClick={() => abrir(t)} className="text-verde underline">editar</button>
-                <button disabled={ocupado} onClick={() => excluir(t.id)} className="text-negativo underline disabled:opacity-60">excluir</button>
+                <button onClick={() => abrir(t)} className="text-verde underline">
+                  editar
+                </button>
+                <button
+                  disabled={ocupado}
+                  onClick={() => excluir(t.id)}
+                  className="text-negativo underline disabled:opacity-60"
+                >
+                  excluir
+                </button>
               </span>
             </li>
           ))}
@@ -157,13 +168,26 @@ export function FormSop({ templates }: { templates: SopTemplateView[] }) {
             </label>
             <label className="text-xs text-cinza">
               Identificador
-              <input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="abertura-empresa" className={`mt-0.5 block w-48 ${cls}`} />
+              <input
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder="abertura-empresa"
+                className={`mt-0.5 block w-48 ${cls}`}
+              />
             </label>
             <label className="text-xs text-cinza">
               Departamento
-              <select value={departamento} onChange={(e) => setDepartamento(e.target.value)} className={`mt-0.5 block ${cls}`}>
+              <select
+                value={departamento}
+                onChange={(e) => setDepartamento(e.target.value)}
+                className={`mt-0.5 block ${cls}`}
+              >
                 <option value="">—</option>
-                {DEPARTAMENTOS.map((d) => <option key={d.valor} value={d.valor}>{d.rotulo}</option>)}
+                {DEPARTAMENTOS.map((d) => (
+                  <option key={d.valor} value={d.valor}>
+                    {d.rotulo}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="mt-5 flex items-center gap-1.5 text-xs text-cinza">
@@ -173,7 +197,11 @@ export function FormSop({ templates }: { templates: SopTemplateView[] }) {
 
           <label className="block text-xs text-cinza">
             Descrição
-            <input value={descricao} onChange={(e) => setDescricao(e.target.value)} className={`mt-0.5 block w-full ${cls}`} />
+            <input
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              className={`mt-0.5 block w-full ${cls}`}
+            />
           </label>
 
           <div className="rounded-lg bg-creme p-2 text-xs text-cinza">
@@ -190,27 +218,60 @@ export function FormSop({ templates }: { templates: SopTemplateView[] }) {
                 <div className="flex flex-wrap gap-2">
                   <label className="text-xs text-cinza">
                     Onda
-                    <input type="number" min={1} value={e.onda} onChange={(ev) => mudarEtapa(i, "onda", Number(ev.target.value))} className={`mt-0.5 block w-16 ${cls}`} />
+                    <input
+                      type="number"
+                      min={1}
+                      value={e.onda}
+                      onChange={(ev) => mudarEtapa(i, "onda", Number(ev.target.value))}
+                      className={`mt-0.5 block w-16 ${cls}`}
+                    />
                   </label>
                   <label className="flex-1 text-xs text-cinza">
                     Etapa
-                    <input value={e.titulo} onChange={(ev) => mudarEtapa(i, "titulo", ev.target.value)} className={`mt-0.5 block w-full ${cls}`} />
+                    <input
+                      value={e.titulo}
+                      onChange={(ev) => mudarEtapa(i, "titulo", ev.target.value)}
+                      className={`mt-0.5 block w-full ${cls}`}
+                    />
                   </label>
                   <label className="text-xs text-cinza">
                     Prazo (dias)
-                    <input type="number" min={0} value={e.prazoDias} onChange={(ev) => mudarEtapa(i, "prazoDias", Number(ev.target.value))} className={`mt-0.5 block w-24 ${cls}`} title="dias após o início do processo" />
+                    <input
+                      type="number"
+                      min={0}
+                      value={e.prazoDias}
+                      onChange={(ev) => mudarEtapa(i, "prazoDias", Number(ev.target.value))}
+                      className={`mt-0.5 block w-24 ${cls}`}
+                      title="dias após o início do processo"
+                    />
                   </label>
                   <label className="text-xs text-cinza">
                     Responsável (papel)
-                    <select value={e.responsavelPapel} onChange={(ev) => mudarEtapa(i, "responsavelPapel", ev.target.value)} className={`mt-0.5 block ${cls}`}>
+                    <select
+                      value={e.responsavelPapel}
+                      onChange={(ev) => mudarEtapa(i, "responsavelPapel", ev.target.value)}
+                      className={`mt-0.5 block ${cls}`}
+                    >
                       <option value="">—</option>
-                      {PAPEIS_EQUIPE.map((p) => <option key={p} value={p}>{p}</option>)}
+                      {PAPEIS_EQUIPE.map((p) => (
+                        <option key={p} value={p}>
+                          {p}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   <label className="text-xs text-cinza">
                     Prioridade
-                    <select value={e.prioridade} onChange={(ev) => mudarEtapa(i, "prioridade", ev.target.value as TarefaPrioridade)} className={`mt-0.5 block ${cls}`}>
-                      {TAREFA_PRIORIDADE.map((p) => <option key={p.valor} value={p.valor}>{p.rotulo}</option>)}
+                    <select
+                      value={e.prioridade}
+                      onChange={(ev) => mudarEtapa(i, "prioridade", ev.target.value as TarefaPrioridade)}
+                      className={`mt-0.5 block ${cls}`}
+                    >
+                      {TAREFA_PRIORIDADE.map((p) => (
+                        <option key={p.valor} value={p.valor}>
+                          {p.rotulo}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   <button
@@ -240,11 +301,21 @@ export function FormSop({ templates }: { templates: SopTemplateView[] }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button disabled={ocupado} onClick={salvar} className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60">
+            <button
+              disabled={ocupado}
+              onClick={salvar}
+              className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60"
+            >
               {ocupado ? "Salvando…" : "Salvar"}
             </button>
-            <button type="button" onClick={() => setAberto(false)} className="text-xs text-cinza underline">cancelar</button>
-            {erro && <span role="alert" className="text-xs text-negativo">{erro}</span>}
+            <button type="button" onClick={() => setAberto(false)} className="text-xs text-cinza underline">
+              cancelar
+            </button>
+            {erro && (
+              <span role="alert" className="text-xs text-negativo">
+                {erro}
+              </span>
+            )}
           </div>
         </div>
       )}

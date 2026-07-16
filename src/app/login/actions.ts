@@ -30,10 +30,7 @@ export async function entrar(_prev: EstadoLogin, formData: FormData): Promise<Es
   redirect("/");
 }
 
-export async function recuperarSenha(
-  _prev: EstadoRecuperar,
-  formData: FormData,
-): Promise<EstadoRecuperar> {
+export async function recuperarSenha(_prev: EstadoRecuperar, formData: FormData): Promise<EstadoRecuperar> {
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();
@@ -52,10 +49,7 @@ export async function recuperarSenha(
   return { mensagem: "Se o e-mail existir, enviaremos instruções de recuperação." };
 }
 
-export async function definirNovaSenha(
-  _prev: EstadoNovaSenha,
-  formData: FormData,
-): Promise<EstadoNovaSenha> {
+export async function definirNovaSenha(_prev: EstadoNovaSenha, formData: FormData): Promise<EstadoNovaSenha> {
   const senha = String(formData.get("senha") ?? "");
   const confirma = String(formData.get("confirma") ?? "");
   if (senha.length < 8) return { erro: "A senha deve ter ao menos 8 caracteres." };

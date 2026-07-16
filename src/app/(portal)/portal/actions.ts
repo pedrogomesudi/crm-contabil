@@ -17,7 +17,12 @@ async function gate() {
 }
 
 // Rastreio (RF-053): gravado SÓ server-side — portal_acesso não tem policy de INSERT.
-async function registrar(clienteId: string, usuarioId: string, tipo: "documento" | "nfse" | "obrigacao" | "boleto", refId: string) {
+async function registrar(
+  clienteId: string,
+  usuarioId: string,
+  tipo: "documento" | "nfse" | "obrigacao" | "boleto",
+  refId: string,
+) {
   const admin = createAdminSupabase();
   await admin.from("portal_acesso").insert({ cliente_id: clienteId, usuario_id: usuarioId, tipo, ref_id: refId });
 }
@@ -76,7 +81,13 @@ export async function registrarAcessoBoleto(id: string): Promise<{ ok?: boolean;
 }
 
 function nomeSeguro(nome: string): string {
-  return nome.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9._-]+/g, "_").slice(0, 100) || "arquivo";
+  return (
+    nome
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-zA-Z0-9._-]+/g, "_")
+      .slice(0, 100) || "arquivo"
+  );
 }
 
 // ÚNICA escrita do papel cliente. O caminho é gerado AQUI (nunca vem do navegador) a
@@ -107,7 +118,13 @@ export async function enviarDocumento(formData: FormData): Promise<{ ok?: boolea
   const supabase = await createServerSupabase();
   const { data: doc, error } = await supabase
     .from("documentos")
-    .insert({ cliente_id: clienteId, nome: arquivo.name.slice(0, 200), caminho_storage: caminho, origem: "cliente", enviado_por: perfil.id })
+    .insert({
+      cliente_id: clienteId,
+      nome: arquivo.name.slice(0, 200),
+      caminho_storage: caminho,
+      origem: "cliente",
+      enviado_por: perfil.id,
+    })
     .select("id")
     .single();
   if (error || !doc) {

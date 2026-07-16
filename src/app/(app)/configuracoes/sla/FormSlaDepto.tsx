@@ -20,8 +20,8 @@ export function FormSlaDepto({ slas }: { slas: Record<string, number> }) {
   return (
     <div className="space-y-3 rounded-2xl border border-linha bg-white p-4 text-sm">
       <p className="text-xs text-cinza">
-        O prazo é aplicado <strong>no momento em que a solicitação é aberta</strong>. Mudar o SLA aqui não
-        reescreve o prazo das solicitações já abertas.
+        O prazo é aplicado <strong>no momento em que a solicitação é aberta</strong>. Mudar o SLA aqui não reescreve o
+        prazo das solicitações já abertas.
       </p>
       {DEPARTAMENTOS.map((d) => (
         <div key={d.valor} className="flex flex-wrap items-center gap-2">

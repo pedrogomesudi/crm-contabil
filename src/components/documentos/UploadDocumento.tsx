@@ -14,11 +14,7 @@ export function UploadDocumento({ clienteId }: { clienteId: string }) {
   }, [estado.ok]);
 
   return (
-    <form
-      ref={formRef}
-      action={formAction}
-      className="space-y-3 rounded border border-linha bg-creme p-3"
-    >
+    <form ref={formRef} action={formAction} className="space-y-3 rounded border border-linha bg-creme p-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <Campo label="Arquivo (PDF, PNG ou JPG, até 10 MB)">
           <input
@@ -30,13 +26,7 @@ export function UploadDocumento({ clienteId }: { clienteId: string }) {
           />
         </Campo>
         <Campo label="Tipo (opcional)">
-          <input
-            name="tipo"
-            type="text"
-            maxLength={60}
-            placeholder="Ex.: Contrato, Balanço"
-            className={inputCls}
-          />
+          <input name="tipo" type="text" maxLength={60} placeholder="Ex.: Contrato, Balanço" className={inputCls} />
         </Campo>
       </div>
       {estado.erro && (

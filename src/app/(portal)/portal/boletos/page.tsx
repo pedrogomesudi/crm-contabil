@@ -27,7 +27,8 @@ export default async function PortalBoletosPage() {
             <li key={b.id as string} className="rounded-2xl border border-linha bg-white p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-medium text-texto">
-                  Vencimento {dataBR(b.vencimento as string)} · <span className="tabular-nums">{brl(Number(b.valor))}</span>
+                  Vencimento {dataBR(b.vencimento as string)} ·{" "}
+                  <span className="tabular-nums">{brl(Number(b.valor))}</span>
                 </span>
                 <span className="text-xs text-cinza">{b.status as string}</span>
               </div>

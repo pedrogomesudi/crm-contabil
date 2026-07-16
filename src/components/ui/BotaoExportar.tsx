@@ -2,11 +2,7 @@
 import { useState } from "react";
 import { baixarBase64 } from "@/lib/lgpd/tipos";
 import { exportar } from "@/app/(app)/exportar/actions";
-import type {
-  ArquivoExportado,
-  FormatoExportacao,
-  RelatorioExportavel,
-} from "@/lib/exportar/tipos";
+import type { ArquivoExportado, FormatoExportacao, RelatorioExportavel } from "@/lib/exportar/tipos";
 
 const BOTOES: { formato: FormatoExportacao; rotulo: string }[] = [
   { formato: "xlsx", rotulo: "XLSX" },

@@ -66,7 +66,11 @@ export async function gerarPrevia(_prev: EstadoPrevia, formData: FormData): Prom
   const itens = reconciliarClientes(normalizados, existentes);
   // Vínculo contrato->cliente por NOME (razão social normalizada) resolvendo o
   // CNPJ pelas empresas do Regime. Dispensa o relatório "Clientes"/código.
-  const { porCnpj: contratosPorCnpj, naoCasados, ambiguos } = vincularContratosPorNome(
+  const {
+    porCnpj: contratosPorCnpj,
+    naoCasados,
+    ambiguos,
+  } = vincularContratosPorNome(
     contratos,
     normalizados.map((n) => ({ cpfCnpj: n.cpf_cnpj, razaoSocial: n.razao_social })),
   );
@@ -143,7 +147,9 @@ export async function aplicarImportacao(importacaoId: string): Promise<EstadoApl
   const { data, error } = await supabase.rpc("aplicar_importacao", { p_id: importacaoId });
   if (error) {
     const indisponivel = /indispon|expirada|aplicada/i.test(error.message);
-    return { erro: indisponivel ? "Prévia já aplicada ou expirada. Gere novamente." : "Falha ao aplicar a importação." };
+    return {
+      erro: indisponivel ? "Prévia já aplicada ou expirada. Gere novamente." : "Falha ao aplicar a importação.",
+    };
   }
   revalidatePath("/clientes");
   const res = data as { gravados?: number; honorarios?: number } | null;
@@ -154,10 +160,7 @@ export async function aplicarImportacao(importacaoId: string): Promise<EstadoApl
 // Cadastrais" (o Regime não traz endereço completo). Casa por CNPJ; por padrão
 // só preenche quem está sem endereço (não-destrutivo). Grava via service_role
 // (bulk), com a trava de papel no servidor (admin/assistente).
-export async function importarEnderecos(
-  _prev: EstadoEnderecos,
-  formData: FormData,
-): Promise<EstadoEnderecos> {
+export async function importarEnderecos(_prev: EstadoEnderecos, formData: FormData): Promise<EstadoEnderecos> {
   if (!(await papelAutorizado())) return { erro: "Sem permissão (apenas admin/assistente)." };
   const arquivo = formData.get("arquivo") as File | null;
   if (!arquivo || arquivo.size === 0) return { erro: "Envie o relatório 'Empresas — Dados Cadastrais' (.xls)." };

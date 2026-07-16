@@ -54,7 +54,10 @@ describe("parseEnderecos", () => {
   });
 
   it("ignora blocos sem CNPJ válido", () => {
-    const semCnpj: FolhaXls = { nome: "x", celulas: [linha("Código:", "1"), linha("Endereço:", "RUA X")] as FolhaXls["celulas"] };
+    const semCnpj: FolhaXls = {
+      nome: "x",
+      celulas: [linha("Código:", "1"), linha("Endereço:", "RUA X")] as FolhaXls["celulas"],
+    };
     expect(parseEnderecos(semCnpj)).toHaveLength(0);
   });
 });

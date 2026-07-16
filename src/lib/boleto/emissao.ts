@@ -16,7 +16,14 @@ export function dadosEmissaoDeTitulo(
     descricao: titulo.descricao ?? "Honorários",
     seuNumero: String(numero),
     pagadorEndereco: temEnd
-      ? { cep: (e.cep ?? "").replace(/\D/g, ""), logradouro: e.logradouro ?? "", numero: e.numero ?? "", bairro: e.bairro ?? "", cidade: e.cidade ?? "", uf: e.uf ?? "" }
+      ? {
+          cep: (e.cep ?? "").replace(/\D/g, ""),
+          logradouro: e.logradouro ?? "",
+          numero: e.numero ?? "",
+          bairro: e.bairro ?? "",
+          cidade: e.cidade ?? "",
+          uf: e.uf ?? "",
+        }
       : null,
   };
 }

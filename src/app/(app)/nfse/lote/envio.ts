@@ -39,18 +39,20 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
   const admin = createAdminSupabase();
   const { data: nota } = await admin
     .from("nfse")
-    .select("id, cliente_id, valor, competencia, chave_acesso, ambiente, emitente, clientes(razao_social, responsavel_nome, telefone, clientes_financeiro(cobranca_whatsapp, dia_vencimento))")
+    .select(
+      "id, cliente_id, valor, competencia, chave_acesso, ambiente, emitente, clientes(razao_social, responsavel_nome, telefone, clientes_financeiro(cobranca_whatsapp, dia_vencimento))",
+    )
     .eq("id", nfseId)
     .maybeSingle();
   const cl = nota
-    ? ((Array.isArray(nota.clientes) ? nota.clientes[0] : nota.clientes) as
-        | {
-            razao_social?: string;
-            responsavel_nome?: string | null;
-            telefone?: string;
-            clientes_financeiro?: { cobranca_whatsapp?: boolean; dia_vencimento?: number | null } | { cobranca_whatsapp?: boolean; dia_vencimento?: number | null }[];
-          }
-        | null)
+    ? ((Array.isArray(nota.clientes) ? nota.clientes[0] : nota.clientes) as {
+        razao_social?: string;
+        responsavel_nome?: string | null;
+        telefone?: string;
+        clientes_financeiro?:
+          | { cobranca_whatsapp?: boolean; dia_vencimento?: number | null }
+          | { cobranca_whatsapp?: boolean; dia_vencimento?: number | null }[];
+      } | null)
     : null;
   const razaoSocial = cl?.razao_social ?? "";
   if (!nota) return { status: "erro", motivo: "Nota não encontrada.", razaoSocial };
@@ -118,7 +120,13 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
   });
 
   const nomeArq = `NFS-e ${razaoSocial}.pdf`;
-  const r = await enviarMidiaZapi(zapi, tel, { tipo: "document", base64: pdfR.pdfBase64, mime: "application/pdf", nome: nomeArq, caption: texto });
+  const r = await enviarMidiaZapi(zapi, tel, {
+    tipo: "document",
+    base64: pdfR.pdfBase64,
+    mime: "application/pdf",
+    nome: nomeArq,
+    caption: texto,
+  });
   const resp = (r.resposta ?? {}) as { messageId?: string; id?: string };
   await admin.from("whatsapp_mensagem").insert({
     cliente_id: nota.cliente_id,

@@ -69,9 +69,7 @@ export async function simularReajuste(
     const honorario = Number(fin?.honorario_mensal ?? 0);
     const indice = String(fin?.indice_reajuste ?? "SALARIO_MINIMO");
     if (honorario <= 0 || indice === "SEM_REAJUSTE") continue;
-    const jaReajustado = ((c.reajuste_item as { ano_base: number }[] | null) ?? []).some(
-      (r) => r.ano_base === anoBase,
-    );
+    const jaReajustado = ((c.reajuste_item as { ano_base: number }[] | null) ?? []).some((r) => r.ano_base === anoBase);
     if (jaReajustado) continue;
     clientes.push({
       clienteId: c.id,

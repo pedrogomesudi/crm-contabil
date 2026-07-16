@@ -10,8 +10,8 @@ export function ImportarEnderecos() {
       <div>
         <h2 className="text-sm font-semibold">Atualizar endereços</h2>
         <p className="text-xs text-gray-600">
-          Envie o relatório <strong>Empresas — Dados Cadastrais</strong> (.xls). O endereço dos
-          clientes é preenchido casando por CNPJ. (O relatório de Regime não traz endereço completo.)
+          Envie o relatório <strong>Empresas — Dados Cadastrais</strong> (.xls). O endereço dos clientes é preenchido
+          casando por CNPJ. (O relatório de Regime não traz endereço completo.)
         </p>
       </div>
       <input name="arquivo" type="file" accept=".xls" required className="block w-full text-sm" />

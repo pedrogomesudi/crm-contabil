@@ -1,10 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  variacaoSalarioMinimo,
-  variacaoAcumulada,
-  aplicarPercentual,
-  type PontoSerie,
-} from "@/lib/reajuste/indice";
+import { variacaoSalarioMinimo, variacaoAcumulada, aplicarPercentual, type PontoSerie } from "@/lib/reajuste/indice";
 
 const p = (data: string, valor: string): PontoSerie => ({ data, valor });
 

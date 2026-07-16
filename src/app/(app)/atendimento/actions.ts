@@ -60,7 +60,9 @@ export async function listarConversas(): Promise<Conversa[]> {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("whatsapp_mensagem")
-    .select("id, telefone, texto, direcao, lida, criado_em, status, midia_tipo, midia_path, midia_nome, midia_mime, clientes(razao_social)")
+    .select(
+      "id, telefone, texto, direcao, lida, criado_em, status, midia_tipo, midia_path, midia_nome, midia_mime, clientes(razao_social)",
+    )
     .order("criado_em", { ascending: false })
     .limit(500);
   const admin = createAdminSupabase();
@@ -98,11 +100,18 @@ export async function abrirConversa(telefone: string): Promise<MsgConversa[]> {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("whatsapp_mensagem")
-    .select("id, telefone, texto, direcao, lida, criado_em, status, midia_tipo, midia_path, midia_nome, midia_mime, clientes(razao_social)")
+    .select(
+      "id, telefone, texto, direcao, lida, criado_em, status, midia_tipo, midia_path, midia_nome, midia_mime, clientes(razao_social)",
+    )
     .eq("telefone", telefone)
     .order("criado_em", { ascending: true });
   // marca entradas como lidas (RLS garante que só as visíveis ao usuário são afetadas)
-  await supabase.from("whatsapp_mensagem").update({ lida: true }).eq("telefone", telefone).eq("direcao", "IN").eq("lida", false);
+  await supabase
+    .from("whatsapp_mensagem")
+    .update({ lida: true })
+    .eq("telefone", telefone)
+    .eq("direcao", "IN")
+    .eq("lida", false);
   return mapMsgs(data ?? []);
 }
 
@@ -151,10 +160,7 @@ export async function responder(telefone: string, texto: string): Promise<{ ok?:
   return r.ok ? { ok: true } : { erro: r.erro ?? "Falha no envio." };
 }
 
-export async function favoritarConversa(
-  telefone: string,
-  favorita: boolean,
-): Promise<{ ok?: boolean; erro?: string }> {
+export async function favoritarConversa(telefone: string, favorita: boolean): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
   const { error } = await supabase.from("conversa").upsert({ telefone, favorita }, { onConflict: "telefone" });
@@ -218,10 +224,7 @@ export async function dadosContato(telefone: string): Promise<DadosContato> {
   };
 }
 
-export async function iniciarConversa(
-  telefone: string,
-  texto: string,
-): Promise<{ ok?: boolean; erro?: string }> {
+export async function iniciarConversa(telefone: string, texto: string): Promise<{ ok?: boolean; erro?: string }> {
   const t = chaveTelefone(telefone);
   if (!t) return { erro: "Telefone inválido." };
   return responder(t, texto);
@@ -239,27 +242,41 @@ export async function listarAtendentes(): Promise<{ id: string; nome: string }[]
   return (data ?? []).map((u) => ({ id: u.id as string, nome: u.nome as string }));
 }
 
-export async function definirStatus(telefone: string, status: StatusConversa): Promise<{ ok?: boolean; erro?: string }> {
+export async function definirStatus(
+  telefone: string,
+  status: StatusConversa,
+): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
   const { error } = await supabase.from("conversa").upsert({ telefone, status }, { onConflict: "telefone" });
   return error ? { erro: "Falha ao mudar o status." } : { ok: true };
 }
 
-export async function atribuirAtendente(telefone: string, atendenteId: string | null): Promise<{ ok?: boolean; erro?: string }> {
+export async function atribuirAtendente(
+  telefone: string,
+  atendenteId: string | null,
+): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
-  const { error } = await supabase.from("conversa").upsert({ telefone, atendente_id: atendenteId }, { onConflict: "telefone" });
+  const { error } = await supabase
+    .from("conversa")
+    .upsert({ telefone, atendente_id: atendenteId }, { onConflict: "telefone" });
   return error ? { erro: "Falha ao atribuir." } : { ok: true };
 }
 
 // Auto-assumir + reabrir: quem responde assume se estava sem atendente; finalizada volta a aberta.
 async function assumirConversa(admin: ReturnType<typeof createAdminSupabase>, telefone: string, atendenteId: string) {
-  const { data: row } = await admin.from("conversa").select("status, atendente_id").eq("telefone", telefone).maybeSingle();
+  const { data: row } = await admin
+    .from("conversa")
+    .select("status, atendente_id")
+    .eq("telefone", telefone)
+    .maybeSingle();
   const novoAtendente = (row?.atendente_id as string | null) ?? atendenteId;
   const statusAtual = (row?.status as string | undefined) ?? "aberta";
   const novoStatus = statusAtual === "finalizada" ? "aberta" : statusAtual;
-  await admin.from("conversa").upsert({ telefone, atendente_id: novoAtendente, status: novoStatus }, { onConflict: "telefone" });
+  await admin
+    .from("conversa")
+    .upsert({ telefone, atendente_id: novoAtendente, status: novoStatus }, { onConflict: "telefone" });
 }
 
 export async function enviarMidia(formData: FormData): Promise<{ ok?: boolean; erro?: string }> {
@@ -288,7 +305,13 @@ export async function enviarMidia(formData: FormData): Promise<{ ok?: boolean; e
 
   const buf = Buffer.from(await arquivo.arrayBuffer());
   const nome = arquivo.name || "arquivo";
-  const r = await enviarMidiaZapi(zapi, telefone, { tipo, base64: buf.toString("base64"), mime, nome, caption: legenda });
+  const r = await enviarMidiaZapi(zapi, telefone, {
+    tipo,
+    base64: buf.toString("base64"),
+    mime,
+    nome,
+    caption: legenda,
+  });
 
   // guarda cópia no storage para a thread renderizar do nosso domínio
   const path = `atendimento/out/${crypto.randomUUID()}.${extensaoPorMime(mime)}`;
@@ -317,14 +340,24 @@ export async function enviarMidia(formData: FormData): Promise<{ ok?: boolean; e
   return r.ok ? { ok: true } : { erro: r.erro ?? "Falha no envio." };
 }
 
-export async function listarClientesParaConversa(): Promise<{ razaoSocial: string; contato: string | null; telefone: string }[]> {
+export async function listarClientesParaConversa(): Promise<
+  { razaoSocial: string; contato: string | null; telefone: string }[]
+> {
   if (!(await gate())) return [];
   const admin = createAdminSupabase();
-  const { data } = await admin.from("clientes").select("razao_social, responsavel_nome, telefone").order("razao_social");
+  const { data } = await admin
+    .from("clientes")
+    .select("razao_social, responsavel_nome, telefone")
+    .order("razao_social");
   const out: { razaoSocial: string; contato: string | null; telefone: string }[] = [];
   for (const c of data ?? []) {
     const tel = chaveTelefone((c.telefone as string | null) ?? "");
-    if (tel) out.push({ razaoSocial: c.razao_social as string, contato: (c.responsavel_nome as string | null) ?? null, telefone: tel });
+    if (tel)
+      out.push({
+        razaoSocial: c.razao_social as string,
+        contato: (c.responsavel_nome as string | null) ?? null,
+        telefone: tel,
+      });
   }
   return out;
 }

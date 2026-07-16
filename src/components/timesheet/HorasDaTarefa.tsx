@@ -64,19 +64,29 @@ export function HorasDaTarefa({
         <h2 className="font-display text-sm font-semibold text-texto">
           Horas <span className="font-normal text-cinza">· {formatarHoras(minutosTotal)} apontadas nesta tarefa</span>
         </h2>
-        <Link href="/timesheet" className="text-xs text-verde underline">Timesheet</Link>
+        <Link href="/timesheet" className="text-xs text-verde underline">
+          Timesheet
+        </Link>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         {sessaoNesta ? (
           <>
             <span className="text-cinza">Cronômetro rodando há {formatarHoras(minutosSessao)}</span>
-            <button onClick={parar} disabled={ocupado} className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60">
+            <button
+              onClick={parar}
+              disabled={ocupado}
+              className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60"
+            >
               Parar e apontar
             </button>
           </>
         ) : (
-          <button onClick={iniciar} disabled={ocupado} className="rounded-lg border border-linha px-3 py-1.5 text-cinza disabled:opacity-60">
+          <button
+            onClick={iniciar}
+            disabled={ocupado}
+            className="rounded-lg border border-linha px-3 py-1.5 text-cinza disabled:opacity-60"
+          >
             Iniciar cronômetro
           </button>
         )}
@@ -87,11 +97,19 @@ export function HorasDaTarefa({
           placeholder="1h30"
           className="w-24 rounded-lg border border-linha px-2 py-1.5 text-sm"
         />
-        <button onClick={apontar} disabled={ocupado || !duracao} className="rounded-lg border border-linha px-3 py-1.5 text-cinza disabled:opacity-60">
+        <button
+          onClick={apontar}
+          disabled={ocupado || !duracao}
+          className="rounded-lg border border-linha px-3 py-1.5 text-cinza disabled:opacity-60"
+        >
           Apontar
         </button>
       </div>
-      {erro && <p role="alert" className="text-xs text-negativo">{erro}</p>}
+      {erro && (
+        <p role="alert" className="text-xs text-negativo">
+          {erro}
+        </p>
+      )}
     </section>
   );
 }

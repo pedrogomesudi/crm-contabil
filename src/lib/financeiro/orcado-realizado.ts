@@ -6,8 +6,23 @@ export type Natureza = "RECEITA" | "DESPESA";
 export type CategoriaRef = { id: string; nome: string; natureza: Natureza; ordem_dre: number };
 export type LancRealizado = { categoriaId: string; ano: number; mes: number; valor: number };
 
-export type LinhaComparativo = { categoriaId: string; nome: string; natureza: Natureza; orcado: number; realizado: number; varAbs: number; varPct: number | null };
-export type GrupoComparativo = { natureza: Natureza; linhas: LinhaComparativo[]; totalOrcado: number; totalRealizado: number; varAbs: number; varPct: number | null };
+export type LinhaComparativo = {
+  categoriaId: string;
+  nome: string;
+  natureza: Natureza;
+  orcado: number;
+  realizado: number;
+  varAbs: number;
+  varPct: number | null;
+};
+export type GrupoComparativo = {
+  natureza: Natureza;
+  linhas: LinhaComparativo[];
+  totalOrcado: number;
+  totalRealizado: number;
+  varAbs: number;
+  varPct: number | null;
+};
 export type PontoSerie = { mes: number; orcado: number; realizado: number };
 export type Comparativo = {
   grupos: GrupoComparativo[];
@@ -63,7 +78,15 @@ export function montarComparativo(
     orcado = r2(orcado);
     real = r2(real);
     const v = variacao(orcado, real);
-    return { categoriaId: cat.id, nome: cat.nome, natureza: cat.natureza, orcado, realizado: real, varAbs: v.abs, varPct: v.pct };
+    return {
+      categoriaId: cat.id,
+      nome: cat.nome,
+      natureza: cat.natureza,
+      orcado,
+      realizado: real,
+      varAbs: v.abs,
+      varPct: v.pct,
+    };
   };
 
   const grupoPara = (natureza: Natureza): GrupoComparativo => {
@@ -94,5 +117,9 @@ export function montarComparativo(
     return { mes, orcado: r2(orc), realizado: r2(rl) };
   });
 
-  return { grupos: [gRec, gDes], resultado: { orcado: resOrc, realizado: resReal, varAbs: vRes.abs, varPct: vRes.pct }, serieReceita };
+  return {
+    grupos: [gRec, gDes],
+    resultado: { orcado: resOrc, realizado: resReal, varAbs: vRes.abs, varPct: vRes.pct },
+    serieReceita,
+  };
 }

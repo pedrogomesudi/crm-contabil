@@ -18,7 +18,9 @@ export default async function InternaPage({ params }: { params: Promise<{ id: st
   const supabase = await createServerSupabase();
   const { data: s } = await supabase
     .from("solicitacao_interna")
-    .select("id, numero, origem, destino, assunto, status, prazo, cliente_id, responsavel_id, tarefa_id, clientes(razao_social)")
+    .select(
+      "id, numero, origem, destino, assunto, status, prazo, cliente_id, responsavel_id, tarefa_id, clientes(razao_social)",
+    )
     .eq("id", id)
     .maybeSingle();
   if (!s) notFound();
@@ -50,7 +52,9 @@ export default async function InternaPage({ params }: { params: Promise<{ id: st
 
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
-      <Link href="/solicitacoes/internas" className="text-sm text-verde underline">← Solicitações internas</Link>
+      <Link href="/solicitacoes/internas" className="text-sm text-verde underline">
+        ← Solicitações internas
+      </Link>
       <PageHeader
         titulo={`#${String(s.numero)} — ${s.assunto as string}`}
         subtitulo={`${rotuloDepartamento(s.origem as Departamento)} → ${rotuloDepartamento(s.destino as Departamento)}${clienteNome ? ` · ${clienteNome}` : ""} · prazo ${formatarData(s.prazo as string | null)}${vencida ? " (vencido)" : ""}`}

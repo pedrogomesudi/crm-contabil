@@ -12,6 +12,15 @@ export type ConfigBoletoView = {
 
 export function statusConfigBoleto(c: ConfigBoletoView): { provedor: string; configurado: boolean } {
   if (c.provedor === "asaas") return { provedor: "asaas", configurado: c.asaasApiKeyDefinida };
-  if (c.provedor === "inter") return { provedor: "inter", configurado: c.interClientIdDefinido && c.interClientSecretDefinido && c.interCertDefinido && c.interKeyDefinida && !!c.interContaCorrente };
+  if (c.provedor === "inter")
+    return {
+      provedor: "inter",
+      configurado:
+        c.interClientIdDefinido &&
+        c.interClientSecretDefinido &&
+        c.interCertDefinido &&
+        c.interKeyDefinida &&
+        !!c.interContaCorrente,
+    };
   return { provedor: "nenhum", configurado: false };
 }

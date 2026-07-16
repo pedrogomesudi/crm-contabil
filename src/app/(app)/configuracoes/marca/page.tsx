@@ -15,7 +15,9 @@ export default async function MarcaPage() {
   const supabase = await createServerSupabase();
   const { data: marca } = await supabase
     .from("escritorio_config")
-    .select("nome, cnpj, email, telefone, endereco, proposta_modelo, proposta_template_tipo, proposta_template_path, solicitacao_sla_dias")
+    .select(
+      "nome, cnpj, email, telefone, endereco, proposta_modelo, proposta_template_tipo, proposta_template_path, solicitacao_sla_dias",
+    )
     .eq("id", 1)
     .maybeSingle();
   const logoUrl = await urlLogoAtual();

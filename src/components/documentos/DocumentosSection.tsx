@@ -72,10 +72,14 @@ export async function DocumentosSection({
                   <td className="p-2 text-texto">
                     {d.nome}
                     {d.origem === "cliente" && (
-                      <span className="ml-2 rounded-full bg-violeta/10 px-2 py-0.5 text-xs text-violeta">enviado pelo cliente</span>
+                      <span className="ml-2 rounded-full bg-violeta/10 px-2 py-0.5 text-xs text-violeta">
+                        enviado pelo cliente
+                      </span>
                     )}
                     <span className="ml-2 text-xs text-cinza">
-                      {vistos.has(d.id) ? `· visto em ${formatarData(vistos.get(d.id) as string)}` : "· não visualizado"}
+                      {vistos.has(d.id)
+                        ? `· visto em ${formatarData(vistos.get(d.id) as string)}`
+                        : "· não visualizado"}
                     </span>
                   </td>
                   <td className="p-2 text-cinza">{d.tipo ?? "—"}</td>
@@ -85,13 +89,7 @@ export async function DocumentosSection({
                   <td className="p-2">
                     <div className="flex flex-wrap gap-2">
                       <BotaoBaixar documentoId={d.id} nome={d.nome} />
-                      {ehAdmin && (
-                        <BotaoExcluirDocumento
-                          documentoId={d.id}
-                          clienteId={clienteId}
-                          nome={d.nome}
-                        />
-                      )}
+                      {ehAdmin && <BotaoExcluirDocumento documentoId={d.id} clienteId={clienteId} nome={d.nome} />}
                     </div>
                     {d.tipo === "Contrato" && d.nome.toLowerCase().endsWith(".pdf") && podeGerenciar && (
                       <div className="mt-2 space-y-2">

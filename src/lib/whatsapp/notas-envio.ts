@@ -11,7 +11,9 @@ export type DadosPagamento = {
 export function linhasPagamento(d: DadosPagamento): string {
   const linhas: string[] = [];
   if (d.pixChave) linhas.push(`PIX: ${d.pixChave}`);
-  const partes = [d.banco && `Banco ${d.banco}`, d.agencia && `Ag. ${d.agencia}`, d.conta && `Conta ${d.conta}`].filter(Boolean);
+  const partes = [d.banco && `Banco ${d.banco}`, d.agencia && `Ag. ${d.agencia}`, d.conta && `Conta ${d.conta}`].filter(
+    Boolean,
+  );
   if (partes.length) {
     let ted = `TED: ${partes.join(", ")}`;
     if (d.titular) ted += ` — ${d.titular}`;

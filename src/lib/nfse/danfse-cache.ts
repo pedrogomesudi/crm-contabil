@@ -43,7 +43,10 @@ export async function carregarCertRowDaNota(
 export type NotaDanfse = { chave_acesso: string; ambiente: string | null; emitente: string; cliente_id: string };
 
 // Cache-first + ADN. O caller fornece a nota (respeitando o próprio gate/RLS).
-export async function obterDanfsePdf(admin: Admin, nota: NotaDanfse): Promise<{ pdfBase64?: string; chave?: string; erro?: string }> {
+export async function obterDanfsePdf(
+  admin: Admin,
+  nota: NotaDanfse,
+): Promise<{ pdfBase64?: string; chave?: string; erro?: string }> {
   const chave = nota.chave_acesso;
   if (!chave) return { erro: "Nota sem chave de acesso." };
   const cache = await lerDanfseStorage(admin, chave);

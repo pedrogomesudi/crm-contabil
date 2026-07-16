@@ -20,9 +20,13 @@ export async function abrirSolicitacao(formData: FormData): Promise<{ id?: strin
   if (!perfil) return { erro: "Sem permissão." };
   const categoria = String(formData.get("categoria") ?? "") as SolicitacaoCategoria;
   if (!CATEGORIAS.has(categoria)) return { erro: "Categoria inválida." };
-  const assunto = String(formData.get("assunto") ?? "").trim().slice(0, 200);
+  const assunto = String(formData.get("assunto") ?? "")
+    .trim()
+    .slice(0, 200);
   if (!assunto) return { erro: "Informe o assunto." };
-  const mensagem = String(formData.get("mensagem") ?? "").trim().slice(0, 4000);
+  const mensagem = String(formData.get("mensagem") ?? "")
+    .trim()
+    .slice(0, 4000);
   if (!mensagem) return { erro: "Descreva a sua solicitação." };
 
   const supabase = await createServerSupabase();
@@ -33,14 +37,19 @@ export async function abrirSolicitacao(formData: FormData): Promise<{ id?: strin
     .single();
   if (error || !data) return { erro: "Falha ao abrir a solicitação." };
 
-  const { error: errMsg } = await supabase.from("solicitacao_mensagem").insert({ solicitacao_id: data.id, corpo: mensagem });
+  const { error: errMsg } = await supabase
+    .from("solicitacao_mensagem")
+    .insert({ solicitacao_id: data.id, corpo: mensagem });
   if (errMsg) return { erro: "Solicitação aberta, mas a mensagem falhou." };
 
   revalidatePath("/portal/solicitacoes");
   return { id: data.id as string };
 }
 
-export async function responderSolicitacao(solicitacaoId: string, corpo: string): Promise<{ ok?: boolean; erro?: string }> {
+export async function responderSolicitacao(
+  solicitacaoId: string,
+  corpo: string,
+): Promise<{ ok?: boolean; erro?: string }> {
   const perfil = await gate();
   if (!perfil) return { erro: "Sem permissão." };
   const texto = corpo.trim().slice(0, 4000);

@@ -55,7 +55,12 @@ export function AtualizarPelaReceita() {
             : l,
         ),
       );
-      setProg((p) => ({ feitas: p.feitas + 1, total: p.total, ok: p.ok + (r.ok ? 1 : 0), falha: p.falha + (r.ok ? 0 : 1) }));
+      setProg((p) => ({
+        feitas: p.feitas + 1,
+        total: p.total,
+        ok: p.ok + (r.ok ? 1 : 0),
+        falha: p.falha + (r.ok ? 0 : 1),
+      }));
       await sleep(250); // gentil com o limite de requisições da BrasilAPI
     }
     setExecutando(false);

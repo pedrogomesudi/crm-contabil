@@ -17,7 +17,13 @@ function Barra({ valor, max, cor = "bg-verde" }: { valor: number; max: number; c
   );
 }
 
-export function DashboardFinanceiro({ mesInicial, dadosIniciais }: { mesInicial: string; dadosIniciais: DadosDashboard }) {
+export function DashboardFinanceiro({
+  mesInicial,
+  dadosIniciais,
+}: {
+  mesInicial: string;
+  dadosIniciais: DadosDashboard;
+}) {
   const [mes, setMes] = useState(mesInicial);
   const [dados, setDados] = useState(dadosIniciais);
   const [pend, start] = useTransition();
@@ -109,12 +115,16 @@ export function DashboardFinanceiro({ mesInicial, dadosIniciais }: { mesInicial:
             <span className="flex items-center gap-2">
               <span className="w-16 text-xs text-verde">recebido</span>
               <Barra valor={m.realizado} max={maxFluxo} cor="bg-verde" />
-              <span className="w-24 text-right font-mono text-xs tabular-nums text-texto">{formatarMoeda(m.realizado)}</span>
+              <span className="w-24 text-right font-mono text-xs tabular-nums text-texto">
+                {formatarMoeda(m.realizado)}
+              </span>
             </span>
             <span className="flex items-center gap-2">
               <span className="w-16 text-xs text-cinza-claro">a receber</span>
               <Barra valor={m.a_receber} max={maxFluxo} cor="bg-linha" />
-              <span className="w-24 text-right font-mono text-xs tabular-nums text-texto">{formatarMoeda(m.a_receber)}</span>
+              <span className="w-24 text-right font-mono text-xs tabular-nums text-texto">
+                {formatarMoeda(m.a_receber)}
+              </span>
             </span>
           </div>
         ))}

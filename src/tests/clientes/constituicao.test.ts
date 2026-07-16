@@ -14,10 +14,13 @@ describe("normalizarConstituicao", () => {
   });
   it("monta dados, sócios e representante = administrador", () => {
     const f = fd({ razao_social: "Nova X Ltda", regime: "Simples", cidade: "Uberlândia", uf: "MG" });
-    f.set("socios", JSON.stringify([
-      { nome: "Ana", cpf: "11144477735", participacao: "50%", papelSocietario: "administrador" },
-      { nome: "Bruno", cpf: null, participacao: "50%", papelSocietario: "quotista" },
-    ]));
+    f.set(
+      "socios",
+      JSON.stringify([
+        { nome: "Ana", cpf: "11144477735", participacao: "50%", papelSocietario: "administrador" },
+        { nome: "Bruno", cpf: null, participacao: "50%", papelSocietario: "quotista" },
+      ]),
+    );
     const r = normalizarConstituicao(f);
     if ("erro" in r) throw new Error(r.erro);
     expect(r.razaoSocial).toBe("Nova X Ltda");
@@ -31,10 +34,16 @@ describe("normalizarConstituicao", () => {
 });
 
 describe("validarAtivacao", () => {
-  it("rejeita CNPJ inválido", () => { expect(validarAtivacao("11.111.111/1111-11", "Simples").erro).toBeTruthy(); });
-  it("aceita CNPJ válido", () => { expect(validarAtivacao("11.222.333/0001-81", "Simples").erro).toBeUndefined(); });
+  it("rejeita CNPJ inválido", () => {
+    expect(validarAtivacao("11.111.111/1111-11", "Simples").erro).toBeTruthy();
+  });
+  it("aceita CNPJ válido", () => {
+    expect(validarAtivacao("11.222.333/0001-81", "Simples").erro).toBeUndefined();
+  });
 });
 
 describe("rotuloStatusCliente", () => {
-  it("rotula em constituição", () => { expect(rotuloStatusCliente("em_constituicao")).toBe("Em constituição"); });
+  it("rotula em constituição", () => {
+    expect(rotuloStatusCliente("em_constituicao")).toBe("Em constituição");
+  });
 });

@@ -23,7 +23,9 @@ export default async function LgpdPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-5 p-4">
-      <Link href="/configuracoes" className="text-sm text-verde underline">← Configurações</Link>
+      <Link href="/configuracoes" className="text-sm text-verde underline">
+        ← Configurações
+      </Link>
       <PageHeader titulo="LGPD" subtitulo="Tratamentos, consentimento, retenção e direitos do titular" />
       <PainelLgpd
         tratamentos={tratamentos as never}

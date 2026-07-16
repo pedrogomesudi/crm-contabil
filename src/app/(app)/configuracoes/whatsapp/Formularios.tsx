@@ -15,19 +15,38 @@ export function FormWhatsapp({ instance, configurado }: { instance: string; conf
       <form action={action} className="space-y-3">
         <label className="block text-sm">
           <span className="text-cinza">Instance ID</span>
-          <input name="instance" defaultValue={instance} required className="mt-1 w-full rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde" />
+          <input
+            name="instance"
+            defaultValue={instance}
+            required
+            className="mt-1 w-full rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde"
+          />
         </label>
         <label className="block text-sm">
           <span className="text-cinza">Token da instância {configurado && "(configurado — reenvie para trocar)"}</span>
-          <input name="token" type="password" required className="mt-1 w-full rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde" />
+          <input
+            name="token"
+            type="password"
+            required
+            className="mt-1 w-full rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde"
+          />
         </label>
         <label className="block text-sm">
           <span className="text-cinza">Client-Token (segurança da conta)</span>
-          <input name="client_token" type="password" required className="mt-1 w-full rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde" />
+          <input
+            name="client_token"
+            type="password"
+            required
+            className="mt-1 w-full rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde"
+          />
         </label>
         {estado.erro && <p className="text-sm text-negativo">{estado.erro}</p>}
         {estado.ok && <p className="text-sm text-verde">Salvo.</p>}
-        <button type="submit" disabled={pend} className="rounded-lg bg-verde px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60">
+        <button
+          type="submit"
+          disabled={pend}
+          className="rounded-lg bg-verde px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
+        >
           {pend ? "Salvando…" : "Salvar"}
         </button>
       </form>

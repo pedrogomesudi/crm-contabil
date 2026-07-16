@@ -47,7 +47,9 @@ export async function listarApontamentos(f: {
   // A RLS já escopa: quem não é admin/financeiro só enxerga os próprios apontamentos.
   let q = supabase
     .from("apontamento")
-    .select("id, usuario_id, cliente_id, tarefa_id, data, minutos, descricao, origem, usuarios(nome), clientes(razao_social), tarefa(titulo)")
+    .select(
+      "id, usuario_id, cliente_id, tarefa_id, data, minutos, descricao, origem, usuarios(nome), clientes(razao_social), tarefa(titulo)",
+    )
     .gte("data", f.de)
     .lte("data", f.ate)
     .order("data", { ascending: false })

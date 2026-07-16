@@ -23,10 +23,7 @@ const CAMPOS: (keyof ClienteExistente & keyof ClienteNormalizado)[] = [
   "telefone",
 ];
 
-export function reconciliarClientes(
-  novos: ClienteNormalizado[],
-  existentes: ClienteExistente[],
-): ItemReconc[] {
+export function reconciliarClientes(novos: ClienteNormalizado[], existentes: ClienteExistente[]): ItemReconc[] {
   const idx = new Map<string, ClienteExistente>();
   for (const e of existentes) idx.set(e.cpf_cnpj, e);
 

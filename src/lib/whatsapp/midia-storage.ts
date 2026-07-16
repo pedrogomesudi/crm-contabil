@@ -36,7 +36,8 @@ async function baixar(url: string, clientToken: string | null): Promise<Buffer |
   }
   if (parsed.protocol !== "https:") return null; // só HTTPS
   if (hostInterno(parsed.hostname)) return null; // anti-SSRF
-  const headers: Record<string, string> = ehHostZapi(parsed.hostname) && clientToken ? { "Client-Token": clientToken } : {};
+  const headers: Record<string, string> =
+    ehHostZapi(parsed.hostname) && clientToken ? { "Client-Token": clientToken } : {};
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 20000);
   try {

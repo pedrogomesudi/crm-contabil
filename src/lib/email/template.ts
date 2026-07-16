@@ -37,10 +37,6 @@ export function aplicarEmail(
 // O corpo é texto; o HTML é derivado com escape. Nunca aceitamos HTML cru — senão o
 // template vira vetor de injeção no cliente de e-mail de quem recebe.
 export function htmlDoTexto(texto: string): string {
-  const esc = texto
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+  const esc = texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   return esc.replace(/\n/g, "<br>");
 }

@@ -52,8 +52,7 @@ function assinar(metodo, chave, corpo, query = "") {
   const assinatura = createHmac("sha256", k).update(stringToSign).digest("hex");
 
   const authorization =
-    `AWS4-HMAC-SHA256 Credential=${c.keyId}/${escopo}, ` +
-    `SignedHeaders=${signedHeaders}, Signature=${assinatura}`;
+    `AWS4-HMAC-SHA256 Credential=${c.keyId}/${escopo}, ` + `SignedHeaders=${signedHeaders}, Signature=${assinatura}`;
 
   return {
     url: `https://${host}${canonicalUri}${query ? `?${query}` : ""}`,
