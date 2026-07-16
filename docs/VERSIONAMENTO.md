@@ -41,12 +41,16 @@ Toda mudança relevante é registrada em [`CHANGELOG.md`](../CHANGELOG.md) (form
 Fluxo enxuto, adequado a um projeto de um mantenedor evoluindo por marcos:
 
 - **`main`** — sempre estável e deployável. Reflete a última versão lançada. Recebe tags.
+  **É protegido:** não aceita push direto (nem de admin), force-push nem deleção. Só entra por
+  **Pull Request** com o CI (`verify`) verde e atualizado em relação ao `main`. O CI roda lint,
+  `format:check`, build, typecheck e testes — se algo estiver vermelho, o merge não acontece.
 - **`develop`** — integração do marco em andamento (a próxima versão do roadmap). É a base das
   feature branches.
 - **`feat/<descrição>`** — uma branch por funcionalidade/tarefa, criada a partir de `develop`.
   Também `fix/<descrição>` para correções e `chore/<descrição>` para manutenção.
 - **`hotfix/<descrição>`** — correção urgente em produção: sai de `main`, volta para `main`
-  (gera um *patch*, ex.: `v1.0.1`) e é reintegrada em `develop`.
+  **por PR** (gera um *patch*, ex.: `v1.0.1`) e é reintegrada em `develop`. Urgência não dispensa o
+  CI: se o `verify` não fechar, o hotfix não entra — a pressa é justamente quando se quebra algo.
 
 Fluxo típico de um marco (ex.: V2):
 
@@ -55,11 +59,23 @@ git switch develop                       # base do marco
 git switch -c feat/dominio-export        # uma tarefa
 # ... commits ...
 git switch develop && git merge feat/dominio-export
-# ao concluir o marco:
-git switch main && git merge develop
+git push origin develop                  # o CI também roda em develop
+
+# ao concluir o marco — o main é protegido, então a entrega vai por PR:
+gh pr create --base main --head develop --title "v2.0.0 — Integração com o Domínio Sistemas"
+gh pr checks --watch                     # espera o verify ficar verde
+gh pr merge --merge                      # cria o merge commit no main
+
+# a tag aponta para o merge commit JÁ no main (só depois do merge):
+git switch main && git pull
 git tag -a v2.0.0 -m "v2.0.0 — Integração com o Domínio Sistemas"
-git push origin main v2.0.0
+git push origin v2.0.0
+gh release create v2.0.0 --notes-from-tag
 ```
+
+> Por que PR se o projeto é solo: o CI só consegue barrar o que ele vê **antes** de entrar. Com push
+> direto, o `main` já estava quebrado quando o CI reclamava — foi assim que o `format:check` ficou
+> três semanas vermelho sem incomodar ninguém. O PR não é cerimônia de revisão aqui; é o portão.
 
 > Projeto solo pode commitar direto em `develop` para tarefas pequenas; as feature branches
 > valem a pena para trabalho maior, revisão ou execução isolada (worktrees).
