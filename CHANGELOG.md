@@ -8,6 +8,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- **`/api/health` devolve a versão no ar:** `{"status":"ok","versao":"6.4.0"}`. O deploy é automático a
+  partir do `main` e, olhando a aplicação, não havia como saber qual release estava rodando. Vem do
+  `package.json` (embutido no build): o `.git` não chega no container e build arg do painel é estático,
+  então os dois desatualizariam calados. O `version` — parado em `0.1.0` desde sempre — passa a valer, e
+  o `src/tests/versao.test.ts` exige que ele bata com a última versão do CHANGELOG, então o CI barra o
+  esquecimento. A tag sai daí, via `npm run release:tag`.
+
+### Corrigido
+
+- **DEPLOY.md dizia que o Dockerfile tem `HEALTHCHECK`** — ele foi removido faz tempo, justamente porque
+  um healthcheck falhando faz o proxy do EasyPanel devolver 502 com o app no ar.
+
 ## [6.4.0] — 2026-07-16
 
 ### Adicionado

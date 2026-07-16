@@ -72,7 +72,12 @@ EMAIL_CRIPTO_KEY=<hex de 32 bytes>                      # cifra a senha SMTP / c
 ### Rede / domínio
 - **Port mapping:** container `3000`.
 - **Domains:** adicione `crm.SEU-DOMINIO.com.br` → **HTTPS habilitado** (EasyPanel emite Let's Encrypt).
-- **Health check:** `/api/health` (o Dockerfile já tem `HEALTHCHECK`; o EasyPanel também pode apontar para esse path).
+- **Health check:** `/api/health` — devolve `{"status":"ok","versao":"6.4.0"}`. O `versao` é a release
+  que está **no ar**: como o deploy é automático a partir do `main`, é assim que se confere se o que
+  subiu é o que você lançou (`curl -s https://app.seusaldo.ai/api/health`).
+  O Dockerfile **não** tem `HEALTHCHECK` de propósito: no EasyPanel um healthcheck que falha marca o
+  container como *unhealthy* e o proxy devolve 502 mesmo com o app no ar. O EasyPanel monitora o
+  serviço por conta própria; a rota fica para checagens externas.
 
 ---
 
