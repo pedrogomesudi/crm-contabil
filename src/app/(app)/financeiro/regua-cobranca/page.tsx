@@ -13,7 +13,7 @@ export default async function ReguaPage() {
     <main className="mx-auto max-w-[720px] space-y-4 p-4">
       <Voltar href="/financeiro/cadastros" />
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Régua de cobrança</h1>
-      <p className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+      <p className="rounded border border-atencao-borda bg-atencao-fundo px-3 py-2 text-xs text-atencao">
         O disparo diário automático depende do agendador externo (ver README). O botão “Processar agora” roda a régua na
         hora.
       </p>

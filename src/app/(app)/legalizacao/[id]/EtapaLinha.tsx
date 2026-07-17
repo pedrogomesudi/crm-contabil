@@ -30,7 +30,7 @@ const STATUS: { v: LegEtapaStatus; l: string }[] = [
   { v: "isenta", l: "Isenta" },
 ];
 const SEV: Record<string, string> = {
-  em_breve: "text-amber-700",
+  em_breve: "text-atencao",
   vencido: "text-negativo",
   critico: "text-negativo font-semibold",
 };
@@ -157,7 +157,7 @@ export function EtapaLinha({ etapa, hoje }: { etapa: Etapa; hoje: string }) {
             ver comprovante
           </a>
         ) : etapa.anexoObrigatorio ? (
-          <span className="text-amber-700">comprovante obrigatório</span>
+          <span className="text-atencao">comprovante obrigatório</span>
         ) : null}
         <form action={enviar} className="flex items-center gap-1">
           <input type="file" name="comprovante" accept=".pdf,image/png,image/jpeg" className="text-xs" />

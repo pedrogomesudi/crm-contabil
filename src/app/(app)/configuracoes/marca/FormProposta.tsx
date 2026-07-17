@@ -91,12 +91,12 @@ export function FormProposta({
           </p>
         )}
         {estUp.tagsDesconhecidas && estUp.tagsDesconhecidas.length > 0 && (
-          <p className="text-xs text-amber-700">
+          <p className="text-xs text-atencao">
             Tags não reconhecidas (ficarão vazias): {estUp.tagsDesconhecidas.map((t) => `{${t}}`).join(", ")}
           </p>
         )}
         {estUp.avisos?.map((a, i) => (
-          <p key={i} className="text-xs text-amber-700">
+          <p key={i} className="text-xs text-atencao">
             {a}
           </p>
         ))}

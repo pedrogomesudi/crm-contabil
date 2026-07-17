@@ -31,7 +31,7 @@ export function GerarContrato({ clienteId, hoje }: { clienteId: string; hoje: st
         <div role="status" className="text-sm text-verde">
           Contrato gerado e salvo nos Documentos abaixo.
           {estado.avisos?.map((a) => (
-            <span key={a} className="block text-amber-700">
+            <span key={a} className="block text-atencao">
               ⚠️ {a}
             </span>
           ))}

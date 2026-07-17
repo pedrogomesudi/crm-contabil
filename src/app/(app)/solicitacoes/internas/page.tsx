@@ -107,7 +107,7 @@ export default async function InternasPage({ searchParams }: { searchParams: Pro
                   </span>
                 </span>
                 <span className="flex items-center gap-3 text-xs">
-                  <span className={s.responsavelId ? "text-cinza" : "text-amber-700"}>
+                  <span className={s.responsavelId ? "text-cinza" : "text-atencao"}>
                     {s.responsavelNome ?? "na fila"}
                   </span>
                   <span className="text-cinza">{rotuloStatusInterno(s.status)}</span>

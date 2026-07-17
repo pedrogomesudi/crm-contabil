@@ -76,7 +76,7 @@ export function EmitirNfseCliente({ clienteId, ambiente }: { clienteId: string; 
   return (
     <form action={action} className="mt-2 space-y-2 rounded-lg border border-linha p-3 text-sm">
       {ambiente === "homologacao" && (
-        <p className="rounded bg-amber-50 px-2 py-1 text-amber-800">Homologação — sem validade jurídica.</p>
+        <p className="rounded bg-atencao-fundo px-2 py-1 text-atencao">Homologação — sem validade jurídica.</p>
       )}
       <p className="font-medium text-cinza">Tomador</p>
       <div className="flex items-center gap-2">

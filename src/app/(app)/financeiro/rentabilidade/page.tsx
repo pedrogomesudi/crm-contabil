@@ -105,7 +105,7 @@ export default async function RentabilidadePage({
       </form>
 
       {rel.semCustoCadastrado && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <p className="rounded-lg bg-atencao-fundo px-3 py-2 text-sm text-atencao">
           Há apontamentos de colaboradores <strong>sem custo/hora cadastrado</strong> no período — o custo deles entrou
           como zero. Cadastre em{" "}
           <Link href="/configuracoes/custos" className="underline">
@@ -115,7 +115,7 @@ export default async function RentabilidadePage({
         </p>
       )}
       {semApontamento > 0 && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <p className="rounded-lg bg-atencao-fundo px-3 py-2 text-sm text-atencao">
           <strong>{semApontamento}</strong> cliente(s) sem nenhuma hora apontada no período. Custo zero aqui não
           significa cliente barato — significa que <strong>ninguém apontou</strong>.
         </p>
@@ -146,12 +146,12 @@ export default async function RentabilidadePage({
                       {l.clienteNome}
                     </Link>
                     {l.semApontamento && <span className="ml-1 text-xs text-cinza">(sem apontamento)</span>}
-                    {l.semCusto && <span className="ml-1 text-xs text-amber-700">(sem custo)</span>}
+                    {l.semCusto && <span className="ml-1 text-xs text-atencao">(sem custo)</span>}
                   </td>
                   <td className="px-3 py-2 text-right text-cinza">{formatarHoras(l.minutos)}</td>
                   <td className="px-3 py-2 text-right text-cinza">{formatarMoeda(l.custo)}</td>
                   <td className="px-3 py-2 text-right text-texto">{formatarMoeda(l.recebido)}</td>
-                  <td className={`px-3 py-2 text-right ${atrasado ? "text-amber-700" : "text-cinza"}`}>
+                  <td className={`px-3 py-2 text-right ${atrasado ? "text-atencao" : "text-cinza"}`}>
                     {formatarMoeda(l.contratado)}
                   </td>
                   <td className={`px-3 py-2 text-right font-medium ${m.valor < 0 ? "text-negativo" : "text-texto"}`}>

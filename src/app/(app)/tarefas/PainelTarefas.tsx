@@ -13,13 +13,13 @@ const rotStatus = (s: string) => TAREFA_STATUS.find((x) => x.valor === s)?.rotul
 const rotPrio = (p: string) => TAREFA_PRIORIDADE.find((x) => x.valor === p)?.rotulo ?? p;
 const dataBR = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "—");
 const SEV: Record<string, string> = {
-  em_breve: "text-amber-700",
+  em_breve: "text-atencao",
   vencido: "text-negativo",
   critico: "text-negativo font-semibold",
 };
 const PRIO_COR: Record<string, string> = {
   urgente: "bg-negativo/15 text-negativo",
-  alta: "bg-amber-100 text-amber-800",
+  alta: "bg-atencao-fundo text-atencao",
   media: "bg-linha text-cinza",
   baixa: "bg-linha text-cinza",
 };

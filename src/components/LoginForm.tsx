@@ -11,7 +11,7 @@ export function LoginForm({ aviso }: { aviso?: string }) {
   return (
     <AuthCard titulo="CRM Contábil">
       {aviso && (
-        <p role="status" className="mb-4 rounded bg-amber-50 p-3 text-sm text-amber-800">
+        <p role="status" className="mb-4 rounded bg-atencao-fundo p-3 text-sm text-atencao">
           {aviso}
         </p>
       )}

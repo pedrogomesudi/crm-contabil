@@ -119,7 +119,7 @@ export function FormComunicado({ contadores, colaboradores }: { contadores: Cola
         </div>
 
         {canal === "whatsapp" && (
-          <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <p className="rounded-lg bg-atencao-fundo px-3 py-2 text-xs text-atencao">
             <strong>Atenção:</strong> disparo em massa por WhatsApp é o gatilho clássico de banimento do número pela
             Meta — e o canal é não oficial (Z-API). Perder o número derruba o <strong>atendimento</strong> e a{" "}
             <strong>régua de cobrança</strong> de uma vez. Teto de {TETO_WHATSAPP} destinatários por comunicado.

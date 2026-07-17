@@ -160,7 +160,7 @@ export function LoteNfse() {
                     <td className="p-2">
                       {l.razaoSocial}
                       {!l.temEndereco && l.situacao === "apta" && (
-                        <span className="ml-1 text-xs text-amber-700">(sem endereço)</span>
+                        <span className="ml-1 text-xs text-atencao">(sem endereço)</span>
                       )}
                     </td>
                     <td className="p-2">R$ {l.honorario.toFixed(2)}</td>

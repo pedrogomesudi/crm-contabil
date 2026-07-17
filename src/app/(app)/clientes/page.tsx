@@ -174,7 +174,7 @@ export default async function ClientesPage({
                     <td className="px-4 py-3 text-right">
                       <span className="inline-flex items-center gap-1.5 text-sm text-cinza">
                         <span
-                          className={`h-1.5 w-1.5 rounded-full ${cl.status === "ativo" ? "bg-verde" : cl.status === "em_constituicao" ? "bg-amber-500" : "bg-cinza-claro"}`}
+                          className={`h-1.5 w-1.5 rounded-full ${cl.status === "ativo" ? "bg-verde" : cl.status === "em_constituicao" ? "bg-atencao-solido" : "bg-cinza-claro"}`}
                         />
                         {cl.status === "ativo"
                           ? "Ativo"

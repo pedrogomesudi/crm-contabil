@@ -68,7 +68,7 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
                   <td className="p-2">
                     <Badge variante={badgeStatusNfse(n.status)}>{ROTULO_STATUS[n.status] ?? n.status}</Badge>
                     {n.ambiente === "homologacao" && (
-                      <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
+                      <span className="ml-1 rounded bg-atencao-fundo px-1.5 py-0.5 text-xs text-atencao">
                         homologação
                       </span>
                     )}

@@ -26,7 +26,7 @@ export default async function MarcaPage() {
     <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <PageHeader titulo="Marca do escritório" subtitulo="Identidade usada na proposta comercial e no whitelabel" />
       {!marca?.nome && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <p className="rounded-lg bg-atencao-fundo px-3 py-2 text-sm text-atencao">
           Configure a marca para usá-la na proposta comercial.
         </p>
       )}
