@@ -14,7 +14,7 @@ export default async function DREPage() {
   const mes = Number(hoje.slice(5, 7));
   const inicial = await relatorioDRE(ano, "mes", mes, "competencia");
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <Voltar href="/financeiro/relatorios" />
       <PageHeader titulo="DRE" subtitulo="Demonstração de Resultado" />
       <RelatorioDRE ano={ano} tipo="mes" indice={mes} base="competencia" dre={inicial?.dre ?? null} />

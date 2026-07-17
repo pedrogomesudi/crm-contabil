@@ -14,7 +14,7 @@ export default async function ObrigacoesPage() {
   const mes = Number(hoje.slice(5, 7));
   const instancias = await listarInstancias(ano, mes);
   return (
-    <main className="mx-auto max-w-6xl space-y-5 p-4">
+    <main className="mx-auto max-w-full space-y-5 p-4">
       <PageHeader
         titulo="Obrigações"
         subtitulo="Calendário de obrigações por competência (o vencimento aparece em cada linha)"

@@ -13,7 +13,7 @@ export default async function BoletosConfigPage() {
   const supabase = await createServerSupabase();
   const { data: contas } = await supabase.from("conta_bancaria").select("id, nome").eq("ativa", true).order("nome");
   return (
-    <main className="mx-auto max-w-2xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <PageHeader titulo="Boletos" subtitulo="Provedor de emissão (Inter ou Asaas)" />
       <FormBoletos config={config} contas={(contas as { id: string; nome: string }[] | null) ?? []} />
     </main>

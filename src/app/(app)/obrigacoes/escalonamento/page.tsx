@@ -10,7 +10,7 @@ export default async function EscalonamentoPage() {
   if (!perfil || !podeCriarCliente(perfil.papel)) redirect("/");
   const [itens, ativo] = await Promise.all([listarEscalonamento(), escalonamentoAtivo()]);
   return (
-    <main className="mx-auto max-w-5xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo="Escalonamento" subtitulo="Obrigações atrasadas que subiram para você (líder/sócio)" />
       <EscalonamentoView itens={itens} ativo={ativo} />
     </main>

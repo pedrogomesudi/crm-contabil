@@ -14,7 +14,7 @@ export default async function TemplatesEmailPage() {
   const templates = await listarTemplates();
 
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <Link href="/configuracoes/email" className="text-sm text-verde underline">
         ← E-mail
       </Link>

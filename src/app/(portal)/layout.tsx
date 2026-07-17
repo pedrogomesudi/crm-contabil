@@ -32,7 +32,7 @@ export default async function PortalLayout({ children }: { children: React.React
   return (
     <div className="min-h-screen bg-creme">
       <header className="border-b border-linha bg-white">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 p-4">
+        <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-2 p-4">
           <div>
             <p className="font-display text-base font-bold text-texto">
               {(marca?.nome as string) ?? "Portal do cliente"}
@@ -43,7 +43,7 @@ export default async function PortalLayout({ children }: { children: React.React
             <button className="rounded-lg border border-linha px-3 py-1.5 text-sm text-cinza">Sair</button>
           </form>
         </div>
-        <nav aria-label="Portal" className="mx-auto flex max-w-4xl flex-wrap gap-1 px-4 pb-2 text-sm">
+        <nav aria-label="Portal" className="mx-auto flex max-w-[1280px] flex-wrap gap-1 px-4 pb-2 text-sm">
           {nav.map((n) => (
             <Link key={n.href} href={n.href} className="rounded-lg px-3 py-1.5 text-cinza hover:bg-creme">
               {n.label}
@@ -51,7 +51,7 @@ export default async function PortalLayout({ children }: { children: React.React
           ))}
         </nav>
       </header>
-      <main className="mx-auto max-w-4xl p-4">{children}</main>
+      <main className="mx-auto max-w-[1280px] p-4">{children}</main>
     </div>
   );
 }

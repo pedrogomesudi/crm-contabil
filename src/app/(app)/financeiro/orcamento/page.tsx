@@ -12,7 +12,7 @@ export default async function OrcamentoPage() {
   const ano = new Date().getFullYear();
   const { categorias, valores } = await listarOrcamento(ano);
   return (
-    <main className="mx-auto max-w-6xl space-y-5 p-4">
+    <main className="mx-auto max-w-full space-y-5 p-4">
       <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Orçamento" subtitulo="Orçado por categoria em cada mês" />
       <GradeOrcamento ano={ano} categorias={categorias} valores={valores} />

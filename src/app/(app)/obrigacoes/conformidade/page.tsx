@@ -13,7 +13,7 @@ export default async function ConformidadePage() {
   const mes = Number(hoje.slice(5, 7));
   const dados = await relatorioConformidade(ano, mes);
   return (
-    <main className="mx-auto max-w-5xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo="Conformidade" subtitulo="Entregas por competência — no prazo, com atraso, pendentes" />
       <RelatorioConformidade ano={ano} mes={mes} dados={dados} />
     </main>

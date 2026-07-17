@@ -83,7 +83,7 @@ export default async function LegalizacaoPage({
     .filter((l) => orgao === "" || l.orgaosPendentes.includes(orgao as LegOrgao));
 
   return (
-    <main className="mx-auto max-w-5xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo="Legalização / Societário" subtitulo="Processos societários e de legalização por órgão" />
       <PainelLegalizacao linhas={linhas} filtros={{ status, orgao }} />
     </main>

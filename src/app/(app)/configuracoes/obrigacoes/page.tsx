@@ -16,7 +16,7 @@ export default async function MatrizPage() {
     obterNotificacaoRiscos(),
   ]);
   return (
-    <main className="mx-auto max-w-5xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader
         titulo="Matriz de obrigações"
         subtitulo="Obrigações e critérios de incidência usados na geração do calendário"

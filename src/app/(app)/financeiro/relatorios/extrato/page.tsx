@@ -20,7 +20,7 @@ export default async function ExtratoPage() {
     listarLancamentos(inicio, fim, "todos", null),
   ]);
   return (
-    <main className="mx-auto max-w-5xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <Voltar href="/financeiro/relatorios" />
       <PageHeader titulo="Extrato / movimentações" subtitulo="Lançamentos e baixas, com export CSV" />
       <Extrato categorias={categorias} inicio={inicio} fim={fim} lancamentosIni={lancamentosIni} />

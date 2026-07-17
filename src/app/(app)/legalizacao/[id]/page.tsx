@@ -80,7 +80,7 @@ export default async function ProcessoLegalizacaoPage({ params }: { params: Prom
   const status = proc.status as LegProcStatus;
 
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <Link href={`/clientes/${proc.cliente_id}`} className="text-sm text-verde underline">
         ← {(cli?.razao_social as string) ?? "Cliente"}
       </Link>

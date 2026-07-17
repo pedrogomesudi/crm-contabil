@@ -72,7 +72,7 @@ export default async function ConfiguracoesHubPage() {
   // Cada página de destino mantém o próprio gate: o filtro aqui é de navegação, não de segurança.
   const itens = ITENS.filter((i) => (i.papeis ?? ["admin"]).includes(perfil.papel));
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <PageHeader titulo="Configurações" subtitulo="Integrações e credenciais do sistema" />
       <ul className="grid gap-3 sm:grid-cols-2">
         {itens.map((i) => (

@@ -28,7 +28,7 @@ export default async function CadastrosHubPage() {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeGerenciarFinanceiro(perfil.papel)) redirect("/");
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <Voltar href="/" />
       <PageHeader titulo="Financeiro" subtitulo="Painéis, movimentações e cadastros do escritório" />
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

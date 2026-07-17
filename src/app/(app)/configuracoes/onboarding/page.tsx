@@ -12,7 +12,7 @@ export default async function ConfigOnboardingPage() {
   const templates = await listarTemplates();
   const alertasAtivos = await obterAlertasAtivos();
   return (
-    <main className="mx-auto max-w-4xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo="Template de onboarding" subtitulo="Modelos de processo de entrada de clientes" />
       <section className="rounded-2xl border border-linha bg-white p-4">
         <h3 className="font-display text-sm font-semibold text-texto">Notificações de prazo</h3>

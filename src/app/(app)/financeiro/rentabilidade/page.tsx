@@ -73,7 +73,7 @@ export default async function RentabilidadePage({
   };
 
   return (
-    <main className="mx-auto max-w-6xl space-y-5 p-4">
+    <main className="mx-auto max-w-full space-y-5 p-4">
       <PageHeader titulo="Rentabilidade por cliente" subtitulo="Quanto custou atender × quanto o cliente pagou" />
 
       <form

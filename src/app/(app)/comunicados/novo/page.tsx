@@ -16,7 +16,7 @@ export default async function NovoComunicadoPage() {
   const colaboradores = await listarColaboradores();
 
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <Link href="/comunicados" className="text-sm text-verde underline">
         ← Comunicados
       </Link>

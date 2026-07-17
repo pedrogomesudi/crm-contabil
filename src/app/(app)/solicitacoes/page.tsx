@@ -65,7 +65,7 @@ export default async function SolicitacoesPage({
     `rounded-lg border px-2.5 py-1 text-xs ${ativo ? "border-verde bg-verde/10 text-verde" : "border-linha text-cinza"}`;
 
   return (
-    <main className="mx-auto max-w-5xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <div className="flex gap-1 text-sm">
         <span className="rounded-lg border border-verde bg-verde/10 px-3 py-1.5 text-verde">Do cliente</span>
         <Link href="/solicitacoes/internas" className="rounded-lg border border-linha px-3 py-1.5 text-cinza">

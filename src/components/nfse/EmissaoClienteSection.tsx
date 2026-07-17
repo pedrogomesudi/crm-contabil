@@ -41,7 +41,7 @@ export async function EmissaoClienteSection({ clienteId, papel }: { clienteId: s
   const podeEmitir = configCompleta && certValido;
 
   return (
-    <section className="max-w-4xl space-y-3 rounded-lg border border-linha bg-white p-4">
+    <section className="space-y-3 rounded-lg border border-linha bg-white p-4">
       <h2 className="text-sm font-semibold text-texto">Emissão de NFS-e (cliente como emitente)</h2>
 
       {podeConfigurarNfse(papel) && (

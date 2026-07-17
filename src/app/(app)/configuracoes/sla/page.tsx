@@ -16,7 +16,7 @@ export default async function SlaPage() {
   for (const s of data ?? []) slas[s.departamento as string] = s.dias as number;
 
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <Link href="/configuracoes" className="text-sm text-verde underline">
         ← Configurações
       </Link>

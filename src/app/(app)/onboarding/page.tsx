@@ -14,7 +14,7 @@ export default async function OnboardingPage() {
   const nAlertas = await contarAlertas();
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
   return (
-    <main className="mx-auto max-w-4xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo="Onboarding" subtitulo="Processos de entrada em andamento" />
       <div>
         <Link href="/onboarding/alertas" className="text-sm text-verde underline">

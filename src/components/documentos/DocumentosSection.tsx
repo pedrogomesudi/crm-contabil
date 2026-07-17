@@ -45,7 +45,7 @@ export async function DocumentosSection({
   const ehAdmin = papel === "admin";
 
   return (
-    <section className="max-w-2xl space-y-3 rounded-lg border border-linha bg-white p-4">
+    <section className="space-y-3 rounded-lg border border-linha bg-white p-4">
       <h2 className="text-sm font-semibold text-texto">Documentos</h2>
 
       {podeGerenciar && <UploadDocumento clienteId={clienteId} />}

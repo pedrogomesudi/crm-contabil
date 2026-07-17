@@ -55,7 +55,7 @@ export async function VencimentosSection({ clienteId, papel }: { clienteId: stri
   ]);
 
   return (
-    <section className="max-w-4xl space-y-4 rounded-lg border border-linha bg-white p-4">
+    <section className="space-y-4 rounded-lg border border-linha bg-white p-4">
       <h2 className="text-sm font-semibold text-texto">Certificados e procurações</h2>
 
       <div className="space-y-2">

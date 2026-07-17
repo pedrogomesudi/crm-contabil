@@ -31,7 +31,7 @@ export default async function ConfigNfsePage() {
   };
 
   return (
-    <main className="mx-auto max-w-2xl space-y-6 p-4">
+    <main className="mx-auto max-w-[720px] space-y-6 p-4">
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Configuração da NFS-e</h1>
 
       <section className="space-y-3 rounded-lg border border-linha bg-white p-4">

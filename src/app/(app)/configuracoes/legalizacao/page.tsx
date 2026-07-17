@@ -11,7 +11,7 @@ export default async function ModelosLegalizacaoPage() {
   if (!perfil || perfil.papel !== "admin") redirect("/");
   const modelos = await listarModelos();
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <PageHeader
         titulo="Modelos de legalização"
         subtitulo="Processos societários e de legalização — etapas por órgão"

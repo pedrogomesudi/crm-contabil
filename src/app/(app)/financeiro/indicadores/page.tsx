@@ -22,7 +22,7 @@ export default async function IndicadoresPage() {
   if (!perfil || !podeGerenciarFinanceiro(perfil.papel)) redirect("/");
   const resumo = await carregarIndicadores();
   return (
-    <main className="mx-auto max-w-5xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Indicadores" subtitulo="Ticket médio, MRR, churn e crescimento da carteira" />
       {!resumo ? (

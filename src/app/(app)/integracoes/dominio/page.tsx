@@ -10,7 +10,7 @@ export default async function IntegracaoDominioPage() {
   // escreve cadastro, então não conduz a importação — fica fora do gate.
   if (!perfil || !["admin", "assistente"].includes(perfil.papel)) redirect("/");
   return (
-    <main className="mx-auto max-w-3xl space-y-6 p-6">
+    <main className="mx-auto max-w-[720px] space-y-6 p-6">
       <header>
         <h1 className="text-xl font-semibold">Integração Domínio</h1>
         <p className="text-sm text-gray-600">

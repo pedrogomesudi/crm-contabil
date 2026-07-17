@@ -12,7 +12,7 @@ export function ContratosSection({ clienteId, contratos }: { clienteId: string; 
   const [editando, setEditando] = useState<Contrato | null>(null);
   const [estado, action, pend] = useActionState<EstadoContrato, FormData>(salvarContrato.bind(null, clienteId), {});
   return (
-    <section className="max-w-2xl space-y-3 rounded-lg border border-linha bg-white p-4">
+    <section className="space-y-3 rounded-lg border border-linha bg-white p-4">
       <h2 className="text-sm font-semibold text-texto">Contratos</h2>
       <ul className="divide-y divide-linha text-sm">
         {contratos.map((ct) => (
