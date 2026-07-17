@@ -40,10 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar
         papel={perfil.papel}
         nome={perfil.nome}
-        alertasOnboarding={alertasOnboarding}
-        riscosObrigacoes={riscosObrigacoes}
-        escalonamento={escalonamento}
-        vencimentos={vencimentos}
+        badges={{ onboarding: alertasOnboarding, riscos: riscosObrigacoes, escalonamento, vencimentos }}
       />
       <main id="conteudo" className="flex-1 bg-creme p-4 md:p-6">
         {children}

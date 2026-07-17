@@ -3,60 +3,23 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Papel } from "@/lib/tipos";
-import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
-import {
-  podeAtender,
-  podeAtenderSolicitacoes,
-  podeCriarCliente,
-  podeGerenciarVencimentos,
-} from "@/lib/clientes/permissoes";
+import { menuDoPapel, type Badges } from "@/lib/ui/navegacao";
 import { sair } from "@/app/login/actions";
 import { LogoSaldo } from "@/components/marca/LogoSaldo";
 
-export function Sidebar({
-  papel,
-  nome,
-  alertasOnboarding = 0,
-  riscosObrigacoes = 0,
-  escalonamento = 0,
-  vencimentos = 0,
-}: {
-  papel: Papel;
-  nome: string;
-  alertasOnboarding?: number;
-  riscosObrigacoes?: number;
-  escalonamento?: number;
-  vencimentos?: number;
-}) {
+export function Sidebar({ papel, nome, badges }: { papel: Papel; nome: string; badges: Badges }) {
   const pathname = usePathname();
   const [aberto, setAberto] = useState(false);
-  // Obrigações, Escalonamento e Vencimentos saíram do menu (agora vivem dentro de Clientes).
-  // Os alertas deles NÃO podem sumir junto: somam no badge de Clientes, e a sub-navegação de
-  // lá mostra cada número separado. Um alerta que ninguém vê é um alerta que não existe.
-  const alertasClientes =
-    (podeCriarCliente(papel) ? riscosObrigacoes + escalonamento : 0) +
-    (podeGerenciarVencimentos(papel) ? vencimentos : 0);
 
-  const itens: { href: string; label: string; badge?: number }[] = [
-    { href: "/", label: "Início" },
-    { href: "/clientes", label: "Clientes", badge: alertasClientes || undefined },
-    ...(podeCriarCliente(papel) ? [{ href: "/onboarding", label: "Onboarding", badge: alertasOnboarding }] : []),
-    ...(podeCriarCliente(papel) ? [{ href: "/legalizacao", label: "Legalização" }] : []),
-    ...(podeCriarCliente(papel) ? [{ href: "/comercial", label: "Comercial" }] : []),
-    { href: "/tarefas", label: "Tarefas" },
-    { href: "/timesheet", label: "Timesheet" },
-    ...(podeAtenderSolicitacoes(papel) ? [{ href: "/solicitacoes", label: "Solicitações" }] : []),
-    { href: "/comunicados", label: "Comunicados" },
-    ...(podeAtender(papel) ? [{ href: "/atendimento", label: "Atendimento" }] : []),
-    ...(podeGerenciarFinanceiro(papel) ? [{ href: "/financeiro/cadastros", label: "Financeiro" }] : []),
-    ...(["admin", "assistente"].includes(papel) ? [{ href: "/configuracoes", label: "Configurações" }] : []),
-  ];
-  // As rotas que saíram do menu continuam realçando a seção que agora as abriga —
-  // senão o usuário fica sem referência de "onde estou" ao entrar em Obrigações ou Usuários.
+  // Quem vê o quê é regra e vive em lib/ui/navegacao (puro, testado sem DOM). Aqui é só render.
+  const grupos = menuDoPapel(papel, badges);
+
+  // As rotas sem item próprio realçam a seção que as abriga — senão o usuário fica sem
+  // referência de "onde estou". Obrigações e Vencimentos saíram daqui: viraram itens.
   const FILHAS: Record<string, string[]> = {
-    "/clientes": ["/obrigacoes", "/vencimentos"],
+    "/clientes": ["/nfse/lote"],
     "/financeiro/cadastros": ["/financeiro"],
-    "/configuracoes": ["/integracoes", "/usuarios"],
+    "/configuracoes": ["/integracoes", "/usuarios", "/lgpd"],
   };
 
   const casa = (href: string) => {
@@ -66,33 +29,45 @@ export function Sidebar({
   };
 
   // Realça só o item mais específico (o href mais longo que casa com a rota atual).
-  const hrefAtivo = itens
-    .map((it) => it.href)
+  const hrefAtivo = grupos
+    .flatMap((g) => g.itens.map((i) => i.href))
     .filter(casa)
     .sort((a, b) => b.length - a.length)[0];
-  const ehAtivo = (href: string) => href === hrefAtivo;
 
   const nav = (
-    <nav aria-label="Navegação principal" className="flex flex-col gap-1 text-sm">
-      {itens.map((it) => {
-        const ativo = ehAtivo(it.href);
-        return (
-          <Link
-            key={it.href}
-            href={it.href}
-            aria-current={ativo ? "page" : undefined}
-            onClick={() => setAberto(false)}
-            className={`rounded-lg px-3 py-2 ${ativo ? "bg-verde font-medium text-white" : "text-texto-claro hover:bg-tinta-2"}`}
-          >
-            <span className="flex items-center justify-between gap-2">
-              {it.label}
-              {it.badge ? (
-                <span className="rounded-full bg-negativo px-1.5 text-[10px] font-semibold text-white">{it.badge}</span>
-              ) : null}
-            </span>
-          </Link>
-        );
-      })}
+    <nav aria-label="Navegação principal" className="flex flex-col gap-4 text-sm">
+      {grupos.map((g, i) => (
+        <div key={g.titulo ?? `solto-${i}`} className="flex flex-col gap-1">
+          {g.titulo && (
+            <p className="px-3 font-mono text-[10px] font-medium uppercase tracking-wider text-mono-muted">
+              {g.titulo}
+            </p>
+          )}
+          {g.itens.map((it) => {
+            const ativo = it.href === hrefAtivo;
+            return (
+              <Link
+                key={it.href}
+                href={it.href}
+                aria-current={ativo ? "page" : undefined}
+                onClick={() => setAberto(false)}
+                className={`rounded-lg px-3 py-2 transition-colors ${
+                  ativo ? "bg-verde font-medium text-white" : "text-texto-claro hover:bg-tinta-2"
+                }`}
+              >
+                <span className="flex items-center justify-between gap-2">
+                  {it.label}
+                  {it.badge ? (
+                    <span className="rounded-full bg-negativo px-1.5 text-[10px] font-semibold text-white">
+                      {it.badge}
+                    </span>
+                  ) : null}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      ))}
     </nav>
   );
 
