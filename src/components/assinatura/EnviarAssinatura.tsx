@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useActionState, useState } from "react";
 import { enviarAssinatura, type EstadoAssinatura } from "@/app/(app)/clientes/[id]/assinatura";
 
@@ -34,7 +35,7 @@ export function EnviarAssinatura({
         defaultValue={clienteNome}
         placeholder="Nome"
         required
-        className="w-full rounded border px-2 py-1"
+        className={`${controleCls("compacto")} w-full`}
       />
       <input
         name="contratante_email"
@@ -42,16 +43,16 @@ export function EnviarAssinatura({
         defaultValue={clienteEmail}
         placeholder="E-mail"
         required
-        className="w-full rounded border px-2 py-1"
+        className={`${controleCls("compacto")} w-full`}
       />
       <p className="font-medium">Representante do escritório (CONTRATADA)</p>
-      <input name="contratada_nome" placeholder="Nome" required className="w-full rounded border px-2 py-1" />
+      <input name="contratada_nome" placeholder="Nome" required className={`${controleCls("compacto")} w-full`} />
       <input
         name="contratada_email"
         type="email"
         placeholder="E-mail"
         required
-        className="w-full rounded border px-2 py-1"
+        className={`${controleCls("compacto")} w-full`}
       />
       <label className="flex items-center gap-2">
         <input
@@ -64,19 +65,19 @@ export function EnviarAssinatura({
       </label>
       {testemunhas && (
         <div className="space-y-2">
-          <input name="t1_nome" placeholder="Testemunha 1 — nome" className="w-full rounded border px-2 py-1" />
+          <input name="t1_nome" placeholder="Testemunha 1 — nome" className={`${controleCls("compacto")} w-full`} />
           <input
             name="t1_email"
             type="email"
             placeholder="Testemunha 1 — e-mail"
-            className="w-full rounded border px-2 py-1"
+            className={`${controleCls("compacto")} w-full`}
           />
-          <input name="t2_nome" placeholder="Testemunha 2 — nome" className="w-full rounded border px-2 py-1" />
+          <input name="t2_nome" placeholder="Testemunha 2 — nome" className={`${controleCls("compacto")} w-full`} />
           <input
             name="t2_email"
             type="email"
             placeholder="Testemunha 2 — e-mail"
-            className="w-full rounded border px-2 py-1"
+            className={`${controleCls("compacto")} w-full`}
           />
         </div>
       )}

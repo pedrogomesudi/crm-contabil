@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { Badge } from "@/components/ui/Badge";
 import { badgeStatusTitulo } from "@/lib/ui/apresentacao";
 import { useState, useTransition } from "react";
@@ -59,8 +60,8 @@ export function ContasPagar({
           ))}
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <input name="descricao" placeholder="Descrição" required className="rounded border border-linha p-2" />
-          <select name="fornecedor_id" required className="rounded border border-linha p-2">
+          <input name="descricao" placeholder="Descrição" required className={controleCls()} />
+          <select name="fornecedor_id" required className={controleCls()}>
             <option value="">Fornecedor…</option>
             {fornecedores.map((f) => (
               <option key={f.id} value={f.id}>
@@ -68,7 +69,7 @@ export function ContasPagar({
               </option>
             ))}
           </select>
-          <select name="categoria_id" className="rounded border border-linha p-2">
+          <select name="categoria_id" className={controleCls()}>
             <option value="">Categoria (despesa)…</option>
             {categorias.map((c) => (
               <option key={c.id} value={c.id}>
@@ -76,16 +77,9 @@ export function ContasPagar({
               </option>
             ))}
           </select>
-          <input
-            name="valor"
-            type="number"
-            step="0.01"
-            placeholder="Valor total"
-            required
-            className="rounded border border-linha p-2"
-          />
+          <input name="valor" type="number" step="0.01" placeholder="Valor total" required className={controleCls()} />
           {modo !== "recorrente" ? (
-            <input name="vencimento" type="date" required className="rounded border border-linha p-2" />
+            <input name="vencimento" type="date" required className={controleCls()} />
           ) : (
             <input
               name="dia_vencimento"
@@ -94,7 +88,7 @@ export function ContasPagar({
               max={28}
               placeholder="Dia venc. (1–28)"
               required
-              className="rounded border border-linha p-2"
+              className={controleCls()}
             />
           )}
           {modo === "parcelada" && (
@@ -104,7 +98,7 @@ export function ContasPagar({
               min={2}
               placeholder="Nº de parcelas"
               required
-              className="rounded border border-linha p-2"
+              className={controleCls()}
             />
           )}
         </div>
@@ -208,10 +202,10 @@ export function ContasPagar({
               step="0.01"
               placeholder="Valor pago"
               required
-              className="rounded border border-linha p-2"
+              className={controleCls()}
             />
-            <input name="data_recebimento" type="date" required className="rounded border border-linha p-2" />
-            <select name="conta_bancaria_id" required className="rounded border border-linha p-2">
+            <input name="data_recebimento" type="date" required className={controleCls()} />
+            <select name="conta_bancaria_id" required className={controleCls()}>
               <option value="">Conta de saída…</option>
               {contas.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -219,7 +213,7 @@ export function ContasPagar({
                 </option>
               ))}
             </select>
-            <select name="forma_pagamento" required className="rounded border border-linha p-2">
+            <select name="forma_pagamento" required className={controleCls()}>
               {["PIX", "BOLETO", "CARTAO", "TRANSFERENCIA", "DINHEIRO"].map((f) => (
                 <option key={f} value={f}>
                   {f}

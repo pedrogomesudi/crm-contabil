@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useActionState } from "react";
 import { gerarContrato, type EstadoContrato } from "@/app/(app)/clientes/[id]/contrato";
 
@@ -11,7 +12,7 @@ export function GerarContrato({ clienteId, hoje }: { clienteId: string; hoje: st
       <form action={formAction} className="flex flex-wrap items-end gap-3">
         <label className="text-sm">
           <span className="block text-cinza">Início da vigência</span>
-          <input type="date" name="vigencia_inicio" defaultValue={hoje} required className="rounded border px-3 py-2" />
+          <input type="date" name="vigencia_inicio" defaultValue={hoje} required className={controleCls()} />
         </label>
         <button
           type="submit"
