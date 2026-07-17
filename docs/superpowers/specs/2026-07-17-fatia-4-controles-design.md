@@ -22,7 +22,7 @@ O registro dizia **"~10 cópias divergentes"**, depois corrigido para **28**. O 
 | **B** | 14 | **Compacto** (`px-2 py-1.5`) — kanban, linha de tabela, grade | Não |
 | **C** | 17 | `rounded` (4px) em vez de `rounded-lg` (8px) | **Sim** |
 | **D** | 9 | `border` **sem cor** → `currentColor` (8 em `EnviarAssinatura.tsx`) | **Sim** |
-| **E** | 10 | Padding em **atalho** (`p-2`, `p-1`, `px-2` sem `py`) — não mapeia limpo | **Sim, decisão caso a caso** |
+| **E** | 10 | Padding em **atalho** (`p-2`, `p-1`, `px-2` sem `py`) — não mapeia limpo | **Sim** — decidido caso a caso (abaixo) |
 | — | 13 | Checkbox, upload escondido, campo sem caixa | Não é o assunto |
 
 17 + 14 + 17 + 9 + 10 + 13 = **80**.
@@ -116,19 +116,19 @@ herda uma decisão que ninguém tomou.
 - **C** (17) → `controleCls`. **Canto de 4px vira 8px.**
 - **D** (9) → `controleCls`. **A borda ganha `border-linha`.** Hoje é `currentColor` (herda a cor do
   texto) — provavelmente já está errado na tela e ninguém reparou. **Confirmar na execução, não presumir.**
-- **E** (10) → **decisão caso a caso; é o único grupo que o script não toca.** São paddings em atalho que
-  não caem num degrau:
+- **E** (10) → **o único grupo que o script não toca: cada caso foi decidido olhando a tela.** São
+  paddings em atalho que não caem num degrau. **Decidido pelo Pedro em 17/07:**
 
-  | Onde | Hoje | A decisão |
-  |---|---|---|
-  | `ContratosSection` (4×) | `p-2` (8px nos quatro lados) | Fica entre os degraus: `px-3 py-2` (padrão) ou `px-2 py-1.5` (compacto)? |
-  | `ContratosSection:88` | `w-16 p-1` | Campo minúsculo de quantidade — nenhum degrau serve; **pode ser exceção declarada**. |
-  | `vencimentos` (2× `<select>`) | `px-2`, **sem `py`** | Não tem padding vertical: a altura vem do `<select>` nativo. Qualquer degrau **muda a altura da linha** do filtro. |
-  | `whatsapp/Formularios` (3×) | `p-2` + `w-full` + `focus` | O mais próximo do padrão; provável `controleCls()` + `w-full`. |
+  | Onde | Hoje | Vira | Por quê |
+  |---|---|---|---|
+  | `ContratosSection` (4×) | `p-2` | `controleCls("compacto")` | Form embutido e denso de propósito (`grid-cols-2 gap-2`, rótulo `text-xs`). `p-2`=8px → 8px/6px: **quase idêntico**. O padrão faria os campos crescerem dentro de um bloco apertado. |
+  | `ContratosSection:88` (mês do 13º) | `w-16 p-1` | `controleCls("compacto")` + `w-16` | Mantém a largura; o padding vai de 4px para 8px/6px e passa a **alinhar com o texto do rótulo ao lado**. Sem exceção a manter. |
+  | `vencimentos` (2× `<select>`) | `px-2`, **sem `py`** | `controleCls()` (padrão) | **Não é risco, é conserto.** Eles vivem numa barra `flex` com o campo "Buscar cliente", que já é `px-3 py-2`. Hoje os três têm regras de altura diferentes — o select sem `py` depende do controle nativo. O padrão os alinha. |
+  | `whatsapp/Formularios` (3×) | `p-2 w-full focus` | `controleCls()` + `w-full` | Já é o padrão em tudo menos no atalho do padding; o `w-full` já está declarado. |
 
   > **Estes 10 são a razão de esta fatia ter spec própria.** Os outros 70 são transformação mecânica;
-  > estes exigem olhar a tela e decidir. O `vencimentos` é o mais delicado — mexer no padding vertical de
-  > um filtro em barra muda a altura de tudo ao redor.
+  > estes exigiram abrir a tela. E abrir a tela achou um defeito que ninguém tinha visto: a barra de
+  > filtros do `/vencimentos` **já está desalinhada hoje**.
 
 ## Verificação
 
@@ -139,8 +139,9 @@ herda uma decisão que ninguém tomou.
 - **Sabotagem com formas não desenhadas.** Na fatia 3, sabotar com o que eu tinha em mente deixou passar
   3 furos: o guard provou pegar o que foi escrito, não o que promete.
 - **Não-regressão:** 691 testes; `lint`, `typecheck`, `build`, `format:check`.
-- **Visual:** o Pedro confere as famílias **C**, **D** e **E** — são as que mudam. A **E** ele decide
-  antes, caso a caso; as outras ele só confere depois.
+- **Visual:** o Pedro confere as famílias **C**, **D** e **E** — são as que mudam. A **E** ele já decidiu
+  caso a caso (tabela acima); as três ele confere depois de prontas. Atenção especial à barra de filtros
+  do `/vencimentos`: é a única mudança de altura desta fatia, e é a que corrige um desalinhamento atual.
 
 ## Fora de escopo
 
