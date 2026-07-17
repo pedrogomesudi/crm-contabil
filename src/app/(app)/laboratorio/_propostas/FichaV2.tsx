@@ -2,6 +2,7 @@ import { Container } from "@/components/ui/Container";
 import { Secao } from "@/components/ui/Secao";
 import { Abas } from "@/components/ui/Abas";
 import { Badge } from "@/components/ui/Badge";
+import { Voltar } from "@/components/ui/Voltar";
 import { formatarDocumento } from "@/lib/format";
 import { CLIENTE_FICTICIO } from "../_dados";
 
@@ -20,6 +21,10 @@ export function FichaV2({ aba }: { aba: string }) {
   return (
     <Container>
       <div className="space-y-4">
+        {/* A ficha de hoje não tem saída: ela só linka para o onboarding, e quem entra por
+            um link de outro módulo fica sem caminho de volta para a lista. */}
+        <Voltar href="/clientes" label="Clientes" />
+
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <h1 className="font-display text-2xl font-bold tracking-tight text-texto">
@@ -30,6 +35,8 @@ export function FichaV2({ aba }: { aba: string }) {
           <p className="font-mono text-xs text-cinza-claro">{formatarDocumento(CLIENTE_FICTICIO.cpf_cnpj)}</p>
         </div>
 
+        {/* As abas ficam fora do conteúdo condicional de propósito: são a régua de navegação
+            da ficha e não podem sumir ao trocar de aba. */}
         <Abas itens={ABAS} ativa={aba} base="/laboratorio" param="aba" />
 
         {aba === "cadastro" && (
