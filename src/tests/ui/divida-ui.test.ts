@@ -39,8 +39,12 @@ const fonte = (p: string) => semComentarios(readFileSync(p, "utf8"));
 describe("o amber não volta", () => {
   // 53 classes, 9 shades, 24 arquivos — para 3 papéis, todos cobertos por 4 tokens de marca:
   // atencao, atencao-fundo, atencao-borda, atencao-solido.
+  //
+  // Qualquer `amber-<n>`, sem lista de prefixos. A primeira versão listava bg|text|border|... e
+  // deixava passar divide-, outline-, accent-, decoration-, shadow-, caret-, placeholder-. Uma
+  // allowlist de prefixos só cobre os usos que já existiam — e a dívida entra pelo uso novo.
   it("nenhuma classe amber do Tailwind em (app)/** ou components/**", () => {
-    const infratores = ESCOPO.filter((p) => /\b(bg|text|border|ring|fill|stroke|from|to|via)-amber-\d/.test(fonte(p)));
+    const infratores = ESCOPO.filter((p) => /\bamber-\d/.test(fonte(p)));
     expect(infratores.map(rel)).toEqual([]);
   });
 });
@@ -68,12 +72,23 @@ describe("o <main> não se duplica", () => {
 });
 
 describe("a régua é o Container, não o max-w solto", () => {
-  // Só as duas larguras que o Container possui. Um max-w genérico (max-w-2xl na folha impressa,
-  // max-w-[85%] no balão de conversa, max-w-full num <audio>) não é régua de tela e não entra
-  // aqui — proibir tudo transformaria o teste em ruído, e teste ruidoso é teste desligado.
-  it("max-w-[720px] e max-w-[1280px] só existem dentro de components/ui/", () => {
-    const infratores = ESCOPO.filter((p) => !rel(p).startsWith("src/components/ui/")).filter((p) =>
-      /max-w-\[(720|1280)px\]/.test(fonte(p)),
+  const foraDoUi = () => ESCOPO.filter((p) => !rel(p).startsWith("src/components/ui/"));
+
+  // Um max-w genérico NÃO é régua e não entra aqui: max-w-2xl na folha impressa, max-w-[85%] no
+  // balão de conversa, max-w-full num <audio>. Proibir todo max-w viraria ruído, e teste ruidoso
+  // é teste desligado. As duas regras abaixo pegam régua pela forma, não pelo prefixo.
+  it("as larguras fixas do Container (720/1280) só existem dentro de components/ui/", () => {
+    const infratores = foraDoUi().filter((p) => /max-w-\[(720|1280)px\]/.test(fonte(p)));
+    expect(infratores.map(rel)).toEqual([]);
+  });
+
+  // A terceira régua é `larga` (max-w-full), e o max-w-full genérico é comum demais para ser
+  // proibido — o que a denuncia é o par com mx-auto: centrar E limitar é o trabalho do Container.
+  // Um <audio className="max-w-full"> não centra nada. Sem isto, a única régua que voltava calada
+  // era justo a das 5 telas migradas para largura="larga".
+  it("nenhum `mx-auto` + `max-w-full` solto fora de components/ui/", () => {
+    const infratores = foraDoUi().filter((p) =>
+      /class(Name)?="[^"]*\b(mx-auto\b[^"]*\bmax-w-full|max-w-full\b[^"]*\bmx-auto)\b[^"]*"/.test(fonte(p)),
     );
     expect(infratores.map(rel)).toEqual([]);
   });
@@ -89,8 +104,11 @@ describe("só existe um jeito de voltar", () => {
     "src/app/(app)/tarefas/Calendario.tsx": "mês anterior (faz par com o 'seguinte →')",
   };
 
+  // A entidade HTML conta: &larr; desenha o mesmo pixel e é a mesma dívida.
+  const SETA = /←|&larr;/;
+
   it("nenhum ← em (app)/** ou components/**, exceto as setas de direção declaradas", () => {
-    const infratores = ESCOPO.filter((p) => fonte(p).includes("←"))
+    const infratores = ESCOPO.filter((p) => SETA.test(fonte(p)))
       .map(rel)
       .filter((p) => !(p in SETA_NAO_E_VOLTAR));
     expect(infratores).toEqual([]);
@@ -98,7 +116,7 @@ describe("só existe um jeito de voltar", () => {
 
   it("as setas de direção declaradas continuam existindo (a lista não vira ficção)", () => {
     for (const p of Object.keys(SETA_NAO_E_VOLTAR)) {
-      expect(fonte(resolve(process.cwd(), p))).toContain("←");
+      expect(fonte(resolve(process.cwd(), p))).toMatch(SETA);
     }
   });
 });

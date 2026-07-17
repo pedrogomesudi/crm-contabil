@@ -3,6 +3,16 @@
 > **Para executores:** implemente tarefa a tarefa. Cada tarefa termina com verificação e commit.
 > Spec: `docs/superpowers/specs/2026-07-17-divida-ui-fatia-3-design.md`.
 
+> **Executado. Dois números deste plano estavam errados, e ficam como estão** — o plano é registro do
+> que se planejou, não do que se achou. O que a execução mediu:
+>
+> - **61 `<main>`, não 62.** O `FormCliente.tsx` só cita `<main>` num comentário; o grep do plano contou
+>   a prosa como elemento. (O teste da Tarefa 4 caiu na mesma armadilha e passou a ignorar comentários.)
+> - **18 links "← voltar", não 22.** Quatro das setas contadas não são voltar: são direção (mover card de
+>   etapa ×2, paginar período, paginar mês). Trocá-las teria sido bug, não limpeza.
+>
+> O saldo real está no `CHANGELOG.md` e no `docs/design/saldo-ui.md`.
+
 **Objetivo:** fechar o brand kit (53 `amber` → tokens), matar o `<main>` aninhado de 62 telas migrando-as
 ao `Container`, e deixar um só padrão de voltar — com um teste que impede as três dívidas de voltarem.
 

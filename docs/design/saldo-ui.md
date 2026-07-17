@@ -51,8 +51,15 @@ tokens de atenção que a fatia 3 criou:
   — só a cor informa, então vale a WCAG 1.4.11 (3:1). Ele dá **3.52** sobre branco. O primeiro valor
   escolhido a olho (`#c88a04`) dava 2.96 e teria **reprovado**; o `amber-500` que ele substituiu dava 2.15.
 - `atencao-borda` (`#e8d5a8`) é hairline (**1.31** sobre o fundo de aviso) **de propósito**: é a convenção
-  do sistema (`border-linha` dá 1.27) e ela nunca informa sozinha — a caixa de aviso já tem fundo e texto
-  próprios. Elevá-la a 3:1 seria criar uma exceção visual e chamar isso de acessibilidade.
+  do sistema (`border-linha` dá 1.27) e em 3 dos seus 4 usos ela é contorno de caixa que já tem fundo e
+  texto próprios — não informa sozinha. Elevá-la a 3:1 ali seria criar uma exceção visual e chamar isso
+  de acessibilidade.
+- **A exceção, registrada:** no `AcoesExclusaoCliente` o `atencao-borda` é o **único contorno** do botão
+  "Restaurar" (sem fill, sem sombra) — ali 1.4.11 se aplicaria, e 1.31 não passa. Não é regressão desta
+  fatia (o `amber-400` dava 1.61: também reprovava), e não é caso isolado: **todo botão secundário do
+  sistema** é assim (`border-negativo/40` dá 1.76, `border-linha` 1.27) — o que identifica esses botões é
+  o **texto** (5.38), não a borda. Consertar só o amber deixaria a família inconsistente sem resolver
+  nada. É dívida da família de botões, não do token: fica para uma fatia que trate os quatro juntos.
 
 ## Formulário: 12 colunas, span pela natureza do dado
 
