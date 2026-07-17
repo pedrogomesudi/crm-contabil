@@ -51,7 +51,9 @@ export function Sidebar({ papel, nome, badges }: { papel: Papel; nome: string; b
                 href={it.href}
                 aria-current={ativo ? "page" : undefined}
                 onClick={() => setAberto(false)}
-                className={`rounded-lg px-3 py-2 transition-colors ${
+                // pl-7: os itens recuam sob o título do grupo, que fica na margem. O realce
+                // (bg) continua ocupando a linha inteira — quem recua é o texto, não a faixa.
+                className={`rounded-lg py-2 pl-7 pr-3 transition-colors ${
                   ativo ? "bg-verde font-medium text-white" : "text-texto-claro hover:bg-tinta-2"
                 }`}
               >

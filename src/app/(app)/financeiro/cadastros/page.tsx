@@ -31,7 +31,10 @@ export default async function CadastrosHubPage() {
     <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <Voltar href="/" />
       <PageHeader titulo="Financeiro" subtitulo="Painéis, movimentações e cadastros do escritório" />
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {/* auto-rows-fr: todas as linhas do grid com a MESMA altura. Sem isso, a linha que tem
+          um rótulo de duas linhas ("Reajuste anual de honorários") fica mais alta que as
+          outras, e o grid vira uma escada. O h-full abaixo estica o card até a linha. */}
+      <ul className="grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {ITENS.map((i) => (
           <li key={i.href}>
             {/* h-full: sem isso o card cresce quando o rótulo quebra em duas linhas ("Reajuste
