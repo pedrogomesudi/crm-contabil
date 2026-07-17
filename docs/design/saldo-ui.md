@@ -103,11 +103,40 @@ O projeto **não usa `tailwind-merge`**: entre duas classes concorrentes, quem v
 do CSS, não a ordem da string. Por isso `Secao` tem `padding={false}` (card full-bleed, tabela colada na
 borda) e `nivel={2|3}` (árvore de headings, WCAG 1.3.1) — e não se sobrescreve `p-5` por `className`.
 
+> Não é teórico: a fatia 4 achou 3 campos do `HonorarioForm` com `w-32`/`w-48` que **nunca valeram** — o
+> `w-full` do token saía depois no CSS e vencia. O campo dizia "128px" e ocupava a linha inteira. Por isso
+> o degrau de tamanho é **argumento** (`controleCls("compacto")`), não classe extra: `px-2` vs `px-3` são
+> concorrentes, e o `className` perderia de forma imprevisível.
+
+## Controle: dois degraus, e a largura não é dele
+
+`controleCls(tamanho)` — `padrao` (`px-3 py-2`) e `compacto` (`px-2 py-1.5`). Diferem **só no padding**; o
+resto (`rounded-lg border border-linha bg-white text-sm text-texto placeholder:text-cinza-claro
+focus:border-verde`) é idêntico.
+
+- **Compacto** é para contexto denso: kanban, linha de tabela, grade embutida, form dentro de painel.
+- **Nenhum dos dois carrega largura.** Quem precisa declara `w-full` (ou deixa o `FormGrid` resolver). O
+  `inputCls` antigo carregava `w-full` — misturava "como se parece" com "quanto ocupa", e era por isso que
+  **quase metade dos controles do sistema não podia usá-lo** e copiava a string alterada. Deu 6 famílias.
+- **`bg-white` não é enfeite.** O preflight do Tailwind força `background-color: transparent` em
+  `input`/`select`/`textarea` (`preflight.css`), anulando o padrão do navegador. Sem ele o controle mostra
+  o creme da página — foi o que aconteceu com dezenas de controles compactos, transparentes sem ninguém
+  notar.
+- **`border` sem cor vira `currentColor`.** O Tailwind 4 não põe `border-color` default no preflight, então
+  um controle com `border` mas sem `border-linha` herda a cor do texto. Sempre usar o token.
+
+> **Os controles ainda são crus.** `<Input>`/`<Select>`/`<Textarea>` existem desde a fatia 1 e tinham
+> **zero uso em produção** — o app tem ~190 `<input>` à mão. Migrar é a **fatia 5**. O
+> `divida-ui.test.ts` garante que o controle cru usa o token (borda inline ou em `const`); não garante que
+> deveria ser cru. As exceções nomeadas: a célula de planilha do `GradeOrcamento` e o campo de busca
+> (`rounded-xl` com ícone).
+
 ## Blocos de construção
 
 - **Base (V8.1):** `LogoSaldo`, `Card`, `Botao` (primario/secundario/fantasma/perigo), `Badge` (neutro/positivo/atencao/negativo/ia), `PageHeader`, `StatCard`.
 - **Ampliados (V8.2a):** `Campo` (label + controle + erro/hint), `Input`/`Select`/`Textarea`, `Painel` (contêiner de tabela/lista), `Chip` (filtro), `Toolbar` (busca + filtros), `EmptyState`, `Iniciais` (avatar de texto).
-- **Layout (fatia 1 do redesign):** `Container` (a régua), `FormGrid`/`FormCampo` (12 colunas), `Secao` (bloco titulado, com `padding` e `nivel`), `Abas` (estado na URL). `inputCls` é a **fonte única** da classe dos controles — era a mesma string copiada em 4 arquivos.
+- **Layout (fatia 1 do redesign):** `Container` (a régua), `FormGrid`/`FormCampo` (12 colunas), `Secao` (bloco titulado, com `padding` e `nivel`), `Abas` (estado na URL).
+- **Controle (fatia 4):** `controleCls(tamanho)` é a fonte única da aparência do controle — ver a seção acima. Substituiu o `inputCls`, que era a mesma string copiada (medida real: **6 famílias**, ~159 controles à mão).
 - **Helpers:** `iniciais(nome)`, `badgeRegime(regime)`, `corValorStat(variante)` — puros, em `src/lib/ui/`.
 
 ## Regras de re-skin (mapa de tokens)

@@ -8,6 +8,33 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Controles de formulário — fatia 4 do redesign:** o `inputCls` respondia a duas perguntas ao mesmo
+  tempo — *como o controle se parece* e *quanto ele ocupa* — e a segunda é do contexto. Era por isso que
+  quase metade dos controles do sistema não podia usá-lo: copiavam a string e a alteravam. A medição real
+  achou **6 famílias** e ~159 controles com a classe à mão (o registro original estimava "~10 cópias").
+  Agora é `controleCls(tamanho)`, com dois degraus (`padrao` e `compacto`, diferindo só no padding) e
+  **sem largura** — quem precisa declara. Um teste trava a dívida, pegando a borda escrita à mão tanto
+  inline quanto extraída para uma `const`.
+  O **compacto** virou degrau oficial: existe em dezenas de lugares (kanban, grade, linha de tabela, form
+  dentro de painel) por necessidade, não por descuido — negar isso é o que produziria a sétima família.
+
+### Corrigido
+
+- **3 campos do `HonorarioForm` tinham largura que nunca valia:** "dia de vencimento", "qtd. de
+  funcionários" e "honorário mensal" declaravam `w-32`/`w-48`, mas o `w-full` do token saía depois no CSS
+  e vencia — os campos ocupavam a linha inteira. Sem o `w-full` no token, a largura pretendida (128/192px)
+  finalmente se aplica.
+- **Dezenas de controles compactos estavam transparentes:** o preflight do Tailwind força
+  `background-color: transparent` em `input`/`select`/`textarea`, e a família compacta não declarava
+  `bg-white` — mostrava o creme da página. Agora são brancos, como o resto.
+- **As bordas dos 8 campos de envio para assinatura herdavam a cor do texto:** usavam `border` sem
+  `border-linha`, e o Tailwind 4 não põe cor de borda padrão — a borda caía em `currentColor` (escura).
+  Agora usam o token.
+- **A barra de filtros de `/vencimentos` estava desalinhada:** os 2 `<select>` usavam `px-2` **sem
+  padding vertical** (a altura vinha do controle nativo) ao lado de um input `px-3 py-2` na mesma barra.
+
 ## [6.6.0] — 2026-07-17
 
 O **redesign do layout**, nas três fatias. As fatias 1 e 2 já haviam ido para o `main` e estavam no ar
