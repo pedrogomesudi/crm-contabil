@@ -8,6 +8,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.7.0] — 2026-07-17
+
+Fatia 4 do redesign: os controles de formulário. `controleCls(tamanho)` no lugar do `inputCls`.
+
 ### Adicionado
 
 - **Controles de formulário — fatia 4 do redesign:** o `inputCls` respondia a duas perguntas ao mesmo
