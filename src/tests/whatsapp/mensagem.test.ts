@@ -34,6 +34,35 @@ describe("normalizarTelefone", () => {
   });
 });
 
+describe("normalizarTelefone — internacional", () => {
+  it("DDI explícito monta ddi + número", () => {
+    expect(normalizarTelefone("555 123 4567", "1")).toBe("15551234567"); // EUA
+    expect(normalizarTelefone("912 345 678", "351")).toBe("351912345678"); // Portugal
+  });
+  it("sem DDI, assume 55 (comportamento atual)", () => {
+    expect(normalizarTelefone("(34) 99999-8888")).toBe("5534999998888");
+  });
+  it("número que JÁ vem com 55 e comprimento BR é respeitado (compat)", () => {
+    expect(normalizarTelefone("5534999998888", "55")).toBe("5534999998888");
+  });
+  it("número curto/absurdo → null", () => {
+    expect(normalizarTelefone("123", "1")).toBeNull();
+    expect(normalizarTelefone("", "1")).toBeNull();
+  });
+});
+
+describe("chaveTelefone — só o BR ganha o nono dígito", () => {
+  it("EUA (DDI 1) não insere o 9", () => {
+    expect(chaveTelefone("5551234567", "1")).toBe("15551234567");
+  });
+  it("Portugal (DDI 351) não insere o 9", () => {
+    expect(chaveTelefone("912345678", "351")).toBe("351912345678");
+  });
+  it("BR sem DDI continua ganhando o 9 (não-regressão)", () => {
+    expect(chaveTelefone("(34) 8840-3020")).toBe("5534988403020");
+  });
+});
+
 describe("aplicarTemplate", () => {
   it("substitui variáveis; ausente vira vazio", () => {
     expect(aplicarTemplate("Olá {nome}, {valor}", { nome: "ACME", valor: "R$ 10" })).toBe("Olá ACME, R$ 10");
