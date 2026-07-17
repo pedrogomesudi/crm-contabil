@@ -8,6 +8,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.8.0] — 2026-07-17
+
+Telefone internacional: o cadastro de clientes ganha um campo de DDI, e o envio de WhatsApp passa a
+funcionar fora do Brasil.
+
 ### Adicionado
 
 - **Telefone internacional (DDI no cadastro):** o envio de WhatsApp era hardcoded para o Brasil — o DDI
