@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -241,7 +242,7 @@ export function QuadroComercial({
               <input
                 value={form.input.prospectNome}
                 onChange={(e) => setForm({ ...form, input: { ...form.input, prospectNome: e.target.value } })}
-                className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                className={`${controleCls("compacto")} mt-0.5 w-full`}
               />
             </label>
             <div className="flex gap-2">
@@ -250,7 +251,7 @@ export function QuadroComercial({
                 <input
                   value={form.input.contatoNome ?? ""}
                   onChange={(e) => setForm({ ...form, input: { ...form.input, contatoNome: e.target.value || null } })}
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
               </label>
               <label className="flex-1 text-xs text-cinza">
@@ -260,7 +261,7 @@ export function QuadroComercial({
                   onChange={(e) =>
                     setForm({ ...form, input: { ...form.input, contatoTelefone: e.target.value || null } })
                   }
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
               </label>
             </div>
@@ -270,7 +271,7 @@ export function QuadroComercial({
                 <input
                   value={form.input.contatoEmail ?? ""}
                   onChange={(e) => setForm({ ...form, input: { ...form.input, contatoEmail: e.target.value || null } })}
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
               </label>
               <label className="w-32 text-xs text-cinza">
@@ -284,7 +285,7 @@ export function QuadroComercial({
                       input: { ...form.input, valorEstimado: e.target.value === "" ? null : Number(e.target.value) },
                     })
                   }
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
               </label>
             </div>
@@ -294,7 +295,7 @@ export function QuadroComercial({
                 <input
                   value={form.input.origem ?? ""}
                   onChange={(e) => setForm({ ...form, input: { ...form.input, origem: e.target.value || null } })}
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
               </label>
               <label className="flex-1 text-xs text-cinza">
@@ -304,7 +305,7 @@ export function QuadroComercial({
                   onChange={(e) =>
                     setForm({ ...form, input: { ...form.input, servicoInteresse: e.target.value || null } })
                   }
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
               </label>
             </div>
@@ -313,7 +314,7 @@ export function QuadroComercial({
               <select
                 value={form.input.responsavelId ?? ""}
                 onChange={(e) => setForm({ ...form, input: { ...form.input, responsavelId: e.target.value || null } })}
-                className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                className={`${controleCls("compacto")} mt-0.5 w-full`}
               >
                 <option value="">—</option>
                 {usuarios.map((u) => (
@@ -329,7 +330,7 @@ export function QuadroComercial({
                 value={form.input.observacoes ?? ""}
                 onChange={(e) => setForm({ ...form, input: { ...form.input, observacoes: e.target.value || null } })}
                 rows={2}
-                className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                className={`${controleCls("compacto")} mt-0.5 w-full`}
               />
             </label>
             <div className="flex justify-end gap-2 pt-1">

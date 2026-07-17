@@ -178,7 +178,7 @@ export function PainelTarefas({
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
           placeholder="Nova tarefa…"
-          className="flex-1 rounded-lg border border-linha px-3 py-2 text-sm"
+          className={`${controleCls()} flex-1`}
         />
         <button
           disabled={ocupado || !titulo.trim()}

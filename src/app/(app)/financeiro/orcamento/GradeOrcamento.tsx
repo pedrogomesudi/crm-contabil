@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { listarOrcamento, salvarOrcamento, type CategoriaOrc } from "./actions";
 import { achatarValores, somaLinha, somaColuna, type MapaValores } from "@/lib/financeiro/orcamento";
@@ -139,7 +140,7 @@ export function GradeOrcamento({
             value={ano}
             onChange={(e) => trocarAno(Number(e.target.value))}
             disabled={ocupado}
-            className="ml-2 rounded-lg border border-linha bg-white px-2 py-1 text-sm"
+            className={`${controleCls("compacto")} ml-2`}
           >
             {anos.map((a) => (
               <option key={a} value={a}>

@@ -1,9 +1,10 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ativarEmpresa } from "@/app/(app)/clientes/constituicao-actions";
 
-const input = "mt-0.5 w-full rounded-lg border border-linha bg-white px-2 py-1.5 text-sm text-texto";
+const input = `${controleCls("compacto")} mt-0.5 w-full`;
 
 export function AtivarEmpresa({ clienteId, regimeAtual }: { clienteId: string; regimeAtual: string }) {
   const router = useRouter();

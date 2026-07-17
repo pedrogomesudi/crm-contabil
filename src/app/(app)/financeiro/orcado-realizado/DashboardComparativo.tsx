@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { dashboardOrcadoRealizado, type BaseRegime } from "./actions";
 import type { Comparativo, CategoriaRef, TipoPeriodo, LinhaComparativo } from "@/lib/financeiro/orcado-realizado";
@@ -81,7 +82,7 @@ export function DashboardComparativo({
           value={ano}
           onChange={(e) => recarregar({ ano: Number(e.target.value) })}
           disabled={carregando}
-          className="rounded-lg border border-linha bg-white px-2 py-1.5 text-sm"
+          className={controleCls("compacto")}
         >
           {anos.map((a) => (
             <option key={a} value={a}>
@@ -107,7 +108,7 @@ export function DashboardComparativo({
             value={indice}
             onChange={(e) => recarregar({ indice: Number(e.target.value) })}
             disabled={carregando}
-            className="rounded-lg border border-linha bg-white px-2 py-1.5 text-sm"
+            className={controleCls("compacto")}
           >
             {idxOpts.map((o) => (
               <option key={o.valor} value={o.valor}>

@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { ETAPAS_ATIVAS } from "@/lib/comercial/funil";
 import { periodoBounds, metricasFunil, type Granularidade } from "@/lib/comercial/metricas";
@@ -53,7 +54,7 @@ export function MetricasFunil({ oportunidades, hoje }: { oportunidades: Oportuni
               setGran(e.target.value as Granularidade);
               setOffset(0);
             }}
-            className="rounded-lg border border-linha px-2 py-1 text-sm"
+            className={controleCls("compacto")}
           >
             {GRANS.map((g) => (
               <option key={g.v} value={g.v}>

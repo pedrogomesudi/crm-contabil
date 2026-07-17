@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -95,7 +96,7 @@ export function HorasDaTarefa({
           value={duracao}
           onChange={(e) => setDuracao(e.target.value)}
           placeholder="1h30"
-          className="w-24 rounded-lg border border-linha px-2 py-1.5 text-sm"
+          className={`${controleCls("compacto")} w-24`}
         />
         <button
           onClick={apontar}

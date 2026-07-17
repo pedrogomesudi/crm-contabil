@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useRef, useState } from "react";
 import PizZip from "pizzip";
 import {
@@ -134,7 +135,7 @@ export function BaixarNotasZip() {
               setTotal(null);
               setFalhas([]);
             }}
-            className="ml-2 rounded-lg border border-linha bg-white px-3 py-1.5 text-sm text-texto focus:border-verde"
+            className={`${controleCls()} ml-2`}
           />
         </label>
         <Botao variante="secundario" onClick={contar} disabled={!competencia || ocupado}>

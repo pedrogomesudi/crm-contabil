@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { formatarMoeda } from "@/lib/format";
 import { BotaoExportar } from "@/components/ui/BotaoExportar";
@@ -112,11 +113,7 @@ export function FluxoCaixaView({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2 print:hidden">
-        <select
-          value={ano}
-          onChange={(e) => trocarAno(Number(e.target.value))}
-          className="rounded-lg border border-linha px-2 py-1 text-sm"
-        >
+        <select value={ano} onChange={(e) => trocarAno(Number(e.target.value))} className={controleCls("compacto")}>
           {anos.map((a) => (
             <option key={a} value={a}>
               {a}

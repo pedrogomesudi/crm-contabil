@@ -129,7 +129,7 @@ export function Atendimento({
           onChange={(e) => setCorpo(e.target.value)}
           rows={3}
           placeholder="Responder…"
-          className="flex-1 rounded-lg border border-linha px-2 py-1.5 text-sm"
+          className={`${controleCls("compacto")} flex-1`}
         />
         <button
           disabled={pendente || !corpo.trim()}

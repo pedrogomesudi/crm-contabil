@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useEffect, useState, useTransition, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
@@ -238,7 +239,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
               value={buscaCliente}
               onChange={(e) => setBuscaCliente(e.target.value)}
               placeholder="Buscar cliente cadastrado…"
-              className="w-full rounded-lg border border-linha bg-white px-3 py-2 focus:border-verde"
+              className={`${controleCls()} w-full`}
             />
             {clientesFiltrados.length > 0 && (
               <div className="max-h-40 overflow-y-auto rounded-lg border border-linha bg-white">
@@ -262,13 +263,13 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
               value={novoTel}
               onChange={(e) => setNovoTel(e.target.value)}
               placeholder="Telefone com DDD"
-              className="w-full rounded-lg border border-linha bg-white px-3 py-2 focus:border-verde"
+              className={`${controleCls()} w-full`}
             />
             <input
               value={novoTexto}
               onChange={(e) => setNovoTexto(e.target.value)}
               placeholder="Mensagem"
-              className="w-full rounded-lg border border-linha bg-white px-3 py-2 focus:border-verde"
+              className={`${controleCls()} w-full`}
             />
             {erroNova && <p className="text-xs text-negativo">{erroNova}</p>}
             <div className="flex gap-2">
@@ -297,7 +298,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar conversa ou telefone"
-            className="w-full rounded-lg border border-linha bg-white px-3 py-2 text-sm focus:border-verde"
+            className={`${controleCls()} w-full`}
           />
         </div>
 
@@ -413,7 +414,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
                   aria-label="Status da conversa"
                   value={convAtiva?.status ?? "aberta"}
                   onChange={(e) => mudarStatus(e.target.value as StatusConversa)}
-                  className="rounded-lg border border-linha bg-white px-2 py-1 text-xs text-texto focus:border-verde"
+                  className={`${controleCls("compacto")} text-xs`}
                 >
                   <option value="aberta">Aberta</option>
                   <option value="pendente">Pendente</option>
@@ -423,7 +424,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
                   aria-label="Atendente"
                   value={convAtiva?.atendenteId ?? ""}
                   onChange={(e) => mudarAtendente(e.target.value)}
-                  className="max-w-[10rem] rounded-lg border border-linha bg-white px-2 py-1 text-xs text-texto focus:border-verde"
+                  className={`${controleCls("compacto")} max-w-[10rem] text-xs`}
                 >
                   <option value="">Não atribuído</option>
                   {atendentes.map((a) => (

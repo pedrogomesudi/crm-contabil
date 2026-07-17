@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { formatarMoeda } from "@/lib/format";
 import { relatorioDRE } from "./dre-actions";
@@ -112,7 +113,7 @@ export function RelatorioDRE({
     setCarregando(false);
   }
 
-  const sel = "rounded-lg border border-linha px-2 py-1 text-sm";
+  const sel = controleCls("compacto");
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2 print:hidden">

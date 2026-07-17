@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { definirResponsavel } from "@/app/(app)/clientes/[id]/responsaveis-actions";
@@ -39,7 +40,7 @@ export function ResponsaveisDepartamento({
                 disabled={ocupado}
                 defaultValue={atuais[d.valor] ?? ""}
                 onChange={(e) => mudar(d.valor, e.target.value)}
-                className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm text-texto"
+                className={`${controleCls("compacto")} mt-0.5 block w-full`}
               >
                 <option value="">— sem responsável</option>
                 {colaboradores.map((c) => (

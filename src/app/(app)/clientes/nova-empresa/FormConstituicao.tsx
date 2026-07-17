@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { criarEmpresaConstituicao } from "../constituicao-actions";
 import { controleCls } from "@/components/ui/Campo";
 
-const input = "mt-0.5 w-full rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto";
+const input = `${controleCls()} mt-0.5 w-full`;
 type Socio = { nome: string; cpf: string; participacao: string; papelSocietario: "administrador" | "quotista" };
 
 export function FormConstituicao({
@@ -140,24 +140,24 @@ export function FormConstituicao({
               value={s.nome}
               onChange={(e) => setSocio(i, { nome: e.target.value })}
               placeholder="Nome"
-              className="flex-1 rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} flex-1`}
             />
             <input
               value={s.cpf}
               onChange={(e) => setSocio(i, { cpf: e.target.value })}
               placeholder="CPF"
-              className="w-36 rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} w-36`}
             />
             <input
               value={s.participacao}
               onChange={(e) => setSocio(i, { participacao: e.target.value })}
               placeholder="%"
-              className="w-20 rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} w-20`}
             />
             <select
               value={s.papelSocietario}
               onChange={(e) => setSocio(i, { papelSocietario: e.target.value as Socio["papelSocietario"] })}
-              className="rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={controleCls("compacto")}
             >
               <option value="administrador">Administrador</option>
               <option value="quotista">Quotista</option>

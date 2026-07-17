@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,7 +67,7 @@ export function ModelosLista({ modelos }: { modelos: ModeloView[] }) {
           <select
             value={tipo}
             onChange={(e) => setTipo(e.target.value)}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block`}
           >
             {LEGALIZACAO_TIPOS.map((t) => (
               <option key={t.valor} value={t.valor}>
@@ -80,7 +81,7 @@ export function ModelosLista({ modelos }: { modelos: ModeloView[] }) {
           <input
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block w-full`}
           />
         </label>
         <button

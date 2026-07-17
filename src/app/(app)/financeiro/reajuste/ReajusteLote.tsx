@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { simularReajuste, aplicarReajusteLote } from "./actions";
 import type { LinhaReajuste } from "@/lib/reajuste/simulacao";
@@ -63,7 +64,7 @@ export function ReajusteLote() {
             value={ano}
             onChange={(e) => setAno(e.target.value.replace(/\D/g, "").slice(0, 4))}
             placeholder="2027"
-            className="ml-2 w-24 rounded-lg border border-linha px-3 py-1.5 text-sm"
+            className={`${controleCls()} ml-2 w-24`}
           />
         </label>
         <button

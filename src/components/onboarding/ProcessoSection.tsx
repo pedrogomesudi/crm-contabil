@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -189,7 +190,7 @@ export function ProcessoSection({
                 <select
                   value={templateId}
                   onChange={(e) => setTemplateId(e.target.value)}
-                  className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 block`}
                 >
                   {templates.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -204,7 +205,7 @@ export function ProcessoSection({
                   type="date"
                   value={dataInicio}
                   onChange={(e) => setDataInicio(e.target.value)}
-                  className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 block`}
                 />
               </label>
               <label className="text-xs text-cinza">
@@ -212,7 +213,7 @@ export function ProcessoSection({
                 <select
                   value={perfil}
                   onChange={(e) => setPerfil(e.target.value as PerfilCliente)}
-                  className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 block`}
                 >
                   {PERFIS.map((p) => (
                     <option key={p.v} value={p.v}>
@@ -383,7 +384,7 @@ export function ProcessoSection({
                             }),
                           )
                         }
-                        className="rounded border border-linha px-1.5 py-0.5 text-xs"
+                        className={`${controleCls("compacto")} text-xs`}
                       />
                     </div>
                   )}
@@ -475,7 +476,7 @@ export function ProcessoSection({
               <input
                 value={form.titulo ?? ""}
                 onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-                className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                className={`${controleCls("compacto")} mt-0.5 w-full`}
               />
             </label>
             <div className="flex gap-2">
@@ -484,7 +485,7 @@ export function ProcessoSection({
                 <select
                   value={form.tipo ?? "padrao"}
                   onChange={(e) => setForm({ ...form, tipo: e.target.value as "padrao" | "acesso" })}
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 >
                   <option value="padrao">Padrão</option>
                   <option value="acesso">Acesso (cofre)</option>
@@ -495,7 +496,7 @@ export function ProcessoSection({
                 <select
                   value={form.responsavelId ?? ""}
                   onChange={(e) => setForm({ ...form, responsavelId: e.target.value || null })}
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 >
                   <option value="">—</option>
                   {usuarios.map((u) => (
@@ -513,7 +514,7 @@ export function ProcessoSection({
                   type="date"
                   value={form.prazo ?? ""}
                   onChange={(e) => setForm({ ...form, prazo: e.target.value || null })}
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
               </label>
               <label className="flex items-end gap-1 text-xs text-cinza">
@@ -532,7 +533,7 @@ export function ProcessoSection({
                   type="month"
                   value={form.valorDestino ?? ""}
                   onChange={(e) => setForm({ ...form, valorDestino: e.target.value || null })}
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
               </label>
             )}
@@ -542,7 +543,7 @@ export function ProcessoSection({
                 value={form.observacao ?? ""}
                 onChange={(e) => setForm({ ...form, observacao: e.target.value })}
                 rows={2}
-                className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                className={`${controleCls("compacto")} mt-0.5 w-full`}
               />
             </label>
             {form.tipo === "acesso" && (
@@ -552,7 +553,7 @@ export function ProcessoSection({
                   <input
                     value={form.acessoUrl ?? ""}
                     onChange={(e) => setForm({ ...form, acessoUrl: e.target.value || null })}
-                    className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                    className={`${controleCls("compacto")} mt-0.5 w-full`}
                   />
                 </label>
                 <label className="block text-xs text-cinza">
@@ -560,7 +561,7 @@ export function ProcessoSection({
                   <input
                     value={form.acessoLogin ?? ""}
                     onChange={(e) => setForm({ ...form, acessoLogin: e.target.value || null })}
-                    className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                    className={`${controleCls("compacto")} mt-0.5 w-full`}
                   />
                 </label>
                 <label className="block text-xs text-cinza">
@@ -569,7 +570,7 @@ export function ProcessoSection({
                     type="password"
                     value={form.novaSenha ?? ""}
                     onChange={(e) => setForm({ ...form, novaSenha: e.target.value })}
-                    className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                    className={`${controleCls("compacto")} mt-0.5 w-full`}
                   />
                 </label>
               </div>

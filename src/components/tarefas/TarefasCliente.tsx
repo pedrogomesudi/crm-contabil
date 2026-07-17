@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -67,7 +68,7 @@ export function TarefasCliente({ clienteId, tarefas }: { clienteId: string; tare
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
           placeholder="Nova tarefa para este cliente…"
-          className="flex-1 rounded-lg border border-linha px-2 py-1.5 text-sm"
+          className={`${controleCls("compacto")} flex-1`}
         />
         <button
           disabled={ocupado || !titulo.trim()}

@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { BotaoExportar } from "@/components/ui/BotaoExportar";
 import type { RelatorioExportavel } from "@/lib/exportar/tipos";
@@ -56,7 +57,7 @@ export function RelatorioConformidade({
         <select
           value={mes}
           onChange={(e) => recarregar(ano, Number(e.target.value))}
-          className="rounded-lg border border-linha px-2 py-1 text-sm"
+          className={controleCls("compacto")}
         >
           <option value={0}>Ano inteiro</option>
           {MES.map((m, i) => (
@@ -68,7 +69,7 @@ export function RelatorioConformidade({
         <select
           value={ano}
           onChange={(e) => recarregar(Number(e.target.value), mes)}
-          className="rounded-lg border border-linha px-2 py-1 text-sm"
+          className={controleCls("compacto")}
         >
           {anos.map((a) => (
             <option key={a} value={a}>

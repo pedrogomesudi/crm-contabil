@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useRef, useState } from "react";
 import { listarNotasParaEnvio, enviarNotaWhatsapp } from "@/app/(app)/nfse/lote/envio";
 import { preSelecionadas } from "@/lib/whatsapp/notas-envio";
@@ -100,7 +101,7 @@ export function EnviarNotasWhatsapp() {
               setNotas(null);
               setFalhas([]);
             }}
-            className="ml-2 rounded-lg border border-linha bg-white px-3 py-1.5 text-sm text-texto focus:border-verde"
+            className={`${controleCls()} ml-2`}
           />
         </label>
         <Botao variante="secundario" onClick={verificar} disabled={!competencia || carregando || enviando}>
@@ -134,7 +135,7 @@ export function EnviarNotasWhatsapp() {
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
                   placeholder="Buscar por razão social…"
-                  className="flex-1 rounded-lg border border-linha bg-white px-3 py-1.5 text-sm focus:border-verde"
+                  className={`${controleCls()} flex-1`}
                 />
                 <button onClick={() => selecionarVisiveis(true)} className="text-xs text-cinza underline">
                   Selecionar todas
