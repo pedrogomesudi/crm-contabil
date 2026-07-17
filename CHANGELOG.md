@@ -8,6 +8,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Atendimento em tempo real:** as mensagens do WhatsApp passam a aparecer no **instante** em que
+  chegam (Supabase Realtime), em vez de esperar o polling — que era de 4s na conversa aberta e 15s na
+  lista. A conversa aberta e a lista reagem na hora; o polling continua como rede de segurança, agora a
+  30s, para o caso de o WebSocket cair. A RLS existente protege a assinatura: um contador não recebe, em
+  tempo real, mensagem de cliente que não é dele.
+
 ## [6.8.0] — 2026-07-17
 
 Telefone internacional: o cadastro de clientes ganha um campo de DDI, e o envio de WhatsApp passa a
