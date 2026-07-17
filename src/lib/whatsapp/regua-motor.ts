@@ -87,7 +87,7 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
   const { data: titulos } = await admin
     .from("titulo")
     .select(
-      "id, valor, vencimento, cliente_id, clientes(razao_social, telefone, email, clientes_financeiro(cobranca_whatsapp, cobranca_email)), baixa(valor_recebido, estornada)",
+      "id, valor, vencimento, cliente_id, clientes(razao_social, telefone, telefone_ddi, email, clientes_financeiro(cobranca_whatsapp, cobranca_email)), baixa(valor_recebido, estornada)",
     )
     .eq("tipo", "RECEBER")
     .in("status", ["ABERTO", "BAIXADO_PARCIAL"]);
@@ -107,6 +107,7 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
     const cl = (Array.isArray(t.clientes) ? t.clientes[0] : t.clientes) as {
       razao_social?: string;
       telefone?: string;
+      telefone_ddi?: string;
       email?: string;
       clientes_financeiro?:
         | { cobranca_whatsapp?: boolean; cobranca_email?: boolean }
@@ -127,7 +128,7 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
     const emailCliente = (cl?.email ?? "").trim();
     const estado: EstadoCanal = {
       whatsappConfigurado: Boolean(zapi),
-      telefone: normalizarTelefone(cl?.telefone ?? ""),
+      telefone: normalizarTelefone(cl?.telefone ?? "", cl?.telefone_ddi ?? "55"),
       optOutWhatsapp: fin?.cobranca_whatsapp === false,
       emailFallbackLigado,
       emailConfigurado,

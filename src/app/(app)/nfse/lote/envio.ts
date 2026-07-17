@@ -40,7 +40,7 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
   const { data: nota } = await admin
     .from("nfse")
     .select(
-      "id, cliente_id, valor, competencia, chave_acesso, ambiente, emitente, clientes(razao_social, responsavel_nome, telefone, clientes_financeiro(cobranca_whatsapp, dia_vencimento))",
+      "id, cliente_id, valor, competencia, chave_acesso, ambiente, emitente, clientes(razao_social, responsavel_nome, telefone, telefone_ddi, clientes_financeiro(cobranca_whatsapp, dia_vencimento))",
     )
     .eq("id", nfseId)
     .maybeSingle();
@@ -49,6 +49,7 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
         razao_social?: string;
         responsavel_nome?: string | null;
         telefone?: string;
+        telefone_ddi?: string;
         clientes_financeiro?:
           | { cobranca_whatsapp?: boolean; dia_vencimento?: number | null }
           | { cobranca_whatsapp?: boolean; dia_vencimento?: number | null }[];
@@ -58,7 +59,7 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
   if (!nota) return { status: "erro", motivo: "Nota não encontrada.", razaoSocial };
   const fin = Array.isArray(cl?.clientes_financeiro) ? cl?.clientes_financeiro[0] : cl?.clientes_financeiro;
   if (fin?.cobranca_whatsapp === false) return { status: "pulado", motivo: "Sem cobrança WhatsApp.", razaoSocial };
-  const tel = normalizarTelefone(cl?.telefone ?? "");
+  const tel = normalizarTelefone(cl?.telefone ?? "", cl?.telefone_ddi ?? "55");
   if (!tel) return { status: "pulado", motivo: "Cliente sem telefone.", razaoSocial };
 
   // Sem bloqueio de reenvio: a seleção do usuário é a intenção. O selo "já enviada" e a

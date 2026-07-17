@@ -60,7 +60,7 @@ async function carregarAlvos(filtro: Filtro): Promise<ClienteAlvo[]> {
   const { data } = await supabase
     .from("clientes")
     .select(
-      "id, razao_social, email, telefone, cpf_cnpj, regime_tributario, tipo_pessoa, status, endereco, contador_id, aceita_comunicados",
+      "id, razao_social, email, telefone, telefone_ddi, cpf_cnpj, regime_tributario, tipo_pessoa, status, endereco, contador_id, aceita_comunicados",
     )
     .is("excluido_em", null)
     .limit(2000);
@@ -72,6 +72,7 @@ async function carregarAlvos(filtro: Filtro): Promise<ClienteAlvo[]> {
       razaoSocial: (c.razao_social as string) ?? "—",
       email: (c.email as string | null) ?? null,
       telefone: (c.telefone as string | null) ?? null,
+      telefoneDdi: (c.telefone_ddi as string | null) ?? null,
       cpfCnpj: (c.cpf_cnpj as string | null) ?? null,
       regime: (c.regime_tributario as string | null) ?? null,
       tipo: c.tipo_pessoa as string,
@@ -198,7 +199,7 @@ export async function dispararComunicado(
       ok = r.ok;
       if (!r.ok) msgErro = r.erro;
     } else {
-      const tel = normalizarTelefone(c.telefone ?? "");
+      const tel = normalizarTelefone(c.telefone ?? "", c.telefoneDdi ?? "55");
       para = tel ?? (c.telefone as string);
       if (!tel || !zapi) {
         msgErro = "Telefone inválido.";

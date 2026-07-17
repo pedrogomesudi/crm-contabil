@@ -16,6 +16,7 @@ export type ClienteAlvo = {
   razaoSocial: string;
   email: string | null;
   telefone: string | null;
+  telefoneDdi: string | null;
   cpfCnpj: string | null;
   regime: string | null;
   tipo: string;
