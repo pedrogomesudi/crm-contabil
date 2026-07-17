@@ -46,11 +46,22 @@ import { listarInstancias } from "@/app/(app)/obrigacoes/actions";
 import { podeGerenciarMatriz } from "@/lib/obrigacoes/permissoes";
 import { listarContratos } from "./contratos";
 import { atualizarCliente } from "../actions";
+import { Container } from "@/components/ui/Container";
+import { Abas } from "@/components/ui/Abas";
+import { Badge } from "@/components/ui/Badge";
+import { Voltar } from "@/components/ui/Voltar";
 
 export const metadata = { title: "Cliente" };
 
-export default async function FichaClientePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function FichaClientePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ aba?: string }>;
+}) {
   const { id } = await params;
+  const { aba: abaPedida } = await searchParams;
   const supabase = await createServerSupabase();
 
   const perfil = await getPerfilAtual();
@@ -201,114 +212,154 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
     : [];
 
   const emConstituicao = cliente.status === "em_constituicao";
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+
+  // As 19 seções desciam numa coluna só — scroll infinito, e com três larguras brigando
+  // entre si. Agora vivem em 5 abas por afinidade, com o estado na URL (?aba=fiscal), então
+  // link direto e botão voltar continuam funcionando. Nenhuma seção sumiu, e cada gate de
+  // permissão é o mesmo de antes: quem não podia ver, continua não vendo.
+  const ABAS = [
+    { chave: "cadastro", rotulo: "Cadastro" },
+    ...(mostrarHonorario ? [{ chave: "financeiro", rotulo: "Financeiro" }] : []),
+    { chave: "fiscal", rotulo: "Fiscal" },
+    { chave: "documentos", rotulo: "Documentos" },
+    { chave: "relacao", rotulo: "Relação" },
+  ];
+  // O Abas já cai na primeira quando a chave não existe; aqui a mesma regra decide o que renderizar.
+  const aba = abaPedida && ABAS.some((a) => a.chave === abaPedida) ? abaPedida : "cadastro";
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <h1 className="font-display text-2xl font-bold tracking-tight text-texto">{cliente.razao_social}</h1>
-        {emConstituicao && (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-            Em constituição
-          </span>
+    <Container>
+      <div className="space-y-4">
+        <Voltar href="/clientes" label="Clientes" />
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-texto">{cliente.razao_social}</h1>
+            {emConstituicao && <Badge variante="atencao">Em constituição</Badge>}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {podeCriarCliente(papel) && (
+              <Link href={`/onboarding/${id}`} className="text-sm text-verde underline">
+                Abrir onboarding
+              </Link>
+            )}
+            {["admin", "assistente"].includes(papel) &&
+              String(cliente.cpf_cnpj ?? "").replace(/\D/g, "").length === 14 && (
+                <BotaoAtualizarReceita cpfCnpj={cliente.cpf_cnpj} />
+              )}
+          </div>
+        </div>
+
+        {(cliente as { competencia_inicial: string | null }).competencia_inicial && (
+          <p className="text-sm text-cinza">
+            Competência inicial: {(cliente as { competencia_inicial: string }).competencia_inicial.slice(5, 7)}/
+            {(cliente as { competencia_inicial: string }).competencia_inicial.slice(0, 4)}
+          </p>
+        )}
+
+        <Abas itens={ABAS} ativa={aba} base={`/clientes/${id}`} />
+
+        {aba === "cadastro" && (
+          <div className="space-y-4">
+            {emConstituicao && <AtivarEmpresa clienteId={id} regimeAtual={cliente.regime_tributario as string} />}
+            <FormCliente
+              key={cliente.atualizado_em}
+              action={atualizarCliente.bind(null, id)}
+              contadores={contadores}
+              cliente={cliente as ClienteDefaults}
+              modo="editar"
+              contadorEditavel={contadorEditavel}
+            />
+            {podeCriarCliente(papel) && (
+              <LegalizacaoSection
+                clienteId={id}
+                processos={processosLeg}
+                modelos={(modelosLeg ?? []).map((m) => ({ id: m.id as string, nome: m.nome as string }))}
+                podeGerenciar={podeLegalizacao}
+                hoje={hoje}
+              />
+            )}
+            {podeExcluirCliente(papel) && (
+              <AcoesExclusaoCliente
+                clienteId={id}
+                excluidoEm={(cliente as { excluido_em: string | null }).excluido_em}
+              />
+            )}
+          </div>
+        )}
+
+        {aba === "financeiro" && mostrarHonorario && (
+          <div className="space-y-4">
+            <HonorarioForm clienteId={id} valorAtual={valorHonorario} extensao={extensaoFinanceira} />
+            <LinhaTempoVigencias clienteId={id} papel={papel} />
+            <ContratosSection clienteId={id} contratos={contratos} />
+            <section className="rounded-lg border border-linha bg-white p-4">
+              <OptOutCobranca
+                clienteId={id}
+                whatsapp={cobrancaWhatsapp}
+                email={cobrancaEmail}
+                comunicados={cliente.aceita_comunicados !== false}
+              />
+            </section>
+          </div>
+        )}
+
+        {aba === "fiscal" && (
+          <div className="space-y-4">
+            {podeCriarCliente(papel) && (
+              <ObrigacoesCliente
+                clienteId={id}
+                ano={anoObrigacoes}
+                mes={mesObrigacoes}
+                instancias={obrigacoesDoMes}
+                podeGerar={podeGerenciarMatriz(papel)}
+              />
+            )}
+            <NotasFiscaisSection clienteId={id} papel={papel} />
+            <EmissaoClienteSection clienteId={id} papel={papel} />
+            <VencimentosSection clienteId={id} papel={papel} />
+          </div>
+        )}
+
+        {aba === "documentos" && (
+          <div className="space-y-4">
+            <DocumentosSection
+              clienteId={id}
+              papel={papel}
+              clienteNome={cliente.responsavel_nome ?? cliente.razao_social}
+              clienteEmail={cliente.email ?? ""}
+            />
+            {mostrarHonorario && <GerarContrato clienteId={id} hoje={hoje} />}
+            {papel === "admin" && <LgpdCliente clienteId={id} />}
+          </div>
+        )}
+
+        {aba === "relacao" && (
+          <div className="space-y-4">
+            <EmailsCliente
+              clienteId={id}
+              emailCliente={cliente.email ?? ""}
+              variaveis={variaveisEmail}
+              templates={templatesEmail}
+              anexaveis={anexaveis}
+              emails={emails}
+              podeEnviar={podeEnviarEmail(papel)}
+            />
+            <TarefasCliente clienteId={id} tarefas={tarefasCliente} />
+            <ProcessosSop clienteId={id} modelos={modelosSop} processos={processosSop} hoje={hoje} />
+            {podeCriarCliente(papel) && (
+              <ResponsaveisDepartamento
+                clienteId={id}
+                colaboradores={colaboradores}
+                atuais={atuaisResp}
+                editavel={respEditavel}
+              />
+            )}
+            {gerenciaPortal && <PortalCliente clienteId={id} acessos={acessosPortal} />}
+          </div>
         )}
       </div>
-      {emConstituicao && <AtivarEmpresa clienteId={id} regimeAtual={cliente.regime_tributario as string} />}
-      {(cliente as { competencia_inicial: string | null }).competencia_inicial && (
-        <p className="-mt-4 text-sm text-cinza">
-          Competência inicial: {(cliente as { competencia_inicial: string }).competencia_inicial.slice(5, 7)}/
-          {(cliente as { competencia_inicial: string }).competencia_inicial.slice(0, 4)}
-        </p>
-      )}
-      {podeCriarCliente(papel) && (
-        <Link href={`/onboarding/${id}`} className="text-sm text-verde underline">
-          Abrir onboarding
-        </Link>
-      )}
-      {podeExcluirCliente(papel) && (
-        <AcoesExclusaoCliente clienteId={id} excluidoEm={(cliente as { excluido_em: string | null }).excluido_em} />
-      )}
-      {["admin", "assistente"].includes(papel) && String(cliente.cpf_cnpj ?? "").replace(/\D/g, "").length === 14 && (
-        <BotaoAtualizarReceita cpfCnpj={cliente.cpf_cnpj} />
-      )}
-      <FormCliente
-        key={cliente.atualizado_em}
-        action={atualizarCliente.bind(null, id)}
-        contadores={contadores}
-        cliente={cliente as ClienteDefaults}
-        modo="editar"
-        contadorEditavel={contadorEditavel}
-      />
-      {mostrarHonorario && <HonorarioForm clienteId={id} valorAtual={valorHonorario} extensao={extensaoFinanceira} />}
-      {mostrarHonorario && <LinhaTempoVigencias clienteId={id} papel={papel} />}
-      {mostrarHonorario && <ContratosSection clienteId={id} contratos={contratos} />}
-      {mostrarHonorario && (
-        <section className="rounded-lg border border-linha bg-white p-4">
-          <OptOutCobranca
-            clienteId={id}
-            whatsapp={cobrancaWhatsapp}
-            email={cobrancaEmail}
-            comunicados={cliente.aceita_comunicados !== false}
-          />
-        </section>
-      )}
-      {mostrarHonorario && (
-        <GerarContrato
-          clienteId={id}
-          hoje={new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })}
-        />
-      )}
-      <DocumentosSection
-        clienteId={id}
-        papel={papel}
-        clienteNome={cliente.responsavel_nome ?? cliente.razao_social}
-        clienteEmail={cliente.email ?? ""}
-      />
-      <EmailsCliente
-        clienteId={id}
-        emailCliente={cliente.email ?? ""}
-        variaveis={variaveisEmail}
-        templates={templatesEmail}
-        anexaveis={anexaveis}
-        emails={emails}
-        podeEnviar={podeEnviarEmail(papel)}
-      />
-      {papel === "admin" && <LgpdCliente clienteId={id} />}
-      <NotasFiscaisSection clienteId={id} papel={papel} />
-      <EmissaoClienteSection clienteId={id} papel={papel} />
-      {podeCriarCliente(papel) && (
-        <ObrigacoesCliente
-          clienteId={id}
-          ano={anoObrigacoes}
-          mes={mesObrigacoes}
-          instancias={obrigacoesDoMes}
-          podeGerar={podeGerenciarMatriz(papel)}
-        />
-      )}
-      <VencimentosSection clienteId={id} papel={papel} />
-      {podeCriarCliente(papel) && (
-        <ResponsaveisDepartamento
-          clienteId={id}
-          colaboradores={colaboradores}
-          atuais={atuaisResp}
-          editavel={respEditavel}
-        />
-      )}
-      {podeCriarCliente(papel) && (
-        <LegalizacaoSection
-          clienteId={id}
-          processos={processosLeg}
-          modelos={(modelosLeg ?? []).map((m) => ({ id: m.id as string, nome: m.nome as string }))}
-          podeGerenciar={podeLegalizacao}
-          hoje={new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })}
-        />
-      )}
-      <TarefasCliente clienteId={id} tarefas={tarefasCliente} />
-      <ProcessosSop
-        clienteId={id}
-        modelos={modelosSop}
-        processos={processosSop}
-        hoje={new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })}
-      />
-      {gerenciaPortal && <PortalCliente clienteId={id} acessos={acessosPortal} />}
-    </div>
+    </Container>
   );
 }
