@@ -8,6 +8,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Telefone internacional (DDI no cadastro):** o envio de WhatsApp era hardcoded para o Brasil — o DDI
+  `55` era chutado em qualquer número, e um telefone estrangeiro virava "55" + número inexistente. Agora o
+  cadastro tem um campo **DDI** (padrão `+55`) antes do telefone, guardado na coluna nova `telefone_ddi`.
+  `normalizarTelefone`/`chaveTelefone` recebem o país; o nono dígito brasileiro roda só quando o número
+  começa com `55`. Todo cliente brasileiro segue idêntico (o default é `55`), e o casamento de conversa no
+  atendimento passa a concatenar o DDI do cliente.
+
+### Notas
+
+- Normalização de dígitos específica de cada país (o "nono dígito" de outros países etc.) fica de fora —
+  para os primeiros clientes internacionais, informar o número completo basta. Iniciar conversa **avulsa**
+  com internacional pelo Inbox também exige digitar o número completo (o Inbox não tem campo de DDI).
+
 ## [6.7.0] — 2026-07-17
 
 Fatia 4 do redesign: os controles de formulário. `controleCls(tamanho)` no lugar do `inputCls`.
