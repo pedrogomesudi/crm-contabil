@@ -17,6 +17,7 @@ import {
   listarClientesParaConversa,
   type DadosContato,
 } from "./actions";
+import { useRealtimeAtendimento } from "@/lib/whatsapp/useRealtimeAtendimento";
 import {
   filtrarConversas,
   contadores,
@@ -89,21 +90,31 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
       setConversas(await listarConversas());
     });
 
-  // Lista de conversas: poll lento (15s) — contadores/prévia não precisam ser instantâneos.
-  useEffect(() => {
-    const id = setInterval(() => {
-      start(async () => setConversas(await listarConversas()));
-    }, 15000);
-    return () => clearInterval(id);
-  }, []);
+  // Tempo real: mensagem nova aparece na hora (Supabase Realtime). A lista faz refetch leve,
+  // com debounce para não refazer a cada mensagem de uma rajada.
+  const debounceLista = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useRealtimeAtendimento({
+    telefoneAtivo: ativa,
+    onMensagemNaConversa: (msg) => setMsgs((m) => (m.some((x) => x.id === msg.id) ? m : [...m, msg])),
+    onListaMudou: () => {
+      if (debounceLista.current) clearTimeout(debounceLista.current);
+      debounceLista.current = setTimeout(() => {
+        start(async () => {
+          setConversas(await listarConversas());
+          if (ativa) setMsgs(await abrirConversa(ativa));
+        });
+      }, 1000);
+    },
+  });
 
-  // Thread aberta: poll rápido (4s) — o entregue/lido (que chega quase instantâneo do Z-API)
-  // aparece logo, sem "pular" a fase de entregue.
+  // Rede de segurança: se o WebSocket cair, um refetch a cada 30s ressincroniza.
   useEffect(() => {
-    if (!ativa) return;
     const id = setInterval(() => {
-      start(async () => setMsgs(await abrirConversa(ativa)));
-    }, 4000);
+      start(async () => {
+        setConversas(await listarConversas());
+        if (ativa) setMsgs(await abrirConversa(ativa));
+      });
+    }, 30000);
     return () => clearInterval(id);
   }, [ativa]);
 
