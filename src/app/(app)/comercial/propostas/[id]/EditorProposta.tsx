@@ -6,6 +6,7 @@ import { salvarProposta, definirStatusProposta, type PropostaView, type Proposta
 import { gerarDocumentoProposta } from "./gerar-actions";
 import { totaisProposta, type ItemRecorrencia } from "@/lib/comercial/proposta";
 import { Botao } from "@/components/ui/Botao";
+import { Voltar } from "@/components/ui/Voltar";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 type Linha = { descricao: string; valor: number; recorrencia: ItemRecorrencia };
@@ -82,9 +83,7 @@ export function EditorProposta({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link href={`/comercial/propostas?op=${proposta.oportunidadeId}`} className="text-sm text-verde underline">
-          ← Propostas
-        </Link>
+        <Voltar href={`/comercial/propostas?op=${proposta.oportunidadeId}`} label="Propostas" />
         <div className="flex items-center gap-3">
           <Link href={`/comercial/propostas/${proposta.id}/documento`} className="text-sm text-verde underline">
             Ver documento

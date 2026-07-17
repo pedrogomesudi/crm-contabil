@@ -1,5 +1,4 @@
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -8,6 +7,7 @@ import { urlLogoAtual } from "@/app/(app)/configuracoes/marca/actions";
 import { DocumentoProposta } from "./DocumentoProposta";
 import { ImprimirBtn } from "./ImprimirBtn";
 import { obterProposta } from "../../../propostas-actions";
+import { Voltar } from "@/components/ui/Voltar";
 
 export default async function DocumentoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -35,9 +35,7 @@ export default async function DocumentoPage({ params }: { params: Promise<{ id: 
     // o layout. O que muda é só o landmark: o <main> do layout continua sendo o único.
     <div className="min-h-screen bg-white p-4">
       <div className="mx-auto mb-3 flex max-w-2xl items-center justify-between print:hidden">
-        <Link href={`/comercial/propostas/${id}`} className="text-sm text-verde underline">
-          ← Editar
-        </Link>
+        <Voltar href={`/comercial/propostas/${id}`} label="Editar" />
         <ImprimirBtn />
       </div>
       <DocumentoProposta proposta={proposta} hoje={hoje} marca={marca} logoUrl={logoUrl} />

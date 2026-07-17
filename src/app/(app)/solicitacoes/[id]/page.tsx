@@ -1,6 +1,5 @@
 import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { listarColaboradores } from "@/lib/clientes/colaboradores";
@@ -8,6 +7,7 @@ import { podeAtenderSolicitacoes } from "@/lib/clientes/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { rotuloCategoria, type SolicitacaoCategoria, type SolicitacaoStatus } from "@/lib/solicitacoes/solicitacao";
 import { Atendimento } from "./Atendimento";
+import { Voltar } from "@/components/ui/Voltar";
 
 const dataBR = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "—");
 
@@ -54,9 +54,7 @@ export default async function SolicitacaoPage({ params }: { params: Promise<{ id
 
   return (
     <Container largura="estreita" className="space-y-5 p-4">
-      <Link href="/solicitacoes" className="text-sm text-verde underline">
-        ← Solicitações
-      </Link>
+      <Voltar href="/solicitacoes" label="Solicitações" />
       <PageHeader
         titulo={`#${String(s.numero)} — ${s.assunto as string}`}
         subtitulo={`${(cliente?.razao_social as string) ?? "—"} · ${rotuloCategoria(s.categoria as SolicitacaoCategoria)} · prazo ${dataBR(s.prazo as string | null)}`}

@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
 import { ETAPAS_ATIVAS } from "@/lib/comercial/funil";
 import { periodoBounds, metricasFunil, type Granularidade } from "@/lib/comercial/metricas";
 import type { OportunidadeView } from "./actions";
+import { Voltar } from "@/components/ui/Voltar";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const GRANS: { v: Granularidade; l: string }[] = [
@@ -22,9 +22,7 @@ export function MetricasFunil({ oportunidades, hoje }: { oportunidades: Oportuni
 
   return (
     <div className="space-y-5">
-      <Link href="/comercial" className="text-sm text-verde underline">
-        ← Funil
-      </Link>
+      <Voltar href="/comercial" label="Funil" />
 
       <section className="space-y-2">
         <h2 className="font-display text-sm font-semibold text-texto">Pipeline atual</h2>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { criarProposta, excluirProposta, type PropostaResumo } from "../propostas-actions";
 import { Botao } from "@/components/ui/Botao";
+import { Voltar } from "@/components/ui/Voltar";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const ROTULO: Record<string, string> = {
@@ -43,9 +44,7 @@ export function PropostasLista({
 
   return (
     <div className="space-y-3">
-      <Link href="/comercial" className="text-sm text-verde underline">
-        ← Funil
-      </Link>
+      <Voltar href="/comercial" label="Funil" />
       <div className="flex items-center justify-between">
         <p className="text-sm text-cinza">
           Prospect: <span className="font-medium text-texto">{prospectNome}</span>

@@ -1,11 +1,11 @@
 import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { listarTratamentos, listarSolicitacoes } from "./actions";
 import { PainelLgpd } from "./PainelLgpd";
+import { Voltar } from "@/components/ui/Voltar";
 
 export const metadata = { title: "LGPD" };
 
@@ -24,9 +24,7 @@ export default async function LgpdPage() {
 
   return (
     <Container largura="estreita" className="space-y-5 p-4">
-      <Link href="/configuracoes" className="text-sm text-verde underline">
-        ← Configurações
-      </Link>
+      <Voltar href="/configuracoes" label="Configurações" />
       <PageHeader titulo="LGPD" subtitulo="Tratamentos, consentimento, retenção e direitos do titular" />
       <PainelLgpd
         tratamentos={tratamentos as never}

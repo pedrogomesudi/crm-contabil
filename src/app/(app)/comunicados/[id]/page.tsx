@@ -6,6 +6,7 @@ import { podeGerenciarTarefas, podeGerenciarTemplatesEmail } from "@/lib/cliente
 import { PageHeader } from "@/components/ui/PageHeader";
 import { detalheComunicado } from "../actions";
 import { Reenviar } from "./Reenviar";
+import { Voltar } from "@/components/ui/Voltar";
 
 export default async function ComunicadoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -17,9 +18,7 @@ export default async function ComunicadoPage({ params }: { params: Promise<{ id:
 
   return (
     <Container largura="estreita" className="space-y-5 p-4">
-      <Link href="/comunicados" className="text-sm text-verde underline">
-        ← Comunicados
-      </Link>
+      <Voltar href="/comunicados" label="Comunicados" />
       <PageHeader
         titulo={comunicado.titulo}
         subtitulo={`${comunicado.canal === "email" ? "E-mail" : "WhatsApp"} · ${comunicado.filtroTexto} · ${comunicado.enviados} enviado(s), ${comunicado.erros} erro(s)`}

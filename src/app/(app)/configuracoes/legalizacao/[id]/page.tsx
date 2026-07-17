@@ -1,10 +1,10 @@
 import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { obterModelo } from "../actions";
 import { EditorModelo } from "./EditorModelo";
+import { Voltar } from "@/components/ui/Voltar";
 
 export default async function EditarModeloPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -14,9 +14,7 @@ export default async function EditarModeloPage({ params }: { params: Promise<{ i
   if (!modelo) notFound();
   return (
     <Container largura="estreita" className="space-y-5 p-4">
-      <Link href="/configuracoes/legalizacao" className="text-sm text-verde underline">
-        ← Modelos de legalização
-      </Link>
+      <Voltar href="/configuracoes/legalizacao" label="Modelos de legalização" />
       <PageHeader titulo={modelo.nome} subtitulo="Metadados e etapas do modelo" />
       <EditorModelo modelo={modelo} />
     </Container>
