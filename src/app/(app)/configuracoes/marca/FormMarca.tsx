@@ -1,9 +1,10 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useActionState } from "react";
 import Image from "next/image";
 import { salvarMarca, salvarLogo, type EstadoMarca } from "./actions";
 
-const input = "mt-1 w-full rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto";
+const input = `${controleCls()} mt-1 w-full`;
 
 type Marca = {
   nome: string | null;

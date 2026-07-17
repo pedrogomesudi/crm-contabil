@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,7 +14,7 @@ import {
   type SessaoView,
 } from "./actions";
 
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 
 type Opcao = { id: string; nome: string };
 

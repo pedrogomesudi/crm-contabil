@@ -1,8 +1,9 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useActionState, useState } from "react";
 import { salvarProcuracao, type EstadoVenc } from "@/app/(app)/vencimentos/crud-actions";
 
-const input = "rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto";
+const input = controleCls();
 
 export function FormProcuracao({ clienteId, substituiId }: { clienteId: string; substituiId?: string }) {
   const [estado, action, pend] = useActionState<EstadoVenc, FormData>(salvarProcuracao.bind(null, clienteId), {});

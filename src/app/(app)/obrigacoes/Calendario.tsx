@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { classificarAlerta } from "@/lib/onboarding/alertas";
 import { listarInstancias, gerarCompetencia, type InstanciaView } from "./actions";
@@ -71,7 +72,7 @@ export function Calendario({
   ]
     .filter(Boolean)
     .join(" · ");
-  const inp = "rounded-lg border border-linha px-2 py-1 text-sm";
+  const inp = controleCls("compacto");
 
   return (
     <div className="space-y-3">

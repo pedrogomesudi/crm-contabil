@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useActionState, useState, useTransition } from "react";
 import { salvarConfigWhatsapp, testarConexao, type EstadoWa } from "./actions";
 
@@ -15,30 +16,15 @@ export function FormWhatsapp({ instance, configurado }: { instance: string; conf
       <form action={action} className="space-y-3">
         <label className="block text-sm">
           <span className="text-cinza">Instance ID</span>
-          <input
-            name="instance"
-            defaultValue={instance}
-            required
-            className="mt-1 w-full rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde"
-          />
+          <input name="instance" defaultValue={instance} required className={`${controleCls()} mt-1 w-full`} />
         </label>
         <label className="block text-sm">
           <span className="text-cinza">Token da instância {configurado && "(configurado — reenvie para trocar)"}</span>
-          <input
-            name="token"
-            type="password"
-            required
-            className="mt-1 w-full rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde"
-          />
+          <input name="token" type="password" required className={`${controleCls()} mt-1 w-full`} />
         </label>
         <label className="block text-sm">
           <span className="text-cinza">Client-Token (segurança da conta)</span>
-          <input
-            name="client_token"
-            type="password"
-            required
-            className="mt-1 w-full rounded-lg border border-linha bg-white p-2 text-sm text-texto focus:border-verde"
-          />
+          <input name="client_token" type="password" required className={`${controleCls()} mt-1 w-full`} />
         </label>
         {estado.erro && <p className="text-sm text-negativo">{estado.erro}</p>}
         {estado.ok && <p className="text-sm text-verde">Salvo.</p>}

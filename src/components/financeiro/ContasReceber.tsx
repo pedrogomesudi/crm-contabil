@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState, useTransition } from "react";
 import {
   listarTitulos,
@@ -60,7 +61,7 @@ export function ContasReceber({
             type="month"
             value={mes}
             onChange={(e) => setMes(e.target.value)}
-            className="ml-2 rounded border border-linha px-2 py-1"
+            className={`${controleCls("compacto")} ml-2`}
           />
         </label>
         <button
@@ -191,10 +192,10 @@ export function ContasReceber({
               step="0.01"
               placeholder="Valor recebido"
               required
-              className="rounded border border-linha p-2"
+              className={controleCls()}
             />
-            <input name="data_recebimento" type="date" required className="rounded border border-linha p-2" />
-            <select name="conta_bancaria_id" required className="rounded border border-linha p-2">
+            <input name="data_recebimento" type="date" required className={controleCls()} />
+            <select name="conta_bancaria_id" required className={controleCls()}>
               <option value="">Conta bancária…</option>
               {contas.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -202,7 +203,7 @@ export function ContasReceber({
                 </option>
               ))}
             </select>
-            <select name="forma_pagamento" required className="rounded border border-linha p-2">
+            <select name="forma_pagamento" required className={controleCls()}>
               {["PIX", "BOLETO", "CARTAO", "TRANSFERENCIA", "DINHEIRO"].map((f) => (
                 <option key={f} value={f}>
                   {f}

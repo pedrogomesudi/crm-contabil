@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useActionState, useState } from "react";
 import { emitirNfse, type EstadoNfse } from "@/app/(app)/clientes/[id]/nfse";
 import { mesAnteriorDeHoje } from "@/lib/financeiro/competencia";
@@ -38,12 +39,12 @@ export function EmitirNfse({
           min="0"
           defaultValue={honorario.toFixed(2)}
           required
-          className="ml-2 w-32 rounded border border-linha px-2 py-1"
+          className={`${controleCls("compacto")} ml-2 w-32`}
         />
       </label>
       <label className="block">
         Descrição do serviço
-        <input name="descricao" placeholder="Honorarios" className="ml-2 w-64 rounded border border-linha px-2 py-1" />
+        <input name="descricao" placeholder="Honorarios" className={`${controleCls("compacto")} ml-2 w-64`} />
       </label>
       <label className="flex items-center gap-2">
         <input type="checkbox" name="avulsa" />
@@ -56,7 +57,7 @@ export function EmitirNfse({
           required
           value={mes}
           onChange={(e) => setMes(e.target.value)}
-          className="ml-2 rounded border border-linha px-2 py-1"
+          className={`${controleCls("compacto")} ml-2`}
         />
       </label>
       <input type="hidden" name="competencia" value={mes ? `${mes}-01` : ""} />

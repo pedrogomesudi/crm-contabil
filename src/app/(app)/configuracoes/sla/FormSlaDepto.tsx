@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { DEPARTAMENTOS, type Departamento } from "@/lib/clientes/departamentos";
@@ -32,7 +33,7 @@ export function FormSlaDepto({ slas }: { slas: Record<string, number> }) {
             max={60}
             value={valores[d.valor] ?? 3}
             onChange={(e) => setValores((v) => ({ ...v, [d.valor]: Number(e.target.value) }))}
-            className="w-20 rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} w-20`}
           />
           <span className="text-xs text-cinza">dia(s)</span>
           <button

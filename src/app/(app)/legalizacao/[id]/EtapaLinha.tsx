@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { atualizarEtapa, anexarComprovanteEtapa } from "@/app/(app)/legalizacao/actions";
@@ -75,7 +76,7 @@ export function EtapaLinha({ etapa, hoje }: { etapa: Etapa; hoje: string }) {
           disabled={ocupado}
           value={etapa.status}
           onChange={(e) => salvar({ status: e.target.value as LegEtapaStatus })}
-          className="rounded-lg border border-linha px-2 py-1 text-sm"
+          className={controleCls("compacto")}
         >
           {STATUS.map((s) => (
             <option key={s.v} value={s.v}>
@@ -94,7 +95,7 @@ export function EtapaLinha({ etapa, hoje }: { etapa: Etapa; hoje: string }) {
               value={protocolo}
               onChange={(e) => setProtocolo(e.target.value)}
               onBlur={() => protocolo !== (etapa.protocolo ?? "") && salvar({ protocolo: protocolo || null })}
-              className="w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} w-full`}
             />
           </div>
         </label>
@@ -107,7 +108,7 @@ export function EtapaLinha({ etapa, hoje }: { etapa: Etapa; hoje: string }) {
               setProtocoloEm(e.target.value);
               salvar({ protocoloEm: e.target.value || null });
             }}
-            className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block w-full`}
           />
         </label>
         <label className="text-xs text-cinza">
@@ -119,7 +120,7 @@ export function EtapaLinha({ etapa, hoje }: { etapa: Etapa; hoje: string }) {
               setPrazo(e.target.value);
               salvar({ prazo: e.target.value || null });
             }}
-            className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block w-full`}
           />
           {sev && (
             <span className={`ml-1 text-[11px] ${SEV[sev]}`}>
@@ -134,7 +135,7 @@ export function EtapaLinha({ etapa, hoje }: { etapa: Etapa; hoje: string }) {
               value={orgaoOutro}
               onChange={(e) => setOrgaoOutro(e.target.value)}
               onBlur={() => orgaoOutro !== (etapa.orgaoOutro ?? "") && salvar({ orgaoOutro: orgaoOutro || null })}
-              className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} mt-0.5 block w-full`}
             />
           </label>
         )}
@@ -147,7 +148,7 @@ export function EtapaLinha({ etapa, hoje }: { etapa: Etapa; hoje: string }) {
           onChange={(e) => setObs(e.target.value)}
           onBlur={() => obs !== (etapa.observacao ?? "") && salvar({ observacao: obs || null })}
           rows={2}
-          className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+          className={`${controleCls("compacto")} mt-0.5 block w-full`}
         />
       </label>
 

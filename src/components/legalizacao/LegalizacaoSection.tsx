@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,7 +67,7 @@ export function LegalizacaoSection({
             <select
               value={modelo}
               onChange={(e) => setModelo(e.target.value)}
-              className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} mt-0.5 block`}
             >
               {modelos.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -81,7 +82,7 @@ export function LegalizacaoSection({
               type="date"
               value={data}
               onChange={(e) => setData(e.target.value)}
-              className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} mt-0.5 block`}
             />
           </label>
           <button

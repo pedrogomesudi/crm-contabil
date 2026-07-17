@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 import { salvarConfigBoleto } from "./actions";
 import type { ConfigBoletoView } from "@/lib/boleto/config";
 import { Botao } from "@/components/ui/Botao";
+import { controleCls } from "@/components/ui/Campo";
 
 type Prov = "nenhum" | "inter" | "asaas";
-const inputCls = "mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm";
 
 export function FormBoletos({ config, contas }: { config: ConfigBoletoView; contas: { id: string; nome: string }[] }) {
   const router = useRouter();
@@ -50,7 +50,11 @@ export function FormBoletos({ config, contas }: { config: ConfigBoletoView; cont
 
       <label className="block text-sm text-cinza">
         Provedor
-        <select value={provedor} onChange={(e) => setProvedor(e.target.value as Prov)} className={inputCls}>
+        <select
+          value={provedor}
+          onChange={(e) => setProvedor(e.target.value as Prov)}
+          className={`${controleCls("compacto")} mt-0.5 w-full`}
+        >
           <option value="nenhum">Nenhum</option>
           <option value="asaas">Asaas</option>
           <option value="inter">Banco Inter</option>
@@ -67,7 +71,7 @@ export function FormBoletos({ config, contas }: { config: ConfigBoletoView; cont
               value={asaasApiKey}
               onChange={(e) => setAsaasApiKey(e.target.value)}
               placeholder={ph(config.asaasApiKeyDefinida)}
-              className={inputCls}
+              className={`${controleCls("compacto")} mt-0.5 w-full`}
             />
           </label>
           <label className="block text-xs text-cinza">
@@ -75,7 +79,7 @@ export function FormBoletos({ config, contas }: { config: ConfigBoletoView; cont
             <select
               value={asaasAmbiente}
               onChange={(e) => setAsaasAmbiente(e.target.value as "sandbox" | "producao")}
-              className={inputCls}
+              className={`${controleCls("compacto")} mt-0.5 w-full`}
             >
               <option value="producao">Produção</option>
               <option value="sandbox">Sandbox</option>
@@ -94,7 +98,7 @@ export function FormBoletos({ config, contas }: { config: ConfigBoletoView; cont
               value={interClientId}
               onChange={(e) => setInterClientId(e.target.value)}
               placeholder={ph(config.interClientIdDefinido)}
-              className={inputCls}
+              className={`${controleCls("compacto")} mt-0.5 w-full`}
             />
           </label>
           <label className="block text-xs text-cinza">
@@ -104,12 +108,16 @@ export function FormBoletos({ config, contas }: { config: ConfigBoletoView; cont
               value={interClientSecret}
               onChange={(e) => setInterClientSecret(e.target.value)}
               placeholder={ph(config.interClientSecretDefinido)}
-              className={inputCls}
+              className={`${controleCls("compacto")} mt-0.5 w-full`}
             />
           </label>
           <label className="block text-xs text-cinza">
             Conta corrente
-            <input value={interConta} onChange={(e) => setInterConta(e.target.value)} className={inputCls} />
+            <input
+              value={interConta}
+              onChange={(e) => setInterConta(e.target.value)}
+              className={`${controleCls("compacto")} mt-0.5 w-full`}
+            />
           </label>
           <label className="block text-xs text-cinza">
             Certificado (PEM)
@@ -118,7 +126,7 @@ export function FormBoletos({ config, contas }: { config: ConfigBoletoView; cont
               onChange={(e) => setInterCert(e.target.value)}
               rows={3}
               placeholder={ph(config.interCertDefinido) || "-----BEGIN CERTIFICATE-----"}
-              className={inputCls}
+              className={`${controleCls("compacto")} mt-0.5 w-full`}
             />
           </label>
           <label className="block text-xs text-cinza">
@@ -128,7 +136,7 @@ export function FormBoletos({ config, contas }: { config: ConfigBoletoView; cont
               onChange={(e) => setInterKey(e.target.value)}
               rows={3}
               placeholder={ph(config.interKeyDefinida) || "-----BEGIN PRIVATE KEY-----"}
-              className={inputCls}
+              className={`${controleCls("compacto")} mt-0.5 w-full`}
             />
           </label>
         </div>
@@ -136,7 +144,11 @@ export function FormBoletos({ config, contas }: { config: ConfigBoletoView; cont
 
       <label className="block text-sm text-cinza">
         Conta de recebimento
-        <select value={contaBancariaId} onChange={(e) => setContaBancariaId(e.target.value)} className={inputCls}>
+        <select
+          value={contaBancariaId}
+          onChange={(e) => setContaBancariaId(e.target.value)}
+          className={`${controleCls("compacto")} mt-0.5 w-full`}
+        >
           <option value="">—</option>
           {contas.map((c) => (
             <option key={c.id} value={c.id}>

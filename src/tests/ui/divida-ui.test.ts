@@ -120,3 +120,106 @@ describe("só existe um jeito de voltar", () => {
     }
   });
 });
+
+// Extrai o corpo de cada tag <input|select|textarea ...>, respeitando chaves {}. Uma regex
+// não serve aqui: `[^<>]*` para no `>` de um arrow handler (`onChange={(e) => …}`), e como quase
+// todo controle controlado põe o handler ANTES do className, 99 controles com a classe à mão
+// escaparam calados do guard — a própria dívida que ele existe para barrar. A primeira revisão
+// do branch pegou isso; o parser abaixo conta chaves e só para no `>` de profundidade zero.
+export function corposDeControle(src: string): string[] {
+  const corpos: string[] = [];
+  const re = /<(input|select|textarea)\b/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(src))) {
+    let i = m.index + m[0].length;
+    let profundidade = 0;
+    let buf = "";
+    while (i < src.length) {
+      const ch = src[i];
+      if (ch === "{") profundidade++;
+      else if (ch === "}") profundidade--;
+      else if (ch === ">" && profundidade === 0) break;
+      buf += ch;
+      i++;
+    }
+    corpos.push(buf);
+  }
+  return corpos;
+}
+
+// Uma classe de borda "estática" — a borda em repouso, não uma variante focus:/hover:. Um
+// controle que só tem `focus:border-verde` (realce de foco) não desenha caixa própria e não é
+// dívida; um que tem `border`/`border-linha` cru, sim. É o que separa infrator de inocente.
+const bordaEstatica = (classes: string) => classes.split(/\s+/).some((c) => /^border(-|$)/.test(c) && !c.includes(":"));
+
+describe("o controle não escreve a própria borda", () => {
+  // A quinta dívida: ~260 controles com a classe escrita à mão, em famílias — px-3 py-2 e
+  // px-2 py-1.5 (dois degraus reais), rounded de 4px, border sem cor, padding em atalho, e a
+  // mesma string extraída para uma const local. Todas nasceram do mesmo jeito: o token respondia
+  // "como se parece" E "quanto ocupa", então quem precisava de outra largura copiava e alterava.
+  // O `controleCls(tamanho)` separou as duas perguntas; este guard impede a cópia de voltar.
+
+  // Controles que NÃO usam o token, com o motivo — não é relaxar a regra, é nomear a exceção.
+  const NAO_E_CONTROLE_DE_FORMULARIO: Record<string, string> = {
+    // Célula de planilha: 12 colunas de mês numa linha, dentro de <td> de 2px. O degrau
+    // compacto (px-2 py-1.5 text-sm) alargaria a grade inteira. Ver o comentário no arquivo.
+    "src/app/(app)/financeiro/orcamento/GradeOrcamento.tsx": "célula de planilha, não campo (celulaCls)",
+    // Campo de busca: pill maior (rounded-xl, py-2.5) com pl-9 para o ícone da lupa. É um quarto
+    // tamanho deliberado, e é o MESMO campo do Toolbar (esse vive em components/ui/, já fora do
+    // escopo). Unificar os dois exige o <Input>, que ainda não é usado — dívida da fatia 5.
+    "src/app/(app)/clientes/page.tsx": "campo de busca (rounded-xl, ícone) — dívida da fatia 5",
+    // Campo de composição de mensagem do chat: pill grande (rounded-xl, bg-creme, px-4 py-2.5),
+    // como os de busca. Não é campo de formulário — é caixa de "Responder…".
+    "src/app/(app)/atendimento/Inbox.tsx": "campo de mensagem do chat (rounded-xl, bg-creme)",
+    // Input de percentual da tabela de reajuste em lote: borda CONDICIONAL (border-negativo quando
+    // o valor é negativo, border-linha caso contrário) — feedback de erro que o token, de borda
+    // fixa, não expressa. E é w-20 px-1 py-0.5, menor que o compacto, como a célula de planilha.
+    "src/app/(app)/financeiro/reajuste/ReajusteLote.tsx": "input de % com borda condicional (feedback de erro)",
+  };
+
+  // Uma const parece classe de CONTROLE (não de card): tem borda estática e o canto de controle
+  // (rounded-lg/rounded), não rounded-2xl/3xl. Sem isto, um `const card = "rounded-2xl border …"`
+  // (painel, não campo) seria falso positivo.
+  const constDeControle = (cls: string) =>
+    bordaEstatica(cls) && /\brounded(-lg)?\b/.test(cls) && !/\brounded-[23]xl\b/.test(cls);
+
+  // O className do controle pode estar em aspas ("…") OU em template-literal (`…${cond}…`). A
+  // segunda revisão do branch achou um <input> com `rounded border … ${neg ? "border-negativo" :
+  // "border-linha"}` que passava calado — o guard antigo só via aspas duplas. Pegamos os dois:
+  // uma classe de borda "estática" (fora de ${…}) em qualquer das duas formas denuncia a caixa
+  // desenhada à mão. O trecho ${…} interpolado é removido antes de testar — border-negativo lá
+  // dentro é escolha de cor condicional, não a borda-base copiada.
+  const classNameDoControle = (corpo: string): string | null => {
+    const aspas = /className="([^"]*)"/.exec(corpo);
+    if (aspas?.[1] !== undefined) return aspas[1];
+    const tmpl = /className=\{`([^`]*)`\}/.exec(corpo);
+    if (tmpl?.[1] !== undefined) return tmpl[1].replace(/\$\{[^}]*\}/g, " ");
+    return null;
+  };
+
+  const declaraBorda = (p: string): boolean => {
+    const src = fonte(p);
+    const inline = corposDeControle(src).some((corpo) => {
+      const cm = classNameDoControle(corpo);
+      return cm ? bordaEstatica(cm) : false;
+    });
+    const emConst = [...src.matchAll(/\bconst \w+\s*=\s*\n?\s*"([^"]*)"/g)].some((m) =>
+      m[1] ? constDeControle(m[1]) : false,
+    );
+    return inline || emConst;
+  };
+
+  it("nenhum <input|select|textarea> declara `border` estática — nem inline, nem em const", () => {
+    const infratores = ESCOPO.filter((p) => !rel(p).startsWith("src/components/ui/"))
+      .filter(declaraBorda)
+      .map(rel)
+      .filter((p) => !(p in NAO_E_CONTROLE_DE_FORMULARIO));
+    expect(infratores).toEqual([]);
+  });
+
+  it("as exceções declaradas continuam existindo (a lista não vira ficção)", () => {
+    for (const p of Object.keys(NAO_E_CONTROLE_DE_FORMULARIO)) {
+      expect(declaraBorda(resolve(process.cwd(), p))).toBe(true);
+    }
+  });
+});

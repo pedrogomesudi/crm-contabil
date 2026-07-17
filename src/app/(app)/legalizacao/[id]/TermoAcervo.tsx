@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { gerarTermoAcervo } from "@/app/(app)/legalizacao/actions";
@@ -46,7 +47,7 @@ export function TermoAcervo({
             type="date"
             value={data}
             onChange={(e) => setData(e.target.value)}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block`}
           />
         </label>
         <label className="flex-1 text-xs text-cinza">
@@ -54,7 +55,7 @@ export function TermoAcervo({
           <input
             value={responsavel}
             onChange={(e) => setResponsavel(e.target.value)}
-            className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block w-full`}
           />
         </label>
       </div>
@@ -64,7 +65,7 @@ export function TermoAcervo({
           value={itens}
           onChange={(e) => setItens(e.target.value)}
           rows={8}
-          className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+          className={`${controleCls("compacto")} mt-0.5 block w-full`}
         />
       </label>
       <button

@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -81,7 +82,7 @@ export function EditorTemplate({ template }: { template: Tpl }) {
             <input
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} mt-0.5 w-full`}
             />
           </label>
           <label className="flex items-center gap-1 text-xs text-cinza">
@@ -94,7 +95,7 @@ export function EditorTemplate({ template }: { template: Tpl }) {
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
             rows={2}
-            className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 w-full`}
           />
         </label>
         <div className="flex justify-end">
@@ -239,7 +240,7 @@ export function EditorTemplate({ template }: { template: Tpl }) {
               <input
                 value={bloco.nome}
                 onChange={(e) => setBloco({ ...bloco, nome: e.target.value })}
-                className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                className={`${controleCls("compacto")} mt-0.5 w-full`}
               />
             </label>
             <div className="flex gap-2">
@@ -251,7 +252,7 @@ export function EditorTemplate({ template }: { template: Tpl }) {
                   onChange={(e) =>
                     setBloco({ ...bloco, prazoBlocoDias: e.target.value === "" ? null : Number(e.target.value) })
                   }
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
               </label>
               {bloco.id && (
@@ -261,7 +262,7 @@ export function EditorTemplate({ template }: { template: Tpl }) {
                     type="number"
                     value={bloco.ordem}
                     onChange={(e) => setBloco({ ...bloco, ordem: Number(e.target.value) })}
-                    className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                    className={`${controleCls("compacto")} mt-0.5 w-full`}
                   />
                 </label>
               )}
@@ -288,7 +289,7 @@ export function EditorTemplate({ template }: { template: Tpl }) {
                 <input
                   value={form.codigo ?? ""}
                   onChange={(e) => setForm({ ...form, codigo: e.target.value })}
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
               </label>
               <label className="flex-1 text-xs text-cinza">
@@ -296,7 +297,7 @@ export function EditorTemplate({ template }: { template: Tpl }) {
                 <input
                   value={form.titulo ?? ""}
                   onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
               </label>
             </div>
@@ -306,7 +307,7 @@ export function EditorTemplate({ template }: { template: Tpl }) {
                 <select
                   value={form.responsavelPapel ?? ""}
                   onChange={(e) => setForm({ ...form, responsavelPapel: e.target.value || null })}
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 >
                   <option value="">—</option>
                   {["admin", "contador", "assistente", "financeiro"].map((pp) => (
@@ -324,7 +325,7 @@ export function EditorTemplate({ template }: { template: Tpl }) {
                   onChange={(e) =>
                     setForm({ ...form, prazoDias: e.target.value === "" ? null : Number(e.target.value) })
                   }
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
               </label>
               <label className="w-28 text-xs text-cinza">
@@ -332,7 +333,7 @@ export function EditorTemplate({ template }: { template: Tpl }) {
                 <select
                   value={form.tipo ?? "padrao"}
                   onChange={(e) => setForm({ ...form, tipo: e.target.value as "padrao" | "acesso" })}
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 >
                   <option value="padrao">Padrão</option>
                   <option value="acesso">Cofre</option>
@@ -382,7 +383,7 @@ export function EditorTemplate({ template }: { template: Tpl }) {
                         .filter(Boolean),
                     })
                   }
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                   placeholder="ex.: 4.6"
                 />
               </label>
@@ -391,7 +392,7 @@ export function EditorTemplate({ template }: { template: Tpl }) {
                 <select
                   value={form.campoDestino ?? ""}
                   onChange={(e) => setForm({ ...form, campoDestino: e.target.value || null })}
-                  className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
                 >
                   <option value="">—</option>
                   <option value="competencia_inicial">Competência inicial</option>

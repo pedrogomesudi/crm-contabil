@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { BotaoExportar } from "@/components/ui/BotaoExportar";
 import { formatarData } from "@/lib/format";
@@ -97,7 +98,7 @@ export function Extrato({
           linhas: baixasFiltradas.map((r) => ({ ...r, tipo: tipoLabel(r.tipo) })),
         };
 
-  const inp = "rounded-lg border border-linha px-2 py-1 text-sm";
+  const inp = controleCls("compacto");
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">

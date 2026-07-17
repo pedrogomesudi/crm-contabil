@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { formatarMoeda } from "@/lib/format";
 import {
@@ -115,7 +116,7 @@ export function Conciliacao({
   const novos = previa?.filter((p) => p.novo).length ?? 0;
   const creditos = lista.filter((m) => m.valor > 0).reduce((s, m) => s + m.valor, 0);
   const debitos = lista.filter((m) => m.valor < 0).reduce((s, m) => s + m.valor, 0);
-  const inp = "rounded-lg border border-linha px-2 py-1 text-sm";
+  const inp = controleCls("compacto");
 
   return (
     <div className="space-y-4">

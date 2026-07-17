@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { darBaixa, reabrir, alternarDispensa, urlComprovante } from "./baixa-actions";
 import type { InstanciaView } from "./actions";
@@ -108,7 +109,7 @@ export function AcoesInstancia({ inst, onDone }: { inst: InstanciaView; onDone: 
             value={obs}
             onChange={(e) => setObs(e.target.value)}
             placeholder="Observação (opcional)"
-            className="rounded border border-linha px-2 py-1"
+            className={controleCls("compacto")}
           />
           <span className="flex items-center gap-2">
             <button

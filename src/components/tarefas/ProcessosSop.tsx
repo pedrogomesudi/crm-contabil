@@ -1,11 +1,12 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatarData } from "@/lib/format";
 import { iniciarProcessoSop, type ModeloOpcao, type ProcessoView } from "@/app/(app)/tarefas/sop-actions";
 
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 
 const ROTULO_STATUS: Record<ProcessoView["status"], string> = {
   em_andamento: "Em andamento",

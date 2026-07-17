@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PAPEIS_EQUIPE } from "@/lib/tipos";
@@ -8,7 +9,7 @@ import { TAREFA_PRIORIDADE, type TarefaPrioridade } from "@/lib/tarefas/tarefa";
 import { resumoFluxo, type SopEtapa } from "@/lib/tarefas/sop";
 import { salvarTemplateSop, excluirTemplateSop, type SopTemplateView } from "./actions";
 
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 
 type EtapaEdit = {
   onda: number;

@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { formatarMoeda } from "@/lib/format";
 import type { MovimentoView } from "./actions";
@@ -128,11 +129,7 @@ export function AcaoMovimento({
           )}
           {lanc && (
             <span className="flex flex-col gap-1">
-              <select
-                value={pessoa}
-                onChange={(e) => setPessoa(e.target.value)}
-                className="rounded border border-linha px-2 py-1"
-              >
+              <select value={pessoa} onChange={(e) => setPessoa(e.target.value)} className={controleCls("compacto")}>
                 <option value="">{credito ? "Cliente…" : "Fornecedor…"}</option>
                 {pessoas.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -140,11 +137,7 @@ export function AcaoMovimento({
                   </option>
                 ))}
               </select>
-              <select
-                value={cat}
-                onChange={(e) => setCat(e.target.value)}
-                className="rounded border border-linha px-2 py-1"
-              >
+              <select value={cat} onChange={(e) => setCat(e.target.value)} className={controleCls("compacto")}>
                 <option value="">Categoria…</option>
                 {categorias.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -156,7 +149,7 @@ export function AcaoMovimento({
                 value={desc}
                 onChange={(e) => setDesc(e.target.value)}
                 placeholder="Descrição (opcional)"
-                className="rounded border border-linha px-2 py-1"
+                className={controleCls("compacto")}
               />
               <span className="flex gap-2">
                 <button

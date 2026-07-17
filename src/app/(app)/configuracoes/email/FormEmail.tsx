@@ -1,8 +1,9 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useActionState, useState, useTransition } from "react";
 import { salvarConfigEmail, enviarTeste, setReguaFallback, type EstadoEmail, type StatusEmail } from "./actions";
 
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 
 export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAdmin: string }) {
   const [provedor, setProvedor] = useState<"smtp" | "api">(status.provedor ?? "smtp");

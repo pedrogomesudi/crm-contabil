@@ -1,10 +1,11 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatarData, formatarMoeda } from "@/lib/format";
 import { salvarCusto, excluirCusto, type CustoView } from "./actions";
 
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 
 export function FormCustos({
   custos,

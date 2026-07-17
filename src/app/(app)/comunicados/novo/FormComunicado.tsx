@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { REGIMES } from "@/lib/tipos";
@@ -7,7 +8,7 @@ import { VARIAVEIS } from "@/lib/email/template";
 import { TETO_WHATSAPP, descreverFiltro, type Filtro } from "@/lib/comunicados/segmento";
 import { previa, enviarTesteComunicado, dispararComunicado, type Canal, type PreviaView } from "../actions";
 
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 const TIPOS = ["PJ", "PF", "MEI"];
 const STATUS = [
   { valor: "ativo", rotulo: "Ativo" },

@@ -10,6 +10,7 @@ import { formatarData, formatarMoeda } from "@/lib/format";
 import { formatarHoras } from "@/lib/timesheet/apontamento";
 import { margem } from "@/lib/timesheet/rentabilidade";
 import { relatorioRentabilidade } from "./actions";
+import { controleCls } from "@/components/ui/Campo";
 
 export const metadata = { title: "Rentabilidade por cliente" };
 
@@ -83,21 +84,11 @@ export default async function RentabilidadePage({
       >
         <label className="text-xs text-cinza">
           De
-          <input
-            type="date"
-            name="de"
-            defaultValue={de}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
-          />
+          <input type="date" name="de" defaultValue={de} className={`${controleCls("compacto")} mt-0.5 block`} />
         </label>
         <label className="text-xs text-cinza">
           Até
-          <input
-            type="date"
-            name="ate"
-            defaultValue={ate}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
-          />
+          <input type="date" name="ate" defaultValue={ate} className={`${controleCls("compacto")} mt-0.5 block`} />
         </label>
         <button className="rounded-lg bg-verde px-3 py-1.5 text-white">Aplicar</button>
         <div className="ml-auto print:hidden">

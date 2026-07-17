@@ -2,7 +2,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { anexarDocumento } from "@/app/(app)/documentos/actions";
 import type { EstadoUpload } from "@/app/(app)/documentos/estados";
-import { Campo, inputCls } from "@/components/ui/Campo";
+import { Campo, controleCls } from "@/components/ui/Campo";
 
 export function UploadDocumento({ clienteId }: { clienteId: string }) {
   const action = anexarDocumento.bind(null, clienteId);
@@ -22,11 +22,17 @@ export function UploadDocumento({ clienteId }: { clienteId: string }) {
             type="file"
             required
             accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
-            className={inputCls}
+            className={`${controleCls()} w-full`}
           />
         </Campo>
         <Campo label="Tipo (opcional)">
-          <input name="tipo" type="text" maxLength={60} placeholder="Ex.: Contrato, Balanço" className={inputCls} />
+          <input
+            name="tipo"
+            type="text"
+            maxLength={60}
+            placeholder="Ex.: Contrato, Balanço"
+            className={`${controleCls()} w-full`}
+          />
         </Campo>
       </div>
       {estado.erro && (

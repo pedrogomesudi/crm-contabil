@@ -2,7 +2,7 @@
 import { useActionState } from "react";
 import { salvarHonorario } from "@/app/(app)/clientes/actions";
 import type { EstadoHonorario } from "@/app/(app)/clientes/estados";
-import { Campo, inputCls } from "@/components/ui/Campo";
+import { Campo, controleCls } from "@/components/ui/Campo";
 import { FAIXAS_FATURAMENTO, FAIXA_LABEL } from "@/lib/financeiro/tipos";
 
 export type ExtensaoFinanceiraForm = {
@@ -36,7 +36,7 @@ export function HonorarioForm({
           inputMode="decimal"
           defaultValue={valorBR}
           placeholder="0,00"
-          className={`${inputCls} w-48`}
+          className={`${controleCls()} w-48`}
         />
       </Campo>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -47,7 +47,7 @@ export function HonorarioForm({
             min={1}
             max={28}
             defaultValue={extensao.dia_vencimento ?? ""}
-            className={`${inputCls} w-32`}
+            className={`${controleCls()} w-32`}
           />
         </Campo>
         <Campo label="Qtd. funcionários">
@@ -56,11 +56,15 @@ export function HonorarioForm({
             type="number"
             min={0}
             defaultValue={extensao.qtd_funcionarios ?? ""}
-            className={`${inputCls} w-32`}
+            className={`${controleCls()} w-32`}
           />
         </Campo>
         <Campo label="Faixa de faturamento">
-          <select name="faixa_faturamento" defaultValue={extensao.faixa_faturamento ?? ""} className={inputCls}>
+          <select
+            name="faixa_faturamento"
+            defaultValue={extensao.faixa_faturamento ?? ""}
+            className={`${controleCls()} w-full`}
+          >
             <option value="">—</option>
             {FAIXAS_FATURAMENTO.map((f) => (
               <option key={f} value={f}>
@@ -70,13 +74,18 @@ export function HonorarioForm({
           </select>
         </Campo>
         <Campo label="Data de saída">
-          <input name="data_saida" type="date" defaultValue={extensao.data_saida ?? ""} className={inputCls} />
+          <input
+            name="data_saida"
+            type="date"
+            defaultValue={extensao.data_saida ?? ""}
+            className={`${controleCls()} w-full`}
+          />
         </Campo>
         <Campo label="Índice de reajuste">
           <select
             name="indice_reajuste"
             defaultValue={extensao.indice_reajuste ?? "SALARIO_MINIMO"}
-            className={inputCls}
+            className={`${controleCls()} w-full`}
           >
             <option value="SALARIO_MINIMO">Salário mínimo</option>
             <option value="IPCA">IPCA</option>
@@ -91,7 +100,7 @@ export function HonorarioForm({
             name="percentual_reajuste"
             inputMode="decimal"
             defaultValue={extensao.percentual_reajuste != null ? String(extensao.percentual_reajuste) : ""}
-            className={inputCls}
+            className={`${controleCls()} w-full`}
           />
         </Campo>
       </div>

@@ -26,8 +26,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
   `gh pr merge --merge`. A **tag vem depois** do merge (`npm run release:tag`, que lê a versão do
   `package.json`). Passo a passo do marco e do hotfix em [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md).
 - **Versão:** `package.json.version` **não** é decorativo — o `/api/health` o devolve, e é assim que se
-  sabe qual release está no ar (o EasyPanel faz auto-deploy do `main`). Ao lançar, ele sobe junto com o
-  CHANGELOG; `src/tests/versao.test.ts` exige que os dois batam, então divergir quebra o CI.
+  sabe qual release está no ar. Ao lançar, ele sobe junto com o CHANGELOG **no mesmo PR**;
+  `src/tests/versao.test.ts` exige que os dois batam, então divergir quebra o CI.
+- **Deploy NÃO é automático — o merge no `main` não publica.** O EasyPanel está com `Source = GitHub`
+  no ramo `main`, mas **não há webhook no repo** (`gh api repos/.../hooks` devolve `[]`), então nada o
+  avisa do push. Publicar exige clicar **Implantar** no painel (app `cursoia/crm-contabil`). Isso passou
+  despercebido por 3 releases: os PRs #8, #9 e #10 mergearam e a produção ficou em 6.5.0 o tempo todo.
+  **Confirme o que está no ar pelo `/api/health` de `https://app.seusaldo.ai`** — não pelo merge.
+  A tag vem **depois** de o health devolver a versão nova; senão ela marca um deploy que não houve.
 - **Scripts `scripts/*.mjs`:** ferramental de banco (JS puro, deliberadamente não-tipado). São
   cobertos por ESLint, mas **fora** do `tsc --noEmit` (não estão no `include` do tsconfig). Não
   adicionar lógica de app aqui.

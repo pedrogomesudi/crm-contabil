@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { gerarRetroativo } from "./actions";
 
@@ -31,7 +32,7 @@ export function GerarRetroativo({
     } else setMsg("Sem permissão.");
   }
   const anos = Array.from({ length: 5 }, (_, i) => anoAtual - i);
-  const inp = "rounded-lg border border-linha px-2 py-1 text-sm";
+  const inp = controleCls("compacto");
   return (
     <span className="flex items-center gap-2">
       <button

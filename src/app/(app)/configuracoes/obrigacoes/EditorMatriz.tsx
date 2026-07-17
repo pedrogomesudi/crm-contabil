@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { salvarObrigacao, excluirObrigacao, semearMatrizPadrao, type ObrigacaoRow } from "./actions";
 
@@ -54,7 +55,7 @@ export function EditorMatriz({ linhas }: { linhas: ObrigacaoRow[] }) {
     else setMsg(r.erro ?? "Erro");
   }
 
-  const inp = "rounded-lg border border-linha px-2 py-1 text-sm";
+  const inp = controleCls("compacto");
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">

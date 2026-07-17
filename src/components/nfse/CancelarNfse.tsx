@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState, useTransition } from "react";
 import { cancelarNfse } from "@/app/(app)/clientes/[id]/nfse";
 
@@ -21,7 +22,7 @@ export function CancelarNfse({ nfseId }: { nfseId: string }) {
       <select
         value={motivo}
         onChange={(e) => setMotivo(e.target.value as "1" | "2" | "9")}
-        className="w-full rounded border border-linha px-1 py-0.5"
+        className={`${controleCls("compacto")} w-full`}
       >
         <option value="1">1 - Erro na emissão</option>
         <option value="2">2 - Serviço não prestado</option>
@@ -32,7 +33,7 @@ export function CancelarNfse({ nfseId }: { nfseId: string }) {
         onChange={(e) => setJustificativa(e.target.value)}
         placeholder="Justificativa (mín. 15 caracteres)"
         rows={2}
-        className="w-full rounded border border-linha px-1 py-0.5"
+        className={`${controleCls("compacto")} w-full`}
       />
       {erro && (
         <p role="alert" className="text-negativo">

@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,7 +10,7 @@ type Msg = { id: string; corpo: string; criadoEm: string; daEquipe: boolean; aut
 type Colab = { id: string; nome: string };
 
 const quando = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)} ${iso.slice(11, 16)}`;
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 
 export function Atendimento({
   solicitacaoId,
@@ -110,7 +111,7 @@ export function Atendimento({
           onChange={(e) => setCorpo(e.target.value)}
           rows={3}
           placeholder="Responder ao cliente…"
-          className="flex-1 rounded-lg border border-linha px-2 py-1.5 text-sm"
+          className={`${controleCls("compacto")} flex-1`}
         />
         <button
           disabled={pendente || !corpo.trim()}

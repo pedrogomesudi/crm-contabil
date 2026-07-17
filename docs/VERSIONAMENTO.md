@@ -35,12 +35,21 @@ Toda mudança relevante é registrada em [`CHANGELOG.md`](../CHANGELOG.md) (form
 1. Durante o desenvolvimento, acumule itens na seção **[Não lançado]**.
 2. Ao lançar, renomeie **[Não lançado]** para a versão + data e crie nova seção **[Não lançado]** vazia.
 3. Suba o `version` do `package.json` para a mesma versão (`npm version X.Y.Z --no-git-tag-version`).
-4. Crie a tag e a release apontando para esse commit.
+   Os passos 2 e 3 vão **no mesmo PR** do código — a versão entra no `main` junto com o que ela nomeia.
+4. Faça o merge e **publique: botão _Implantar_ no EasyPanel**. O merge **não** dispara deploy.
+5. **Confirme no `/api/health`** que a `versao` mudou. Só então:
+6. Crie a tag e a release apontando para o commit de merge (`npm run release:tag`).
 
 > O passo 2 foi esquecido em **três releases seguidas** (6.1.0 a 6.3.0 ficaram listadas como "não
 > lançadas" mesmo já tagueadas), então o passo 3 não fica no lembrete: o **`src/tests/versao.test.ts`**
 > exige que o `package.json` bata com a última versão do CHANGELOG, e o CI barra o PR se divergirem.
 > A versão vale porque o **`/api/health` a devolve** — é como se sabe qual release está no ar.
+
+> **Os passos 4 e 5 não existiam aqui, e custaram três releases.** Este guia ia de "suba a versão" direto
+> para "crie a tag", como se o merge publicasse. Ele não publica (não há webhook no repo; veja
+> [`DEPLOY.md`](DEPLOY.md)). Resultado: os PRs #8, #9 e #10 entraram no `main` e a produção seguiu em
+> 6.5.0 até 17/07. **A ordem importa:** a tag depois do health, senão ela marca como lançado um commit
+> que ninguém publicou — e a tag é justamente o que se consulta para saber o que foi lançado.
 
 ## Estratégia de branches
 

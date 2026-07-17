@@ -1,9 +1,10 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { Badge } from "@/components/ui/Badge";
 import { useState, useTransition } from "react";
 import { salvarEtapa, setReguaAtiva, dispararReguaManual, type EtapaView, type EnvioView } from "./actions";
 
-const campo = "rounded border border-linha p-1";
+const campo = controleCls("compacto");
 
 export function Regua({
   ativaInicial,
@@ -79,7 +80,7 @@ export function Regua({
                 <input type="checkbox" name="ativa" defaultChecked={e.ativa} /> ativa
               </label>
               <input type="hidden" name="ordem" defaultValue={e.ordem} />
-              <button type="submit" className="rounded border border-linha px-2 py-1">
+              <button type="submit" className="rounded-lg border border-linha px-2 py-1 text-sm hover:bg-creme">
                 Salvar
               </button>
             </div>

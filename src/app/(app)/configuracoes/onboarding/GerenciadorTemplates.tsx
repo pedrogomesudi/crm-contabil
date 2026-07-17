@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -111,7 +112,7 @@ export function GerenciadorTemplates({ templates }: { templates: TemplateResumo[
               <input
                 value={novo.nome}
                 onChange={(e) => setNovo({ ...novo, nome: e.target.value })}
-                className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                className={`${controleCls("compacto")} mt-0.5 w-full`}
               />
             </label>
             <label className="block text-xs text-cinza">
@@ -120,7 +121,7 @@ export function GerenciadorTemplates({ templates }: { templates: TemplateResumo[
                 value={novo.descricao}
                 onChange={(e) => setNovo({ ...novo, descricao: e.target.value })}
                 rows={2}
-                className="mt-0.5 w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+                className={`${controleCls("compacto")} mt-0.5 w-full`}
               />
             </label>
             <div className="flex justify-end gap-2 pt-1">

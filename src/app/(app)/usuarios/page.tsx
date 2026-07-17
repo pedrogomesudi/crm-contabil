@@ -6,6 +6,7 @@ import { BotaoAcao } from "@/components/usuarios/BotaoAcao";
 import { PAPEIS_EQUIPE } from "@/lib/tipos";
 import { DEPARTAMENTOS } from "@/lib/clientes/departamentos";
 import { alterarPapel, definirAtivo, reenviarAcesso, definirSuperior, definirDepartamento } from "./actions";
+import { controleCls } from "@/components/ui/Campo";
 
 export const metadata = { title: "Usuários" };
 
@@ -90,7 +91,7 @@ export default async function UsuariosPage({
                             name="papel"
                             defaultValue={u.papel}
                             aria-label={`Papel de ${u.nome}`}
-                            className="rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto focus:border-verde"
+                            className={controleCls()}
                           >
                             {PAPEIS_EQUIPE.map((p) => (
                               <option key={p} value={p}>
@@ -118,7 +119,7 @@ export default async function UsuariosPage({
                           name="departamento"
                           defaultValue={(u as { departamento: string | null }).departamento ?? ""}
                           aria-label={`Departamento de ${u.nome}`}
-                          className="rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto focus:border-verde"
+                          className={controleCls()}
                         >
                           <option value="">— nenhum —</option>
                           {DEPARTAMENTOS.map((d) => (
@@ -144,7 +145,7 @@ export default async function UsuariosPage({
                             name="superior_id"
                             defaultValue={(u as { superior_id: string | null }).superior_id ?? ""}
                             aria-label={`Superior de ${u.nome}`}
-                            className="rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto focus:border-verde"
+                            className={controleCls()}
                           >
                             <option value="">— nenhum —</option>
                             {usuarios!

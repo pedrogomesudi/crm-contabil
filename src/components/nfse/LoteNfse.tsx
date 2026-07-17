@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useRef, useState } from "react";
 import { listarElegiveisLote, emitirNfseCliente } from "@/app/(app)/clientes/[id]/nfse";
 import { montarCsv } from "@/lib/nfse/relatorioLote";
@@ -107,7 +108,7 @@ export function LoteNfse() {
             type="month"
             value={mes}
             onChange={(e) => setMes(e.target.value)}
-            className="ml-2 rounded border border-linha px-2 py-1"
+            className={`${controleCls("compacto")} ml-2`}
           />
         </label>
         <button

@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -127,19 +128,19 @@ export function EditorProposta({
               value={it.descricao}
               onChange={(e) => setItem(idx, { descricao: e.target.value })}
               placeholder="Descrição"
-              className="flex-1 rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} flex-1`}
             />
             <input
               type="number"
               value={it.valor || ""}
               onChange={(e) => setItem(idx, { valor: e.target.value === "" ? 0 : Number(e.target.value) })}
               placeholder="Valor"
-              className="w-28 rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} w-28`}
             />
             <select
               value={it.recorrencia}
               onChange={(e) => setItem(idx, { recorrencia: e.target.value as ItemRecorrencia })}
-              className="rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={controleCls("compacto")}
             >
               <option value="mensal">Mensal</option>
               <option value="unico">Único</option>
@@ -173,7 +174,7 @@ export function EditorProposta({
             type="date"
             value={validade}
             onChange={(e) => setValidade(e.target.value)}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block`}
           />
         </label>
         <label className="flex-1 text-xs text-cinza">
@@ -182,7 +183,7 @@ export function EditorProposta({
             value={observacoes}
             onChange={(e) => setObservacoes(e.target.value)}
             rows={3}
-            className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block w-full`}
           />
         </label>
       </div>
@@ -195,7 +196,7 @@ export function EditorProposta({
             <input
               value={respNome}
               onChange={(e) => setRespNome(e.target.value)}
-              className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} mt-0.5 block w-full`}
             />
           </label>
           <label className="flex-1 text-xs text-cinza">
@@ -203,7 +204,7 @@ export function EditorProposta({
             <input
               value={respEmail}
               onChange={(e) => setRespEmail(e.target.value)}
-              className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} mt-0.5 block w-full`}
             />
           </label>
           <label className="flex-1 text-xs text-cinza">
@@ -211,7 +212,7 @@ export function EditorProposta({
             <input
               value={respTelefone}
               onChange={(e) => setRespTelefone(e.target.value)}
-              className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
+              className={`${controleCls("compacto")} mt-0.5 block w-full`}
             />
           </label>
         </div>

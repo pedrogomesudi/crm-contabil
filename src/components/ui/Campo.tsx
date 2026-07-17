@@ -1,6 +1,20 @@
-// Classe padrão dos controles de formulário (SALDO). Reusada por telas que passam className.
-export const inputCls =
-  "w-full rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto placeholder:text-cinza-claro focus:border-verde";
+// A aparência do controle de formulário (SALDO) — input, select e textarea.
+// NÃO carrega largura: isso é do contexto (o FormGrid, ou um w-full declarado). O `inputCls`
+// antigo carregava `w-full`, e era por isso que 47 dos 80 controles do sistema não podiam usá-lo.
+const BASE =
+  "rounded-lg border border-linha bg-white text-sm text-texto placeholder:text-cinza-claro focus:border-verde";
+
+// Único eixo que varia. O compacto não é divergência: é o tamanho que 14 controles usam em
+// contexto denso (kanban, linha de tabela, grade). Fingir que só existe um degrau foi o que
+// produziu as 5 famílias de classe copiada.
+const PADDING = {
+  padrao: "px-3 py-2",
+  compacto: "px-2 py-1.5",
+} as const;
+
+export function controleCls(tamanho: keyof typeof PADDING = "padrao"): string {
+  return `${BASE} ${PADDING[tamanho]}`;
+}
 
 // Campo de formulário com label visível associado (o controle vai aninhado no <label>).
 export function Campo({

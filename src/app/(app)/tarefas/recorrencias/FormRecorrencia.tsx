@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PERIODICIDADES, rotuloRegra, type Periodicidade } from "@/lib/tarefas/recorrencia";
@@ -7,7 +8,7 @@ import { DEPARTAMENTOS, type Departamento } from "@/lib/clientes/departamentos";
 import { formatarData } from "@/lib/format";
 import { salvarRecorrencia, excluirRecorrencia, gerarAgora, type RecorrenciaView } from "./actions";
 
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 const DIAS = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
 
 type Colab = { id: string; nome: string };

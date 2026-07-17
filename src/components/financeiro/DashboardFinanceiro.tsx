@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState, useTransition } from "react";
 import { StatCard } from "@/components/ui/StatCard";
 import { Card } from "@/components/ui/Card";
@@ -50,7 +51,7 @@ export function DashboardFinanceiro({
             type="month"
             value={mes}
             onChange={(e) => trocar(e.target.value)}
-            className="ml-2 rounded-lg border border-linha bg-white px-3 py-1.5 text-sm text-texto focus:border-verde"
+            className={`${controleCls()} ml-2`}
           />
         </label>
         {pend && <span className="text-xs text-cinza-claro">atualizando…</span>}

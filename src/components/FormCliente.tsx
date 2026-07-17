@@ -2,7 +2,7 @@
 import { useActionState, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { TIPOS_PESSOA, REGIMES } from "@/lib/tipos";
-import { inputCls } from "@/components/ui/Campo";
+import { controleCls } from "@/components/ui/Campo";
 import { Secao } from "@/components/ui/Secao";
 import { FormGrid, FormCampo } from "@/components/ui/FormGrid";
 import { Botao } from "@/components/ui/Botao";
@@ -114,7 +114,7 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
               required
               value={tipoPessoa}
               onChange={(e) => setTipoPessoa(e.target.value)}
-              className={inputCls}
+              className={`${controleCls()} w-full`}
             >
               <option value="" disabled>
                 Selecione
@@ -133,7 +133,7 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
                 required
                 value={cpfCnpj}
                 onChange={(e) => setCpfCnpj(e.target.value)}
-                className={inputCls}
+                className={`${controleCls()} w-full`}
               />
               {ehCnpj && (
                 <button
@@ -156,14 +156,24 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
               required
               value={f.razao_social}
               onChange={set("razao_social")}
-              className={inputCls}
+              className={`${controleCls()} w-full`}
             />
           </FormCampo>
           <FormCampo label="Nome fantasia" span={5}>
-            <input name="nome_fantasia" value={f.nome_fantasia} onChange={set("nome_fantasia")} className={inputCls} />
+            <input
+              name="nome_fantasia"
+              value={f.nome_fantasia}
+              onChange={set("nome_fantasia")}
+              className={`${controleCls()} w-full`}
+            />
           </FormCampo>
           <FormCampo label="Regime tributário *" span={3}>
-            <select name="regime_tributario" required defaultValue={c.regime_tributario ?? ""} className={inputCls}>
+            <select
+              name="regime_tributario"
+              required
+              defaultValue={c.regime_tributario ?? ""}
+              className={`${controleCls()} w-full`}
+            >
               <option value="" disabled>
                 Selecione
               </option>
@@ -175,10 +185,18 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
             </select>
           </FormCampo>
           <FormCampo label="Inscrição estadual" span={2}>
-            <input name="inscricao_estadual" defaultValue={c.inscricao_estadual ?? ""} className={inputCls} />
+            <input
+              name="inscricao_estadual"
+              defaultValue={c.inscricao_estadual ?? ""}
+              className={`${controleCls()} w-full`}
+            />
           </FormCampo>
           <FormCampo label="Inscrição municipal" span={2}>
-            <input name="inscricao_municipal" defaultValue={c.inscricao_municipal ?? ""} className={inputCls} />
+            <input
+              name="inscricao_municipal"
+              defaultValue={c.inscricao_municipal ?? ""}
+              className={`${controleCls()} w-full`}
+            />
           </FormCampo>
         </FormGrid>
       </Secao>
@@ -186,28 +204,42 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
       <Secao titulo="Contato e endereço">
         <FormGrid>
           <FormCampo label="E-mail" span={5}>
-            <input name="email" type="email" defaultValue={c.email ?? ""} className={inputCls} />
+            <input name="email" type="email" defaultValue={c.email ?? ""} className={`${controleCls()} w-full`} />
           </FormCampo>
           <FormCampo label="Telefone / WhatsApp" span={3}>
-            <input name="telefone" defaultValue={c.telefone ?? ""} className={inputCls} />
+            <input name="telefone" defaultValue={c.telefone ?? ""} className={`${controleCls()} w-full`} />
           </FormCampo>
           <FormCampo label="Responsável (contato)" span={4}>
-            <input name="responsavel_nome" defaultValue={c.responsavel_nome ?? ""} className={inputCls} />
+            <input
+              name="responsavel_nome"
+              defaultValue={c.responsavel_nome ?? ""}
+              className={`${controleCls()} w-full`}
+            />
           </FormCampo>
           <FormCampo label="Logradouro" span={7}>
-            <input name="logradouro" value={f.logradouro} onChange={set("logradouro")} className={inputCls} />
+            <input
+              name="logradouro"
+              value={f.logradouro}
+              onChange={set("logradouro")}
+              className={`${controleCls()} w-full`}
+            />
           </FormCampo>
           <FormCampo label="Número" span={2}>
-            <input name="numero" value={f.numero} onChange={set("numero")} className={inputCls} />
+            <input name="numero" value={f.numero} onChange={set("numero")} className={`${controleCls()} w-full`} />
           </FormCampo>
           <FormCampo label="Complemento" span={3}>
-            <input name="complemento" value={f.complemento} onChange={set("complemento")} className={inputCls} />
+            <input
+              name="complemento"
+              value={f.complemento}
+              onChange={set("complemento")}
+              className={`${controleCls()} w-full`}
+            />
           </FormCampo>
           <FormCampo label="Bairro" span={5}>
-            <input name="bairro" value={f.bairro} onChange={set("bairro")} className={inputCls} />
+            <input name="bairro" value={f.bairro} onChange={set("bairro")} className={`${controleCls()} w-full`} />
           </FormCampo>
           <FormCampo label="Cidade" span={4}>
-            <input name="cidade" value={f.cidade} onChange={set("cidade")} className={inputCls} />
+            <input name="cidade" value={f.cidade} onChange={set("cidade")} className={`${controleCls()} w-full`} />
           </FormCampo>
           <FormCampo label="UF" span={1}>
             <input
@@ -216,11 +248,11 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
               value={f.uf}
               onChange={set("uf")}
               style={{ textTransform: "uppercase" }}
-              className={inputCls}
+              className={`${controleCls()} w-full`}
             />
           </FormCampo>
           <FormCampo label="CEP" span={2}>
-            <input name="cep" value={f.cep} onChange={set("cep")} className={inputCls} />
+            <input name="cep" value={f.cep} onChange={set("cep")} className={`${controleCls()} w-full`} />
           </FormCampo>
         </FormGrid>
       </Secao>
@@ -231,24 +263,36 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
             <input
               name="rep_nacionalidade"
               defaultValue={(c.representante ?? {}).nacionalidade ?? ""}
-              className={inputCls}
+              className={`${controleCls()} w-full`}
             />
           </FormCampo>
           <FormCampo label="Estado civil" span={3}>
             <input
               name="rep_estado_civil"
               defaultValue={(c.representante ?? {}).estado_civil ?? ""}
-              className={inputCls}
+              className={`${controleCls()} w-full`}
             />
           </FormCampo>
           <FormCampo label="Profissão" span={3}>
-            <input name="rep_profissao" defaultValue={(c.representante ?? {}).profissao ?? ""} className={inputCls} />
+            <input
+              name="rep_profissao"
+              defaultValue={(c.representante ?? {}).profissao ?? ""}
+              className={`${controleCls()} w-full`}
+            />
           </FormCampo>
           <FormCampo label="RG" span={3}>
-            <input name="rep_rg" defaultValue={(c.representante ?? {}).rg ?? ""} className={inputCls} />
+            <input
+              name="rep_rg"
+              defaultValue={(c.representante ?? {}).rg ?? ""}
+              className={`${controleCls()} w-full`}
+            />
           </FormCampo>
           <FormCampo label="CPF do representante" span={3}>
-            <input name="rep_cpf" defaultValue={(c.representante ?? {}).cpf ?? ""} className={inputCls} />
+            <input
+              name="rep_cpf"
+              defaultValue={(c.representante ?? {}).cpf ?? ""}
+              className={`${controleCls()} w-full`}
+            />
           </FormCampo>
         </FormGrid>
       </Secao>
@@ -257,7 +301,7 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
         <FormGrid>
           <FormCampo label="Contador responsável" span={5}>
             {contadorEditavel ? (
-              <select name="contador_id" defaultValue={c.contador_id ?? ""} className={inputCls}>
+              <select name="contador_id" defaultValue={c.contador_id ?? ""} className={`${controleCls()} w-full`}>
                 <option value="">— sem atribuição —</option>
                 {contadores.map((ct) => (
                   <option key={ct.id} value={ct.id}>
@@ -271,11 +315,16 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
             )}
           </FormCampo>
           <FormCampo label="Início do contrato" span={3}>
-            <input name="data_inicio" type="date" defaultValue={c.data_inicio ?? ""} className={inputCls} />
+            <input
+              name="data_inicio"
+              type="date"
+              defaultValue={c.data_inicio ?? ""}
+              className={`${controleCls()} w-full`}
+            />
           </FormCampo>
           {modo === "editar" && (
             <FormCampo label="Status" span={4}>
-              <select name="status" defaultValue={c.status ?? "ativo"} className={inputCls}>
+              <select name="status" defaultValue={c.status ?? "ativo"} className={`${controleCls()} w-full`}>
                 <option value="ativo">Ativo</option>
                 <option value="inativo">Inativo</option>
               </select>
@@ -287,7 +336,7 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
               rows={3}
               maxLength={2000}
               defaultValue={c.observacoes ?? ""}
-              className={inputCls}
+              className={`${controleCls()} w-full`}
             />
           </FormCampo>
         </FormGrid>

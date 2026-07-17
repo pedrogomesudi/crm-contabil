@@ -7,6 +7,7 @@ import { TAREFA_STATUS, TAREFA_PRIORIDADE, type TarefaStatus } from "@/lib/taref
 import { DEPARTAMENTOS } from "@/lib/clientes/departamentos";
 import { classificarAlerta } from "@/lib/onboarding/alertas";
 import { Calendario } from "./Calendario";
+import { controleCls } from "@/components/ui/Campo";
 
 type Colab = { id: string; nome: string };
 const rotStatus = (s: string) => TAREFA_STATUS.find((x) => x.valor === s)?.rotulo ?? s;
@@ -90,7 +91,7 @@ export function PainelTarefas({
           <select
             name="responsavel"
             defaultValue={filtros.responsavel ?? ""}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block`}
           >
             <option value="">Todos</option>
             {colaboradores.map((c) => (
@@ -105,7 +106,7 @@ export function PainelTarefas({
           <select
             name="departamento"
             defaultValue={filtros.departamento ?? ""}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block`}
           >
             <option value="">Todos</option>
             {DEPARTAMENTOS.map((d) => (
@@ -120,7 +121,7 @@ export function PainelTarefas({
           <select
             name="status"
             defaultValue={filtros.status ?? ""}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block`}
           >
             <option value="">Todos</option>
             {TAREFA_STATUS.map((s) => (
@@ -135,7 +136,7 @@ export function PainelTarefas({
           <select
             name="prioridade"
             defaultValue={filtros.prioridade ?? ""}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block`}
           >
             <option value="">Todas</option>
             {TAREFA_PRIORIDADE.map((p) => (
@@ -177,7 +178,7 @@ export function PainelTarefas({
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
           placeholder="Nova tarefa…"
-          className="flex-1 rounded-lg border border-linha px-3 py-2 text-sm"
+          className={`${controleCls()} flex-1`}
         />
         <button
           disabled={ocupado || !titulo.trim()}

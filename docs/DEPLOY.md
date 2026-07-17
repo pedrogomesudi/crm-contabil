@@ -1,10 +1,17 @@
 # Deploy — CRM Contábil (EasyPanel na Hostinger VPS)
 
-Guia operacional da Fase 1. Substitua `crm.SEU-DOMINIO.com.br` pelo domínio escolhido.
+Guia operacional da Fase 1.
 
+- **App em produção:** **`https://app.seusaldo.ai`** — app `cursoia/crm-contabil` no EasyPanel.
 - **VPS:** `srv1767582.hstgr.cloud` — IP `187.77.234.86` (EasyPanel).
 - **Supabase:** dois projetos **separados** — veja abaixo.
-- **Porta do app:** 3000 · **Health check:** `/api/health`.
+- **Porta do app:** 3000 · **Health check:** `/api/health` (devolve `{"status":"ok","versao":"x.y.z"}`).
+
+> **Publicar é um clique, não um merge.** O `Source` é GitHub/`main`, mas **não há webhook no repo**
+> (`gh api repos/pedrogomesudi/crm-contabil/hooks` → `[]`), então o merge **não dispara build**. Para
+> subir: botão **Implantar**, no painel do app. Confirme sempre pelo `/api/health` — é ele que diz o que
+> está no ar, não o `git log`. Os PRs #8, #9 e #10 mergearam achando que publicavam; a produção ficou em
+> 6.5.0 até 17/07, quando o primeiro **Implantar** manual subiu a 6.6.0.
 
 ## Ambientes — produção e desenvolvimento são bancos diferentes
 
@@ -37,11 +44,13 @@ No painel de DNS do domínio (Wix, Hostinger ou outro registrador):
 
 | Tipo | Nome/Host | Valor | TTL |
 |------|-----------|-------|-----|
-| `A`  | `crm` (ou `@` se domínio raiz) | `187.77.234.86` | padrão |
+| `A`  | `app` (ou `@` se domínio raiz) | `187.77.234.86` | padrão |
 
-- Subdomínio de `gomesadvocacia.com.br` (DNS no Wix): adicione um registro **A** `crm` → `187.77.234.86`.
+**Já feito:** `app.seusaldo.ai` → `187.77.234.86` (confirmado por `dig +short app.seusaldo.ai`). O que
+segue vale para um domínio novo (outro escritório, staging).
+
 - Domínio próprio na Hostinger: aponte o **A** (ou os nameservers para a Hostinger) para o IP do VPS.
-- Propagação leva de minutos a algumas horas. Confira com: `dig +short crm.SEU-DOMINIO.com.br`.
+- Propagação leva de minutos a algumas horas. Confira com: `dig +short <o-dominio>`.
 
 ---
 
@@ -49,7 +58,7 @@ No painel de DNS do domínio (Wix, Hostinger ou outro registrador):
 
 No EasyPanel → **+ Service → App**.
 
-### Opção A — GitHub (recomendado, auto-deploy)
+### Opção A — GitHub (a que está em uso; deploy por clique, não automático)
 1. Faça push deste repositório para um repo (privado) no GitHub.
 2. App → **Source = GitHub** → selecione o repo e a branch `main`.
 3. **Build = Dockerfile** (o `Dockerfile` na raiz já está pronto, output `standalone`).
@@ -60,7 +69,7 @@ No EasyPanel → **+ Service → App**.
    docker build \
      --build-arg NEXT_PUBLIC_SUPABASE_URL="https://SEU-REF.supabase.co" \
      --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_..." \
-     --build-arg NEXT_PUBLIC_SITE_URL="https://crm.SEU-DOMINIO.com.br" \
+     --build-arg NEXT_PUBLIC_SITE_URL="https://app.seusaldo.ai" \
      -t SEU-USUARIO/crm-contabil:0.1.0 .
    docker push SEU-USUARIO/crm-contabil:0.1.0
    ```
@@ -75,7 +84,7 @@ No EasyPanel → **+ Service → App**.
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://SEU-REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...        # a publishable key (NÃO a anon JWT legada)
-NEXT_PUBLIC_SITE_URL=https://crm.SEU-DOMINIO.com.br
+NEXT_PUBLIC_SITE_URL=https://app.seusaldo.ai
 ```
 
 **Runtime (secreta, só no servidor — NUNCA NEXT_PUBLIC):**
@@ -94,7 +103,7 @@ EMAIL_CRIPTO_KEY=<hex de 32 bytes>                      # cifra a senha SMTP / c
 
 ### Rede / domínio
 - **Port mapping:** container `3000`.
-- **Domains:** adicione `crm.SEU-DOMINIO.com.br` → **HTTPS habilitado** (EasyPanel emite Let's Encrypt).
+- **Domains:** adicione `app.seusaldo.ai` → **HTTPS habilitado** (EasyPanel emite Let's Encrypt).
 - **Health check:** `/api/health` — devolve `{"status":"ok","versao":"6.4.0"}`. O `versao` é a release
   que está **no ar**: como o deploy é automático a partir do `main`, é assim que se confere se o que
   subiu é o que você lançou (`curl -s https://app.seusaldo.ai/api/health`).
@@ -107,10 +116,10 @@ EMAIL_CRIPTO_KEY=<hex de 32 bytes>                      # cifra a senha SMTP / c
 ## 3. Configurar URLs de Auth no Supabase
 
 Supabase → **Authentication → URL Configuration**:
-- **Site URL:** `https://crm.SEU-DOMINIO.com.br`
+- **Site URL:** `https://app.seusaldo.ai`
 - **Redirect URLs (adicionar):**
-  - `https://crm.SEU-DOMINIO.com.br/auth/confirmar`
-  - `https://crm.SEU-DOMINIO.com.br/redefinir-senha`
+  - `https://app.seusaldo.ai/auth/confirmar`
+  - `https://app.seusaldo.ai/redefinir-senha`
 
 > Sem isso, os links de **convite** e **recuperação de senha** apontam para o domínio errado e falham.
 > O SMTP (Brevo) já está configurado e validado — não precisa mexer.
@@ -164,14 +173,15 @@ então `localhost` nunca funcionaria.
 
 ## 5. Verificação ponta a ponta (no domínio público)
 
-1. `https://crm.SEU-DOMINIO.com.br/api/health` → `{"status":"ok"}`.
+1. `https://app.seusaldo.ai/api/health` → `{"status":"ok","versao":"x.y.z"}` — **confira se a `versao` é
+   a que você acabou de lançar**. Se ainda for a anterior, o deploy não rodou (veja o aviso no topo).
 2. **Login** como admin.
 3. **Convidar** um usuário → conferir e-mail de convite chegando → definir senha pelo link → entrar.
 4. **Cliente:** cadastrar → **anexar** documento → **baixar** (gera log) → **inativar**.
 5. Logar como **assistente** → confirmar honorário **invisível**.
 6. Conferir headers em produção:
    ```bash
-   curl -sI https://crm.SEU-DOMINIO.com.br/login | grep -iE "content-security|strict-transport|cross-origin"
+   curl -sI https://app.seusaldo.ai/login | grep -iE "content-security|strict-transport|cross-origin"
    ```
 
 ---
@@ -326,8 +336,9 @@ git push --tags        # se houver remoto
 
 - **Migrations em produção:** já aplicadas via runner próprio (`npm run db:migrate`) no mesmo projeto.
   Para novas migrations no futuro: rode `npm run db:migrate` e `npm run db:test` localmente apontando ao projeto.
-- **Atualizar o app:** na Opção A, basta `git push` (auto-deploy). Na Opção B, rebuild + push da imagem e
-  redeploy no EasyPanel.
+- **Atualizar o app:** na Opção A, faça o merge no `main` e clique **Implantar** no painel — `git push`
+  **não** basta: não há webhook, então nada avisa o EasyPanel (foi o que fez 3 releases não subirem).
+  Confirme pelo `/api/health`. Na Opção B, rebuild + push da imagem e redeploy no EasyPanel.
 - **Rollback:** o EasyPanel mantém histórico de deploys; reverta para o anterior pela UI.
 
 ## Gotenberg (conversão de contrato para PDF — V3)

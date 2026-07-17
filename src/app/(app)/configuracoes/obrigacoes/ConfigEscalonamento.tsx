@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { salvarConfigEscalonamento, type ConfigEscalonamentoView } from "./actions";
 
@@ -12,7 +13,7 @@ export function ConfigEscalonamento({ inicial }: { inicial: ConfigEscalonamentoV
     const r = await salvarConfigEscalonamento({ ativo, diasLider, diasSocio });
     setMsg(r.ok ? "Salvo." : (r.erro ?? "Erro"));
   }
-  const num = "w-16 rounded-lg border border-linha px-2 py-1 text-sm";
+  const num = `${controleCls("compacto")} w-16`;
   return (
     <section className="space-y-2 rounded-2xl border border-linha bg-white p-3">
       <h2 className="font-display text-lg font-semibold text-texto">Escalonamento de atrasos</h2>
