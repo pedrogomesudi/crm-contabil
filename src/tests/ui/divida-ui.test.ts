@@ -171,6 +171,10 @@ describe("o controle não escreve a própria borda", () => {
     // Campo de composição de mensagem do chat: pill grande (rounded-xl, bg-creme, px-4 py-2.5),
     // como os de busca. Não é campo de formulário — é caixa de "Responder…".
     "src/app/(app)/atendimento/Inbox.tsx": "campo de mensagem do chat (rounded-xl, bg-creme)",
+    // Input de percentual da tabela de reajuste em lote: borda CONDICIONAL (border-negativo quando
+    // o valor é negativo, border-linha caso contrário) — feedback de erro que o token, de borda
+    // fixa, não expressa. E é w-20 px-1 py-0.5, menor que o compacto, como a célula de planilha.
+    "src/app/(app)/financeiro/reajuste/ReajusteLote.tsx": "input de % com borda condicional (feedback de erro)",
   };
 
   // Uma const parece classe de CONTROLE (não de card): tem borda estática e o canto de controle
@@ -179,14 +183,25 @@ describe("o controle não escreve a própria borda", () => {
   const constDeControle = (cls: string) =>
     bordaEstatica(cls) && /\brounded(-lg)?\b/.test(cls) && !/\brounded-[23]xl\b/.test(cls);
 
-  // Pega os dois vetores: (1) className="…border…" inline no controle, via parser de chaves;
-  // (2) a string com border extraída para QUALQUER const (não só nomes terminados em "cls" —
-  // um `const input = "…border…"` alimentava 12 controles e escapava). Comentário não conta.
+  // O className do controle pode estar em aspas ("…") OU em template-literal (`…${cond}…`). A
+  // segunda revisão do branch achou um <input> com `rounded border … ${neg ? "border-negativo" :
+  // "border-linha"}` que passava calado — o guard antigo só via aspas duplas. Pegamos os dois:
+  // uma classe de borda "estática" (fora de ${…}) em qualquer das duas formas denuncia a caixa
+  // desenhada à mão. O trecho ${…} interpolado é removido antes de testar — border-negativo lá
+  // dentro é escolha de cor condicional, não a borda-base copiada.
+  const classNameDoControle = (corpo: string): string | null => {
+    const aspas = /className="([^"]*)"/.exec(corpo);
+    if (aspas?.[1] !== undefined) return aspas[1];
+    const tmpl = /className=\{`([^`]*)`\}/.exec(corpo);
+    if (tmpl?.[1] !== undefined) return tmpl[1].replace(/\$\{[^}]*\}/g, " ");
+    return null;
+  };
+
   const declaraBorda = (p: string): boolean => {
     const src = fonte(p);
     const inline = corposDeControle(src).some((corpo) => {
-      const cm = /className="([^"]*)"/.exec(corpo);
-      return cm?.[1] ? bordaEstatica(cm[1]) : false;
+      const cm = classNameDoControle(corpo);
+      return cm ? bordaEstatica(cm) : false;
     });
     const emConst = [...src.matchAll(/\bconst \w+\s*=\s*\n?\s*"([^"]*)"/g)].some((m) =>
       m[1] ? constDeControle(m[1]) : false,

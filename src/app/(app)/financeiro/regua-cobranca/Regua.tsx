@@ -80,7 +80,7 @@ export function Regua({
                 <input type="checkbox" name="ativa" defaultChecked={e.ativa} /> ativa
               </label>
               <input type="hidden" name="ordem" defaultValue={e.ordem} />
-              <button type="submit" className={controleCls("compacto")}>
+              <button type="submit" className="rounded-lg border border-linha px-2 py-1 text-sm hover:bg-creme">
                 Salvar
               </button>
             </div>
