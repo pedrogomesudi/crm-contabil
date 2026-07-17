@@ -74,12 +74,14 @@ export default async function ConfiguracoesHubPage() {
   return (
     <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <PageHeader titulo="Configurações" subtitulo="Integrações e credenciais do sistema" />
-      <ul className="grid gap-3 sm:grid-cols-2">
+      {/* auto-rows-fr + h-full: todos os cards com a mesma altura, mesmo quando a descrição
+          ocupa mais linhas em um deles. Sem isso o grid vira uma escada. */}
+      <ul className="grid auto-rows-fr gap-3 sm:grid-cols-2">
         {itens.map((i) => (
           <li key={i.href}>
             <Link
               href={i.href}
-              className="flex items-start justify-between gap-3 rounded-2xl border border-linha bg-white p-4 transition hover:border-cinza-claro hover:shadow-sm"
+              className="flex h-full items-start justify-between gap-3 rounded-2xl border border-linha bg-white p-4 transition hover:border-cinza-claro hover:shadow-sm"
             >
               <span>
                 <span className="block font-medium text-texto">{i.label}</span>
