@@ -8,6 +8,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.6.0] — 2026-07-17
+
+O **redesign do layout**, nas três fatias. As fatias 1 e 2 já haviam ido para o `main` e estavam no ar
+sem versão própria desde 16/07 — esta release dá nome ao conjunto, em vez de inventar retroativamente
+duas tags que nunca corresponderam a um deploy.
+
 ### Adicionado
 
 - **Redesign do layout — fatia 1 (fundação visual):** o cadastro de cliente usava **58% da largura**
