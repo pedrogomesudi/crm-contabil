@@ -4,6 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeAtenderSolicitacoes } from "@/lib/clientes/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubNav } from "@/components/ui/SubNav";
 import {
   SOLICITACAO_CATEGORIAS,
   SOLICITACAO_STATUS,
@@ -66,13 +67,14 @@ export default async function SolicitacoesPage({
 
   return (
     <main className="mx-auto max-w-[1280px] space-y-5 p-4">
-      <div className="flex gap-1 text-sm">
-        <span className="rounded-lg border border-verde bg-verde/10 px-3 py-1.5 text-verde">Do cliente</span>
-        <Link href="/solicitacoes/internas" className="rounded-lg border border-linha px-3 py-1.5 text-cinza">
-          Internas
-        </Link>
-      </div>
       <PageHeader titulo="Solicitações" subtitulo="Pedidos abertos pelos clientes no portal" />
+      {/* Era um par de botões-âncora imitando abas — o quinto padrão de navegação do sistema. */}
+      <SubNav
+        itens={[
+          { href: "/solicitacoes", label: "Do portal" },
+          { href: "/solicitacoes/internas", label: "Internas" },
+        ]}
+      />
 
       <div className="flex flex-wrap items-center gap-1.5">
         <Link href={link({ status: undefined })} className={chip(!sp.status)}>

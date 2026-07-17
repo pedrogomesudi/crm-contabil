@@ -19,6 +19,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   Nasceram `Container`, `FormGrid`/`FormCampo`, `Secao` e `Abas`; o `inputCls` virou fonte única (era a
   mesma string em 4 arquivos, e uma delas já havia divergido).
 
+- **Navegação reorganizada (fatia 2):** o menu tinha **12 itens planos** e **11 rotas fora dele** — a
+  Conformidade de obrigações ficava a **3 cliques dentro de "Clientes"**, atrás de um `<a>` cru no meio de
+  um calendário. Agora são **4 grupos** (Operação · Entrada · Relacionamento · Financeiro) e o `SubNav`
+  virou o padrão único de navegação secundária (de 2 para 6 telas), aposentando os botões-âncora que
+  imitavam abas. **Obrigações e Vencimentos saíram de dentro de "Clientes"** e viraram itens próprios,
+  cada um com o **seu** badge — antes os três eram somados num número só. O mapa do menu virou dado puro
+  (`lib/ui/navegacao.ts`), e um teste varre as rotas e falha se alguma tela ficar sem caminho até ela.
+  As permissões **não mudaram**: só onde as coisas aparecem.
+
 ### Corrigido
 
 - **`amber` fora do brand kit:** o `Badge` de atenção usava `amber-100/800` do Tailwind. Nasceu o token

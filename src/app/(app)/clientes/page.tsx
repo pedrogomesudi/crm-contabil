@@ -8,10 +8,6 @@ import { BotaoExportar } from "@/components/ui/BotaoExportar";
 import { exportarClientes } from "./actions";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SubNav, type ItemSubNav } from "@/components/ui/SubNav";
-import { podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
-import { contarRiscos } from "@/app/(app)/obrigacoes/actions";
-import { contarEscalonamento } from "@/app/(app)/obrigacoes/escalonamento-actions";
-import { contarVencimentos } from "@/app/(app)/vencimentos/actions";
 import { Botao } from "@/components/ui/Botao";
 import { Painel } from "@/components/ui/Painel";
 import { Badge } from "@/components/ui/Badge";
@@ -47,22 +43,14 @@ export default async function ClientesPage({
 
   const { data: clientes, error } = await query;
 
-  // Obrigações, Escalonamento e Vencimentos saíram do menu lateral e vivem aqui.
-  // Os badges vêm junto: um alerta que ninguém vê é um alerta que não existe.
-  const secoes: ItemSubNav[] = [];
-  if (podeCriarCliente(perfil?.papel)) {
-    const [riscos, escal] = await Promise.all([contarRiscos(), contarEscalonamento()]);
-    secoes.push({ href: "/obrigacoes", label: "Obrigações", badge: riscos || undefined });
-    secoes.push({
-      href: "/obrigacoes/escalonamento",
-      label: "Escalonamento",
-      badge: escal || undefined,
-    });
-  }
-  if (podeGerenciarVencimentos(perfil?.papel)) {
-    const venc = await contarVencimentos();
-    secoes.push({ href: "/vencimentos", label: "Vencimentos", badge: venc || undefined });
-  }
+  // Obrigações e Vencimentos voltaram para o menu (agora são itens próprios, com badge cada
+  // um) — nada em "Clientes" sugeria conformidade fiscal. Aqui ficam só as telas que são
+  // mesmo desta seção.
+  const secoes: ItemSubNav[] = [
+    { href: "/clientes", label: "Lista" },
+    ...(podeGerenciarResponsaveis(perfil?.papel) ? [{ href: "/clientes/responsaveis", label: "Responsáveis" }] : []),
+    ...(podeVerHonorario(perfil?.papel) ? [{ href: "/nfse/lote", label: "NFS-e em lote" }] : []),
+  ];
 
   return (
     // Régua larga: é tabela — espremer as colunas em 1280px pioraria a leitura.
@@ -75,16 +63,8 @@ export default async function ClientesPage({
             <>
               {/* A tela lista até LIMITE; a exportação refaz a busca sem limite. */}
               <BotaoExportar acao={exportarClientes.bind(null, { q, status })} />
-              {podeVerHonorario(perfil?.papel) && (
-                <Link href="/nfse/lote">
-                  <Botao variante="secundario">Emitir NFS-e em lote</Botao>
-                </Link>
-              )}
-              {podeGerenciarResponsaveis(perfil?.papel) && (
-                <Link href="/clientes/responsaveis">
-                  <Botao variante="secundario">Responsáveis por departamento</Botao>
-                </Link>
-              )}
+              {/* "NFS-e em lote" e "Responsáveis" viraram chips do SubNav: são navegação, não
+                  ação. Manter os dois seria a sexta forma de chegar no mesmo lugar. */}
               {podeCriar && (
                 <Link href="/clientes/nova-empresa">
                   <Botao variante="secundario">Nova empresa (em constituição)</Botao>

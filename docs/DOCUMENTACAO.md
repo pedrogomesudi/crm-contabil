@@ -37,6 +37,24 @@ Quatro papéis de **equipe** e um papel de **cliente** (portal). O papel é a **
 | **financeiro** | Financeiro do escritório — contas, cobrança, honorários, relatórios. |
 | **cliente** | Cliente do escritório — **só o portal** (`/portal`), somente leitura do que é dele (ver 3.6). |
 
+### O menu por papel
+
+O menu lateral é agrupado por afinidade e **montado a partir do papel** — o mapa é dado puro em
+`src/lib/ui/navegacao.ts`, testado sem DOM. **As permissões não mudam com a organização do menu:** cada
+item mantém o gate que sempre teve; o menu apenas não mostra o que o papel não pode abrir.
+
+| Grupo | Itens | Quem vê |
+|---|---|---|
+| *(solto)* | Início | todos |
+| **Operação** | Clientes · Obrigações · Vencimentos · Tarefas · Timesheet | Clientes/Tarefas/Timesheet: todos. Obrigações: admin, assistente, contador. Vencimentos: admin, assistente, contador. |
+| **Entrada** | Comercial · Onboarding · Legalização | admin, assistente, contador — **o grupo inteiro some para `financeiro`** |
+| **Relacionamento** | Atendimento · Solicitações · Comunicados | Atendimento: admin, financeiro, contador. Solicitações: admin, assistente, contador. Comunicados: todos. |
+| **Financeiro** | Financeiro (hub de 16 telas) | admin, financeiro |
+| *(solto)* | Configurações (hub de 16 telas, inclui Usuários, LGPD e Domínio) | admin, assistente |
+
+**Regra:** um grupo sem nenhum item visível **não é renderizado** — nem o título. Cada item mostra o
+**próprio** badge (antes, "Clientes" somava obrigações + escalonamento + vencimentos num número só).
+
 > O papel `cliente` é **negado por padrão** em todas as policies de equipe; só ganha SELECT estreito nas
 > linhas do próprio cadastro. Nasce apenas pelo **convite ao portal** (na ficha do cliente) e nunca aparece
 > na tela de Usuários.

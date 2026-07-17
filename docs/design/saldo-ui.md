@@ -42,6 +42,21 @@ da razão social. No mobile tudo colapsa para 1 coluna.
 > strings completas e não gera classe a partir de interpolação. Trocar por `` `md:col-span-${n}` `` passa
 > nos testes e quebra o layout em produção, calado.
 
+## Navegação: duas camadas, só duas
+
+- **Menu lateral** = seções, em grupos por afinidade (**Operação · Entrada · Relacionamento ·
+  Financeiro**, com Início e Configurações soltos). O mapa é **dado puro** em `src/lib/ui/navegacao.ts`:
+  quem vê o quê é regra, e regra se testa sem DOM.
+- **SubNav** = as telas de uma seção.
+- **Hub** (grid de cards) só onde a seção tem muitas telas de peso parecido: Financeiro e Configurações,
+  16 cada. O defeito nunca foi o hub — era ele ser o **único** caminho.
+- Um grupo **não é renderizado** sem item visível (o papel `financeiro` não vê "Entrada", então o título
+  não aparece).
+- **Cada item mostra o próprio badge.** O menu somava obrigações + escalonamento + vencimentos num número
+  só, em "Clientes".
+- **Nada de sexta forma:** links "← voltar" soltos, botões-âncora imitando abas e `<a>` cru não entram em
+  tela nova. `src/tests/ui/rotas-alcancaveis.test.ts` falha se alguma tela ficar sem caminho.
+
 ## `Abas` × `SubNav` — parecidos, diferentes
 
 - **`SubNav`**: navega **entre rotas** (`href`).
