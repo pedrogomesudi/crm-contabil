@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { atribuirEmMassa } from "./actions";
 import type { Departamento } from "@/lib/clientes/departamentos";
+import { controleCls } from "@/components/ui/Campo";
 
 type ClienteLinha = { id: string; razaoSocial: string; cpfCnpj: string; responsavelId: string | null };
 type Colab = { id: string; nome: string };
@@ -54,11 +55,7 @@ export function RedistribuicaoCarteira({
       >
         <label className="text-xs text-cinza">
           Departamento
-          <select
-            name="depto"
-            defaultValue={filtros.depto}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
-          >
+          <select name="depto" defaultValue={filtros.depto} className={`${controleCls("compacto")} mt-0.5 block`}>
             {departamentos.map((d) => (
               <option key={d.valor} value={d.valor}>
                 {d.rotulo}
@@ -68,11 +65,7 @@ export function RedistribuicaoCarteira({
         </label>
         <label className="text-xs text-cinza">
           Responsável atual
-          <select
-            name="resp"
-            defaultValue={filtros.resp}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
-          >
+          <select name="resp" defaultValue={filtros.resp} className={`${controleCls("compacto")} mt-0.5 block`}>
             <option value="">Qualquer</option>
             <option value="nenhum">Sem responsável</option>
             {colaboradores.map((c) => (
@@ -84,11 +77,7 @@ export function RedistribuicaoCarteira({
         </label>
         <label className="flex-1 text-xs text-cinza">
           Busca (razão social)
-          <input
-            name="q"
-            defaultValue={filtros.q}
-            className="mt-0.5 block w-full rounded-lg border border-linha px-2 py-1.5 text-sm"
-          />
+          <input name="q" defaultValue={filtros.q} className={`${controleCls("compacto")} mt-0.5 block w-full`} />
         </label>
         <button className="rounded-lg bg-verde px-3 py-1.5 text-white">Filtrar</button>
       </form>
@@ -145,7 +134,7 @@ export function RedistribuicaoCarteira({
           <select
             value={deptoAlvo}
             onChange={(e) => setDeptoAlvo(e.target.value as Departamento)}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block`}
           >
             {departamentos.map((d) => (
               <option key={d.valor} value={d.valor}>
@@ -159,7 +148,7 @@ export function RedistribuicaoCarteira({
           <select
             value={destino}
             onChange={(e) => setDestino(e.target.value)}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block`}
           >
             <option value="">— remover responsável</option>
             {colaboradores.map((c) => (

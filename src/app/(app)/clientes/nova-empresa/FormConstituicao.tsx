@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { criarEmpresaConstituicao } from "../constituicao-actions";
+import { controleCls } from "@/components/ui/Campo";
 
 const input = "mt-0.5 w-full rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto";
 type Socio = { nome: string; cpf: string; participacao: string; papelSocietario: "administrador" | "quotista" };
@@ -177,7 +178,7 @@ export function FormConstituicao({
       <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-linha bg-creme p-3 text-sm">
         <label className="text-xs text-cinza">
           Modelo de abertura
-          <select name="modelo_abertura" className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm">
+          <select name="modelo_abertura" className={`${controleCls("compacto")} mt-0.5 block`}>
             <option value="">— iniciar depois</option>
             {modelos.map((m) => (
               <option key={m.id} value={m.id}>
@@ -192,7 +193,7 @@ export function FormConstituicao({
             type="date"
             name="data_inicio"
             defaultValue={hoje}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
+            className={`${controleCls("compacto")} mt-0.5 block`}
           />
         </label>
       </div>

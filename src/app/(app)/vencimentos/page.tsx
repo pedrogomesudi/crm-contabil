@@ -7,6 +7,7 @@ import type { Severidade } from "@/lib/vencimentos/alerta";
 import { listarVencimentos } from "./actions";
 import { BotaoExportar } from "@/components/ui/BotaoExportar";
 import type { RelatorioExportavel } from "@/lib/exportar/tipos";
+import { controleCls } from "@/components/ui/Campo";
 
 export const metadata = { title: "Vencimentos" };
 
@@ -92,7 +93,7 @@ export default async function VencimentosPage({
           placeholder="Buscar cliente"
           aria-label="Buscar cliente"
           maxLength={60}
-          className="rounded-lg border border-linha px-3 py-2 text-sm text-texto"
+          className={controleCls()}
         />
         <select
           name="sev"

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LEGALIZACAO_ORGAOS, type LegOrgao } from "@/lib/legalizacao/tipos";
+import { controleCls } from "@/components/ui/Campo";
 
 type Linha = {
   id: string;
@@ -28,11 +29,7 @@ export function PainelLegalizacao({
       >
         <label className="text-xs text-cinza">
           Status
-          <select
-            name="status"
-            defaultValue={filtros.status}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
-          >
+          <select name="status" defaultValue={filtros.status} className={`${controleCls("compacto")} mt-0.5 block`}>
             <option value="em_andamento">Em andamento</option>
             <option value="concluido">Concluído</option>
             <option value="cancelado">Cancelado</option>
@@ -41,11 +38,7 @@ export function PainelLegalizacao({
         </label>
         <label className="text-xs text-cinza">
           Órgão pendente
-          <select
-            name="orgao"
-            defaultValue={filtros.orgao}
-            className="mt-0.5 block rounded-lg border border-linha px-2 py-1.5 text-sm"
-          >
+          <select name="orgao" defaultValue={filtros.orgao} className={`${controleCls("compacto")} mt-0.5 block`}>
             <option value="">Qualquer</option>
             {LEGALIZACAO_ORGAOS.map((o) => (
               <option key={o.valor} value={o.valor}>

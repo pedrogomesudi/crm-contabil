@@ -2,6 +2,7 @@
 import { useActionState } from "react";
 import type { EstadoMarca } from "./actions";
 import { salvarSla } from "./portal-actions";
+import { controleCls } from "@/components/ui/Campo";
 
 export function FormSla({ dias }: { dias: number }) {
   const [estado, acao, pendente] = useActionState<EstadoMarca, FormData>(salvarSla, {});
@@ -20,7 +21,7 @@ export function FormSla({ dias }: { dias: number }) {
           min={0}
           max={60}
           defaultValue={dias}
-          className="mt-0.5 block w-28 rounded-lg border border-linha px-2 py-1.5 text-sm"
+          className={`${controleCls("compacto")} mt-0.5 block w-28`}
         />
       </label>
       <div className="flex items-center gap-3">
