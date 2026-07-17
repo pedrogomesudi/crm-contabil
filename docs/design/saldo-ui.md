@@ -29,8 +29,30 @@ Havia **9 larguras** espalhadas por 74 lugares, sem regra. Agora são **três de
 - **Nada de `max-w-*` solto** numa tela nova: use o `Container`.
 - **Seções não impõem largura.** Um bloco dentro de uma tela ocupa o pai — era o que fazia a borda
   direita descer serrilhada na ficha do cliente (672px num bloco, 896px no vizinho).
-- As telas migradas ainda usam `max-w-[720px]`/`max-w-[1280px]` inline com os **mesmos valores** da
-  régua; elas passam para o `Container` conforme forem tocadas.
+- **A migração terminou (fatia 3).** Não há mais `max-w-[720px]`/`max-w-[1280px]` inline: as 61 telas
+  que os tinham passaram para o `Container`. `src/tests/ui/divida-ui.test.ts` falha se voltarem.
+- Um `max-w-*` **genérico** continua legítimo onde não é régua de tela: `max-w-2xl` na folha impressa da
+  proposta, `max-w-[85%]` no balão de conversa, `max-w-full` num `<audio>`. A régua são só os dois valores
+  que o `Container` possui.
+
+## O `<main>` é do layout — a tela não abre outro
+
+O `(app)/layout.tsx` já tem `<main id="conteudo">`. Uma tela que abre o próprio `<main>` duplica o
+landmark e o leitor de tela anuncia "principal" duas vezes (WCAG 1.3.1). Estavam assim **61 lugares**;
+hoje a tela abre um `<Container>` e o landmark é um só. As exceções legítimas — o `AuthCard`, que vive em
+`/login/**`, fora deste layout — estão nomeadas no `divida-ui.test.ts`.
+
+## Contraste se mede, não se estima
+
+O par que carrega informação **sozinho** precisa passar; o que só decora, não. A distinção decidiu os dois
+tokens de atenção que a fatia 3 criou:
+
+- `atencao-solido` (`#b87d03`) é a bolinha de status. No calendário a prioridade "alta" **não tem rótulo**
+  — só a cor informa, então vale a WCAG 1.4.11 (3:1). Ele dá **3.52** sobre branco. O primeiro valor
+  escolhido a olho (`#c88a04`) dava 2.96 e teria **reprovado**; o `amber-500` que ele substituiu dava 2.15.
+- `atencao-borda` (`#e8d5a8`) é hairline (**1.31** sobre o fundo de aviso) **de propósito**: é a convenção
+  do sistema (`border-linha` dá 1.27) e ela nunca informa sozinha — a caixa de aviso já tem fundo e texto
+  próprios. Elevá-la a 3:1 seria criar uma exceção visual e chamar isso de acessibilidade.
 
 ## Formulário: 12 colunas, span pela natureza do dado
 
@@ -54,8 +76,13 @@ da razão social. No mobile tudo colapsa para 1 coluna.
   não aparece).
 - **Cada item mostra o próprio badge.** O menu somava obrigações + escalonamento + vencimentos num número
   só, em "Clientes".
-- **Nada de sexta forma:** links "← voltar" soltos, botões-âncora imitando abas e `<a>` cru não entram em
-  tela nova. `src/tests/ui/rotas-alcancaveis.test.ts` falha se alguma tela ficar sem caminho.
+- **Nada de sexta forma:** botões-âncora imitando abas e `<a>` cru não entram em tela nova.
+  `src/tests/ui/rotas-alcancaveis.test.ts` falha se alguma tela ficar sem caminho.
+- **Voltar é o `<Voltar>`, e só ele** (fatia 3). Os 18 links "← texto" soltos viraram
+  `<Voltar href label>` — o rótulo contextual sobrevive como `label` ("← Comunicados" →
+  `label="Comunicados"`). O `←` **sozinho não é voltar**: onde ele significa direção (mover card de
+  etapa, paginar mês) continua sendo um controle, e trocá-lo por navegação seria bug. As quatro
+  exceções estão nomeadas, com motivo, no `divida-ui.test.ts`.
 
 ## `Abas` × `SubNav` — parecidos, diferentes
 
@@ -78,6 +105,8 @@ borda) e `nivel={2|3}` (árvore de headings, WCAG 1.3.1) — e não se sobrescre
 
 ## Regras de re-skin (mapa de tokens)
 
-`bg-amber-100/text-amber-800→bg-atencao-fundo/text-atencao` (o `amber` é do Tailwind, fora do brand kit — restam ~55 ocorrências a migrar) · `text-slate-900→text-texto` · `text-slate-700/600→text-cinza` · `text-slate-500→text-cinza-claro` · `border-slate-*→border-linha` · `bg-slate-100/50→bg-creme` · botão primário `bg-slate-900`→`<Botao variante="primario">` · secundário `border-slate-300`→`<Botao variante="secundario">` · sucesso `bg-green-50/text-green-700`→`bg-verde/10 text-verde` · erro `bg-red-50/text-red-700`→`bg-negativo/10 text-negativo` · inputs→`Campo`+`Input` · dados (CNPJ/R$)→`font-mono`.
+**O `amber` acabou** (fatia 3): 53 classes, 9 shades, 24 arquivos — todas migradas, nenhuma resta. Os 9 shades serviam só **3 papéis**, hoje cobertos por 4 tokens: `bg-amber-50|100→bg-atencao-fundo` (os dois fundos faziam o mesmo trabalho e colapsaram num só) · `text-amber-700|800|900→text-atencao` · `border-amber-200|300|400→border-atencao-borda` · `bg-amber-500→bg-atencao-solido`.
+
+`text-slate-900→text-texto` · `text-slate-700/600→text-cinza` · `text-slate-500→text-cinza-claro` · `border-slate-*→border-linha` · `bg-slate-100/50→bg-creme` · botão primário `bg-slate-900`→`<Botao variante="primario">` · secundário `border-slate-300`→`<Botao variante="secundario">` · sucesso `bg-green-50/text-green-700`→`bg-verde/10 text-verde` · erro `bg-red-50/text-red-700`→`bg-negativo/10 text-negativo` · inputs→`Campo`+`Input` · dados (CNPJ/R$)→`font-mono`.
 
 **Sempre re-skin, nunca refuncionalizar:** preservar `name`/`value`/`onChange`/actions, `aria-*`, `role`, e labels associadas.
