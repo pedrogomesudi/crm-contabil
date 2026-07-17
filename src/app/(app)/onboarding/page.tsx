@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubNav } from "@/components/ui/SubNav";
 import { ListaProcessos } from "./ListaProcessos";
 import { listarProcessos } from "./processos-actions";
 import { contarAlertas } from "./alertas-actions";
@@ -16,11 +16,12 @@ export default async function OnboardingPage() {
   return (
     <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo="Onboarding" subtitulo="Processos de entrada em andamento" />
-      <div>
-        <Link href="/onboarding/alertas" className="text-sm text-verde underline">
-          Alertas de prazo{nAlertas > 0 ? ` (${nAlertas})` : ""}
-        </Link>
-      </div>
+      <SubNav
+        itens={[
+          { href: "/onboarding", label: "Processos" },
+          { href: "/onboarding/alertas", label: "Alertas de prazo", badge: nAlertas || undefined },
+        ]}
+      />
       <ListaProcessos itens={itens} hoje={hoje} />
     </main>
   );

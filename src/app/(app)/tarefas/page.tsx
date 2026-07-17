@@ -3,6 +3,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { listarColaboradores } from "@/lib/clientes/colaboradores";
 import { podeGerenciarTarefas } from "@/lib/clientes/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubNav } from "@/components/ui/SubNav";
 import { listarTarefas } from "./actions";
 import { PainelTarefas } from "./PainelTarefas";
 import { ProcessosSop } from "@/components/tarefas/ProcessosSop";
@@ -45,6 +46,12 @@ export default async function TarefasPage({
   return (
     <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo="Tarefas" subtitulo="Tarefas internas da equipe" />
+      <SubNav
+        itens={[
+          { href: "/tarefas", label: "Painel" },
+          { href: "/tarefas/recorrencias", label: "Recorrências" },
+        ]}
+      />
       <PainelTarefas
         tarefas={tarefas}
         colaboradores={colaboradores}

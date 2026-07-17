@@ -3,6 +3,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { podeGerenciarMatriz } from "@/lib/obrigacoes/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubNav } from "@/components/ui/SubNav";
 import { Calendario } from "./Calendario";
 import { listarInstancias } from "./actions";
 
@@ -18,6 +19,16 @@ export default async function ObrigacoesPage() {
       <PageHeader
         titulo="Obrigações"
         subtitulo="Calendário de obrigações por competência (o vencimento aparece em cada linha)"
+      />
+      {/* Conformidade e Riscos só eram alcançáveis por um botão dentro do calendário — 3 cliques
+          a partir de um menu chamado "Clientes". Agora a seção declara suas telas. */}
+      <SubNav
+        itens={[
+          { href: "/obrigacoes", label: "Calendário" },
+          { href: "/obrigacoes/riscos", label: "Riscos" },
+          { href: "/obrigacoes/escalonamento", label: "Escalonamento" },
+          { href: "/obrigacoes/conformidade", label: "Conformidade" },
+        ]}
       />
       <Calendario ano={ano} mes={mes} instancias={instancias} podeGerar={podeGerenciarMatriz(perfil.papel)} />
     </main>
