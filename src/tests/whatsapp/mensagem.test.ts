@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizarTelefone, chaveTelefone, aplicarTemplate } from "@/lib/whatsapp/mensagem";
+import { normalizarTelefone, chaveTelefone, chaveDeNumeroCompleto, aplicarTemplate } from "@/lib/whatsapp/mensagem";
 
 describe("chaveTelefone (nono dígito)", () => {
   it("13 dígitos (com 9) → inalterado", () => {
@@ -49,6 +49,10 @@ describe("normalizarTelefone — internacional", () => {
     expect(normalizarTelefone("123", "1")).toBeNull();
     expect(normalizarTelefone("", "1")).toBeNull();
   });
+  it("BR sem DDD (8–9 díg) continua rejeitado — contrato antigo preservado", () => {
+    expect(normalizarTelefone("33445566")).toBeNull(); // 8 díg, sem DDD
+    expect(normalizarTelefone("334455667")).toBeNull(); // 9 díg
+  });
 });
 
 describe("chaveTelefone — só o BR ganha o nono dígito", () => {
@@ -60,6 +64,25 @@ describe("chaveTelefone — só o BR ganha o nono dígito", () => {
   });
   it("BR sem DDI continua ganhando o 9 (não-regressão)", () => {
     expect(chaveTelefone("(34) 8840-3020")).toBe("5534988403020");
+  });
+});
+
+describe("chaveDeNumeroCompleto — número que JÁ vem com DDI (webhook)", () => {
+  it("BR de 12 díg ganha o 9 (como chaveTelefone); 13 fica igual", () => {
+    expect(chaveDeNumeroCompleto("553488403020")).toBe("5534988403020");
+    expect(chaveDeNumeroCompleto("5534988403020")).toBe("5534988403020");
+  });
+  it("internacional NÃO ganha 55 na frente — o bug que a revisão achou", () => {
+    expect(chaveDeNumeroCompleto("15551234567")).toBe("15551234567"); // EUA
+    expect(chaveDeNumeroCompleto("351912345678")).toBe("351912345678"); // Portugal
+  });
+  it("casa com a chave do cliente (mesmo número, dois caminhos)", () => {
+    // webhook recebe completo; cliente é montado de local + ddi. As chaves batem.
+    expect(chaveDeNumeroCompleto("15551234567")).toBe(chaveTelefone("5551234567", "1"));
+  });
+  it("inválido → null", () => {
+    expect(chaveDeNumeroCompleto("123")).toBeNull();
+    expect(chaveDeNumeroCompleto("")).toBeNull();
   });
 });
 

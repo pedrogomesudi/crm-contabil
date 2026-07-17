@@ -1,4 +1,4 @@
-import { chaveTelefone } from "@/lib/whatsapp/mensagem";
+import { chaveTelefone, chaveDeNumeroCompleto } from "@/lib/whatsapp/mensagem";
 
 export type MsgConversa = {
   id: string;
@@ -170,7 +170,7 @@ export function marcaEntrega(status: string, direcao: "IN" | "OUT"): MarcaEntreg
 export function agruparConversas(msgs: MsgConversa[], meta: Map<string, ConversaMeta> = new Map()): Conversa[] {
   const porTel = new Map<string, MsgConversa[]>();
   for (const m of msgs) {
-    const chave = chaveTelefone(m.telefone) ?? m.telefone;
+    const chave = chaveDeNumeroCompleto(m.telefone) ?? m.telefone; // mensagens vêm do webhook, já com DDI
     const arr = porTel.get(chave) ?? [];
     arr.push(m);
     porTel.set(chave, arr);

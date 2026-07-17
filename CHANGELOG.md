@@ -20,8 +20,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ### Notas
 
 - Normalização de dígitos específica de cada país (o "nono dígito" de outros países etc.) fica de fora —
-  para os primeiros clientes internacionais, informar o número completo basta. Iniciar conversa **avulsa**
-  com internacional pelo Inbox também exige digitar o número completo (o Inbox não tem campo de DDI).
+  para os primeiros clientes internacionais, informar o número completo no cadastro basta. **Iniciar
+  conversa avulsa com internacional pelo Inbox não é suportado** (o campo do Inbox assume Brasil); use o
+  cadastro do cliente, que tem o campo DDI.
 
 ## [6.7.0] — 2026-07-17
 
