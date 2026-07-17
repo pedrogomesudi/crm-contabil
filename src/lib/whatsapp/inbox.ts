@@ -251,12 +251,17 @@ export function contadores(convs: Conversa[]): {
 
 // Mapa telefone-normalizado → { razaoSocial, contato }. Só telefones com UM único cliente.
 export function mapaClientesPorTelefone(
-  clientes: { razao_social: string; responsavel_nome: string | null; telefone: string | null }[],
+  clientes: {
+    razao_social: string;
+    responsavel_nome: string | null;
+    telefone: string | null;
+    telefone_ddi?: string | null;
+  }[],
 ): Map<string, { razaoSocial: string; contato: string | null }> {
   const contagem = new Map<string, number>();
   const mapa = new Map<string, { razaoSocial: string; contato: string | null }>();
   for (const c of clientes) {
-    const tel = chaveTelefone(c.telefone ?? "");
+    const tel = chaveTelefone(c.telefone ?? "", c.telefone_ddi ?? "55");
     if (!tel) continue;
     contagem.set(tel, (contagem.get(tel) ?? 0) + 1);
     mapa.set(tel, { razaoSocial: c.razao_social, contato: c.responsavel_nome ?? null });

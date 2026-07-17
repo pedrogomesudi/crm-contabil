@@ -46,8 +46,10 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
   const admin = createAdminSupabase();
 
   // resolve cliente por telefone (best-effort): só casa se houver EXATAMENTE um
-  const { data: casadosRaw } = await admin.from("clientes").select("id, telefone");
-  const casados = (casadosRaw ?? []).filter((c) => chaveTelefone((c.telefone as string) ?? "") === tel);
+  const { data: casadosRaw } = await admin.from("clientes").select("id, telefone, telefone_ddi");
+  const casados = (casadosRaw ?? []).filter(
+    (c) => chaveTelefone((c.telefone as string) ?? "", (c.telefone_ddi as string) ?? "55") === tel,
+  );
   const clienteId = casados.length === 1 ? (casados[0]!.id as string) : null;
 
   // dedup pelo unique (z_message_id); ignora violação
