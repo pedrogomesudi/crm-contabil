@@ -13,7 +13,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - **Controles de formulário — fatia 4 do redesign:** o `inputCls` respondia a duas perguntas ao mesmo
   tempo — *como o controle se parece* e *quanto ele ocupa* — e a segunda é do contexto. Era por isso que
   quase metade dos controles do sistema não podia usá-lo: copiavam a string e a alteravam. A medição real
-  achou **6 famílias** e ~159 controles com a classe à mão (o registro original estimava "~10 cópias").
+  achou ~260 controles com a classe à mão, em várias famílias (o registro original estimava "~10
+  cópias"). Metade só apareceu quando a revisão do branch achou que o próprio teste-guard tinha um furo
+  — a mesma regex cega que subestimou o inventário — e o guard passou a usar um parser de verdade.
   Agora é `controleCls(tamanho)`, com dois degraus (`padrao` e `compacto`, diferindo só no padding) e
   **sem largura** — quem precisa declara. Um teste trava a dívida, pegando a borda escrita à mão tanto
   inline quanto extraída para uma `const`.

@@ -128,15 +128,22 @@ focus:border-verde`) é idêntico.
 > **Os controles ainda são crus.** `<Input>`/`<Select>`/`<Textarea>` existem desde a fatia 1 e tinham
 > **zero uso em produção** — o app tem ~190 `<input>` à mão. Migrar é a **fatia 5**. O
 > `divida-ui.test.ts` garante que o controle cru usa o token (borda inline ou em `const`); não garante que
-> deveria ser cru. As exceções nomeadas: a célula de planilha do `GradeOrcamento` e o campo de busca
-> (`rounded-xl` com ícone).
+> deveria ser cru. Quatro exceções nomeadas: a célula de planilha do `GradeOrcamento`, os dois campos de
+> busca (`rounded-xl` com ícone) e a caixa de mensagem do chat (`rounded-xl`, `bg-creme`).
+
+> **Guard de UI se faz com parser, não com regex.** A primeira versão do guard usava
+> `<input\b[^<>]*className="…"` — e `[^<>]*` para no `>` de um arrow handler (`onChange={(e) => …}`).
+> Como quase todo controle controlado põe o handler antes do `className`, o guard não via metade da
+> dívida — e passava verde, dando confiança falsa. Pior: o mesmo padrão cego media o inventário, então a
+> fatia migrou só o que enxergava. A revisão do branch pegou; hoje o guard tem um `corposDeControle()`
+> que conta chaves `{}`. Lição para o próximo guard que ler JSX: contar chaves, não confiar em `[^<>]`.
 
 ## Blocos de construção
 
 - **Base (V8.1):** `LogoSaldo`, `Card`, `Botao` (primario/secundario/fantasma/perigo), `Badge` (neutro/positivo/atencao/negativo/ia), `PageHeader`, `StatCard`.
 - **Ampliados (V8.2a):** `Campo` (label + controle + erro/hint), `Input`/`Select`/`Textarea`, `Painel` (contêiner de tabela/lista), `Chip` (filtro), `Toolbar` (busca + filtros), `EmptyState`, `Iniciais` (avatar de texto).
 - **Layout (fatia 1 do redesign):** `Container` (a régua), `FormGrid`/`FormCampo` (12 colunas), `Secao` (bloco titulado, com `padding` e `nivel`), `Abas` (estado na URL).
-- **Controle (fatia 4):** `controleCls(tamanho)` é a fonte única da aparência do controle — ver a seção acima. Substituiu o `inputCls`, que era a mesma string copiada (medida real: **6 famílias**, ~159 controles à mão).
+- **Controle (fatia 4):** `controleCls(tamanho)` é a fonte única da aparência do controle — ver a seção acima. Substituiu o `inputCls`, que era a mesma string copiada em ~260 controles (o registro estimava "~10").
 - **Helpers:** `iniciais(nome)`, `badgeRegime(regime)`, `corValorStat(variante)` — puros, em `src/lib/ui/`.
 
 ## Regras de re-skin (mapa de tokens)
