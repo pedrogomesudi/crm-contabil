@@ -27,7 +27,7 @@ export function EmitirNfse({
   return (
     <form action={action} className="mt-2 space-y-2 rounded border border-linha p-3 text-sm">
       {ambiente === "homologacao" && (
-        <p className="rounded bg-amber-50 px-2 py-1 text-amber-800">Homologação — sem validade jurídica.</p>
+        <p className="rounded bg-atencao-fundo px-2 py-1 text-atencao">Homologação — sem validade jurídica.</p>
       )}
       <label className="block">
         Valor (R$)

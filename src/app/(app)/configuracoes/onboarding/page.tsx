@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -12,7 +13,7 @@ export default async function ConfigOnboardingPage() {
   const templates = await listarTemplates();
   const alertasAtivos = await obterAlertasAtivos();
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader titulo="Template de onboarding" subtitulo="Modelos de processo de entrada de clientes" />
       <section className="rounded-2xl border border-linha bg-white p-4">
         <h3 className="font-display text-sm font-semibold text-texto">Notificações de prazo</h3>
@@ -22,6 +23,6 @@ export default async function ConfigOnboardingPage() {
         <ToggleAlertas ativoInicial={alertasAtivos} />
       </section>
       <GerenciadorTemplates templates={templates} />
-    </main>
+    </Container>
   );
 }

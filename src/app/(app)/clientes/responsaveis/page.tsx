@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -65,7 +66,7 @@ export default async function ResponsaveisPage({
     .filter((c) => (resp === "" ? true : resp === "nenhum" ? c.responsavelId === null : c.responsavelId === resp));
 
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader
         titulo="Responsáveis por departamento"
         subtitulo="Redistribuição de carteira — filtre, marque e atribua em massa"
@@ -76,6 +77,6 @@ export default async function ResponsaveisPage({
         departamentos={DEPARTAMENTOS}
         filtros={{ depto, resp, q }}
       />
-    </main>
+    </Container>
   );
 }

@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -5,6 +6,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { statusConfig } from "./actions";
 import { FormEmail } from "./FormEmail";
+import { Voltar } from "@/components/ui/Voltar";
 
 export const metadata = { title: "E-mail" };
 
@@ -20,13 +22,11 @@ export default async function EmailConfigPage() {
   } = await supabase.auth.getUser();
 
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
-      <Link href="/configuracoes" className="text-sm text-verde underline">
-        ← Configurações
-      </Link>
+    <Container largura="estreita" className="space-y-5 p-4">
+      <Voltar href="/configuracoes" label="Configurações" />
       <PageHeader titulo="E-mail" subtitulo="Canal de envio, remetente e teste de entrega" />
       {!status.provedor && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <p className="rounded-lg bg-atencao-fundo px-3 py-2 text-sm text-atencao">
           Configure o canal para enviar e-mails aos clientes pela ficha.
         </p>
       )}
@@ -38,6 +38,6 @@ export default async function EmailConfigPage() {
         </Link>
         .
       </p>
-    </main>
+    </Container>
   );
 }

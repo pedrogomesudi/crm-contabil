@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
@@ -15,7 +16,7 @@ export default async function ObrigacoesPage() {
   const mes = Number(hoje.slice(5, 7));
   const instancias = await listarInstancias(ano, mes);
   return (
-    <main className="mx-auto max-w-full space-y-5 p-4">
+    <Container largura="larga" className="space-y-5 p-4">
       <PageHeader
         titulo="Obrigações"
         subtitulo="Calendário de obrigações por competência (o vencimento aparece em cada linha)"
@@ -31,6 +32,6 @@ export default async function ObrigacoesPage() {
         ]}
       />
       <Calendario ano={ano} mes={mes} instancias={instancias} podeGerar={podeGerenciarMatriz(perfil.papel)} />
-    </main>
+    </Container>
   );
 }

@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -5,6 +6,7 @@ import { podeGerenciarTarefas, podeGerenciarTemplatesEmail } from "@/lib/cliente
 import { PageHeader } from "@/components/ui/PageHeader";
 import { detalheComunicado } from "../actions";
 import { Reenviar } from "./Reenviar";
+import { Voltar } from "@/components/ui/Voltar";
 
 export default async function ComunicadoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,10 +17,8 @@ export default async function ComunicadoPage({ params }: { params: Promise<{ id:
   if (!comunicado) notFound();
 
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
-      <Link href="/comunicados" className="text-sm text-verde underline">
-        ← Comunicados
-      </Link>
+    <Container largura="estreita" className="space-y-5 p-4">
+      <Voltar href="/comunicados" label="Comunicados" />
       <PageHeader
         titulo={comunicado.titulo}
         subtitulo={`${comunicado.canal === "email" ? "E-mail" : "WhatsApp"} · ${comunicado.filtroTexto} · ${comunicado.enviados} enviado(s), ${comunicado.erros} erro(s)`}
@@ -64,6 +64,6 @@ export default async function ComunicadoPage({ params }: { params: Promise<{ id:
           </tbody>
         </table>
       </div>
-    </main>
+    </Container>
   );
 }

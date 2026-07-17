@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import Link from "next/link";
 import { Voltar } from "@/components/ui/Voltar";
 import { redirect } from "next/navigation";
@@ -23,7 +24,7 @@ export default async function RelatoriosPage() {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeGerenciarFinanceiro(perfil.papel)) redirect("/");
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Relatórios" subtitulo="Relatórios financeiros" />
       <ul className="grid gap-3 sm:grid-cols-2">
@@ -39,6 +40,6 @@ export default async function RelatoriosPage() {
           </li>
         ))}
       </ul>
-    </main>
+    </Container>
   );
 }

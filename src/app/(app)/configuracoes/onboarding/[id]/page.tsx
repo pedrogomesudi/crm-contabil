@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -11,9 +12,9 @@ export default async function EditorTemplatePage({ params }: { params: Promise<{
   const template = await obterTemplate(id);
   if (!template) notFound();
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader titulo={template.nome} subtitulo="Blocos e itens do template" />
       <EditorTemplate template={template} />
-    </main>
+    </Container>
   );
 }

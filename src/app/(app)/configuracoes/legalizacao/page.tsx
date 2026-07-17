@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -11,12 +12,12 @@ export default async function ModelosLegalizacaoPage() {
   if (!perfil || perfil.papel !== "admin") redirect("/");
   const modelos = await listarModelos();
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <PageHeader
         titulo="Modelos de legalização"
         subtitulo="Processos societários e de legalização — etapas por órgão"
       />
       <ModelosLista modelos={modelos} />
-    </main>
+    </Container>
   );
 }

@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { listarColaboradores } from "@/lib/clientes/colaboradores";
@@ -44,7 +45,7 @@ export default async function TarefasPage({
   const mes = Number(sp.mes) >= 1 && Number(sp.mes) <= 12 ? Number(sp.mes) : mesHoje;
 
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader titulo="Tarefas" subtitulo="Tarefas internas da equipe" />
       <SubNav
         itens={[
@@ -62,6 +63,6 @@ export default async function TarefasPage({
         mes={mes}
       />
       <ProcessosSop clienteId={null} modelos={modelos} processos={processos} hoje={hoje} />
-    </main>
+    </Container>
   );
 }

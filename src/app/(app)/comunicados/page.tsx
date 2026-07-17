@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -16,7 +17,7 @@ export default async function ComunicadosPage() {
   const podeCriar = podeGerenciarTemplatesEmail(perfil.papel);
 
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader titulo="Comunicados" subtitulo="Avisos em massa para um segmento da base" />
 
       {podeCriar && (
@@ -50,6 +51,6 @@ export default async function ComunicadosPage() {
           ))}
         </ul>
       )}
-    </main>
+    </Container>
   );
 }

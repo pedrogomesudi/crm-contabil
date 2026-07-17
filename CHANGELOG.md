@@ -8,6 +8,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.6.0] — 2026-07-17
+
+O **redesign do layout**, nas três fatias. As fatias 1 e 2 já haviam ido para o `main` e estavam no ar
+sem versão própria desde 16/07 — esta release dá nome ao conjunto, em vez de inventar retroativamente
+duas tags que nunca corresponderam a um deploy.
+
 ### Adicionado
 
 - **Redesign do layout — fatia 1 (fundação visual):** o cadastro de cliente usava **58% da largura**
@@ -28,11 +34,24 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   (`lib/ui/navegacao.ts`), e um teste varre as rotas e falha se alguma tela ficar sem caminho até ela.
   As permissões **não mudaram**: só onde as coisas aparecem.
 
+- **Dívida de UI quitada (fatia 3):** as três dívidas que as fatias 1 e 2 deixaram registradas, cada uma
+  nascida do mesmo jeito — uma exceção pontual que ninguém viu virar padrão.
+  - **O `amber` acabou:** eram **53 classes em 9 shades** para apenas **3 papéis**, hoje 4 tokens de
+    marca. Os dois fundos (`amber-50` e `amber-100`) faziam o mesmo trabalho e colapsaram num só.
+  - **O `<main>` parou de se duplicar:** **61 lugares** abriam um segundo `<main>` dentro do `<main>` do
+    layout, e o leitor de tela anunciava "principal" duas vezes (WCAG 1.3.1). Viraram `<Container>` — o
+    que conserta o landmark **e** apaga o último `max-w` inline, fechando a promessa da fatia 1.
+  - **Um só jeito de voltar:** os **18** links "← texto" soltos viraram `<Voltar>`, com o rótulo
+    contextual preservado. Quatro setas ficaram: não eram "voltar", eram direção (mover card de etapa,
+    paginar mês) — trocá-las teria sido bug, não limpeza.
+  - **Um teste tranca as três** (`divida-ui.test.ts`), e cada guard foi sabotado para provar que morde.
+
 ### Corrigido
 
-- **`amber` fora do brand kit:** o `Badge` de atenção usava `amber-100/800` do Tailwind. Nasceu o token
-  `atencao` (contraste medido: **5.38**, AA exige 4.5). Restam ~55 ocorrências no sistema, mapeadas para
-  a fatia 2.
+- **Bolinha de prioridade ilegível no calendário:** a prioridade "alta" não tem rótulo — só a cor informa
+  — e o `amber-500` dava **2.15** de contraste, abaixo dos 3:1 que a WCAG 1.4.11 exige. O token
+  `atencao-solido` dá **3.52**. O contraste foi medido, e a medição mudou o valor escolhido: o primeiro
+  candidato, escolhido a olho, dava 2.96 e teria reprovado calado.
 - **Cards do hub financeiro:** "Reajuste anual de honorários" quebrava em duas linhas e crescia, deixando
   os vizinhos menores (faltava `h-full`).
 

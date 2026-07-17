@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeGerenciarMatriz } from "@/lib/obrigacoes/permissoes";
@@ -16,7 +17,7 @@ export default async function MatrizPage() {
     obterNotificacaoRiscos(),
   ]);
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader
         titulo="Matriz de obrigações"
         subtitulo="Obrigações e critérios de incidência usados na geração do calendário"
@@ -24,6 +25,6 @@ export default async function MatrizPage() {
       <ToggleNotificacoes ativoInicial={notificacaoRiscos} />
       <ConfigEscalonamento inicial={config} />
       <EditorMatriz linhas={linhas} />
-    </main>
+    </Container>
   );
 }

@@ -20,6 +20,15 @@
   /* Atenção — o Badge usava amber do Tailwind, fora do brand kit. */
   --color-atencao: #8a5a00;
   --color-atencao-fundo: #fdf3e0;
+  /* Borda e sólido do mesmo papel "atenção": o amber servia 3 papéis com 9 shades.
+     A borda unifica amber-200/300/400 — hairline, como o border-linha (1.27 sobre branco).
+     Não carrega informação sozinha: a caixa de aviso já tem fundo e texto próprios.
+     O sólido é a bolinha de status. Ele SIM carrega informação sozinho (no calendário a
+     prioridade "alta" não tem rótulo, só a cor), então é 3.52 sobre branco — acima do 3:1
+     que a WCAG 1.4.11 exige, e na faixa das bolinhas vizinhas (verde 3.05, negativo 4.71).
+     O amber-500 que ele substitui dava 2.15: reprovava. */
+  --color-atencao-borda: #e8d5a8;
+  --color-atencao-solido: #b87d03;
 
   /* Elevação: o sistema é hairline sobre creme; a sombra dá camada sem pesar. */
   --shadow-card: 0 1px 2px rgb(16 22 20 / 0.04), 0 1px 3px rgb(16 22 20 / 0.06);

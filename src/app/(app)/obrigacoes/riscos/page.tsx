@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
@@ -11,9 +12,9 @@ export default async function RiscosPage() {
   const painel = await listarRiscos();
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader titulo="Riscos de obrigações" subtitulo="Vencendo hoje, vencidas e sem responsável" />
       <PainelRiscosView painel={painel} hoje={hoje} />
-    </main>
+    </Container>
   );
 }

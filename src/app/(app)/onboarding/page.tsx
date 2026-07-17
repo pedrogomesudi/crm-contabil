@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
@@ -14,7 +15,7 @@ export default async function OnboardingPage() {
   const nAlertas = await contarAlertas();
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader titulo="Onboarding" subtitulo="Processos de entrada em andamento" />
       <SubNav
         itens={[
@@ -23,6 +24,6 @@ export default async function OnboardingPage() {
         ]}
       />
       <ListaProcessos itens={itens} hoje={hoje} />
-    </main>
+    </Container>
   );
 }

@@ -8,7 +8,7 @@ export function FormWhatsapp({ instance, configurado }: { instance: string; conf
   const [pendT, start] = useTransition();
   return (
     <div className="space-y-4">
-      <p className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+      <p className="rounded border border-atencao-borda bg-atencao-fundo px-3 py-2 text-xs text-atencao">
         ⚠️ O Z-API é <strong>não-oficial</strong> (usa o WhatsApp Web). Use um <strong>número dedicado</strong> do
         escritório — há risco de banimento do número.
       </p>

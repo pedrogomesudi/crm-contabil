@@ -13,7 +13,7 @@ export const metadata = { title: "Vencimentos" };
 const CLASSE: Record<Severidade, string> = {
   vencido: "bg-negativo text-white",
   critico: "bg-negativo/15 text-negativo",
-  alerta: "bg-amber-100 text-amber-800",
+  alerta: "bg-atencao-fundo text-atencao",
   aviso: "bg-slate-100 text-cinza",
   ok: "bg-slate-100 text-cinza",
 };

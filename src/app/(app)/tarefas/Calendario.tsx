@@ -5,7 +5,7 @@ import { DIAS_SEMANA_CURTO, NOMES_MES, gradeDoMes, mesAnterior, mesSeguinte } fr
 
 const PRIO_PONTO: Record<string, string> = {
   urgente: "bg-negativo",
-  alta: "bg-amber-500",
+  alta: "bg-atencao-solido",
   media: "bg-cinza-claro",
   baixa: "bg-cinza-claro",
 };

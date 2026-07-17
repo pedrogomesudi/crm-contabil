@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -27,7 +28,7 @@ export default async function ConciliacaoPage() {
   const contaInicial = contas[0]?.id ?? "";
   const movimentosIni = contaInicial ? await listarMovimentos(contaInicial, inicio, fim, "") : [];
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Conciliação bancária" subtitulo="Importe o extrato (OFX/CSV) e veja as movimentações" />
       {contas.length === 0 ? (
@@ -46,6 +47,6 @@ export default async function ConciliacaoPage() {
           fornecedores={fornecedores}
         />
       )}
-    </main>
+    </Container>
   );
 }

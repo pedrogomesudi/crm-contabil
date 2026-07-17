@@ -137,8 +137,8 @@ export function PainelTimesheet({
         )}
 
         {confirmar && (
-          <div className="space-y-2 rounded-lg bg-amber-50 p-3">
-            <p className="text-xs text-amber-800">
+          <div className="space-y-2 rounded-lg bg-atencao-fundo p-3">
+            <p className="text-xs text-atencao">
               O cronômetro ficou <strong>{formatarHoras(confirmar.minutos)}</strong> ligado — provavelmente foi
               esquecido. Confirme ou corrija o tempo antes de gravar.
             </p>

@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
@@ -18,9 +19,9 @@ export default async function EditarPropostaPage({ params }: { params: Promise<{
   } = await supabase.auth.getUser();
   const responsavelPadrao = { nome: perfil.nome, email: user?.email ?? "" };
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <PageHeader titulo={`Proposta nº ${proposta.numero}`} subtitulo={proposta.prospectNome} />
       <EditorProposta proposta={proposta} responsavelPadrao={responsavelPadrao} />
-    </main>
+    </Container>
   );
 }

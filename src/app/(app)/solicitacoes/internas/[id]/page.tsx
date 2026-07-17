@@ -1,5 +1,5 @@
+import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { listarColaboradores } from "@/lib/clientes/colaboradores";
@@ -9,6 +9,7 @@ import { rotuloDepartamento, type Departamento } from "@/lib/clientes/departamen
 import { estaVencida, type SolicInternaStatus } from "@/lib/solicitacoes/interna";
 import { formatarData } from "@/lib/format";
 import { Atendimento } from "./Atendimento";
+import { Voltar } from "@/components/ui/Voltar";
 
 export default async function InternaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -51,10 +52,8 @@ export default async function InternaPage({ params }: { params: Promise<{ id: st
   const vencida = estaVencida(s.status as SolicInternaStatus, (s.prazo as string | null) ?? null, hoje);
 
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
-      <Link href="/solicitacoes/internas" className="text-sm text-verde underline">
-        ← Solicitações internas
-      </Link>
+    <Container largura="estreita" className="space-y-5 p-4">
+      <Voltar href="/solicitacoes/internas" label="Solicitações internas" />
       <PageHeader
         titulo={`#${String(s.numero)} — ${s.assunto as string}`}
         subtitulo={`${rotuloDepartamento(s.origem as Departamento)} → ${rotuloDepartamento(s.destino as Departamento)}${clienteNome ? ` · ${clienteNome}` : ""} · prazo ${formatarData(s.prazo as string | null)}${vencida ? " (vencido)" : ""}`}
@@ -67,6 +66,6 @@ export default async function InternaPage({ params }: { params: Promise<{ id: st
         colaboradores={colaboradores}
         mensagens={mensagens}
       />
-    </main>
+    </Container>
   );
 }

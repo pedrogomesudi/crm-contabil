@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -13,7 +14,7 @@ export default async function FluxoPage() {
   const ano = Number(hoje.slice(0, 4));
   const dados = await relatorioFluxo(ano);
   return (
-    <main className="mx-auto max-w-full space-y-5 p-4">
+    <Container largura="larga" className="space-y-5 p-4">
       <Voltar href="/financeiro/relatorios" />
       <PageHeader titulo="Fluxo de caixa detalhado" subtitulo="Realizado e projetado, mês a mês, com saldo acumulado" />
       {dados ? (
@@ -21,6 +22,6 @@ export default async function FluxoPage() {
       ) : (
         <p className="text-sm text-negativo">Não foi possível carregar os dados.</p>
       )}
-    </main>
+    </Container>
   );
 }

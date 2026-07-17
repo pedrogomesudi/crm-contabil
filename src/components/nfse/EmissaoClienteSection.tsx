@@ -94,7 +94,7 @@ export async function EmissaoClienteSection({ clienteId, papel }: { clienteId: s
                   <td className="p-2 text-cinza">
                     {ROTULO[n.status] ?? n.status}
                     {n.ambiente === "homologacao" && (
-                      <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
+                      <span className="ml-1 rounded bg-atencao-fundo px-1.5 py-0.5 text-xs text-atencao">
                         homologação
                       </span>
                     )}

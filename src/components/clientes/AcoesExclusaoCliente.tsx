@@ -13,8 +13,8 @@ export function AcoesExclusaoCliente({ clienteId, excluidoEm }: { clienteId: str
   // Cliente excluído: faixa de aviso + Restaurar.
   if (excluidoEm) {
     return (
-      <div className="flex items-center justify-between gap-3 rounded border border-amber-300 bg-amber-50 p-3 text-sm">
-        <span className="text-amber-900">Cliente excluído em {formatarData(excluidoEm)}.</span>
+      <div className="flex items-center justify-between gap-3 rounded border border-atencao-borda bg-atencao-fundo p-3 text-sm">
+        <span className="text-atencao">Cliente excluído em {formatarData(excluidoEm)}.</span>
         <div className="flex flex-col items-end gap-1">
           <button
             disabled={pend}
@@ -26,7 +26,7 @@ export function AcoesExclusaoCliente({ clienteId, excluidoEm }: { clienteId: str
                 else router.refresh();
               })
             }
-            className="rounded border border-amber-400 px-3 py-1 text-amber-900 disabled:opacity-60"
+            className="rounded border border-atencao-borda px-3 py-1 text-atencao disabled:opacity-60"
           >
             {pend ? "Restaurando…" : "Restaurar"}
           </button>

@@ -1,5 +1,5 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { listarColaboradores } from "@/lib/clientes/colaboradores";
@@ -7,6 +7,7 @@ import { podeGerenciarTarefas, podeGerenciarRecorrencias } from "@/lib/clientes/
 import { PageHeader } from "@/components/ui/PageHeader";
 import { listarRecorrencias } from "./actions";
 import { FormRecorrencia } from "./FormRecorrencia";
+import { Voltar } from "@/components/ui/Voltar";
 
 export const metadata = { title: "Tarefas recorrentes" };
 
@@ -26,10 +27,8 @@ export default async function RecorrenciasPage() {
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
-      <Link href="/tarefas" className="text-sm text-verde underline">
-        ← Tarefas
-      </Link>
+    <Container largura="padrao" className="space-y-5 p-4">
+      <Voltar href="/tarefas" label="Tarefas" />
       <PageHeader titulo="Tarefas recorrentes" subtitulo="Moldes que geram tarefas sozinhos, todo dia às 9h" />
       <FormRecorrencia
         recorrencias={recorrencias}
@@ -38,6 +37,6 @@ export default async function RecorrenciasPage() {
         hoje={hoje}
         editavel={podeGerenciarRecorrencias(perfil.papel)}
       />
-    </main>
+    </Container>
   );
 }

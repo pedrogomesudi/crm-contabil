@@ -1,5 +1,5 @@
+import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -16,6 +16,7 @@ import {
 import { EtapaLinha } from "./EtapaLinha";
 import { TermoAcervo } from "./TermoAcervo";
 import { AcoesProcesso } from "./AcoesProcesso";
+import { Voltar } from "@/components/ui/Voltar";
 
 const ROT_PROC: Record<string, string> = {
   em_andamento: "Em andamento",
@@ -80,10 +81,8 @@ export default async function ProcessoLegalizacaoPage({ params }: { params: Prom
   const status = proc.status as LegProcStatus;
 
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
-      <Link href={`/clientes/${proc.cliente_id}`} className="text-sm text-verde underline">
-        ← {(cli?.razao_social as string) ?? "Cliente"}
-      </Link>
+    <Container largura="estreita" className="space-y-5 p-4">
+      <Voltar href={`/clientes/${proc.cliente_id}`} label={(cli?.razao_social as string) ?? "Cliente"} />
       <PageHeader
         titulo={(proc.titulo as string) || rotuloTipo(proc.tipo as LegTipo)}
         subtitulo={`${ROT_PROC[status] ?? status} · ${prog.pct}% · ${prog.concluidas}/${prog.total} etapas`}
@@ -97,6 +96,6 @@ export default async function ProcessoLegalizacaoPage({ params }: { params: Prom
           <EtapaLinha key={l.id} etapa={l} hoje={hoje} />
         ))}
       </div>
-    </main>
+    </Container>
   );
 }

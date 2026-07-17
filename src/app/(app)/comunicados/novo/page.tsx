@@ -1,11 +1,12 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { listarContadores } from "@/lib/clientes/contadores";
 import { listarColaboradores } from "@/lib/clientes/colaboradores";
 import { podeGerenciarTemplatesEmail } from "@/lib/clientes/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FormComunicado } from "./FormComunicado";
+import { Voltar } from "@/components/ui/Voltar";
 
 export const metadata = { title: "Novo comunicado" };
 
@@ -16,12 +17,10 @@ export default async function NovoComunicadoPage() {
   const colaboradores = await listarColaboradores();
 
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
-      <Link href="/comunicados" className="text-sm text-verde underline">
-        ← Comunicados
-      </Link>
+    <Container largura="estreita" className="space-y-5 p-4">
+      <Voltar href="/comunicados" label="Comunicados" />
       <PageHeader titulo="Novo comunicado" subtitulo="Escreva, segmente, confira a prévia e dispare" />
       <FormComunicado contadores={contadores} colaboradores={colaboradores} />
-    </main>
+    </Container>
   );
 }
