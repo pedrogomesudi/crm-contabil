@@ -2,9 +2,7 @@
 import { useActionState, useState } from "react";
 import { emitirComoEmitente, consultarCnpjTomador, type EstadoEmitente } from "@/app/(app)/clientes/[id]/nfse-emitente";
 import { mesAnteriorDeHoje } from "@/lib/financeiro/competencia";
-
-const inputCls =
-  "rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto placeholder:text-cinza-claro focus:border-verde";
+import { controleCls } from "@/components/ui/Campo";
 
 type CamposTomador = {
   doc: string;
@@ -86,7 +84,7 @@ export function EmitirNfseCliente({ clienteId, ambiente }: { clienteId: string; 
           onChange={set("doc")}
           placeholder="CNPJ/CPF"
           required
-          className={`flex-1 ${inputCls}`}
+          className={`${controleCls()} flex-1`}
         />
         <button
           type="button"
@@ -106,34 +104,66 @@ export function EmitirNfseCliente({ clienteId, ambiente }: { clienteId: string; 
           onChange={set("razao")}
           placeholder="Razão social"
           required
-          className={inputCls}
+          className={controleCls()}
         />
-        <input name="tom_cep" value={f.cep} onChange={set("cep")} placeholder="CEP" required className={inputCls} />
+        <input
+          name="tom_cep"
+          value={f.cep}
+          onChange={set("cep")}
+          placeholder="CEP"
+          required
+          className={controleCls()}
+        />
         <input
           name="tom_logradouro"
           value={f.logradouro}
           onChange={set("logradouro")}
           placeholder="Logradouro"
           required
-          className={inputCls}
+          className={controleCls()}
         />
-        <input name="tom_numero" value={f.numero} onChange={set("numero")} placeholder="Número" className={inputCls} />
-        <input name="tom_bairro" value={f.bairro} onChange={set("bairro")} placeholder="Bairro" className={inputCls} />
-        <input name="tom_cidade" value={f.cidade} onChange={set("cidade")} placeholder="Cidade" className={inputCls} />
-        <input name="tom_uf" value={f.uf} onChange={set("uf")} placeholder="UF" maxLength={2} className={inputCls} />
+        <input
+          name="tom_numero"
+          value={f.numero}
+          onChange={set("numero")}
+          placeholder="Número"
+          className={controleCls()}
+        />
+        <input
+          name="tom_bairro"
+          value={f.bairro}
+          onChange={set("bairro")}
+          placeholder="Bairro"
+          className={controleCls()}
+        />
+        <input
+          name="tom_cidade"
+          value={f.cidade}
+          onChange={set("cidade")}
+          placeholder="Cidade"
+          className={controleCls()}
+        />
+        <input
+          name="tom_uf"
+          value={f.uf}
+          onChange={set("uf")}
+          placeholder="UF"
+          maxLength={2}
+          className={controleCls()}
+        />
         <input
           name="tom_cmun"
           value={f.cmun}
           onChange={set("cmun")}
           placeholder="Cód. município (IBGE)"
-          className={inputCls}
+          className={controleCls()}
         />
       </div>
       <p className="font-medium text-cinza">Serviço</p>
-      <input name="descricao_servico" placeholder="Descrição do serviço" className={`w-full ${inputCls}`} />
+      <input name="descricao_servico" placeholder="Descrição do serviço" className={`${controleCls()} w-full`} />
       <label className="block text-cinza">
         Valor (R$)
-        <input type="number" name="valor" step="0.01" min="0" required className={`ml-2 w-32 ${inputCls}`} />
+        <input type="number" name="valor" step="0.01" min="0" required className={`${controleCls()} ml-2 w-32`} />
       </label>
       <label className="block text-cinza">
         Competência
@@ -142,7 +172,7 @@ export function EmitirNfseCliente({ clienteId, ambiente }: { clienteId: string; 
           required
           value={mes}
           onChange={(e) => setMes(e.target.value)}
-          className={`ml-2 ${inputCls}`}
+          className={`${controleCls()} ml-2`}
         />
       </label>
       <input type="hidden" name="competencia" value={mes ? `${mes}-01` : ""} />

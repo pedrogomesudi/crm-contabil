@@ -3,7 +3,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { convidarUsuario } from "@/app/(app)/usuarios/actions";
 import type { EstadoConvite } from "@/app/(app)/usuarios/estados";
 import { PAPEIS } from "@/lib/tipos";
-import { Campo, inputCls } from "@/components/ui/Campo";
+import { Campo, controleCls } from "@/components/ui/Campo";
 
 export function ConviteForm() {
   const [estado, action, pending] = useActionState<EstadoConvite, FormData>(convidarUsuario, {});
@@ -17,13 +17,13 @@ export function ConviteForm() {
       <h2 className="text-sm font-semibold text-texto">Convidar usuário</h2>
       <div className="grid gap-3 sm:grid-cols-3">
         <Campo label="Nome">
-          <input name="nome" required className={inputCls} />
+          <input name="nome" required className={`${controleCls()} w-full`} />
         </Campo>
         <Campo label="E-mail">
-          <input name="email" type="email" required className={inputCls} />
+          <input name="email" type="email" required className={`${controleCls()} w-full`} />
         </Campo>
         <Campo label="Papel">
-          <select name="papel" required defaultValue="assistente" className={inputCls}>
+          <select name="papel" required defaultValue="assistente" className={`${controleCls()} w-full`}>
             {PAPEIS.map((p) => (
               <option key={p} value={p}>
                 {p}

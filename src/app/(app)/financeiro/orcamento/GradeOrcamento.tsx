@@ -6,7 +6,12 @@ import { formatarMoeda } from "@/lib/format";
 import { Botao } from "@/components/ui/Botao";
 
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-const inputCls = "w-20 rounded border border-linha px-1.5 py-1 text-right text-xs tabular-nums focus:border-verde";
+// Célula de planilha, não campo de formulário — por isso NÃO usa o controleCls.
+// São 12 colunas de mês numa linha só, dentro de <td> com 2px de padding. O degrau
+// compacto (px-2 py-1.5 text-sm) alargaria a grade inteira, numa tela que existe
+// justamente para caber o ano na horizontal. É exceção declarada, com motivo:
+// está na lista do divida-ui.test.ts.
+const celulaCls = "w-20 rounded border border-linha px-1.5 py-1 text-right text-xs tabular-nums focus:border-verde";
 
 export function GradeOrcamento({
   ano: anoInicial,
@@ -96,7 +101,7 @@ export function GradeOrcamento({
                 min="0"
                 value={valores[cat.id]?.[mes] ?? ""}
                 onChange={(e) => setCel(cat.id, mes, e.target.value)}
-                className={inputCls}
+                className={celulaCls}
               />
             </td>
           ))}

@@ -1,7 +1,7 @@
 "use client";
 import { useActionState } from "react";
 import { salvarConfig, salvarCertificado, type EstadoConfig } from "./actions";
-import { inputCls } from "@/components/ui/Campo";
+import { controleCls } from "@/components/ui/Campo";
 
 export function FormConfig({ inicial }: { inicial: Record<string, string | boolean> }) {
   const [estado, action, pend] = useActionState<EstadoConfig, FormData>(salvarConfig, {});
@@ -10,15 +10,20 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
       <div className="grid grid-cols-2 gap-2">
         <label className="block">
           CNPJ
-          <input name="cnpj" defaultValue={String(inicial.cnpj)} required className={inputCls} />
+          <input name="cnpj" defaultValue={String(inicial.cnpj)} required className={`${controleCls()} w-full`} />
         </label>
         <label className="block">
           Inscrição municipal
-          <input name="im" defaultValue={String(inicial.im)} required className={inputCls} />
+          <input name="im" defaultValue={String(inicial.im)} required className={`${controleCls()} w-full`} />
         </label>
         <label className="col-span-2 block">
           Razão social
-          <input name="razao_social" defaultValue={String(inicial.razao_social)} required className={inputCls} />
+          <input
+            name="razao_social"
+            defaultValue={String(inicial.razao_social)}
+            required
+            className={`${controleCls()} w-full`}
+          />
         </label>
         <label className="block">
           Código do município (IBGE)
@@ -26,12 +31,12 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
             name="codigo_municipio"
             defaultValue={String(inicial.codigo_municipio)}
             required
-            className={inputCls}
+            className={`${controleCls()} w-full`}
           />
         </label>
         <label className="block">
           UF
-          <input name="uf" defaultValue={String(inicial.uf)} required className={inputCls} />
+          <input name="uf" defaultValue={String(inicial.uf)} required className={`${controleCls()} w-full`} />
         </label>
         <label className="block">
           Código de serviço nacional (cTribNac)
@@ -40,7 +45,7 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
             defaultValue={String(inicial.codigo_servico_nacional)}
             placeholder="ex.: 170201"
             required
-            className={inputCls}
+            className={`${controleCls()} w-full`}
           />
         </label>
         <label className="block">
@@ -50,7 +55,7 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
             defaultValue={String(inicial.descricao_servico)}
             placeholder="Honorarios"
             required
-            className={inputCls}
+            className={`${controleCls()} w-full`}
           />
         </label>
         <label className="block">
@@ -60,7 +65,7 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
             type="number"
             step="0.01"
             defaultValue={String(inicial.aliquota_iss)}
-            className={inputCls}
+            className={`${controleCls()} w-full`}
           />
         </label>
         <label className="block">
@@ -70,12 +75,12 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
             type="number"
             step="0.01"
             defaultValue={String(inicial.pct_trib_sn)}
-            className={inputCls}
+            className={`${controleCls()} w-full`}
           />
         </label>
         <label className="block">
           Ambiente
-          <select name="ambiente" defaultValue={String(inicial.ambiente)} className={inputCls}>
+          <select name="ambiente" defaultValue={String(inicial.ambiente)} className={`${controleCls()} w-full`}>
             <option value="homologacao">Homologação (produção restrita)</option>
             <option value="producao">Produção</option>
           </select>
@@ -107,11 +112,11 @@ export function FormCertificado() {
     <form action={action} className="space-y-2 text-sm">
       <label className="block">
         Arquivo .pfx / .p12
-        <input name="pfx" type="file" accept=".pfx,.p12" required className={inputCls} />
+        <input name="pfx" type="file" accept=".pfx,.p12" required className={`${controleCls()} w-full`} />
       </label>
       <label className="block">
         Senha do certificado
-        <input name="senha" type="password" required className={inputCls} />
+        <input name="senha" type="password" required className={`${controleCls()} w-full`} />
       </label>
       {estado.erro && (
         <p role="alert" className="text-negativo">

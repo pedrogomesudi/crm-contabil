@@ -16,11 +16,6 @@ export function controleCls(tamanho: keyof typeof PADDING = "padrao"): string {
   return `${BASE} ${PADDING[tamanho]}`;
 }
 
-// Classe padrão dos controles de formulário (SALDO). Reusada por telas que passam className.
-// TEMPORÁRIO: morre na Task 2, quando os 12 arquivos que a importam migrarem para controleCls().
-export const inputCls =
-  "w-full rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto placeholder:text-cinza-claro focus:border-verde";
-
 // Campo de formulário com label visível associado (o controle vai aninhado no <label>).
 export function Campo({
   label,

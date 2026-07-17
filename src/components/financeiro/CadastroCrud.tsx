@@ -5,7 +5,7 @@ import { useActionState, useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Painel } from "@/components/ui/Painel";
 import { Botao } from "@/components/ui/Botao";
-import { Campo, inputCls } from "@/components/ui/Campo";
+import { Campo, controleCls } from "@/components/ui/Campo";
 import { Badge } from "@/components/ui/Badge";
 
 export type CampoDesc = {
@@ -58,7 +58,7 @@ export function CadastroCrud({
                   name={c.nome}
                   required={c.obrigatorio}
                   defaultValue={String(editando?.[c.nome] ?? "")}
-                  className={inputCls}
+                  className={`${controleCls()} w-full`}
                 >
                   <option value="">—</option>
                   {c.opcoes?.map((o) => (
@@ -72,7 +72,7 @@ export function CadastroCrud({
                   name={c.nome}
                   required={c.obrigatorio}
                   defaultValue={String(editando?.[c.nome] ?? "")}
-                  className={inputCls}
+                  className={`${controleCls()} w-full`}
                 />
               ) : (
                 <input
@@ -81,7 +81,7 @@ export function CadastroCrud({
                   step={c.tipo === "numero" ? "0.01" : undefined}
                   required={c.obrigatorio}
                   defaultValue={String(editando?.[c.nome] ?? "")}
-                  className={inputCls}
+                  className={`${controleCls()} w-full`}
                 />
               )}
             </Campo>
