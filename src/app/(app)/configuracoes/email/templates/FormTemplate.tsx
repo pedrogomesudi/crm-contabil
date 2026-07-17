@@ -1,10 +1,11 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VARIAVEIS, aplicarEmail } from "@/lib/email/template";
 import { salvarTemplate, excluirTemplate, type TemplateView } from "./actions";
 
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 
 // Cliente fictício só para a prévia — o operador vê o resultado antes de salvar.
 const EXEMPLO: Record<string, string> = {

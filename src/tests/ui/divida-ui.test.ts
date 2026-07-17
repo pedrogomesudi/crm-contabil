@@ -120,3 +120,45 @@ describe("só existe um jeito de voltar", () => {
     }
   });
 });
+
+describe("o controle não escreve a própria borda", () => {
+  // A quinta dívida: 142 controles com a classe escrita à mão, em 5 famílias — px-3 py-2 e
+  // px-2 py-1.5 (dois degraus reais), rounded de 4px, border sem cor, e padding em atalho.
+  // Todas nasceram do mesmo jeito: o token respondia "como se parece" E "quanto ocupa", então
+  // quem precisava de outra largura copiava a string e a alterava. O `controleCls(tamanho)`
+  // separou as duas perguntas; este guard impede a cópia de voltar.
+  //
+  // Dois vetores, porque a fatia teve os dois: `border` inline no <input>, e a string extraída
+  // para uma `const ...Cls` (3 arquivos declaravam o próprio "inputCls" local, divergente).
+  // `[^>]*` casaria quebras de linha e cruzaria até o className de OUTRO elemento (um
+  // <input type="file" hidden> sem classe própria acusava a borda do vizinho). `[^<>]*` prende
+  // a busca DENTRO da tag do próprio controle.
+  const BORDA_INLINE = /<(input|select|textarea)\b[^<>]*className="[^"]*\bborder\b[^"]*"/;
+  const BORDA_EM_CONST = /\bconst \w*[cC]ls\s*=\s*\n?\s*"[^"]*\bborder\b[^"]*"/;
+
+  // Controles que NÃO usam o token, com o motivo — não é relaxar a regra, é nomear a exceção.
+  const NAO_E_CONTROLE_DE_FORMULARIO: Record<string, string> = {
+    // Célula de planilha: 12 colunas de mês numa linha, dentro de <td> de 2px. O degrau
+    // compacto (px-2 py-1.5 text-sm) alargaria a grade inteira. Ver o comentário no arquivo.
+    "src/app/(app)/financeiro/orcamento/GradeOrcamento.tsx": "célula de planilha, não campo (celulaCls)",
+    // Campo de busca: pill maior (rounded-xl, py-2.5) com pl-9 para o ícone da lupa. É um quarto
+    // tamanho deliberado, e é o MESMO campo do Toolbar (esse vive em components/ui/, já fora do
+    // escopo). Unificar os dois exige o <Input>, que ainda não é usado — dívida da fatia 5.
+    "src/app/(app)/clientes/page.tsx": "campo de busca (rounded-xl, ícone) — dívida da fatia 5",
+  };
+
+  it("nenhum <input|select|textarea> declara `border` — nem inline, nem em const", () => {
+    const infratores = ESCOPO.filter((p) => !rel(p).startsWith("src/components/ui/"))
+      .filter((p) => BORDA_INLINE.test(fonte(p)) || BORDA_EM_CONST.test(fonte(p)))
+      .map(rel)
+      .filter((p) => !(p in NAO_E_CONTROLE_DE_FORMULARIO));
+    expect(infratores).toEqual([]);
+  });
+
+  it("as exceções declaradas continuam existindo (a lista não vira ficção)", () => {
+    for (const p of Object.keys(NAO_E_CONTROLE_DE_FORMULARIO)) {
+      const src = fonte(resolve(process.cwd(), p));
+      expect(BORDA_INLINE.test(src) || BORDA_EM_CONST.test(src)).toBe(true);
+    }
+  });
+});

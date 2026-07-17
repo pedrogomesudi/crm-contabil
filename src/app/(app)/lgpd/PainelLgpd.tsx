@@ -1,11 +1,12 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BASES_LEGAIS, rotuloBaseLegal } from "@/lib/lgpd/tipos";
 import { formatarData } from "@/lib/format";
 import { salvarTratamento, excluirTratamento, semearTratamentos, salvarConfigLgpd } from "./actions";
 
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 
 type Tratamento = {
   id: string;

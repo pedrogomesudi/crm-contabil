@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -7,7 +8,7 @@ import {
   type AcessoPortal,
 } from "@/app/(app)/clientes/[id]/portal-actions";
 
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 
 export function PortalCliente({ clienteId, acessos }: { clienteId: string; acessos: AcessoPortal[] }) {
   const router = useRouter();

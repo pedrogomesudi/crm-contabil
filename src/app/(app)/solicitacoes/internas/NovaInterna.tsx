@@ -1,11 +1,12 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DEPARTAMENTOS, type Departamento } from "@/lib/clientes/departamentos";
 import { slaDoDepartamento } from "@/lib/solicitacoes/interna";
 import { abrirSolicitacaoInterna } from "./actions";
 
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 
 type Opcao = { id: string; nome: string };
 

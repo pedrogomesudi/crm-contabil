@@ -1,11 +1,12 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { salvarTarefa, definirStatusTarefa, excluirTarefa, salvarItem, alternarItem, excluirItem } from "../actions";
 import { TAREFA_STATUS, TAREFA_PRIORIDADE, type TarefaStatus, type TarefaPrioridade } from "@/lib/tarefas/tarefa";
 import { DEPARTAMENTOS, type Departamento } from "@/lib/clientes/departamentos";
 
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 type Item = { id: string; descricao: string; feito: boolean };
 type Tarefa = {
   id: string;

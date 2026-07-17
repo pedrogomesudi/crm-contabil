@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -19,7 +20,7 @@ const PAPEIS = [
   { v: "assistente", l: "Assistente" },
   { v: "financeiro", l: "Financeiro" },
 ];
-const cls = "rounded-lg border border-linha px-2 py-1.5 text-sm";
+const cls = controleCls("compacto");
 
 export function EditorModelo({ modelo }: { modelo: ModeloDetalhe }) {
   const router = useRouter();

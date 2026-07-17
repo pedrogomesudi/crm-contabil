@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useActionState } from "react";
 import { salvarDadosPagamento, type EstadoPagamento } from "@/app/(app)/configuracoes/pagamento/actions";
 
@@ -12,7 +13,7 @@ type Dados = {
   mensagem_template?: string | null;
 } | null;
 
-const cls = "w-full rounded-lg border border-linha bg-white px-3 py-2 text-sm text-texto focus:border-verde";
+const cls = `${controleCls()} w-full`;
 
 export function FormDadosPagamento({ inicial }: { inicial: Dados }) {
   const [estado, action, pend] = useActionState<EstadoPagamento, FormData>(salvarDadosPagamento, {});
