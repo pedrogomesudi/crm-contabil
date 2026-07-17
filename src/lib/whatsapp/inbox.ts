@@ -1,4 +1,4 @@
-import { chaveTelefone } from "@/lib/whatsapp/mensagem";
+import { chaveTelefone, chaveDeNumeroCompleto } from "@/lib/whatsapp/mensagem";
 
 export type MsgConversa = {
   id: string;
@@ -170,7 +170,7 @@ export function marcaEntrega(status: string, direcao: "IN" | "OUT"): MarcaEntreg
 export function agruparConversas(msgs: MsgConversa[], meta: Map<string, ConversaMeta> = new Map()): Conversa[] {
   const porTel = new Map<string, MsgConversa[]>();
   for (const m of msgs) {
-    const chave = chaveTelefone(m.telefone) ?? m.telefone;
+    const chave = chaveDeNumeroCompleto(m.telefone) ?? m.telefone; // mensagens vêm do webhook, já com DDI
     const arr = porTel.get(chave) ?? [];
     arr.push(m);
     porTel.set(chave, arr);
@@ -251,12 +251,17 @@ export function contadores(convs: Conversa[]): {
 
 // Mapa telefone-normalizado → { razaoSocial, contato }. Só telefones com UM único cliente.
 export function mapaClientesPorTelefone(
-  clientes: { razao_social: string; responsavel_nome: string | null; telefone: string | null }[],
+  clientes: {
+    razao_social: string;
+    responsavel_nome: string | null;
+    telefone: string | null;
+    telefone_ddi?: string | null;
+  }[],
 ): Map<string, { razaoSocial: string; contato: string | null }> {
   const contagem = new Map<string, number>();
   const mapa = new Map<string, { razaoSocial: string; contato: string | null }>();
   for (const c of clientes) {
-    const tel = chaveTelefone(c.telefone ?? "");
+    const tel = chaveTelefone(c.telefone ?? "", c.telefone_ddi ?? "55");
     if (!tel) continue;
     contagem.set(tel, (contagem.get(tel) ?? 0) + 1);
     mapa.set(tel, { razaoSocial: c.razao_social, contato: c.responsavel_nome ?? null });

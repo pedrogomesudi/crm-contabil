@@ -26,6 +26,7 @@ export const clienteSchema = z
     inscricao_municipal: z.string().trim().max(30).optional(),
     email: z.union([z.email("E-mail inválido").max(120), z.literal("")]).optional(),
     telefone: z.string().trim().max(30).optional(),
+    telefone_ddi: z.string().trim().max(4).optional(),
     responsavel_nome: z.string().trim().max(120).optional(),
     observacoes: z.string().max(2000).optional(),
     // Campos persistidos que vêm do formulário — sem eles o Zod os descartaria.

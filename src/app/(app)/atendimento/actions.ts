@@ -66,12 +66,15 @@ export async function listarConversas(): Promise<Conversa[]> {
     .order("criado_em", { ascending: false })
     .limit(500);
   const admin = createAdminSupabase();
-  const { data: clientes } = await admin.from("clientes").select("razao_social, responsavel_nome, telefone");
+  const { data: clientes } = await admin
+    .from("clientes")
+    .select("razao_social, responsavel_nome, telefone, telefone_ddi");
   const mapaCli = mapaClientesPorTelefone(
     (clientes ?? []).map((c) => ({
       razao_social: c.razao_social as string,
       responsavel_nome: (c.responsavel_nome as string | null) ?? null,
       telefone: (c.telefone as string | null) ?? null,
+      telefone_ddi: (c.telefone_ddi as string | null) ?? null,
     })),
   );
   const { data: convRows } = await admin.from("conversa").select("telefone, favorita, status, atendente_id");
@@ -134,8 +137,10 @@ export async function responder(telefone: string, texto: string): Promise<{ ok?:
   };
   const r = await enviarTexto(zapi, telefone, t);
   // resolve cliente para vincular a saída à mesma thread (best-effort; só se houver exatamente um)
-  const { data: cli } = await admin.from("clientes").select("id, telefone");
-  const casados = (cli ?? []).filter((c) => chaveTelefone((c.telefone as string) ?? "") === telefone);
+  const { data: cli } = await admin.from("clientes").select("id, telefone, telefone_ddi");
+  const casados = (cli ?? []).filter(
+    (c) => chaveTelefone((c.telefone as string) ?? "", (c.telefone_ddi as string) ?? "55") === telefone,
+  );
   const clienteId = casados.length === 1 ? (casados[0]!.id as string) : null;
   // Guarda o messageId do Z-API para casar os eventos de status (entregue/lido).
   const resp = (r.resposta ?? {}) as { messageId?: string; id?: string; zaapId?: string };
@@ -200,8 +205,10 @@ export async function dadosContato(telefone: string): Promise<DadosContato> {
   const admin = createAdminSupabase();
   const { data: cli } = await admin
     .from("clientes")
-    .select("id, telefone, razao_social, cpf_cnpj, regime_tributario, status");
-  const casados = (cli ?? []).filter((c) => chaveTelefone((c.telefone as string) ?? "") === telefone);
+    .select("id, telefone, telefone_ddi, razao_social, cpf_cnpj, regime_tributario, status");
+  const casados = (cli ?? []).filter(
+    (c) => chaveTelefone((c.telefone as string) ?? "", (c.telefone_ddi as string) ?? "55") === telefone,
+  );
   if (casados.length !== 1) return vazio;
   const c = casados[0]!;
   let honorario: number | null = null;
@@ -317,8 +324,10 @@ export async function enviarMidia(formData: FormData): Promise<{ ok?: boolean; e
   const path = `atendimento/out/${crypto.randomUUID()}.${extensaoPorMime(mime)}`;
   await admin.storage.from("documentos").upload(path, buf, { contentType: mime, upsert: false });
 
-  const { data: cli } = await admin.from("clientes").select("id, telefone");
-  const casados = (cli ?? []).filter((c) => chaveTelefone((c.telefone as string) ?? "") === telefone);
+  const { data: cli } = await admin.from("clientes").select("id, telefone, telefone_ddi");
+  const casados = (cli ?? []).filter(
+    (c) => chaveTelefone((c.telefone as string) ?? "", (c.telefone_ddi as string) ?? "55") === telefone,
+  );
   const clienteId = casados.length === 1 ? (casados[0]!.id as string) : null;
   const resp = (r.resposta ?? {}) as { messageId?: string; id?: string };
   await admin.from("whatsapp_mensagem").insert({
@@ -347,11 +356,11 @@ export async function listarClientesParaConversa(): Promise<
   const admin = createAdminSupabase();
   const { data } = await admin
     .from("clientes")
-    .select("razao_social, responsavel_nome, telefone")
+    .select("razao_social, responsavel_nome, telefone, telefone_ddi")
     .order("razao_social");
   const out: { razaoSocial: string; contato: string | null; telefone: string }[] = [];
   for (const c of data ?? []) {
-    const tel = chaveTelefone((c.telefone as string | null) ?? "");
+    const tel = chaveTelefone((c.telefone as string | null) ?? "", (c.telefone_ddi as string | null) ?? "55");
     if (tel)
       out.push({
         razaoSocial: c.razao_social as string,

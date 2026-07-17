@@ -19,6 +19,7 @@ export type ClienteDefaults = {
   inscricao_municipal?: string;
   email?: string;
   telefone?: string;
+  telefone_ddi?: string;
   endereco?: Record<string, string> | null;
   responsavel_nome?: string;
   representante?: Record<string, string> | null;
@@ -206,7 +207,16 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
           <FormCampo label="E-mail" span={5}>
             <input name="email" type="email" defaultValue={c.email ?? ""} className={`${controleCls()} w-full`} />
           </FormCampo>
-          <FormCampo label="Telefone / WhatsApp" span={3}>
+          <FormCampo label="DDI" span={1}>
+            <input
+              name="telefone_ddi"
+              inputMode="numeric"
+              defaultValue={c.telefone_ddi ?? "55"}
+              className={`${controleCls()} w-full`}
+              aria-label="Código do país"
+            />
+          </FormCampo>
+          <FormCampo label="Telefone / WhatsApp" span={2}>
             <input name="telefone" defaultValue={c.telefone ?? ""} className={`${controleCls()} w-full`} />
           </FormCampo>
           <FormCampo label="Responsável (contato)" span={4}>

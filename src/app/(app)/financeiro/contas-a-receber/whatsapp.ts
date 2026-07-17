@@ -13,13 +13,13 @@ export async function cobrarViaWhatsapp(tituloId: string): Promise<{ ok?: boolea
   const supabase = await createServerSupabase();
   const { data: t } = await supabase
     .from("titulo")
-    .select("id, valor, vencimento, cliente_id, clientes(razao_social, telefone)")
+    .select("id, valor, vencimento, cliente_id, clientes(razao_social, telefone, telefone_ddi)")
     .eq("id", tituloId)
     .maybeSingle();
   if (!t) return { erro: "Título não encontrado." };
   const cl = Array.isArray(t.clientes) ? t.clientes[0] : t.clientes;
-  const cliente = cl as { razao_social?: string; telefone?: string } | null;
-  const tel = normalizarTelefone(cliente?.telefone ?? "");
+  const cliente = cl as { razao_social?: string; telefone?: string; telefone_ddi?: string } | null;
+  const tel = normalizarTelefone(cliente?.telefone ?? "", cliente?.telefone_ddi ?? "55");
   if (!tel) return { erro: "Cliente sem telefone válido." };
 
   const texto = aplicarTemplate(TEMPLATES.cobranca, {

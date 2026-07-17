@@ -6,6 +6,7 @@ const cli = (over: Partial<ClienteAlvo>): ClienteAlvo => ({
   razaoSocial: "Cliente",
   email: "c@x.com",
   telefone: "62999998888",
+  telefoneDdi: "55",
   cpfCnpj: "1",
   regime: "Simples",
   tipo: "PJ",

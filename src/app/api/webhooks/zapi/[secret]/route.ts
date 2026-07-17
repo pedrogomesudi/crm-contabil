@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { extrairMensagemZapi, extrairStatusZapi } from "@/lib/whatsapp/inbox";
-import { chaveTelefone } from "@/lib/whatsapp/mensagem";
+import { chaveTelefone, chaveDeNumeroCompleto } from "@/lib/whatsapp/mensagem";
 import { decifrarDominio } from "@/lib/cripto/envelope";
 import { baixarEStorearMidia } from "@/lib/whatsapp/midia-storage";
 
@@ -42,12 +42,16 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
     return NextResponse.json({ ok: true, ignored: true });
   }
 
-  const tel = chaveTelefone(msg.telefone) ?? msg.telefone.replace(/\D/g, "");
+  // msg.telefone JÁ vem completo com DDI (do Z-API) — canonicaliza sem colar 55, senão um número
+  // internacional viraria "55"+número e nunca casaria com o cliente.
+  const tel = chaveDeNumeroCompleto(msg.telefone) ?? msg.telefone.replace(/\D/g, "");
   const admin = createAdminSupabase();
 
   // resolve cliente por telefone (best-effort): só casa se houver EXATAMENTE um
-  const { data: casadosRaw } = await admin.from("clientes").select("id, telefone");
-  const casados = (casadosRaw ?? []).filter((c) => chaveTelefone((c.telefone as string) ?? "") === tel);
+  const { data: casadosRaw } = await admin.from("clientes").select("id, telefone, telefone_ddi");
+  const casados = (casadosRaw ?? []).filter(
+    (c) => chaveTelefone((c.telefone as string) ?? "", (c.telefone_ddi as string) ?? "55") === tel,
+  );
   const clienteId = casados.length === 1 ? (casados[0]!.id as string) : null;
 
   // dedup pelo unique (z_message_id); ignora violação

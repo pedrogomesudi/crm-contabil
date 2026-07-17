@@ -335,4 +335,10 @@ describe("mapaClientesPorTelefone", () => {
     ]);
     expect(m.size).toBe(0);
   });
+  it("cliente internacional casa pela chave DDI + número, sem inserir o 9", () => {
+    const m = mapaClientesPorTelefone([
+      { razao_social: "US Corp", responsavel_nome: "John", telefone: "555 123 4567", telefone_ddi: "1" },
+    ]);
+    expect([...m.entries()]).toEqual([["15551234567", { razaoSocial: "US Corp", contato: "John" }]]);
+  });
 });
