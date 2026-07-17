@@ -10,6 +10,7 @@ O registro dizia **"~10 cópias divergentes"**, depois corrigido para **28**. O 
 | Medida | Valor |
 |---|---|
 | Controles com `className` literal | **80**, em **27 arquivos** |
+| **Destes, o que esta fatia toca** | **67**, em **17 arquivos** (os outros 13 são checkbox/upload/sem caixa) |
 | Controles crus (`<input>`/`<select>`/`<textarea>`) no sistema | **200** |
 | Controles pelo componente (`<Input>`/`<Select>`/`<Textarea>`) | **0** — os 5 que existem são dentro dos testes deles |
 | Usos de `inputCls` colado em elemento cru | **75** em tela (+3 definições de componente), em 12 arquivos |
@@ -18,8 +19,8 @@ O registro dizia **"~10 cópias divergentes"**, depois corrigido para **28**. O 
 
 | Família | Nº | O que é | Muda na tela? |
 |---|---|---|---|
-| **A** | 17 | Igual ao `inputCls` (`px-3 py-2`) — duplicação de verdade | Não |
-| **B** | 14 | **Compacto** (`px-2 py-1.5`) — kanban, linha de tabela, grade | Não |
+| **A** | 17 | Igual ao `inputCls` (`px-3 py-2`) — duplicação de verdade | Não (1 exceção, abaixo) |
+| **B** | 14 | **Compacto** (`px-2 py-1.5`) — kanban, linha de tabela, grade | **Sim** — ganham fundo branco |
 | **C** | 17 | `rounded` (4px) em vez de `rounded-lg` (8px) | **Sim** |
 | **D** | 9 | `border` **sem cor** → `currentColor` (8 em `EnviarAssinatura.tsx`) | **Sim** |
 | **E** | 10 | Padding em **atalho** (`p-2`, `p-1`, `px-2` sem `py`) — não mapeia limpo | **Sim** — decidido caso a caso (abaixo) |
@@ -111,8 +112,17 @@ herda uma decisão que ninguém tomou.
 
 ### As famílias
 
-- **A** (17) → `controleCls` importado. String idêntica; nada muda.
-- **B** (14) → `controleCls("compacto")`. O degrau foi desenhado a partir deles; nada muda.
+- **A** (17) → `controleCls()`. String idêntica; nada muda — **exceto `vencimentos/page.tsx:89`**, que não
+  tem `bg-white` nem `focus:border-verde` e vai ganhar os dois.
+- **B** (14) → `controleCls("compacto")` + `mt-0.5 block`. O padding é idêntico, mas **eles mudam**: a
+  família B não tem `bg-white`, `text-texto` nem `focus:border-verde`, e ganha os três.
+
+> **Por que o `bg-white` muda a tela (e não é no-op):** o preflight do Tailwind força
+> `background-color: transparent` em `input`, `select` e `textarea` — anulando o padrão do navegador
+> (`background-color: field`, branco). Ou seja, os 14 controles da família B são **transparentes hoje** e
+> mostram o creme da página. Com `bg-white` ficam brancos, como todo controle do sistema.
+> Isso foi **verificado no `node_modules/tailwindcss/preflight.css:250`**, não presumido — a intuição
+> ("input já é branco por padrão") estava errada.
 - **C** (17) → `controleCls`. **Canto de 4px vira 8px.**
 - **D** (9) → `controleCls`. **A borda ganha `border-linha`.** Hoje é `currentColor` (herda a cor do
   texto) — provavelmente já está errado na tela e ninguém reparou. **Confirmar na execução, não presumir.**
@@ -139,9 +149,12 @@ herda uma decisão que ninguém tomou.
 - **Sabotagem com formas não desenhadas.** Na fatia 3, sabotar com o que eu tinha em mente deixou passar
   3 furos: o guard provou pegar o que foi escrito, não o que promete.
 - **Não-regressão:** 691 testes; `lint`, `typecheck`, `build`, `format:check`.
-- **Visual:** o Pedro confere as famílias **C**, **D** e **E** — são as que mudam. A **E** ele já decidiu
-  caso a caso (tabela acima); as três ele confere depois de prontas. Atenção especial à barra de filtros
-  do `/vencimentos`: é a única mudança de altura desta fatia, e é a que corrige um desalinhamento atual.
+- **Visual:** o Pedro confere **B, C, D e E** — são as que mudam (a **A** não muda, salvo
+  `vencimentos:89`). A **E** ele já decidiu caso a caso (tabela acima). Dois pontos merecem o olho:
+  - **A família B ganha fundo branco** em 14 controles hoje transparentes (kanban, grade, linha de
+    tabela). É a mudança de maior alcance da fatia.
+  - **A barra de filtros do `/vencimentos`** é a única mudança de **altura**, e corrige um
+    desalinhamento que já existe.
 
 ## Fora de escopo
 
