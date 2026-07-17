@@ -95,24 +95,14 @@ export default async function VencimentosPage({
           maxLength={60}
           className={controleCls()}
         />
-        <select
-          name="sev"
-          defaultValue={sev}
-          aria-label="Filtrar por situação"
-          className="rounded-lg border border-linha px-2 text-sm text-texto"
-        >
+        <select name="sev" defaultValue={sev} aria-label="Filtrar por situação" className={controleCls()}>
           <option value="">Todas as situações</option>
           <option value="vencido">Vencido</option>
           <option value="critico">Crítico (≤ 15)</option>
           <option value="alerta">Alerta (≤ 30)</option>
           <option value="aviso">Aviso (≤ 60)</option>
         </select>
-        <select
-          name="origem"
-          defaultValue={origem}
-          aria-label="Filtrar por tipo"
-          className="rounded-lg border border-linha px-2 text-sm text-texto"
-        >
+        <select name="origem" defaultValue={origem} aria-label="Filtrar por tipo" className={controleCls()}>
           <option value="">Todos os tipos</option>
           <option value="certificado">Certificado</option>
           <option value="procuracao">Procuração</option>

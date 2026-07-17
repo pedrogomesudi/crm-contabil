@@ -1,4 +1,5 @@
 "use client";
+import { controleCls } from "@/components/ui/Campo";
 import { useActionState, useState } from "react";
 import {
   salvarContrato,
@@ -53,7 +54,7 @@ export function ContratosSection({ clienteId, contratos }: { clienteId: string; 
             placeholder="Descrição"
             required
             defaultValue={editando?.descricao ?? ""}
-            className="rounded-lg border border-linha p-2 text-sm"
+            className={controleCls("compacto")}
           />
           <input
             name="valor_mensal"
@@ -62,7 +63,7 @@ export function ContratosSection({ clienteId, contratos }: { clienteId: string; 
             placeholder="Valor mensal"
             required
             defaultValue={editando?.valor_mensal ?? ""}
-            className="rounded-lg border border-linha p-2 text-sm"
+            className={controleCls("compacto")}
           />
           <input
             name="dia_vencimento"
@@ -72,14 +73,14 @@ export function ContratosSection({ clienteId, contratos }: { clienteId: string; 
             placeholder="Dia venc. (1–28)"
             required
             defaultValue={editando?.dia_vencimento ?? ""}
-            className="rounded-lg border border-linha p-2 text-sm"
+            className={controleCls("compacto")}
           />
           <input
             name="data_inicio"
             type="date"
             required
             defaultValue={editando?.data_inicio ?? ""}
-            className="rounded-lg border border-linha p-2 text-sm"
+            className={controleCls("compacto")}
           />
         </div>
         <label className="flex items-center gap-2 text-sm">
@@ -91,7 +92,7 @@ export function ContratosSection({ clienteId, contratos }: { clienteId: string; 
             min={1}
             max={12}
             defaultValue={editando?.mes_decimo_terceiro ?? 12}
-            className="w-16 rounded-lg border border-linha p-1"
+            className={`${controleCls("compacto")} w-16`}
             title="Mês do 13º"
           />
         </label>
