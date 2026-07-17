@@ -49,6 +49,14 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
   const [buscaCliente, setBuscaCliente] = useState("");
   const [busca, setBusca] = useState("");
   const [ativa, setAtiva] = useState<string | null>(null);
+  // Ref espelhando `ativa`: refetches ATRASADOS (o debounce de 1s, o interval de 30s) precisam ler
+  // a conversa aberta AGORA, não a que estava aberta quando o timer foi agendado — senão a thread
+  // é sobrescrita pela conversa errada se o usuário trocar de conversa no meio. Atualizado num
+  // effect (não no corpo) porque o react-hooks/lint proíbe escrever ref.current durante o render.
+  const ativaRef = useRef<string | null>(null);
+  useEffect(() => {
+    ativaRef.current = ativa;
+  }, [ativa]);
   const [msgs, setMsgs] = useState<MsgConversa[]>([]);
   const [contato, setContato] = useState<DadosContato | null>(null);
   const [texto, setTexto] = useState("");
@@ -101,22 +109,31 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
       debounceLista.current = setTimeout(() => {
         start(async () => {
           setConversas(await listarConversas());
-          if (ativa) setMsgs(await abrirConversa(ativa));
+          const alvo = ativaRef.current; // a conversa aberta AGORA, não a de quando agendou
+          if (alvo) setMsgs(await abrirConversa(alvo));
         });
       }, 1000);
     },
   });
+
+  // Limpa o debounce pendente no unmount (evita refetch + setState após desmontar).
+  useEffect(() => {
+    return () => {
+      if (debounceLista.current) clearTimeout(debounceLista.current);
+    };
+  }, []);
 
   // Rede de segurança: se o WebSocket cair, um refetch a cada 30s ressincroniza.
   useEffect(() => {
     const id = setInterval(() => {
       start(async () => {
         setConversas(await listarConversas());
-        if (ativa) setMsgs(await abrirConversa(ativa));
+        const alvo = ativaRef.current;
+        if (alvo) setMsgs(await abrirConversa(alvo));
       });
     }, 30000);
     return () => clearInterval(id);
-  }, [ativa]);
+  }, []);
 
   // auto-scroll ao fim quando a thread muda
   useEffect(() => {
