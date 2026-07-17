@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -12,12 +13,12 @@ export default async function EditarModeloPage({ params }: { params: Promise<{ i
   const modelo = await obterModelo(id);
   if (!modelo) notFound();
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <Link href="/configuracoes/legalizacao" className="text-sm text-verde underline">
         ← Modelos de legalização
       </Link>
       <PageHeader titulo={modelo.nome} subtitulo="Metadados e etapas do modelo" />
       <EditorModelo modelo={modelo} />
-    </main>
+    </Container>
   );
 }

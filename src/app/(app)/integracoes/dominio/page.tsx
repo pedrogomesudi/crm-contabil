@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { UploadDominio } from "@/components/dominio/UploadDominio";
@@ -10,7 +11,7 @@ export default async function IntegracaoDominioPage() {
   // escreve cadastro, então não conduz a importação — fica fora do gate.
   if (!perfil || !["admin", "assistente"].includes(perfil.papel)) redirect("/");
   return (
-    <main className="mx-auto max-w-[720px] space-y-6 p-6">
+    <Container largura="estreita" className="space-y-6 p-6">
       <header>
         <h1 className="text-xl font-semibold">Integração Domínio</h1>
         <p className="text-sm text-gray-600">
@@ -20,6 +21,6 @@ export default async function IntegracaoDominioPage() {
       <UploadDominio />
       <ImportarEnderecos />
       <AtualizarPelaReceita />
-    </main>
+    </Container>
   );
 }

@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -10,7 +11,7 @@ export default async function ReguaPage() {
   if (!perfil || !podeGerenciarFinanceiro(perfil.papel)) redirect("/");
   const [ativa, etapas, historico] = await Promise.all([lerReguaAtiva(), listarEtapas(), historicoRegua()]);
   return (
-    <main className="mx-auto max-w-[720px] space-y-4 p-4">
+    <Container largura="estreita" className="space-y-4 p-4">
       <Voltar href="/financeiro/cadastros" />
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Régua de cobrança</h1>
       <p className="rounded border border-atencao-borda bg-atencao-fundo px-3 py-2 text-xs text-atencao">
@@ -18,6 +19,6 @@ export default async function ReguaPage() {
         hora.
       </p>
       <Regua ativaInicial={ativa} etapas={etapas} historico={historico} />
-    </main>
+    </Container>
   );
 }

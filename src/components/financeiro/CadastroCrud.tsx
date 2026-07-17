@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { Container } from "@/components/ui/Container";
 import { useActionState, useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Painel } from "@/components/ui/Painel";
@@ -36,7 +37,7 @@ export function CadastroCrud({
   const [estado, action, pending] = useActionState(salvar, {} as EstadoCrud);
 
   return (
-    <main className="mx-auto max-w-[720px] space-y-6 p-4">
+    <Container largura="estreita" className="space-y-6 p-4">
       <PageHeader
         titulo={titulo}
         acoes={
@@ -153,6 +154,6 @@ export function CadastroCrud({
           </tbody>
         </table>
       </Painel>
-    </main>
+    </Container>
   );
 }

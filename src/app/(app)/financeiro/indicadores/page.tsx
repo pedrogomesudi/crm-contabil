@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
@@ -22,7 +23,7 @@ export default async function IndicadoresPage() {
   if (!perfil || !podeGerenciarFinanceiro(perfil.papel)) redirect("/");
   const resumo = await carregarIndicadores();
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Indicadores" subtitulo="Ticket médio, MRR, churn e crescimento da carteira" />
       {!resumo ? (
@@ -42,6 +43,6 @@ export default async function IndicadoresPage() {
           <Indicadores resumo={resumo} />
         </>
       )}
-    </main>
+    </Container>
   );
 }

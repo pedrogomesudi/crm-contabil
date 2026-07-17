@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -20,10 +21,10 @@ export default async function ExtratoPage() {
     listarLancamentos(inicio, fim, "todos", null),
   ]);
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <Voltar href="/financeiro/relatorios" />
       <PageHeader titulo="Extrato / movimentações" subtitulo="Lançamentos e baixas, com export CSV" />
       <Extrato categorias={categorias} inicio={inicio} fim={fim} lancamentosIni={lancamentosIni} />
-    </main>
+    </Container>
   );
 }

@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -14,10 +15,10 @@ export default async function DREPage() {
   const mes = Number(hoje.slice(5, 7));
   const inicial = await relatorioDRE(ano, "mes", mes, "competencia");
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <Voltar href="/financeiro/relatorios" />
       <PageHeader titulo="DRE" subtitulo="Demonstração de Resultado" />
       <RelatorioDRE ano={ano} tipo="mes" indice={mes} base="competencia" dre={inicial?.dre ?? null} />
-    </main>
+    </Container>
   );
 }

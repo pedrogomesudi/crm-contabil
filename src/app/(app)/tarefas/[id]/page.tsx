@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -57,7 +58,7 @@ export default async function TarefaPage({ params }: { params: Promise<{ id: str
     })),
   };
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <Link href="/tarefas" className="text-sm text-verde underline">
         ← Tarefas
       </Link>
@@ -74,6 +75,6 @@ export default async function TarefaPage({ params }: { params: Promise<{ id: str
         minutosSessao={sessao?.minutos ?? 0}
         hoje={hoje}
       />
-    </main>
+    </Container>
   );
 }

@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -73,7 +74,7 @@ export default async function RentabilidadePage({
   };
 
   return (
-    <main className="mx-auto max-w-full space-y-5 p-4">
+    <Container largura="larga" className="space-y-5 p-4">
       <PageHeader titulo="Rentabilidade por cliente" subtitulo="Quanto custou atender × quanto o cliente pagou" />
 
       <form
@@ -190,6 +191,6 @@ export default async function RentabilidadePage({
         meses do período — em âmbar quando o recebido ficou abaixo dele (sinal de atraso). O custo usa o valor/hora{" "}
         <strong>vigente na data de cada apontamento</strong>. Ordenado por margem: os piores primeiro.
       </p>
-    </main>
+    </Container>
   );
 }

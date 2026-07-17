@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -14,7 +15,7 @@ export default async function OrcadoRealizadoPage() {
   const indice = agora.getMonth() + 1;
   const dados = await dashboardOrcadoRealizado(ano, "mes", indice, "competencia");
   return (
-    <main className="mx-auto max-w-full space-y-5 p-4">
+    <Container largura="larga" className="space-y-5 p-4">
       <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Orçado × Realizado" subtitulo="Comparativo do orçamento com o realizado" />
       {dados ? (
@@ -29,6 +30,6 @@ export default async function OrcadoRealizadoPage() {
       ) : (
         <p className="text-sm text-cinza">Sem acesso ao financeiro.</p>
       )}
-    </main>
+    </Container>
   );
 }

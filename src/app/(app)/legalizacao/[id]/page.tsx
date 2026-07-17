@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -80,7 +81,7 @@ export default async function ProcessoLegalizacaoPage({ params }: { params: Prom
   const status = proc.status as LegProcStatus;
 
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <Link href={`/clientes/${proc.cliente_id}`} className="text-sm text-verde underline">
         ← {(cli?.razao_social as string) ?? "Cliente"}
       </Link>
@@ -97,6 +98,6 @@ export default async function ProcessoLegalizacaoPage({ params }: { params: Prom
           <EtapaLinha key={l.id} etapa={l} hoje={hoje} />
         ))}
       </div>
-    </main>
+    </Container>
   );
 }

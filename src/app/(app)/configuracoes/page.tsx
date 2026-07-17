@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -72,7 +73,7 @@ export default async function ConfiguracoesHubPage() {
   // Cada página de destino mantém o próprio gate: o filtro aqui é de navegação, não de segurança.
   const itens = ITENS.filter((i) => (i.papeis ?? ["admin"]).includes(perfil.papel));
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <PageHeader titulo="Configurações" subtitulo="Integrações e credenciais do sistema" />
       {/* auto-rows-fr + h-full: todos os cards com a mesma altura, mesmo quando a descrição
           ocupa mais linhas em um deles. Sem isso o grid vira uma escada. */}
@@ -102,6 +103,6 @@ export default async function ConfiguracoesHubPage() {
           </li>
         ))}
       </ul>
-    </main>
+    </Container>
   );
 }

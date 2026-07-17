@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -15,7 +16,7 @@ export default async function ContasPagarPage() {
     supabase.from("categoria").select("id, nome").eq("natureza", "DESPESA").eq("ativa", true).order("ordem_dre"),
   ]);
   return (
-    <main className="mx-auto max-w-[1280px] space-y-4 p-4">
+    <Container largura="padrao" className="space-y-4 p-4">
       <Voltar href="/financeiro/cadastros" />
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Contas a pagar</h1>
       <ContasPagar
@@ -23,6 +24,6 @@ export default async function ContasPagarPage() {
         fornecedores={fornecedores.data ?? []}
         categorias={categorias.data ?? []}
       />
-    </main>
+    </Container>
   );
 }

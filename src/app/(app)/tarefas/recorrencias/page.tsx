@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -26,7 +27,7 @@ export default async function RecorrenciasPage() {
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <Link href="/tarefas" className="text-sm text-verde underline">
         ← Tarefas
       </Link>
@@ -38,6 +39,6 @@ export default async function RecorrenciasPage() {
         hoje={hoje}
         editavel={podeGerenciarRecorrencias(perfil.papel)}
       />
-    </main>
+    </Container>
   );
 }

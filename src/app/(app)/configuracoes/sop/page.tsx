@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -14,7 +15,7 @@ export default async function SopPage() {
   const templates = await listarTemplatesSop();
 
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <Link href="/configuracoes" className="text-sm text-verde underline">
         ← Configurações
       </Link>
@@ -23,6 +24,6 @@ export default async function SopPage() {
         subtitulo="Etapas que viram tarefas — em ondas paralelas e sequenciais"
       />
       <FormSop templates={templates} />
-    </main>
+    </Container>
   );
 }

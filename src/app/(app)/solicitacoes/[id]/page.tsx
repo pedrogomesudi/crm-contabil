@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -52,7 +53,7 @@ export default async function SolicitacaoPage({ params }: { params: Promise<{ id
   });
 
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <Link href="/solicitacoes" className="text-sm text-verde underline">
         ← Solicitações
       </Link>
@@ -68,6 +69,6 @@ export default async function SolicitacaoPage({ params }: { params: Promise<{ id
         colaboradores={colaboradores}
         mensagens={mensagens}
       />
-    </main>
+    </Container>
   );
 }

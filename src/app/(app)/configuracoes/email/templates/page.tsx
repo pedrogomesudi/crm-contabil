@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -14,12 +15,12 @@ export default async function TemplatesEmailPage() {
   const templates = await listarTemplates();
 
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <Link href="/configuracoes/email" className="text-sm text-verde underline">
         ← E-mail
       </Link>
       <PageHeader titulo="Templates de e-mail" subtitulo="Modelos com variáveis de personalização" />
       <FormTemplate templates={templates} />
-    </main>
+    </Container>
   );
 }

@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import Link from "next/link";
 import { Voltar } from "@/components/ui/Voltar";
 import { redirect } from "next/navigation";
@@ -13,7 +14,7 @@ export default async function DashboardFinanceiroPage() {
   const mes = hoje.slice(0, 7);
   const dados = await carregarDashboard(`${mes}-01`);
   return (
-    <main className="mx-auto max-w-[1280px] space-y-4 p-4">
+    <Container largura="padrao" className="space-y-4 p-4">
       <Voltar href="/financeiro/cadastros" />
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Dashboard financeiro</h1>
       <div className="flex gap-3">
@@ -29,6 +30,6 @@ export default async function DashboardFinanceiroPage() {
       ) : (
         <p className="text-sm text-red-600">Não foi possível carregar os dados.</p>
       )}
-    </main>
+    </Container>
   );
 }

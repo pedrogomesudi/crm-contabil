@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -66,7 +67,7 @@ export default async function SolicitacoesPage({
     `rounded-lg border px-2.5 py-1 text-xs ${ativo ? "border-verde bg-verde/10 text-verde" : "border-linha text-cinza"}`;
 
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader titulo="Solicitações" subtitulo="Pedidos abertos pelos clientes no portal" />
       {/* Era um par de botões-âncora imitando abas — o quinto padrão de navegação do sistema. */}
       <SubNav
@@ -129,6 +130,6 @@ export default async function SolicitacoesPage({
           })}
         </ul>
       )}
-    </main>
+    </Container>
   );
 }

@@ -29,7 +29,11 @@ export default async function DocumentoPage({ params }: { params: Promise<{ id: 
   };
   const logoUrl = await urlLogoAtual();
   return (
-    <main className="min-h-screen bg-white p-4">
+    // <div>, não <Container>: esta é a folha impressa da proposta, não uma tela com régua.
+    // O branco cobrindo a viewport é de propósito (o creme não vai para o papel), e a largura
+    // do documento é a do <div> interno. Um Container aqui imporia mx-auto + max-w e mudaria
+    // o layout. O que muda é só o landmark: o <main> do layout continua sendo o único.
+    <div className="min-h-screen bg-white p-4">
       <div className="mx-auto mb-3 flex max-w-2xl items-center justify-between print:hidden">
         <Link href={`/comercial/propostas/${id}`} className="text-sm text-verde underline">
           ← Editar
@@ -37,6 +41,6 @@ export default async function DocumentoPage({ params }: { params: Promise<{ id: 
         <ImprimirBtn />
       </div>
       <DocumentoProposta proposta={proposta} hoje={hoje} marca={marca} logoUrl={logoUrl} />
-    </main>
+    </div>
   );
 }

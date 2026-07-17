@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -51,7 +52,7 @@ export default async function TimesheetPage({
     .limit(100);
 
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader titulo="Timesheet" subtitulo="Apontamento de horas por cliente e tarefa" />
       <PainelTimesheet
         apontamentos={apontamentos}
@@ -63,6 +64,6 @@ export default async function TimesheetPage({
         filtros={{ de, ate, usuarioId: sp.usuarioId }}
         veDeTodos={veDeTodos}
       />
-    </main>
+    </Container>
   );
 }

@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -23,7 +24,7 @@ export default async function MarcaPage() {
   const logoUrl = await urlLogoAtual();
 
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <PageHeader titulo="Marca do escritório" subtitulo="Identidade usada na proposta comercial e no whitelabel" />
       {!marca?.nome && (
         <p className="rounded-lg bg-atencao-fundo px-3 py-2 text-sm text-atencao">
@@ -37,6 +38,6 @@ export default async function MarcaPage() {
         temTemplate={Boolean(marca?.proposta_template_path)}
       />
       <FormSla dias={(marca?.solicitacao_sla_dias as number | null) ?? 2} />
-    </main>
+    </Container>
   );
 }

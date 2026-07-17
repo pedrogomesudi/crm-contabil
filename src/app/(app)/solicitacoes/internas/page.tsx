@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -41,7 +42,7 @@ export default async function InternasPage({ searchParams }: { searchParams: Pro
     `rounded-lg border px-2.5 py-1 text-xs ${ativo ? "border-verde bg-verde/10 text-verde" : "border-linha text-cinza"}`;
 
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <div className="flex gap-1 text-sm">
         <Link href="/solicitacoes" className="rounded-lg border border-linha px-3 py-1.5 text-cinza">
           Do cliente
@@ -120,6 +121,6 @@ export default async function InternasPage({ searchParams }: { searchParams: Pro
           ))}
         </ul>
       )}
-    </main>
+    </Container>
   );
 }

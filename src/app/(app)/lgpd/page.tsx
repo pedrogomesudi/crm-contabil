@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -22,7 +23,7 @@ export default async function LgpdPage() {
     .maybeSingle();
 
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <Link href="/configuracoes" className="text-sm text-verde underline">
         ← Configurações
       </Link>
@@ -33,6 +34,6 @@ export default async function LgpdPage() {
         retencaoMeses={(cfg?.retencao_meses as number | null) ?? 60}
         encarregado={(cfg?.lgpd_encarregado as string | null) ?? ""}
       />
-    </main>
+    </Container>
   );
 }

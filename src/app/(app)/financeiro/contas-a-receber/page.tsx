@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -13,10 +14,10 @@ export default async function ContasReceberPage() {
   const { data: contas } = await supabase.from("conta_bancaria").select("id, nome").eq("ativa", true).order("nome");
   const automacao = await lerAutomacao();
   return (
-    <main className="mx-auto max-w-[1280px] space-y-4 p-4">
+    <Container largura="padrao" className="space-y-4 p-4">
       <Voltar href="/financeiro/cadastros" />
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Contas a receber</h1>
       <ContasReceber contas={contas ?? []} automacaoInicial={automacao} />
-    </main>
+    </Container>
   );
 }

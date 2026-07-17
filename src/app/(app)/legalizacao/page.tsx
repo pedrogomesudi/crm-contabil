@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -83,9 +84,9 @@ export default async function LegalizacaoPage({
     .filter((l) => orgao === "" || l.orgaosPendentes.includes(orgao as LegOrgao));
 
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader titulo="Legalização / Societário" subtitulo="Processos societários e de legalização por órgão" />
       <PainelLegalizacao linhas={linhas} filtros={{ status, orgao }} />
-    </main>
+    </Container>
   );
 }

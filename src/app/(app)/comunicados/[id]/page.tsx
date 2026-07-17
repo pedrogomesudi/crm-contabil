@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -15,7 +16,7 @@ export default async function ComunicadoPage({ params }: { params: Promise<{ id:
   if (!comunicado) notFound();
 
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <Link href="/comunicados" className="text-sm text-verde underline">
         ← Comunicados
       </Link>
@@ -64,6 +65,6 @@ export default async function ComunicadoPage({ params }: { params: Promise<{ id:
           </tbody>
         </table>
       </div>
-    </main>
+    </Container>
   );
 }

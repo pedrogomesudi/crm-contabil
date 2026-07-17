@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -15,7 +16,7 @@ export default async function ComercialPage() {
   const { data: us } = await supabase.from("usuarios").select("id, nome").eq("ativo", true).order("nome");
   const usuarios = (us as { id: string; nome: string }[] | null) ?? [];
   return (
-    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
+    <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader titulo="Comercial" subtitulo="Funil de oportunidades" />
       <SubNav
         itens={[
@@ -24,6 +25,6 @@ export default async function ComercialPage() {
         ]}
       />
       <QuadroComercial oportunidades={oportunidades} usuarios={usuarios} />
-    </main>
+    </Container>
   );
 }

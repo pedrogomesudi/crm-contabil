@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { Voltar } from "@/components/ui/Voltar";
 import { getPerfilAtual } from "@/lib/auth/perfil";
@@ -12,10 +13,10 @@ export default async function OrcamentoPage() {
   const ano = new Date().getFullYear();
   const { categorias, valores } = await listarOrcamento(ano);
   return (
-    <main className="mx-auto max-w-full space-y-5 p-4">
+    <Container largura="larga" className="space-y-5 p-4">
       <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Orçamento" subtitulo="Orçado por categoria em cada mês" />
       <GradeOrcamento ano={ano} categorias={categorias} valores={valores} />
-    </main>
+    </Container>
   );
 }

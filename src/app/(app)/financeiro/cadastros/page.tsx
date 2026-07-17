@@ -1,3 +1,4 @@
+import { Container } from "@/components/ui/Container";
 import Link from "next/link";
 import { Voltar } from "@/components/ui/Voltar";
 import { redirect } from "next/navigation";
@@ -28,7 +29,7 @@ export default async function CadastrosHubPage() {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeGerenciarFinanceiro(perfil.papel)) redirect("/");
   return (
-    <main className="mx-auto max-w-[720px] space-y-5 p-4">
+    <Container largura="estreita" className="space-y-5 p-4">
       <Voltar href="/" />
       <PageHeader titulo="Financeiro" subtitulo="Painéis, movimentações e cadastros do escritório" />
       {/* auto-rows-fr: todas as linhas do grid com a MESMA altura. Sem isso, a linha que tem
@@ -59,6 +60,6 @@ export default async function CadastrosHubPage() {
           </li>
         ))}
       </ul>
-    </main>
+    </Container>
   );
 }
