@@ -16,7 +16,7 @@ export default async function CustosPage() {
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <Link href="/configuracoes" className="text-sm text-verde underline">
         ← Configurações
       </Link>

@@ -24,7 +24,7 @@ export default async function NovaEmpresaPage() {
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <PageHeader
         titulo="Nova empresa em constituição"
         subtitulo="Cadastro da empresa nova (sem CNPJ) e início do processo de abertura"

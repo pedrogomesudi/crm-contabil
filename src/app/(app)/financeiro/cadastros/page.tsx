@@ -28,19 +28,21 @@ export default async function CadastrosHubPage() {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeGerenciarFinanceiro(perfil.papel)) redirect("/");
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <Voltar href="/" />
       <PageHeader titulo="Financeiro" subtitulo="Painéis, movimentações e cadastros do escritório" />
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {ITENS.map((i) => (
           <li key={i.href}>
+            {/* h-full: sem isso o card cresce quando o rótulo quebra em duas linhas ("Reajuste
+                anual de honorários") e os vizinhos da mesma linha ficam menores que ele. */}
             <Link
               href={i.href}
-              className="flex items-center justify-between rounded-2xl border border-linha bg-white p-4 transition hover:border-cinza-claro hover:shadow-sm"
+              className="flex h-full items-center justify-between gap-2 rounded-2xl border border-linha bg-white p-4 transition hover:border-cinza-claro hover:shadow-sm"
             >
               <span className="font-medium text-texto">{i.label}</span>
               <svg
-                className="text-cinza-claro"
+                className="shrink-0 text-cinza-claro"
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"

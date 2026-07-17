@@ -10,7 +10,7 @@ export default async function ConfigPagamentoPage() {
   const admin = createAdminSupabase();
   const { data } = await admin.from("dados_bancarios").select("*").eq("id", 1).maybeSingle();
   return (
-    <main className="mx-auto max-w-2xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <PageHeader titulo="Dados de pagamento" subtitulo="PIX e dados bancários enviados ao cliente com a NFS-e" />
       <FormDadosPagamento inicial={data ?? null} />
     </main>

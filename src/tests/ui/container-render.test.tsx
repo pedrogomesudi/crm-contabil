@@ -7,7 +7,7 @@ describe("Container", () => {
     expect(renderToStaticMarkup(<Container>x</Container>)).toContain("mx-auto");
   });
   it("padrão é a régua média", () => {
-    expect(renderToStaticMarkup(<Container>x</Container>)).toContain("max-w-[1120px]");
+    expect(renderToStaticMarkup(<Container>x</Container>)).toContain("max-w-[1280px]");
   });
   it("estreita para formulários focados", () => {
     expect(renderToStaticMarkup(<Container largura="estreita">x</Container>)).toContain("max-w-[720px]");

@@ -57,7 +57,7 @@ export default async function TarefaPage({ params }: { params: Promise<{ id: str
     })),
   };
   return (
-    <main className="mx-auto max-w-2xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <Link href="/tarefas" className="text-sm text-verde underline">
         ← Tarefas
       </Link>

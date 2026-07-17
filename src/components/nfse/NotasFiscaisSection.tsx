@@ -37,7 +37,7 @@ export async function NotasFiscaisSection({ clienteId, papel }: { clienteId: str
   const ambiente = cfg?.ambiente ?? "homologacao";
 
   return (
-    <section className="max-w-4xl space-y-3 rounded-lg border border-linha bg-white p-4">
+    <section className="space-y-3 rounded-lg border border-linha bg-white p-4">
       <h2 className="text-sm font-semibold text-texto">Notas fiscais (NFS-e)</h2>
 
       {honorario > 0 ? (

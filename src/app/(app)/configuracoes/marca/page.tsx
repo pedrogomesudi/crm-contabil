@@ -23,7 +23,7 @@ export default async function MarcaPage() {
   const logoUrl = await urlLogoAtual();
 
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <PageHeader titulo="Marca do escritório" subtitulo="Identidade usada na proposta comercial e no whitelabel" />
       {!marca?.nome && (
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">

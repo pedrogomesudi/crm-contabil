@@ -11,7 +11,7 @@ export default async function MetricasPage() {
   const oportunidades = await listarOportunidades();
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
   return (
-    <main className="mx-auto max-w-4xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo="Métricas do funil" subtitulo="Pipeline e fechamentos" />
       <MetricasFunil oportunidades={oportunidades} hoje={hoje} />
     </main>

@@ -14,7 +14,7 @@ export default async function SopPage() {
   const templates = await listarTemplatesSop();
 
   return (
-    <main className="mx-auto max-w-4xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <Link href="/configuracoes" className="text-sm text-verde underline">
         ← Configurações
       </Link>

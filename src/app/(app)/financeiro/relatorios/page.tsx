@@ -23,7 +23,7 @@ export default async function RelatoriosPage() {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeGerenciarFinanceiro(perfil.papel)) redirect("/");
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Relatórios" subtitulo="Relatórios financeiros" />
       <ul className="grid gap-3 sm:grid-cols-2">

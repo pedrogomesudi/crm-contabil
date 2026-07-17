@@ -3,7 +3,7 @@
 // um lado. Três decisões, declaradas por tela.
 const LARGURAS = {
   estreita: "max-w-[720px]", // formulário focado, login
-  padrao: "max-w-[1120px]", // a maioria das telas
+  padrao: "max-w-[1280px]", // a maioria das telas
   larga: "max-w-full", // tabelões, calendário, kanban
 } as const;
 

@@ -4,6 +4,8 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { listarContadores } from "@/lib/clientes/contadores";
 import { podeCriarCliente, podeAtribuirContador } from "@/lib/clientes/permissoes";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
+import { Container } from "@/components/ui/Container";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { criarCliente } from "../actions";
 
 export const metadata = { title: "Novo cliente" };
@@ -39,15 +41,17 @@ export default async function NovoClientePage({ searchParams }: { searchParams: 
   }
 
   return (
-    <div>
-      <h1 className="mb-4 font-display text-2xl font-bold tracking-tight text-texto">Novo cliente</h1>
-      <FormCliente
-        action={criarCliente.bind(null, oportunidadeId)}
-        contadores={contadores}
-        cliente={defaults}
-        modo="novo"
-        contadorEditavel={contadorEditavel}
-      />
-    </div>
+    <Container>
+      <div className="space-y-4">
+        <PageHeader titulo="Novo cliente" subtitulo="Cadastro do cliente no escritório" />
+        <FormCliente
+          action={criarCliente.bind(null, oportunidadeId)}
+          contadores={contadores}
+          cliente={defaults}
+          modo="novo"
+          contadorEditavel={contadorEditavel}
+        />
+      </div>
+    </Container>
   );
 }

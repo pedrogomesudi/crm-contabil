@@ -13,7 +13,7 @@ export default async function FluxoPage() {
   const ano = Number(hoje.slice(0, 4));
   const dados = await relatorioFluxo(ano);
   return (
-    <main className="mx-auto max-w-6xl space-y-5 p-4">
+    <main className="mx-auto max-w-full space-y-5 p-4">
       <Voltar href="/financeiro/relatorios" />
       <PageHeader titulo="Fluxo de caixa detalhado" subtitulo="Realizado e projetado, mês a mês, com saldo acumulado" />
       {dados ? (

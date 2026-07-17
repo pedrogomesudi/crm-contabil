@@ -27,7 +27,7 @@ export function HonorarioForm({
   const [estado, formAction, pending] = useActionState<EstadoHonorario, FormData>(action, {});
   const valorBR = valorAtual != null ? valorAtual.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "";
   return (
-    <form action={formAction} className="max-w-2xl space-y-3 rounded-lg border border-linha bg-white p-4">
+    <form action={formAction} className="space-y-3 rounded-lg border border-linha bg-white p-4">
       <h2 className="text-sm font-semibold text-texto">Honorário</h2>
       <Campo label="Honorário mensal (R$)">
         <input

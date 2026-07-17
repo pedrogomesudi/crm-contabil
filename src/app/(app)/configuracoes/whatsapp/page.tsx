@@ -10,7 +10,7 @@ export default async function ConfigWhatsappPage() {
   const supabase = await createServerSupabase();
   const { data } = await supabase.from("whatsapp_config").select("instance, token_cifrado").eq("id", 1).maybeSingle();
   return (
-    <main className="mx-auto max-w-2xl space-y-4 p-4">
+    <main className="mx-auto max-w-[720px] space-y-4 p-4">
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">WhatsApp (Z-API)</h1>
       <FormWhatsapp instance={data?.instance ?? ""} configurado={Boolean(data?.token_cifrado)} />
     </main>

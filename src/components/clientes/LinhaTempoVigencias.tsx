@@ -37,7 +37,7 @@ export async function LinhaTempoVigencias({ clienteId, papel }: { clienteId: str
   if (!hon?.length && !reg?.length && !rej?.length) return null;
 
   return (
-    <section className="max-w-4xl space-y-3 rounded-lg border border-linha bg-white p-4">
+    <section className="space-y-3 rounded-lg border border-linha bg-white p-4">
       <h2 className="text-sm font-semibold text-texto">Histórico de honorário e regime</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>

@@ -15,7 +15,7 @@ export default async function ComercialPage() {
   const { data: us } = await supabase.from("usuarios").select("id, nome").eq("ativo", true).order("nome");
   const usuarios = (us as { id: string; nome: string }[] | null) ?? [];
   return (
-    <main className="mx-auto max-w-5xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo="Comercial" subtitulo="Funil de oportunidades" />
       <SubNav
         itens={[

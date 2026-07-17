@@ -51,7 +51,7 @@ export default async function TimesheetPage({
     .limit(100);
 
   return (
-    <main className="mx-auto max-w-4xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo="Timesheet" subtitulo="Apontamento de horas por cliente e tarefa" />
       <PainelTimesheet
         apontamentos={apontamentos}

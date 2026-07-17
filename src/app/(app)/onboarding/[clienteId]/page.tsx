@@ -38,7 +38,7 @@ export default async function OnboardingClientePage({ params }: { params: Promis
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 p-4">
+    <main className="mx-auto max-w-[720px] space-y-4 p-4">
       <PageHeader titulo={cliente.razao_social as string} subtitulo="Onboarding do cliente" />
       <Link href={`/clientes/${clienteId}`} className="text-sm text-verde underline">
         Ver cadastro completo

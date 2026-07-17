@@ -11,7 +11,7 @@ export default async function RiscosPage() {
   const painel = await listarRiscos();
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
   return (
-    <main className="mx-auto max-w-5xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo="Riscos de obrigações" subtitulo="Vencendo hoje, vencidas e sem responsável" />
       <PainelRiscosView painel={painel} hoje={hoje} />
     </main>

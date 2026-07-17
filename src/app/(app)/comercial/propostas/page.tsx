@@ -15,7 +15,7 @@ export default async function PropostasPage({ searchParams }: { searchParams: Pr
   if (!op) {
     const propostas = await listarTodasPropostas();
     return (
-      <main className="mx-auto max-w-4xl space-y-5 p-4">
+      <main className="mx-auto max-w-[1280px] space-y-5 p-4">
         <PageHeader titulo="Propostas" subtitulo="Todas as propostas de honorários" />
         <TodasPropostas propostas={propostas} />
       </main>
@@ -26,7 +26,7 @@ export default async function PropostasPage({ searchParams }: { searchParams: Pr
   const { data: oport } = await supabase.from("oportunidade").select("prospect_nome").eq("id", op).maybeSingle();
   const propostas = await listarPropostas(op);
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <PageHeader titulo="Propostas" subtitulo="Propostas de honorários da oportunidade" />
       <PropostasLista
         oportunidadeId={op}

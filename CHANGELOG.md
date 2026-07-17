@@ -8,6 +8,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Redesign do layout — fatia 1 (fundação visual):** o cadastro de cliente usava **58% da largura**
+  (`max-w-2xl` sem `mx-auto`) e o endereço ia num `grid-cols-2` uniforme — a **UF recebia a largura de
+  "Logradouro"**. Agora há uma **régua de 3 degraus** (`Container`: 720 / 1280 / fluida, no lugar de 9
+  larguras espalhadas por 74 lugares) e um **grid de 12 colunas** onde o span vem da natureza do dado.
+  A **ficha do cliente** deixou de empilhar 19 seções numa coluna (~330 linhas, com três larguras
+  brigando) e passou a 5 abas por afinidade, com `?aba=` na URL e um **voltar** que ela nunca teve.
+  Nasceram `Container`, `FormGrid`/`FormCampo`, `Secao` e `Abas`; o `inputCls` virou fonte única (era a
+  mesma string em 4 arquivos, e uma delas já havia divergido).
+
+### Corrigido
+
+- **`amber` fora do brand kit:** o `Badge` de atenção usava `amber-100/800` do Tailwind. Nasceu o token
+  `atencao` (contraste medido: **5.38**, AA exige 4.5). Restam ~55 ocorrências no sistema, mapeadas para
+  a fatia 2.
+- **Cards do hub financeiro:** "Reajuste anual de honorários" quebrava em duas linhas e crescia, deixando
+  os vizinhos menores (faltava `h-full`).
+
 ## [6.5.0] — 2026-07-16
 
 ### Adicionado

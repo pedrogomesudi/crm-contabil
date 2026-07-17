@@ -65,7 +65,7 @@ export default async function ResponsaveisPage({
     .filter((c) => (resp === "" ? true : resp === "nenhum" ? c.responsavelId === null : c.responsavelId === resp));
 
   return (
-    <main className="mx-auto max-w-5xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader
         titulo="Responsáveis por departamento"
         subtitulo="Redistribuição de carteira — filtre, marque e atribua em massa"

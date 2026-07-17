@@ -43,7 +43,7 @@ export default async function TarefasPage({
   const mes = Number(sp.mes) >= 1 && Number(sp.mes) <= 12 ? Number(sp.mes) : mesHoje;
 
   return (
-    <main className="mx-auto max-w-5xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo="Tarefas" subtitulo="Tarefas internas da equipe" />
       <PainelTarefas
         tarefas={tarefas}

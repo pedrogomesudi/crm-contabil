@@ -27,7 +27,7 @@ export default async function ConciliacaoPage() {
   const contaInicial = contas[0]?.id ?? "";
   const movimentosIni = contaInicial ? await listarMovimentos(contaInicial, inicio, fim, "") : [];
   return (
-    <main className="mx-auto max-w-5xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Conciliação bancária" subtitulo="Importe o extrato (OFX/CSV) e veja as movimentações" />
       {contas.length === 0 ? (

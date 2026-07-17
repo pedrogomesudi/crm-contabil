@@ -11,7 +11,7 @@ export default async function EditorTemplatePage({ params }: { params: Promise<{
   const template = await obterTemplate(id);
   if (!template) notFound();
   return (
-    <main className="mx-auto max-w-4xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <PageHeader titulo={template.nome} subtitulo="Blocos e itens do template" />
       <EditorTemplate template={template} />
     </main>

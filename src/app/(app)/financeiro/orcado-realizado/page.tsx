@@ -14,7 +14,7 @@ export default async function OrcadoRealizadoPage() {
   const indice = agora.getMonth() + 1;
   const dados = await dashboardOrcadoRealizado(ano, "mes", indice, "competencia");
   return (
-    <main className="mx-auto max-w-6xl space-y-5 p-4">
+    <main className="mx-auto max-w-full space-y-5 p-4">
       <Voltar href="/financeiro/cadastros" />
       <PageHeader titulo="Orçado × Realizado" subtitulo="Comparativo do orçamento com o realizado" />
       {dados ? (

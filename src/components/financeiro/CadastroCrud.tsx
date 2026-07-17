@@ -36,7 +36,7 @@ export function CadastroCrud({
   const [estado, action, pending] = useActionState(salvar, {} as EstadoCrud);
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 p-4">
+    <main className="mx-auto max-w-[720px] space-y-6 p-4">
       <PageHeader
         titulo={titulo}
         acoes={

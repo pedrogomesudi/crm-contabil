@@ -26,7 +26,7 @@ export default async function RecorrenciasPage() {
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
   return (
-    <main className="mx-auto max-w-4xl space-y-5 p-4">
+    <main className="mx-auto max-w-[1280px] space-y-5 p-4">
       <Link href="/tarefas" className="text-sm text-verde underline">
         ← Tarefas
       </Link>

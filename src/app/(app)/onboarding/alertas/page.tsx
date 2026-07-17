@@ -11,7 +11,7 @@ export default async function AlertasPage() {
   const alertas = await listarAlertas();
   const ativos = await obterAlertasAtivos();
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-4">
+    <main className="mx-auto max-w-[720px] space-y-5 p-4">
       <PageHeader titulo="Alertas de prazo" subtitulo="Itens do onboarding vencendo ou vencidos" />
       {!ativos && (
         <p className="rounded-lg bg-creme px-3 py-2 text-sm text-cinza">
