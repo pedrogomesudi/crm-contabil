@@ -8,6 +8,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.10.0] — 2026-07-18
+
+Atendimento — mídia como no WhatsApp: os arquivos abrem rápido (URL assinada) e aparecem com miniatura,
+player, cartão e visualizador.
+
 ### Adicionado
 
 - **Atendimento — mídia como no WhatsApp:** os arquivos abrem **rápido** (URL assinada, direto do
