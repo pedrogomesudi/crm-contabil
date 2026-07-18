@@ -31,8 +31,8 @@ const ops: OportunidadeView[] = [
     responsavelNome: "Ana",
     etapa: "e1",
     etapaDesde: "2026-07-01T12:00:00.000Z",
-    segmento: null,
-    regime: null,
+    segmento: "Padaria",
+    regime: "Simples",
     observacoes: null,
     motivoPerda: null,
     clienteId: null,
@@ -67,15 +67,33 @@ const ops: OportunidadeView[] = [
 describe("QuadroComercial", () => {
   it("renderiza colunas e card ativo", () => {
     const html = renderToStaticMarkup(
-      <QuadroComercial oportunidades={ops} usuarios={[{ id: "u1", nome: "Ana" }]} etapas={ETAPAS} />,
+      <QuadroComercial
+        oportunidades={ops}
+        usuarios={[{ id: "u1", nome: "Ana" }]}
+        etapas={ETAPAS}
+        agora="2026-07-20T00:00:00.000Z"
+      />,
     );
     expect(html).toContain("Novo");
     expect(html).toContain("Negociação");
     expect(html).toContain("Padaria Sol");
+    expect(html).toContain("Padaria"); // segmento no card
+    expect(html).toContain("Simples"); // badge de regime
     expect(html).toContain('draggable="true"');
   });
+  it("mostra a faixa de métricas do topo", () => {
+    const html = renderToStaticMarkup(
+      <QuadroComercial oportunidades={ops} usuarios={[]} etapas={ETAPAS} agora="2026-07-20T00:00:00.000Z" />,
+    );
+    expect(html).toContain("Em pipeline");
+    expect(html).toContain("Ponderado");
+    expect(html).toContain("Conversão");
+    expect(html).toContain("Ciclo médio");
+  });
   it("mostra seção de fechados", () => {
-    const html = renderToStaticMarkup(<QuadroComercial oportunidades={ops} usuarios={[]} etapas={ETAPAS} />);
+    const html = renderToStaticMarkup(
+      <QuadroComercial oportunidades={ops} usuarios={[]} etapas={ETAPAS} agora="2026-07-20T00:00:00.000Z" />,
+    );
     expect(html).toContain("Fechados");
   });
 });

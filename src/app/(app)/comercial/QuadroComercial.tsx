@@ -3,7 +3,20 @@ import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { etapaAdjacente, resumoFunil, rotuloEtapa, type Etapa, type ChaveEtapa } from "@/lib/comercial/funil";
+import {
+  etapaAdjacente,
+  resumoFunil,
+  rotuloEtapa,
+  diasNaEtapa,
+  corDias,
+  type Etapa,
+  type ChaveEtapa,
+} from "@/lib/comercial/funil";
+import { resumoPipeline } from "@/lib/comercial/metricas";
+import { Iniciais } from "@/components/ui/Iniciais";
+import { Badge } from "@/components/ui/Badge";
+import { badgeRegime } from "@/lib/ui/apresentacao";
+import { REGIMES } from "@/lib/tipos";
 import {
   criarOportunidade,
   salvarOportunidade,
@@ -12,8 +25,14 @@ import {
   type OportunidadeInput,
 } from "./actions";
 import { Botao } from "@/components/ui/Botao";
+import { StatCard } from "@/components/ui/StatCard";
 
 const brl = (v: number | null) => (v == null ? "—" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
+const TEXTO_DIAS: Record<"recente" | "atencao" | "parado", string> = {
+  recente: "text-cinza",
+  atencao: "text-atencao",
+  parado: "text-negativo",
+};
 const vazio = (): OportunidadeInput => ({
   prospectNome: "",
   contatoNome: null,
@@ -45,10 +64,12 @@ export function QuadroComercial({
   oportunidades,
   usuarios,
   etapas,
+  agora,
 }: {
   oportunidades: OportunidadeView[];
   usuarios: { id: string; nome: string }[];
   etapas: Etapa[];
+  agora: string;
 }) {
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
@@ -69,6 +90,15 @@ export function QuadroComercial({
   const fechadas = base.filter((o) => o.etapa === "ganho" || o.etapa === "perdido");
   const resumo = resumoFunil(
     ativas.map((o) => ({ etapa: o.etapa, valorEstimado: o.valorEstimado })),
+    etapas,
+  );
+  const topo = resumoPipeline(
+    base.map((o) => ({
+      etapa: o.etapa,
+      valorEstimado: o.valorEstimado,
+      criadoEm: o.criadoEm,
+      fechadoEm: o.fechadoEm,
+    })),
     etapas,
   );
 
@@ -109,6 +139,13 @@ export function QuadroComercial({
         </Link>
       </div>
 
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard rotulo="Em pipeline" valor={brl(topo.valorPipeline)} />
+        <StatCard rotulo="Ponderado" valor={brl(topo.valorPonderado)} variante="destaque" />
+        <StatCard rotulo="Conversão" valor={`${Math.round(topo.taxaConversao * 100)}%`} variante="positivo" />
+        <StatCard rotulo="Ciclo médio" valor={`${topo.cicloMedioDias} d`} />
+      </div>
+
       <div className="flex gap-3 overflow-x-auto pb-2">
         {etapas.map((col) => {
           const doCol = ativas.filter((o) => o.etapa === col.id);
@@ -146,17 +183,23 @@ export function QuadroComercial({
                   }}
                   className="space-y-1 rounded-lg border border-linha bg-white px-2.5 py-2 text-sm cursor-grab"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium text-texto">{o.prospectNome}</span>
-                    <span className="tabular-nums text-cinza">{brl(o.valorEstimado)}</span>
-                  </div>
-                  {(o.servicoInteresse || o.responsavelNome) && (
-                    <div className="text-[11px] text-cinza">
-                      {o.servicoInteresse ?? ""}
-                      {o.servicoInteresse && o.responsavelNome ? " · " : ""}
-                      {o.responsavelNome ? `resp. ${o.responsavelNome}` : ""}
+                  <div className="flex items-start gap-2">
+                    <Iniciais nome={o.responsavelNome ?? o.prospectNome} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate font-medium text-texto">{o.prospectNome}</span>
+                        <span className="flex-none tabular-nums text-cinza">{brl(o.valorEstimado)}</span>
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-cinza">
+                        {o.segmento && <span>{o.segmento}</span>}
+                        {o.regime && <Badge variante={badgeRegime(o.regime)}>{o.regime}</Badge>}
+                      </div>
                     </div>
-                  )}
+                  </div>
+                  {(() => {
+                    const d = diasNaEtapa(o.etapaDesde, agora);
+                    return <div className={`text-[11px] ${TEXTO_DIAS[corDias(d)]}`}>{d} d nesta etapa</div>;
+                  })()}
                   <div className="flex flex-wrap items-center gap-1 pt-0.5 text-[11px]">
                     <button
                       type="button"
@@ -318,6 +361,31 @@ export function QuadroComercial({
                   }
                   className={`${controleCls("compacto")} mt-0.5 w-full`}
                 />
+              </label>
+            </div>
+            <div className="flex gap-2">
+              <label className="flex-1 text-xs text-cinza">
+                Segmento
+                <input
+                  value={form.input.segmento ?? ""}
+                  onChange={(e) => setForm({ ...form, input: { ...form.input, segmento: e.target.value || null } })}
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
+                />
+              </label>
+              <label className="flex-1 text-xs text-cinza">
+                Regime
+                <select
+                  value={form.input.regime ?? ""}
+                  onChange={(e) => setForm({ ...form, input: { ...form.input, regime: e.target.value || null } })}
+                  className={`${controleCls("compacto")} mt-0.5 w-full`}
+                >
+                  <option value="">—</option>
+                  {REGIMES.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
             <label className="block text-xs text-cinza">
