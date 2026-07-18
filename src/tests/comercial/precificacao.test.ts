@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { acrescimoFator, multiplicador, calcularHonorario, type ConfigPreco } from "@/lib/comercial/precificacao";
+import {
+  acrescimoFator,
+  multiplicador,
+  calcularHonorario,
+  paraConfigPreco,
+  type ConfigPreco,
+} from "@/lib/comercial/precificacao";
 
 const faixas = {
   modo: "faixas" as const,
@@ -98,5 +104,42 @@ describe("calcularHonorario", () => {
       cfg,
     );
     expect(r.mensal).toBeCloseTo(400); // 0 → piso
+  });
+});
+
+describe("paraConfigPreco", () => {
+  const entrada = {
+    regimes: [{ regime: "Simples", valorBase: 500 }],
+    fatores: [
+      { fator: "faturamento", modo: "faixas", valorUnitario: 0, franquia: 0, faixas: [{ ate: null, valor: 100 }] },
+      { fator: "funcionarios", modo: "unidade", valorUnitario: 25, franquia: 5, faixas: [] },
+      { fator: "notas", modo: "faixas", valorUnitario: 0, franquia: 0, faixas: [] },
+    ],
+    complexidades: [{ id: "c1", multiplicador: 1.2 }],
+    servicos: [{ id: "s1", valor: 200, recorrencia: "mensal" }],
+    global: { valorMinimo: 400, descontoMaximoPct: 20 },
+  };
+  it("monta o ConfigPreco que o motor consome", () => {
+    const cfg = paraConfigPreco(entrada);
+    expect(cfg.baseRegime).toEqual({ Simples: 500 });
+    expect(cfg.faturamento.modo).toBe("faixas");
+    expect(cfg.funcionarios.modo).toBe("unidade");
+    expect(cfg.funcionarios.valorUnitario).toBe(25);
+    expect(cfg.servicos[0]).toEqual({ id: "s1", valor: 200, recorrencia: "mensal" });
+    expect(cfg.valorMinimo).toBe(400);
+    expect(cfg.descontoMaximoPct).toBe(20);
+  });
+  it("fator ausente vira um Fator neutro (faixas vazias)", () => {
+    const cfg = paraConfigPreco({ ...entrada, fatores: [] });
+    expect(cfg.faturamento).toEqual({ modo: "faixas", valorUnitario: 0, franquia: 0, faixas: [] });
+  });
+  it("recorrência/modo desconhecidos caem em padrão seguro", () => {
+    const cfg = paraConfigPreco({
+      ...entrada,
+      fatores: [{ fator: "faturamento", modo: "xxx", valorUnitario: 0, franquia: 0, faixas: [] }],
+      servicos: [{ id: "s1", valor: 10, recorrencia: "xxx" }],
+    });
+    expect(cfg.faturamento.modo).toBe("faixas"); // modo desconhecido → faixas
+    expect(cfg.servicos[0]!.recorrencia).toBe("unico"); // ≠ 'mensal' → unico
   });
 });
