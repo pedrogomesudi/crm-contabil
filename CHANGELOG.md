@@ -8,6 +8,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.9.0] — 2026-07-17
+
+Atendimento em tempo real: as mensagens do WhatsApp aparecem no instante em que chegam (Supabase Realtime),
+no lugar do polling.
+
 ### Adicionado
 
 - **Atendimento em tempo real:** as mensagens do WhatsApp passam a aparecer no **instante** em que
