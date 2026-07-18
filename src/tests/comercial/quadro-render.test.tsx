@@ -80,6 +80,7 @@ describe("QuadroComercial", () => {
     expect(html).toContain("Padaria"); // segmento no card
     expect(html).toContain("Simples"); // badge de regime
     expect(html).toContain('draggable="true"');
+    expect(html).toContain("Buscar negócio…");
   });
   it("mostra a faixa de métricas do topo", () => {
     const html = renderToStaticMarkup(

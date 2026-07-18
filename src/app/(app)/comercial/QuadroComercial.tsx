@@ -74,6 +74,7 @@ export function QuadroComercial({
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [soMinhas, setSoMinhas] = useState(false);
+  const [busca, setBusca] = useState("");
   const [form, setForm] = useState<{ id: string | null; input: OportunidadeInput } | null>(null);
   const [arrastando, setArrastando] = useState<{ id: string; etapa: ChaveEtapa } | null>(null);
   const [sobreColuna, setSobreColuna] = useState<string | null>(null);
@@ -86,14 +87,18 @@ export function QuadroComercial({
   }
 
   const base = soMinhas ? oportunidades.filter((o) => o.meu) : oportunidades;
-  const ativas = base.filter((o) => o.etapa !== "ganho" && o.etapa !== "perdido");
-  const fechadas = base.filter((o) => o.etapa === "ganho" || o.etapa === "perdido");
+  const t = busca.trim().toLowerCase();
+  const filtradas = t
+    ? base.filter((o) => `${o.prospectNome} ${o.segmento ?? ""}`.toLowerCase().includes(t))
+    : base;
+  const ativas = filtradas.filter((o) => o.etapa !== "ganho" && o.etapa !== "perdido");
+  const fechadas = filtradas.filter((o) => o.etapa === "ganho" || o.etapa === "perdido");
   const resumo = resumoFunil(
     ativas.map((o) => ({ etapa: o.etapa, valorEstimado: o.valorEstimado })),
     etapas,
   );
   const topo = resumoPipeline(
-    base.map((o) => ({
+    filtradas.map((o) => ({
       etapa: o.etapa,
       valorEstimado: o.valorEstimado,
       criadoEm: o.criadoEm,
@@ -134,7 +139,13 @@ export function QuadroComercial({
         <label className="flex items-center gap-1 text-sm text-cinza">
           <input type="checkbox" checked={soMinhas} onChange={(e) => setSoMinhas(e.target.checked)} /> Só as minhas
         </label>
-        <Link href="/comercial/metricas" className="ml-auto text-sm text-verde underline">
+        <input
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Buscar negócio…"
+          className={`${controleCls("compacto")} w-full sm:ml-auto sm:w-56`}
+        />
+        <Link href="/comercial/metricas" className="text-sm text-verde underline">
           Métricas
         </Link>
       </div>
