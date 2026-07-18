@@ -8,6 +8,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Atendimento — busca por cliente:** o campo de busca da lista passa a achar o cliente pelo **nome da
+  empresa** em duas seções, como no WhatsApp: as **conversas existentes** que casam (de qualquer aba, não
+  só a selecionada) e os **clientes cadastrados sem conversa** para **iniciar** uma. Some o formulário de
+  busca escondido atrás do `+` — a busca principal cobre os dois casos.
+
 ## [6.10.0] — 2026-07-18
 
 Atendimento — mídia como no WhatsApp: os arquivos abrem rápido (URL assinada) e aparecem com miniatura,
