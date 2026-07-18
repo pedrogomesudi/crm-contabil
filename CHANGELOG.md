@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.13.0] — 2026-07-18
+
+RF-002 — configuração do funil. **Fecha a RF-002.** As etapas do pipeline agora são geridas pelo escritório
+em **Configurações → Funil**, sem depender de código.
+
+### Adicionado
+
+- **Configurações → Funil** (`/configuracoes/funil`, admin): **adicionar, renomear, recolorir, ajustar a
+  probabilidade e reordenar** (↑/↓) as etapas ativas do pipeline. Mudanças refletem no quadro na hora.
+- **Arquivar etapa** (nunca apagar), com **trava de segurança:** uma etapa com negócio ativo não pode ser
+  arquivada — o sistema pede para mover os negócios antes, evitando que sumam do quadro.
+- **Ganho/Perdido** aparecem como **estados de sistema**, sempre presentes e não editáveis.
+
 ## [6.12.0] — 2026-07-18
 
 RF-002 — pipeline comercial visual. O funil ganha a cara do pipeline: faixa de métricas no topo, busca,
