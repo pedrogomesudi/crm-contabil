@@ -23,6 +23,7 @@ export default async function ComercialPage() {
         itens={[
           { href: "/comercial/propostas", label: "Propostas" },
           { href: "/comercial/metricas", label: "Métricas do funil" },
+          { href: "/comercial/precificacao", label: "Precificação" },
         ]}
       />
       <QuadroComercial oportunidades={oportunidades} usuarios={usuarios} etapas={etapas} agora={agora} />

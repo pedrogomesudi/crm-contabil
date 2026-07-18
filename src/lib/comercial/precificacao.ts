@@ -77,3 +77,48 @@ export function calcularHonorario(p: Parametros, cfg: ConfigPreco): Resultado {
 
   return { mensal, unico, detalhamento: det };
 }
+
+export type EntradaConfig = {
+  regimes: { regime: string; valorBase: number }[];
+  fatores: {
+    fator: string;
+    modo: string;
+    valorUnitario: number;
+    franquia: number;
+    faixas: { ate: number | null; valor: number }[];
+  }[];
+  complexidades: { id: string; multiplicador: number }[];
+  servicos: { id: string; valor: number; recorrencia: string }[];
+  global: { valorMinimo: number; descontoMaximoPct: number };
+};
+
+const FATOR_NEUTRO: Fator = { modo: "faixas", valorUnitario: 0, franquia: 0, faixas: [] };
+
+function fatorDe(e: EntradaConfig, nome: string): Fator {
+  const f = e.fatores.find((x) => x.fator === nome);
+  if (!f) return { ...FATOR_NEUTRO };
+  return {
+    modo: f.modo === "unidade" ? "unidade" : "faixas",
+    valorUnitario: f.valorUnitario,
+    franquia: f.franquia,
+    faixas: f.faixas.map((x) => ({ ate: x.ate, valor: x.valor })),
+  };
+}
+
+// Mapeia a configuração vinda do banco (a view da tela de config) para o tipo que o motor consome.
+export function paraConfigPreco(e: EntradaConfig): ConfigPreco {
+  return {
+    baseRegime: Object.fromEntries(e.regimes.map((r) => [r.regime, r.valorBase])),
+    faturamento: fatorDe(e, "faturamento"),
+    funcionarios: fatorDe(e, "funcionarios"),
+    notas: fatorDe(e, "notas"),
+    complexidades: e.complexidades.map((c) => ({ id: c.id, multiplicador: c.multiplicador })),
+    servicos: e.servicos.map((s) => ({
+      id: s.id,
+      valor: s.valor,
+      recorrencia: s.recorrencia === "mensal" ? "mensal" : "unico",
+    })),
+    valorMinimo: e.global.valorMinimo,
+    descontoMaximoPct: e.global.descontoMaximoPct,
+  };
+}
