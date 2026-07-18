@@ -8,6 +8,32 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.12.0] — 2026-07-18
+
+RF-002 — pipeline comercial visual. O funil ganha a cara do pipeline: faixa de métricas no topo, busca,
+colunas coloridas e cards ricos. Este release **também leva ao ar a fundação da RF-002** (Fatia A): as
+etapas do funil deixaram de ser um enum fixo e viraram a tabela `funil_etapa`, configurável por escritório
+(a tela de configuração vem na Fatia C).
+
+### Adicionado
+
+- **Funil — faixa de métricas no topo:** quatro indicadores do pipeline — **valor em aberto**, **ponderado**
+  (Σ valor × probabilidade da etapa), **taxa de conversão** e **ciclo médio** de fechamento.
+- **Funil — busca de negócio:** campo "Buscar negócio…" que filtra em memória por nome do prospect ou
+  segmento.
+- **Funil — cards ricos:** cada negócio mostra avatar, **segmento**, valor, **badge de regime** e os **dias
+  na etapa** com cor semântica (recente/atenção/parado). O formulário passou a editar segmento e regime.
+- **Funil — colunas por etapa:** cada coluna vem da `funil_etapa` (rótulo, cor, ordem, probabilidade), num
+  cartão próprio, com **"+ Adicionar"** que cria o negócio já naquela etapa. "Fechados" virou um atalho no
+  topo.
+
+### Mudado
+
+- **Modelo do funil (Fatia A):** `oportunidade.etapa` (enum) deu lugar a `etapa_id` (referência à
+  `funil_etapa`) + `desfecho` (`ganho`/`perdido`, estados de sistema), com `etapa_desde`, `segmento` e
+  `regime`. A lógica de funil/métricas passou a ser orientada pelos dados das etapas; a taxa de conversão
+  ficou inalterada. Migration `0101`.
+
 ## [6.11.0] — 2026-07-18
 
 Atendimento — busca por cliente: achar/iniciar conversa pelo nome da empresa, num campo só. Fecha as três
