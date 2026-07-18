@@ -88,9 +88,7 @@ export function QuadroComercial({
 
   const base = soMinhas ? oportunidades.filter((o) => o.meu) : oportunidades;
   const t = busca.trim().toLowerCase();
-  const filtradas = t
-    ? base.filter((o) => `${o.prospectNome} ${o.segmento ?? ""}`.toLowerCase().includes(t))
-    : base;
+  const filtradas = t ? base.filter((o) => `${o.prospectNome} ${o.segmento ?? ""}`.toLowerCase().includes(t)) : base;
   const ativas = filtradas.filter((o) => o.etapa !== "ganho" && o.etapa !== "perdido");
   const fechadas = filtradas.filter((o) => o.etapa === "ganho" || o.etapa === "perdido");
   const resumo = resumoFunil(
@@ -118,9 +116,7 @@ export function QuadroComercial({
     if (!form) return;
     if (!form.input.prospectNome.trim()) return alert("Informe o prospect.");
     setOcupado(true);
-    const r = await (form.id
-      ? salvarOportunidade(form.id, form.input)
-      : criarOportunidade(form.input, form.etapaId));
+    const r = await (form.id ? salvarOportunidade(form.id, form.input) : criarOportunidade(form.input, form.etapaId));
     setOcupado(false);
     if (r?.erro) return alert(r.erro);
     setForm(null);
