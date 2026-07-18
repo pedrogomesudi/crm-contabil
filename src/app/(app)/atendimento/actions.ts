@@ -50,6 +50,7 @@ function mapMsgs(rows: unknown[]): MsgConversa[] {
       midiaPath: m.midia_path ?? null,
       midiaNome: m.midia_nome ?? null,
       midiaMime: m.midia_mime ?? null,
+      midiaUrl: null,
       cliente: (cl as { razao_social?: string } | null)?.razao_social ?? null,
     };
   });
@@ -115,7 +116,23 @@ export async function abrirConversa(telefone: string): Promise<MsgConversa[]> {
     .eq("telefone", telefone)
     .eq("direcao", "IN")
     .eq("lida", false);
-  return mapMsgs(data ?? []);
+  const msgs = mapMsgs(data ?? []);
+  // Assina as URLs das mídias direto do Storage (uma chamada para todas). Usa o admin: a policy de
+  // storage só libera paths na tabela `documentos`, e a mídia do atendimento não tem linha lá — mas a
+  // autorização de ver esta conversa já foi feita acima (gate + RLS na leitura das mensagens).
+  const paths = msgs.map((m) => m.midiaPath).filter((p): p is string => !!p);
+  if (paths.length > 0) {
+    const admin = createAdminSupabase();
+    const { data: assinadas } = await admin.storage.from("documentos").createSignedUrls(paths, 600);
+    const porPath = new Map<string, string>();
+    for (const a of assinadas ?? []) {
+      if (a.path && a.signedUrl) porPath.set(a.path, a.signedUrl);
+    }
+    for (const m of msgs) {
+      if (m.midiaPath) m.midiaUrl = porPath.get(m.midiaPath) ?? null;
+    }
+  }
+  return msgs;
 }
 
 export async function responder(telefone: string, texto: string): Promise<{ ok?: boolean; erro?: string }> {

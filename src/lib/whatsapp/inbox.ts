@@ -13,6 +13,7 @@ export type MsgConversa = {
   midiaPath: string | null;
   midiaNome: string | null;
   midiaMime: string | null;
+  midiaUrl: string | null; // URL assinada (direto do Storage), preenchida por abrirConversa; null no evento Realtime
 };
 export type StatusConversa = "aberta" | "pendente" | "finalizada";
 

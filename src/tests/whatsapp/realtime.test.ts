@@ -29,6 +29,7 @@ describe("linhaParaMsg", () => {
       midiaPath: null,
       midiaNome: null,
       midiaMime: null,
+      midiaUrl: null, // o evento cru não tem URL assinada; o refetch a traz
       cliente: null, // o Realtime não traz o join de cliente
     });
   });

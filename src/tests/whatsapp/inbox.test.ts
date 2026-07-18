@@ -68,6 +68,7 @@ describe("agruparConversas", () => {
         midiaPath: null,
         midiaNome: null,
         midiaMime: null,
+        midiaUrl: null,
       },
       {
         id: "2",
@@ -82,6 +83,7 @@ describe("agruparConversas", () => {
         midiaPath: null,
         midiaNome: null,
         midiaMime: null,
+        midiaUrl: null,
       },
       {
         id: "3",
@@ -96,6 +98,7 @@ describe("agruparConversas", () => {
         midiaPath: null,
         midiaNome: null,
         midiaMime: null,
+        midiaUrl: null,
       },
     ];
     const convs = agruparConversas(msgs);
@@ -281,6 +284,7 @@ describe("agruparConversas meta", () => {
       midiaPath: null,
       midiaNome: null,
       midiaMime: null,
+      midiaUrl: null,
     },
   ];
   it("sem meta → cliente vem da mensagem; contato null; defaults", () => {
