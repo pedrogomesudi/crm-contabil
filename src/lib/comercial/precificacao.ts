@@ -60,20 +60,22 @@ export function calcularHonorario(p: Parametros, cfg: ConfigPreco): Resultado {
   let recorrente = subtotal * mult;
   if (mult !== 1) det.push({ rotulo: `Complexidade (×${mult})`, valor: recorrente - subtotal });
 
-  const marcados = cfg.servicos.filter((s) => p.servicoIds.includes(s.id));
-  for (const s of marcados.filter((s) => s.recorrencia === "mensal")) {
-    recorrente += s.valor;
-    det.push({ rotulo: "Serviço (mensal)", valor: s.valor });
-  }
-  const unico = marcados.filter((s) => s.recorrencia === "unico").reduce((t, s) => t + s.valor, 0);
-
+  // Desconto e piso incidem SÓ no honorário (base + acréscimos × complexidade).
   const pct = Math.min(p.descontoPct, cfg.descontoMaximoPct);
   const desconto = recorrente * (pct / 100);
   if (desconto) det.push({ rotulo: `Desconto (${pct}%)`, valor: -desconto });
   recorrente -= desconto;
 
-  const mensal = Math.max(cfg.valorMinimo, recorrente);
+  let mensal = Math.max(cfg.valorMinimo, recorrente);
   if (mensal !== recorrente) det.push({ rotulo: "Piso aplicado", valor: mensal - recorrente });
+
+  // Serviços entram DEPOIS do desconto/piso, sem desconto.
+  const marcados = cfg.servicos.filter((s) => p.servicoIds.includes(s.id));
+  for (const s of marcados.filter((s) => s.recorrencia === "mensal")) {
+    mensal += s.valor;
+    det.push({ rotulo: "Serviço (mensal)", valor: s.valor });
+  }
+  const unico = marcados.filter((s) => s.recorrencia === "unico").reduce((t, s) => t + s.valor, 0);
 
   return { mensal, unico, detalhamento: det };
 }
@@ -120,5 +122,28 @@ export function paraConfigPreco(e: EntradaConfig): ConfigPreco {
     })),
     valorMinimo: e.global.valorMinimo,
     descontoMaximoPct: e.global.descontoMaximoPct,
+  };
+}
+
+export type ItemProposta = { descricao: string; valor: number; recorrencia: "mensal" | "unico" };
+export type ServicoView = { id: string; nome: string; valor: number; recorrencia: "mensal" | "unico" };
+export type SnapshotPreco = { params: Parametros; mensal: number; unico: number; detalhamento: Linha[] };
+
+// Transforma um cálculo nos itens da proposta: o honorário consolidado (com desconto, sem serviços) +
+// uma linha por serviço marcado (valor de tabela, sem desconto). O snapshot guarda o cálculo cheio.
+export function itensProposta(
+  p: Parametros,
+  cfg: ConfigPreco,
+  servicos: ServicoView[],
+): { itens: ItemProposta[]; snapshot: SnapshotPreco } {
+  const honorario = calcularHonorario({ ...p, servicoIds: [] }, cfg).mensal; // honorário sem serviços
+  const cheio = calcularHonorario(p, cfg); // mensal/unico/detalhamento com serviços (para o snapshot)
+  const itens: ItemProposta[] = [{ descricao: "Honorários contábeis", valor: honorario, recorrencia: "mensal" }];
+  for (const s of servicos.filter((s) => p.servicoIds.includes(s.id))) {
+    itens.push({ descricao: s.nome, valor: s.valor, recorrencia: s.recorrencia });
+  }
+  return {
+    itens,
+    snapshot: { params: p, mensal: cheio.mensal, unico: cheio.unico, detalhamento: cheio.detalhamento },
   };
 }
