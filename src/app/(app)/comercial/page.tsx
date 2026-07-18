@@ -6,12 +6,12 @@ import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SubNav } from "@/components/ui/SubNav";
 import { QuadroComercial } from "./QuadroComercial";
-import { listarOportunidades } from "./actions";
+import { listarOportunidades, listarEtapas } from "./actions";
 
 export default async function ComercialPage() {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeCriarCliente(perfil.papel)) redirect("/");
-  const oportunidades = await listarOportunidades();
+  const [oportunidades, etapas] = await Promise.all([listarOportunidades(), listarEtapas()]);
   const supabase = await createServerSupabase();
   const { data: us } = await supabase.from("usuarios").select("id, nome").eq("ativo", true).order("nome");
   const usuarios = (us as { id: string; nome: string }[] | null) ?? [];
@@ -24,7 +24,7 @@ export default async function ComercialPage() {
           { href: "/comercial/metricas", label: "Métricas do funil" },
         ]}
       />
-      <QuadroComercial oportunidades={oportunidades} usuarios={usuarios} />
+      <QuadroComercial oportunidades={oportunidades} usuarios={usuarios} etapas={etapas} />
     </Container>
   );
 }

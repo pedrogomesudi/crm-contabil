@@ -3,7 +3,7 @@ import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ETAPAS_ATIVAS, etapaAdjacente, resumoFunil, rotuloEtapa, type EtapaOportunidade } from "@/lib/comercial/funil";
+import { etapaAdjacente, resumoFunil, rotuloEtapa, type Etapa, type ChaveEtapa } from "@/lib/comercial/funil";
 import {
   criarOportunidade,
   salvarOportunidade,
@@ -23,6 +23,8 @@ const vazio = (): OportunidadeInput => ({
   servicoInteresse: null,
   valorEstimado: null,
   responsavelId: null,
+  segmento: null,
+  regime: null,
   observacoes: null,
 });
 const doView = (o: OportunidadeView): OportunidadeInput => ({
@@ -34,24 +36,28 @@ const doView = (o: OportunidadeView): OportunidadeInput => ({
   servicoInteresse: o.servicoInteresse,
   valorEstimado: o.valorEstimado,
   responsavelId: o.responsavelId,
+  segmento: o.segmento,
+  regime: o.regime,
   observacoes: o.observacoes,
 });
 
 export function QuadroComercial({
   oportunidades,
   usuarios,
+  etapas,
 }: {
   oportunidades: OportunidadeView[];
   usuarios: { id: string; nome: string }[];
+  etapas: Etapa[];
 }) {
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [soMinhas, setSoMinhas] = useState(false);
   const [form, setForm] = useState<{ id: string | null; input: OportunidadeInput } | null>(null);
-  const [arrastando, setArrastando] = useState<{ id: string; etapa: EtapaOportunidade } | null>(null);
-  const [sobreColuna, setSobreColuna] = useState<EtapaOportunidade | null>(null);
+  const [arrastando, setArrastando] = useState<{ id: string; etapa: ChaveEtapa } | null>(null);
+  const [sobreColuna, setSobreColuna] = useState<string | null>(null);
 
-  function soltarNa(etapa: EtapaOportunidade) {
+  function soltarNa(etapa: string) {
     const a = arrastando;
     setArrastando(null);
     setSobreColuna(null);
@@ -61,7 +67,10 @@ export function QuadroComercial({
   const base = soMinhas ? oportunidades.filter((o) => o.meu) : oportunidades;
   const ativas = base.filter((o) => o.etapa !== "ganho" && o.etapa !== "perdido");
   const fechadas = base.filter((o) => o.etapa === "ganho" || o.etapa === "perdido");
-  const resumo = resumoFunil(ativas.map((o) => ({ etapa: o.etapa, valorEstimado: o.valorEstimado })));
+  const resumo = resumoFunil(
+    ativas.map((o) => ({ etapa: o.etapa, valorEstimado: o.valorEstimado })),
+    etapas,
+  );
 
   async function chamar(fn: () => Promise<{ ok?: boolean; erro?: string }>) {
     setOcupado(true);
@@ -101,22 +110,22 @@ export function QuadroComercial({
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-2">
-        {ETAPAS_ATIVAS.map((col) => {
-          const doCol = ativas.filter((o) => o.etapa === col.chave);
-          const rs = resumo[col.chave]!;
+        {etapas.map((col) => {
+          const doCol = ativas.filter((o) => o.etapa === col.id);
+          const rs = resumo[col.id]!;
           return (
             <div
-              key={col.chave}
+              key={col.id}
               onDragOver={(e) => {
                 e.preventDefault();
-                setSobreColuna(col.chave);
+                setSobreColuna(col.id);
               }}
-              onDragLeave={() => setSobreColuna((s) => (s === col.chave ? null : s))}
+              onDragLeave={() => setSobreColuna((s) => (s === col.id ? null : s))}
               onDrop={(e) => {
                 e.preventDefault();
-                soltarNa(col.chave);
+                soltarNa(col.id);
               }}
-              className={`min-w-[240px] flex-1 space-y-2 rounded-lg ${sobreColuna === col.chave ? "ring-1 ring-verde" : ""}`}
+              className={`min-w-[240px] flex-1 space-y-2 rounded-lg ${sobreColuna === col.id ? "ring-1 ring-verde" : ""}`}
             >
               <div className="rounded-lg bg-creme px-2 py-1.5">
                 <div className="font-display text-xs font-semibold uppercase tracking-wide text-texto">
@@ -151,9 +160,9 @@ export function QuadroComercial({
                   <div className="flex flex-wrap items-center gap-1 pt-0.5 text-[11px]">
                     <button
                       type="button"
-                      disabled={ocupado || !etapaAdjacente(o.etapa, "anterior")}
+                      disabled={ocupado || !etapaAdjacente(o.etapa, etapas, "anterior")}
                       onClick={() => {
-                        const a = etapaAdjacente(o.etapa, "anterior");
+                        const a = etapaAdjacente(o.etapa, etapas, "anterior");
                         if (a) void chamar(() => definirEtapa(o.id, a));
                       }}
                       className="rounded border border-linha px-1.5 disabled:opacity-40"
@@ -162,9 +171,9 @@ export function QuadroComercial({
                     </button>
                     <button
                       type="button"
-                      disabled={ocupado || !etapaAdjacente(o.etapa, "proxima")}
+                      disabled={ocupado || !etapaAdjacente(o.etapa, etapas, "proxima")}
                       onClick={() => {
-                        const a = etapaAdjacente(o.etapa, "proxima");
+                        const a = etapaAdjacente(o.etapa, etapas, "proxima");
                         if (a) void chamar(() => definirEtapa(o.id, a));
                       }}
                       className="rounded border border-linha px-1.5 disabled:opacity-40"
@@ -211,7 +220,9 @@ export function QuadroComercial({
           {fechadas.map((o) => (
             <div key={o.id} className="flex flex-wrap items-center gap-2 border-b border-linha/60 pb-1 text-sm">
               <span className="font-medium text-texto">{o.prospectNome}</span>
-              <span className={o.etapa === "ganho" ? "text-verde" : "text-negativo"}>{rotuloEtapa(o.etapa)}</span>
+              <span className={o.etapa === "ganho" ? "text-verde" : "text-negativo"}>
+                {rotuloEtapa(o.etapa, etapas)}
+              </span>
               <span className="tabular-nums text-cinza">{brl(o.valorEstimado)}</span>
               {o.etapa === "perdido" && o.motivoPerda && (
                 <span className="text-[11px] text-cinza">— {o.motivoPerda}</span>
