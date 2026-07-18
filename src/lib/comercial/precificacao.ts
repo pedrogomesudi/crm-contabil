@@ -80,7 +80,13 @@ export function calcularHonorario(p: Parametros, cfg: ConfigPreco): Resultado {
 
 export type EntradaConfig = {
   regimes: { regime: string; valorBase: number }[];
-  fatores: { fator: string; modo: string; valorUnitario: number; franquia: number; faixas: { ate: number | null; valor: number }[] }[];
+  fatores: {
+    fator: string;
+    modo: string;
+    valorUnitario: number;
+    franquia: number;
+    faixas: { ate: number | null; valor: number }[];
+  }[];
   complexidades: { id: string; multiplicador: number }[];
   servicos: { id: string; valor: number; recorrencia: string }[];
   global: { valorMinimo: number; descontoMaximoPct: number };
