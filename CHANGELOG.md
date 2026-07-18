@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.15.0] — 2026-07-18
+
+RF-003 — calculadora de precificação (avulsa). Um simulador de honorários no Comercial, consumindo as
+regras configuradas na Fatia A.
+
+### Adicionado
+
+- **Comercial → Precificação** (`/comercial/precificacao`): informar regime, faturamento, funcionários,
+  notas, complexidade, serviços e desconto, e ver o **mensal**, o **único** e o **detalhamento** do cálculo
+  em tempo real. Só simula (a integração na proposta vem a seguir).
+
 ## [6.14.0] — 2026-07-18
 
 RF-003 — precificação de honorários (fundação). O escritório passa a configurar as **regras de preço** dos
