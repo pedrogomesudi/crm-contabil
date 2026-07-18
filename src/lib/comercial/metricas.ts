@@ -72,12 +72,7 @@ export type MetricasFunil = {
   };
 };
 
-export function metricasFunil(
-  ops: OpMetrica[],
-  etapas: Etapa[],
-  inicio: string,
-  fim: string,
-): MetricasFunil {
+export function metricasFunil(ops: OpMetrica[], etapas: Etapa[], inicio: string, fim: string): MetricasFunil {
   const porEtapa: Record<string, { qtd: number; total: number }> = {};
   for (const e of etapas) porEtapa[e.id] = { qtd: 0, total: 0 };
   let totQ = 0,

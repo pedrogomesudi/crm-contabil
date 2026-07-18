@@ -1,12 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  rotuloEtapa,
-  etapaAdjacente,
-  resumoFunil,
-  diasNaEtapa,
-  corDias,
-  type Etapa,
-} from "@/lib/comercial/funil";
+import { rotuloEtapa, etapaAdjacente, resumoFunil, diasNaEtapa, corDias, type Etapa } from "@/lib/comercial/funil";
 
 const ETAPAS: Etapa[] = [
   { id: "e1", rotulo: "Novo", ordem: 1, cor: "#000", probabilidade: 0.2 },

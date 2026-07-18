@@ -10,11 +10,7 @@ export function rotuloEtapa(chave: ChaveEtapa, etapas: Etapa[]): string {
 }
 
 // Anda na ordem das etapas ATIVAS. Só faz sentido para etapa ativa.
-export function etapaAdjacente(
-  etapaId: string,
-  etapas: Etapa[],
-  dir: "anterior" | "proxima",
-): string | null {
+export function etapaAdjacente(etapaId: string, etapas: Etapa[], dir: "anterior" | "proxima"): string | null {
   const ord = [...etapas].sort((a, b) => a.ordem - b.ordem);
   const i = ord.findIndex((e) => e.id === etapaId);
   if (i < 0) return null;
