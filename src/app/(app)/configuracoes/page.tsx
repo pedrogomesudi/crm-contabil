@@ -25,6 +25,11 @@ const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] 
     label: "Funil comercial",
     desc: "Etapas do pipeline — rótulo, cor, probabilidade e ordem.",
   },
+  {
+    href: "/configuracoes/precificacao",
+    label: "Precificação de honorários",
+    desc: "Base por regime, acréscimos, complexidade, serviços, piso e desconto.",
+  },
   { href: "/configuracoes/whatsapp", label: "WhatsApp (Z-API)", desc: "Credenciais do provedor e teste de conexão." },
   { href: "/configuracoes/email", label: "E-mail", desc: "Canal de envio (SMTP ou API), remetente e teste." },
   {
