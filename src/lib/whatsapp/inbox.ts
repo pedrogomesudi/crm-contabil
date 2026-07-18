@@ -235,6 +235,26 @@ export function filtrarConversas(convs: Conversa[], aba: FiltroAba, busca: strin
   });
 }
 
+export type ClienteParaConversa = { razaoSocial: string; contato: string | null; telefone: string };
+
+// Busca unificada estilo WhatsApp: dado um termo, devolve as conversas que casam (nome do cliente ou
+// telefone, de QUALQUER aba) e os clientes cadastrados que casam o nome E ainda NÃO têm conversa. O
+// cruzamento é possível porque os dois lados usam o mesmo telefone canônico (chaveTelefone).
+export function buscaUnificada(
+  conversas: Conversa[],
+  clientes: ClienteParaConversa[],
+  termo: string,
+): { conversas: Conversa[]; iniciar: ClienteParaConversa[] } {
+  const t = termo.trim().toLowerCase();
+  if (!t) return { conversas: [], iniciar: [] };
+
+  const conversasCasadas = conversas.filter((c) => `${(c.cliente ?? "").toLowerCase()} ${c.telefone}`.includes(t));
+  const jaTemConversa = new Set(conversas.map((c) => c.telefone));
+  const iniciar = clientes.filter((cl) => cl.razaoSocial.toLowerCase().includes(t) && !jaTemConversa.has(cl.telefone));
+
+  return { conversas: conversasCasadas, iniciar };
+}
+
 // Contadores para as abas.
 export function contadores(convs: Conversa[]): {
   abertas: number;
