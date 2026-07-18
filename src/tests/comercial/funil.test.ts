@@ -1,39 +1,62 @@
 import { describe, it, expect } from "vitest";
-import { etapaAdjacente, resumoFunil, rotuloEtapa, ETAPAS_ATIVAS } from "@/lib/comercial/funil";
+import {
+  rotuloEtapa,
+  etapaAdjacente,
+  resumoFunil,
+  diasNaEtapa,
+  corDias,
+  type Etapa,
+} from "@/lib/comercial/funil";
+
+const ETAPAS: Etapa[] = [
+  { id: "e1", rotulo: "Novo", ordem: 1, cor: "#000", probabilidade: 0.2 },
+  { id: "e2", rotulo: "Contato feito", ordem: 2, cor: "#000", probabilidade: 0.4 },
+  { id: "e3", rotulo: "Proposta enviada", ordem: 3, cor: "#000", probabilidade: 0.6 },
+];
+
+describe("rotuloEtapa", () => {
+  it("etapa ativa → rótulo da lista; terminal → Ganho/Perdido", () => {
+    expect(rotuloEtapa("e2", ETAPAS)).toBe("Contato feito");
+    expect(rotuloEtapa("ganho", ETAPAS)).toBe("Ganho");
+    expect(rotuloEtapa("perdido", ETAPAS)).toBe("Perdido");
+    expect(rotuloEtapa("inexistente", ETAPAS)).toBe("—");
+  });
+});
 
 describe("etapaAdjacente", () => {
-  it("navega entre ativas", () => {
-    expect(etapaAdjacente("contato", "anterior")).toBe("novo");
-    expect(etapaAdjacente("proposta", "proxima")).toBe("negociacao");
-  });
-  it("bordas → null", () => {
-    expect(etapaAdjacente("novo", "anterior")).toBe(null);
-    expect(etapaAdjacente("negociacao", "proxima")).toBe(null);
-  });
-  it("terminais → null", () => {
-    expect(etapaAdjacente("ganho", "anterior")).toBe(null);
-    expect(etapaAdjacente("perdido", "proxima")).toBe(null);
+  it("anda na ordem das etapas ativas; extremos → null", () => {
+    expect(etapaAdjacente("e2", ETAPAS, "anterior")).toBe("e1");
+    expect(etapaAdjacente("e2", ETAPAS, "proxima")).toBe("e3");
+    expect(etapaAdjacente("e1", ETAPAS, "anterior")).toBeNull();
+    expect(etapaAdjacente("e3", ETAPAS, "proxima")).toBeNull();
   });
 });
 
 describe("resumoFunil", () => {
-  it("conta e soma por etapa, null=0", () => {
-    const r = resumoFunil([
-      { etapa: "novo", valorEstimado: 300 },
-      { etapa: "novo", valorEstimado: null },
-      { etapa: "proposta", valorEstimado: 500 },
-      { etapa: "ganho", valorEstimado: 999 },
-    ]);
-    expect(r.novo).toEqual({ qtd: 2, total: 300 });
-    expect(r.proposta).toEqual({ qtd: 1, total: 500 });
-    expect(r.negociacao).toEqual({ qtd: 0, total: 0 });
-    expect(r.ganho).toBeUndefined();
+  it("agrega qtd e total por etapa ativa", () => {
+    const r = resumoFunil(
+      [
+        { etapa: "e1", valorEstimado: 100 },
+        { etapa: "e1", valorEstimado: 50 },
+        { etapa: "e3", valorEstimado: 200 },
+        { etapa: "ganho", valorEstimado: 999 }, // terminal: ignorado
+      ],
+      ETAPAS,
+    );
+    expect(r["e1"]).toEqual({ qtd: 2, total: 150 });
+    expect(r["e3"]).toEqual({ qtd: 1, total: 200 });
+    expect(r["e2"]).toEqual({ qtd: 0, total: 0 });
   });
 });
 
-describe("rotuloEtapa / ETAPAS_ATIVAS", () => {
-  it("rótulos", () => {
-    expect(rotuloEtapa("negociacao")).toBe("Negociação");
-    expect(ETAPAS_ATIVAS.map((e) => e.chave)).toEqual(["novo", "contato", "proposta", "negociacao"]);
+describe("diasNaEtapa / corDias", () => {
+  it("conta dias inteiros entre etapa_desde e agora", () => {
+    expect(diasNaEtapa("2026-07-10T12:00:00Z", "2026-07-12T12:00:00Z")).toBe(2);
+    expect(diasNaEtapa("2026-07-12T12:00:00Z", "2026-07-12T18:00:00Z")).toBe(0);
+  });
+  it("cor semântica por faixa", () => {
+    expect(corDias(1)).toBe("recente");
+    expect(corDias(6)).toBe("atencao");
+    expect(corDias(15)).toBe("parado");
   });
 });
