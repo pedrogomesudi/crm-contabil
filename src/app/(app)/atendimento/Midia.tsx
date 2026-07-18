@@ -88,7 +88,7 @@ export function Lightbox({ url, nome, onFechar }: { url: string; nome: string; o
     >
       {/* Backdrop clicável (fecha ao clicar fora). É um <button> de tela cheia — acessível e sem
           violar a regra de handler em elemento não-interativo. O conteúdo fica por cima. */}
-      <button type="button" onClick={onFechar} aria-label="Fechar" className="absolute inset-0 cursor-default" />
+      <button type="button" onClick={onFechar} aria-label="Fechar imagem" className="absolute inset-0 cursor-default" />
       <button
         type="button"
         onClick={onFechar}
