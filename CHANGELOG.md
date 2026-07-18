@@ -8,7 +8,24 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-## [6.13.0] — 2026-07-18
+## [6.14.0] — 2026-07-18
+
+RF-003 — precificação de honorários (fundação). O escritório passa a configurar as **regras de preço** dos
+honorários; a calculadora que as consome vem a seguir.
+
+### Adicionado
+
+- **Configurações → Precificação** (`/configuracoes/precificacao`, admin): **valor-base por regime**,
+  **acréscimos por fator** (faturamento/funcionários/notas, cada um em **faixas** ou **por unidade**),
+  **níveis de complexidade** (multiplicador), **catálogo de serviços adicionais** e os **globais** (valor
+  mínimo e desconto máximo).
+- **Motor de cálculo** `calcularHonorario` (base do regime → acréscimos → complexidade → serviços →
+  desconto com teto → piso), testado. Migration `0102`.
+
+### Segurança
+
+- **RLS das tabelas de precificação restringida:** escrita apenas para admin (leitura para o comercial),
+  fechando um grant amplo que a revisão apontou. Migration `0103`.
 
 RF-002 — configuração do funil. **Fecha a RF-002.** As etapas do pipeline agora são geridas pelo escritório
 em **Configurações → Funil**, sem depender de código.
