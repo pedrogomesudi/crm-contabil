@@ -339,7 +339,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
               )}
               {resultado.iniciar.map((cl) => (
                 <button
-                  key={cl.telefone}
+                  key={cl.telefone + cl.razaoSocial}
                   type="button"
                   onClick={() => abrir(cl.telefone)}
                   className="flex w-full items-center gap-3 border-b border-linha/60 px-4 py-3 text-left hover:bg-creme/60"
