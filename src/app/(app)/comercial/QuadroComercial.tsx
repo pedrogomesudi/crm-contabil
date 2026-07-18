@@ -75,6 +75,7 @@ export function QuadroComercial({
   const [ocupado, setOcupado] = useState(false);
   const [soMinhas, setSoMinhas] = useState(false);
   const [busca, setBusca] = useState("");
+  const [verFechados, setVerFechados] = useState(false);
   const [form, setForm] = useState<{ id: string | null; etapaId?: string; input: OportunidadeInput } | null>(null);
   const [arrastando, setArrastando] = useState<{ id: string; etapa: ChaveEtapa } | null>(null);
   const [sobreColuna, setSobreColuna] = useState<string | null>(null);
@@ -143,10 +144,45 @@ export function QuadroComercial({
           placeholder="Buscar negócio…"
           className={`${controleCls("compacto")} w-full sm:ml-auto sm:w-56`}
         />
-        <Link href="/comercial/metricas" className="text-sm text-verde underline">
-          Métricas
-        </Link>
+        <button
+          type="button"
+          onClick={() => setVerFechados((v) => !v)}
+          aria-pressed={verFechados}
+          className={`rounded-lg border px-3 py-1.5 text-sm ${verFechados ? "border-verde bg-verde/10 text-verde" : "border-linha text-cinza hover:text-texto"}`}
+        >
+          Fechados ({fechadas.length})
+        </button>
       </div>
+
+      {verFechados && (
+        <div className="rounded-2xl border border-linha bg-white p-3">
+          <div className="space-y-1.5">
+            {fechadas.length === 0 && <p className="text-xs text-cinza">Nenhum fechado.</p>}
+            {fechadas.map((o) => (
+              <div key={o.id} className="flex flex-wrap items-center gap-2 border-b border-linha/60 pb-1 text-sm">
+                <span className="font-medium text-texto">{o.prospectNome}</span>
+                <span className={o.etapa === "ganho" ? "text-verde" : "text-negativo"}>
+                  {rotuloEtapa(o.etapa, etapas)}
+                </span>
+                <span className="tabular-nums text-cinza">{brl(o.valorEstimado)}</span>
+                {o.etapa === "perdido" && o.motivoPerda && (
+                  <span className="text-[11px] text-cinza">— {o.motivoPerda}</span>
+                )}
+                {o.etapa === "ganho" &&
+                  (o.clienteId ? (
+                    <Link href={`/onboarding/${o.clienteId}`} className="ml-auto text-xs text-verde underline">
+                      Ver onboarding
+                    </Link>
+                  ) : (
+                    <Link href={`/clientes/novo?oportunidade=${o.id}`} className="ml-auto text-xs text-verde underline">
+                      Converter em cliente
+                    </Link>
+                  ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard rotulo="Em pipeline" valor={brl(topo.valorPipeline)} />
@@ -171,9 +207,9 @@ export function QuadroComercial({
                 e.preventDefault();
                 soltarNa(col.id);
               }}
-              className={`min-w-[240px] flex-1 space-y-2 rounded-lg ${sobreColuna === col.id ? "ring-1 ring-verde" : ""}`}
+              className={`flex min-h-[60vh] min-w-[240px] flex-1 flex-col gap-2 rounded-2xl border bg-linha/60 p-2 ${sobreColuna === col.id ? "border-verde ring-1 ring-verde" : "border-linha"}`}
             >
-              <div className="rounded-lg bg-creme px-2 py-1.5">
+              <div className="px-1 pt-0.5">
                 <div className="flex items-center gap-1.5">
                   <span className="h-2 w-2 flex-none rounded-full" style={{ backgroundColor: col.cor }} />
                   <div className="font-display text-xs font-semibold uppercase tracking-wide text-texto">
@@ -184,85 +220,87 @@ export function QuadroComercial({
                   {rs.qtd} · {brl(rs.total)}
                 </div>
               </div>
-              {doCol.map((o) => (
-                <div
-                  key={o.id}
-                  draggable
-                  onDragStart={() => setArrastando({ id: o.id, etapa: o.etapa })}
-                  onDragEnd={() => {
-                    setArrastando(null);
-                    setSobreColuna(null);
-                  }}
-                  className="space-y-1 rounded-lg border border-linha bg-white px-2.5 py-2 text-sm cursor-grab"
-                >
-                  <div className="flex items-start gap-2">
-                    <Iniciais nome={o.responsavelNome ?? o.prospectNome} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="truncate font-medium text-texto">{o.prospectNome}</span>
-                        <span className="flex-none tabular-nums text-cinza">{brl(o.valorEstimado)}</span>
-                      </div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-cinza">
-                        {o.segmento && <span>{o.segmento}</span>}
-                        {o.regime && <Badge variante={badgeRegime(o.regime)}>{o.regime}</Badge>}
+              <div className="flex-1 space-y-2">
+                {doCol.map((o) => (
+                  <div
+                    key={o.id}
+                    draggable
+                    onDragStart={() => setArrastando({ id: o.id, etapa: o.etapa })}
+                    onDragEnd={() => {
+                      setArrastando(null);
+                      setSobreColuna(null);
+                    }}
+                    className="space-y-1 rounded-lg border border-linha bg-white px-2.5 py-2 text-sm cursor-grab"
+                  >
+                    <div className="flex items-start gap-2">
+                      <Iniciais nome={o.responsavelNome ?? o.prospectNome} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate font-medium text-texto">{o.prospectNome}</span>
+                          <span className="flex-none tabular-nums text-cinza">{brl(o.valorEstimado)}</span>
+                        </div>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-cinza">
+                          {o.segmento && <span>{o.segmento}</span>}
+                          {o.regime && <Badge variante={badgeRegime(o.regime)}>{o.regime}</Badge>}
+                        </div>
                       </div>
                     </div>
+                    {(() => {
+                      const d = diasNaEtapa(o.etapaDesde, agora);
+                      return <div className={`text-[11px] ${TEXTO_DIAS[corDias(d)]}`}>{d} d nesta etapa</div>;
+                    })()}
+                    <div className="flex flex-wrap items-center gap-1 pt-0.5 text-[11px]">
+                      <button
+                        type="button"
+                        disabled={ocupado || !etapaAdjacente(o.etapa, etapas, "anterior")}
+                        onClick={() => {
+                          const a = etapaAdjacente(o.etapa, etapas, "anterior");
+                          if (a) void chamar(() => definirEtapa(o.id, a));
+                        }}
+                        className="rounded border border-linha px-1.5 disabled:opacity-40"
+                      >
+                        ←
+                      </button>
+                      <button
+                        type="button"
+                        disabled={ocupado || !etapaAdjacente(o.etapa, etapas, "proxima")}
+                        onClick={() => {
+                          const a = etapaAdjacente(o.etapa, etapas, "proxima");
+                          if (a) void chamar(() => definirEtapa(o.id, a));
+                        }}
+                        className="rounded border border-linha px-1.5 disabled:opacity-40"
+                      >
+                        →
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void chamar(() => definirEtapa(o.id, "ganho"))}
+                        className="rounded border border-verde px-1.5 text-verde"
+                      >
+                        Ganho
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => perder(o.id)}
+                        className="rounded border border-negativo px-1.5 text-negativo"
+                      >
+                        Perdido
+                      </button>
+                      <Link href={`/comercial/propostas?op=${o.id}`} className="ml-auto text-cinza underline">
+                        propostas
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setForm({ id: o.id, input: doView(o) })}
+                        className="text-cinza underline"
+                      >
+                        editar
+                      </button>
+                    </div>
                   </div>
-                  {(() => {
-                    const d = diasNaEtapa(o.etapaDesde, agora);
-                    return <div className={`text-[11px] ${TEXTO_DIAS[corDias(d)]}`}>{d} d nesta etapa</div>;
-                  })()}
-                  <div className="flex flex-wrap items-center gap-1 pt-0.5 text-[11px]">
-                    <button
-                      type="button"
-                      disabled={ocupado || !etapaAdjacente(o.etapa, etapas, "anterior")}
-                      onClick={() => {
-                        const a = etapaAdjacente(o.etapa, etapas, "anterior");
-                        if (a) void chamar(() => definirEtapa(o.id, a));
-                      }}
-                      className="rounded border border-linha px-1.5 disabled:opacity-40"
-                    >
-                      ←
-                    </button>
-                    <button
-                      type="button"
-                      disabled={ocupado || !etapaAdjacente(o.etapa, etapas, "proxima")}
-                      onClick={() => {
-                        const a = etapaAdjacente(o.etapa, etapas, "proxima");
-                        if (a) void chamar(() => definirEtapa(o.id, a));
-                      }}
-                      className="rounded border border-linha px-1.5 disabled:opacity-40"
-                    >
-                      →
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void chamar(() => definirEtapa(o.id, "ganho"))}
-                      className="rounded border border-verde px-1.5 text-verde"
-                    >
-                      Ganho
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => perder(o.id)}
-                      className="rounded border border-negativo px-1.5 text-negativo"
-                    >
-                      Perdido
-                    </button>
-                    <Link href={`/comercial/propostas?op=${o.id}`} className="ml-auto text-cinza underline">
-                      propostas
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => setForm({ id: o.id, input: doView(o) })}
-                      className="text-cinza underline"
-                    >
-                      editar
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {doCol.length === 0 && <p className="px-1 text-[11px] text-cinza-claro">—</p>}
+                ))}
+                {doCol.length === 0 && <p className="px-1 text-[11px] text-cinza-claro">—</p>}
+              </div>
               <button
                 type="button"
                 onClick={() => setForm({ id: null, etapaId: col.id, input: vazio() })}
@@ -274,35 +312,6 @@ export function QuadroComercial({
           );
         })}
       </div>
-
-      <details className="rounded-lg border border-linha bg-white p-3">
-        <summary className="cursor-pointer text-sm font-medium text-texto">Fechados ({fechadas.length})</summary>
-        <div className="mt-2 space-y-1.5">
-          {fechadas.length === 0 && <p className="text-xs text-cinza">Nenhum fechado.</p>}
-          {fechadas.map((o) => (
-            <div key={o.id} className="flex flex-wrap items-center gap-2 border-b border-linha/60 pb-1 text-sm">
-              <span className="font-medium text-texto">{o.prospectNome}</span>
-              <span className={o.etapa === "ganho" ? "text-verde" : "text-negativo"}>
-                {rotuloEtapa(o.etapa, etapas)}
-              </span>
-              <span className="tabular-nums text-cinza">{brl(o.valorEstimado)}</span>
-              {o.etapa === "perdido" && o.motivoPerda && (
-                <span className="text-[11px] text-cinza">— {o.motivoPerda}</span>
-              )}
-              {o.etapa === "ganho" &&
-                (o.clienteId ? (
-                  <Link href={`/onboarding/${o.clienteId}`} className="ml-auto text-xs text-verde underline">
-                    Ver onboarding
-                  </Link>
-                ) : (
-                  <Link href={`/clientes/novo?oportunidade=${o.id}`} className="ml-auto text-xs text-verde underline">
-                    Converter em cliente
-                  </Link>
-                ))}
-            </div>
-          ))}
-        </div>
-      </details>
 
       {form && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
