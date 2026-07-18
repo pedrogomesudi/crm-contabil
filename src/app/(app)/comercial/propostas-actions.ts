@@ -199,21 +199,27 @@ export async function criarProposta(oportunidadeId: string): Promise<{ id?: stri
 
 export async function salvarProposta(
   id: string,
-  dados: { validade: string | null; observacoes: string | null; itens: ItemInput[]; responsavel: Responsavel },
+  dados: {
+    validade: string | null;
+    observacoes: string | null;
+    itens: ItemInput[];
+    responsavel: Responsavel;
+    precificacao?: unknown;
+  },
 ): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
-  const { error: e1 } = await supabase
-    .from("proposta")
-    .update({
-      validade: dados.validade,
-      observacoes: dados.observacoes,
-      responsavel_nome: dados.responsavel.nome,
-      responsavel_email: dados.responsavel.email,
-      responsavel_telefone: dados.responsavel.telefone,
-      atualizado_em: new Date().toISOString(),
-    })
-    .eq("id", id);
+  const patch: Record<string, unknown> = {
+    validade: dados.validade,
+    observacoes: dados.observacoes,
+    responsavel_nome: dados.responsavel.nome,
+    responsavel_email: dados.responsavel.email,
+    responsavel_telefone: dados.responsavel.telefone,
+    atualizado_em: new Date().toISOString(),
+  };
+  // Só grava o snapshot quando vier — um save normal não apaga o snapshot existente.
+  if (dados.precificacao !== undefined) patch.precificacao = dados.precificacao;
+  const { error: e1 } = await supabase.from("proposta").update(patch).eq("id", id);
   if (e1) return { erro: "Falha ao salvar." };
   await supabase.from("proposta_item").delete().eq("proposta_id", id);
   const linhas = dados.itens
