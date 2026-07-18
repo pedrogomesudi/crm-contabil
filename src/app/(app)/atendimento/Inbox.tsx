@@ -21,6 +21,7 @@ import { useRealtimeAtendimento } from "@/lib/whatsapp/useRealtimeAtendimento";
 import { Midia, Lightbox } from "./Midia";
 import {
   filtrarConversas,
+  buscaUnificada,
   contadores,
   horaMsg,
   separadorDia,
@@ -47,7 +48,6 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
   const [clientesConv, setClientesConv] = useState<{ razaoSocial: string; contato: string | null; telefone: string }[]>(
     [],
   );
-  const [buscaCliente, setBuscaCliente] = useState("");
   const [busca, setBusca] = useState("");
   const [ativa, setAtiva] = useState<string | null>(null);
   // Ref espelhando `ativa`: refetches ATRASADOS (o debounce de 1s, o interval de 30s) precisam ler
@@ -76,12 +76,9 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
 
   const cont = contadores(conversas);
   const visiveis = filtrarConversas(conversas, aba, busca);
+  const buscando = busca.trim().length > 0;
+  const resultado = buscando ? buscaUnificada(conversas, clientesConv, busca) : null;
   const convAtiva = conversas.find((c) => c.telefone === ativa) ?? null;
-  const clientesFiltrados = buscaCliente.trim()
-    ? clientesConv
-        .filter((c) => `${c.razaoSocial.toLowerCase()} ${c.telefone}`.includes(buscaCliente.trim().toLowerCase()))
-        .slice(0, 8)
-    : [];
 
   useEffect(() => {
     start(async () => {
@@ -265,30 +262,9 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
 
         {nova && (
           <div className="mx-4 mb-2 space-y-2 rounded-lg border border-linha bg-creme p-3 text-sm">
-            <input
-              value={buscaCliente}
-              onChange={(e) => setBuscaCliente(e.target.value)}
-              placeholder="Buscar cliente cadastrado…"
-              className={`${controleCls()} w-full`}
-            />
-            {clientesFiltrados.length > 0 && (
-              <div className="max-h-40 overflow-y-auto rounded-lg border border-linha bg-white">
-                {clientesFiltrados.map((cl) => (
-                  <button
-                    key={cl.telefone + cl.razaoSocial}
-                    type="button"
-                    onClick={() => {
-                      setNovoTel(cl.telefone);
-                      setBuscaCliente("");
-                    }}
-                    className="block w-full px-3 py-2 text-left hover:bg-creme"
-                  >
-                    <span className="font-medium text-texto">{cl.razaoSocial}</span>{" "}
-                    <span className="font-mono text-[11px] text-cinza-claro">{cl.telefone}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+            <p className="text-xs text-cinza-claro">
+              Para um cliente cadastrado, use a busca acima. Aqui, um telefone avulso:
+            </p>
             <input
               value={novoTel}
               onChange={(e) => setNovoTel(e.target.value)}
@@ -310,13 +286,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
               >
                 Iniciar
               </button>
-              <button
-                onClick={() => {
-                  setNova(false);
-                  setBuscaCliente("");
-                }}
-                className="rounded-lg border border-linha px-3 py-1.5"
-              >
+              <button onClick={() => setNova(false)} className="rounded-lg border border-linha px-3 py-1.5">
                 Cancelar
               </button>
             </div>
@@ -327,7 +297,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
           <input
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar conversa ou telefone"
+            placeholder="Buscar cliente, conversa ou telefone"
             className={`${controleCls()} w-full`}
           />
         </div>
@@ -352,71 +322,51 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {visiveis.map((c) => (
-            <div
-              key={c.telefone}
-              role="button"
-              tabIndex={0}
-              className={`flex cursor-pointer items-center gap-3 border-b border-linha/60 px-4 py-3 ${
-                ativa === c.telefone ? "bg-creme" : "hover:bg-creme/60"
-              }`}
-              onClick={() => abrir(c.telefone)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  abrir(c.telefone);
-                }
-              }}
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-verde/10 text-sm font-semibold text-verde">
-                {iniciais(c.cliente ?? c.telefone)}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-sm font-semibold text-texto">{c.cliente ?? c.telefone}</span>
-                  <span className="shrink-0 font-mono text-[11px] text-cinza-claro">{horaMsg(c.ultima_em)}</span>
-                </div>
-                {c.contato && <p className="truncate text-xs text-cinza-claro">{c.contato}</p>}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-xs text-cinza-claro">
-                    {c.status !== "aberta" && (
-                      <span className="mr-1 rounded bg-linha px-1 py-0.5 text-[10px] text-cinza">
-                        {c.status === "pendente" ? "pendente" : "finalizada"}
-                      </span>
-                    )}
-                    {c.atendenteNome ? `${c.atendenteNome.split(" ")[0]} · ` : ""}
-                    {c.ultima}
-                  </span>
-                  {c.nao_lidas > 0 && (
-                    <span className="grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-full bg-verde px-1 text-[11px] font-semibold text-white">
-                      {c.nao_lidas}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <button
-                type="button"
-                aria-label={c.favorita ? "Desfavoritar" : "Favoritar"}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleFavorita(c);
-                }}
-                className={`shrink-0 ${c.favorita ? "text-verde" : "text-cinza-claro hover:text-cinza"}`}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill={c.favorita ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  strokeWidth="2"
+          {buscando && resultado ? (
+            <>
+              {resultado.conversas.length > 0 && (
+                <p className="px-4 pb-1 pt-2 font-mono text-[10px] uppercase tracking-wider text-mono-muted">
+                  Conversas
+                </p>
+              )}
+              {resultado.conversas.map((c) => (
+                <ItemConversa key={c.telefone} c={c} ativa={ativa} onAbrir={abrir} onToggleFavorita={toggleFavorita} />
+              ))}
+              {resultado.iniciar.length > 0 && (
+                <p className="px-4 pb-1 pt-3 font-mono text-[10px] uppercase tracking-wider text-mono-muted">
+                  Iniciar conversa
+                </p>
+              )}
+              {resultado.iniciar.map((cl) => (
+                <button
+                  key={cl.telefone}
+                  type="button"
+                  onClick={() => abrir(cl.telefone)}
+                  className="flex w-full items-center gap-3 border-b border-linha/60 px-4 py-3 text-left hover:bg-creme/60"
                 >
-                  <path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5L2.6 9.8l6.5-.9Z" />
-                </svg>
-              </button>
-            </div>
-          ))}
-          {visiveis.length === 0 && <p className="px-4 py-6 text-sm text-cinza-claro">Nenhuma conversa.</p>}
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-linha text-sm font-semibold text-cinza">
+                    {iniciais(cl.razaoSocial)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-texto">{cl.razaoSocial}</span>
+                    <span className="block truncate text-xs text-cinza-claro">
+                      {cl.contato ? `${cl.contato} · ` : ""}iniciar conversa
+                    </span>
+                  </div>
+                </button>
+              ))}
+              {resultado.conversas.length === 0 && resultado.iniciar.length === 0 && (
+                <p className="px-4 py-6 text-center text-sm text-cinza-claro">Nada encontrado para “{busca}”.</p>
+              )}
+            </>
+          ) : (
+            <>
+              {visiveis.map((c) => (
+                <ItemConversa key={c.telefone} c={c} ativa={ativa} onAbrir={abrir} onToggleFavorita={toggleFavorita} />
+              ))}
+              {visiveis.length === 0 && <p className="px-4 py-6 text-sm text-cinza-claro">Nenhuma conversa.</p>}
+            </>
+          )}
         </div>
 
         <div className="border-t border-linha/70 px-4 py-2 text-right">
@@ -613,6 +563,84 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
         )}
       </aside>
       {lightbox && <Lightbox url={lightbox.url} nome={lightbox.nome} onFechar={() => setLightbox(null)} />}
+    </div>
+  );
+}
+
+// Um item da lista de conversas. Extraído do Inbox para ser reusado nas duas seções da busca
+// (Conversas de qualquer aba) e na lista normal por aba — o JSX é o mesmo, só parametrizado.
+function ItemConversa({
+  c,
+  ativa,
+  onAbrir,
+  onToggleFavorita,
+}: {
+  c: Conversa;
+  ativa: string | null;
+  onAbrir: (tel: string) => void;
+  onToggleFavorita: (c: Conversa) => void;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      className={`flex cursor-pointer items-center gap-3 border-b border-linha/60 px-4 py-3 ${
+        ativa === c.telefone ? "bg-creme" : "hover:bg-creme/60"
+      }`}
+      onClick={() => onAbrir(c.telefone)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onAbrir(c.telefone);
+        }
+      }}
+    >
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-verde/10 text-sm font-semibold text-verde">
+        {iniciais(c.cliente ?? c.telefone)}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="truncate text-sm font-semibold text-texto">{c.cliente ?? c.telefone}</span>
+          <span className="shrink-0 font-mono text-[11px] text-cinza-claro">{horaMsg(c.ultima_em)}</span>
+        </div>
+        {c.contato && <p className="truncate text-xs text-cinza-claro">{c.contato}</p>}
+        <div className="flex items-center justify-between gap-2">
+          <span className="truncate text-xs text-cinza-claro">
+            {c.status !== "aberta" && (
+              <span className="mr-1 rounded bg-linha px-1 py-0.5 text-[10px] text-cinza">
+                {c.status === "pendente" ? "pendente" : "finalizada"}
+              </span>
+            )}
+            {c.atendenteNome ? `${c.atendenteNome.split(" ")[0]} · ` : ""}
+            {c.ultima}
+          </span>
+          {c.nao_lidas > 0 && (
+            <span className="grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-full bg-verde px-1 text-[11px] font-semibold text-white">
+              {c.nao_lidas}
+            </span>
+          )}
+        </div>
+      </div>
+      <button
+        type="button"
+        aria-label={c.favorita ? "Desfavoritar" : "Favoritar"}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleFavorita(c);
+        }}
+        className={`shrink-0 ${c.favorita ? "text-verde" : "text-cinza-claro hover:text-cinza"}`}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill={c.favorita ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5L2.6 9.8l6.5-.9Z" />
+        </svg>
+      </button>
     </div>
   );
 }
