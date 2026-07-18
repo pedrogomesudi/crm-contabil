@@ -77,7 +77,7 @@ export function EtapasFunil({ etapas }: { etapas: Etapa[] }) {
               aria-label={`Cor de ${e.rotulo}`}
               disabled={ocupado}
               onChange={(ev) => chamar(() => recolorirEtapa(e.id, ev.target.value))}
-              className="h-8 w-8 flex-none cursor-pointer rounded border border-linha bg-white"
+              className="h-8 w-8 flex-none cursor-pointer rounded ring-1 ring-inset ring-linha"
             />
 
             <input
