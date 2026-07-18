@@ -20,6 +20,11 @@ const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] 
     label: "Marca do escritório",
     desc: "Nome, CNPJ, endereço e logo usados na proposta.",
   },
+  {
+    href: "/configuracoes/funil",
+    label: "Funil comercial",
+    desc: "Etapas do pipeline — rótulo, cor, probabilidade e ordem.",
+  },
   { href: "/configuracoes/whatsapp", label: "WhatsApp (Z-API)", desc: "Credenciais do provedor e teste de conexão." },
   { href: "/configuracoes/email", label: "E-mail", desc: "Canal de envio (SMTP ou API), remetente e teste." },
   {
