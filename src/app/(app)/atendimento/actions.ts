@@ -14,6 +14,7 @@ import {
   type MsgConversa,
   type ConversaMeta,
   type StatusConversa,
+  type ClienteParaConversa,
 } from "@/lib/whatsapp/inbox";
 
 async function gate() {
@@ -366,16 +367,14 @@ export async function enviarMidia(formData: FormData): Promise<{ ok?: boolean; e
   return r.ok ? { ok: true } : { erro: r.erro ?? "Falha no envio." };
 }
 
-export async function listarClientesParaConversa(): Promise<
-  { razaoSocial: string; contato: string | null; telefone: string }[]
-> {
+export async function listarClientesParaConversa(): Promise<ClienteParaConversa[]> {
   if (!(await gate())) return [];
   const admin = createAdminSupabase();
   const { data } = await admin
     .from("clientes")
     .select("razao_social, responsavel_nome, telefone, telefone_ddi")
     .order("razao_social");
-  const out: { razaoSocial: string; contato: string | null; telefone: string }[] = [];
+  const out: ClienteParaConversa[] = [];
   for (const c of data ?? []) {
     const tel = chaveTelefone((c.telefone as string | null) ?? "", (c.telefone_ddi as string | null) ?? "55");
     if (tel)
