@@ -8,6 +8,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.11.0] — 2026-07-18
+
+Atendimento — busca por cliente: achar/iniciar conversa pelo nome da empresa, num campo só. Fecha as três
+melhorias funcionais do Atendimento (tempo real, mídia, busca).
+
 ### Adicionado
 
 - **Atendimento — busca por cliente:** o campo de busca da lista passa a achar o cliente pelo **nome da
