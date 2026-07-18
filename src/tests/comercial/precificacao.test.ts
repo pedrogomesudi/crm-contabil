@@ -70,7 +70,15 @@ describe("calcularHonorario", () => {
   });
   it("desconto respeita o teto e o piso é o chão final", () => {
     const r = calcularHonorario(
-      { regime: "Simples", faturamento: 10000, funcionarios: 0, notas: 0, complexidadeId: null, servicoIds: [], descontoPct: 90 },
+      {
+        regime: "Simples",
+        faturamento: 10000,
+        funcionarios: 0,
+        notas: 0,
+        complexidadeId: null,
+        servicoIds: [],
+        descontoPct: 90,
+      },
       cfg,
     );
     // base 500; ×1 = 500; desconto limitado a 20% = 100 → 400; piso 400 → 400.
@@ -78,7 +86,15 @@ describe("calcularHonorario", () => {
   });
   it("regime sem base cai em 0 e o piso garante o mínimo", () => {
     const r = calcularHonorario(
-      { regime: "Inexistente", faturamento: 0, funcionarios: 0, notas: 0, complexidadeId: null, servicoIds: [], descontoPct: 0 },
+      {
+        regime: "Inexistente",
+        faturamento: 0,
+        funcionarios: 0,
+        notas: 0,
+        complexidadeId: null,
+        servicoIds: [],
+        descontoPct: 0,
+      },
       cfg,
     );
     expect(r.mensal).toBeCloseTo(400); // 0 → piso

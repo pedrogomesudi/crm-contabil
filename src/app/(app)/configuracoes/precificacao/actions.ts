@@ -177,10 +177,7 @@ export async function salvarComplexidade(id: string, nome: string, multiplicador
   if (!nome.trim()) return { erro: "Informe um nome." };
   if (!Number.isFinite(multiplicador) || multiplicador < 0) return { erro: "Multiplicador inválido." };
   const s = await createServerSupabase();
-  const { error } = await s
-    .from("precificacao_complexidade")
-    .update({ nome: nome.trim(), multiplicador })
-    .eq("id", id);
+  const { error } = await s.from("precificacao_complexidade").update({ nome: nome.trim(), multiplicador }).eq("id", id);
   if (error) return { erro: "Falha ao salvar." };
   revalidar();
   return { ok: true };
