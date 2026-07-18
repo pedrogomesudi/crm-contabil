@@ -15,6 +15,7 @@ export default async function ComercialPage() {
   const supabase = await createServerSupabase();
   const { data: us } = await supabase.from("usuarios").select("id, nome").eq("ativo", true).order("nome");
   const usuarios = (us as { id: string; nome: string }[] | null) ?? [];
+  const agora = new Date().toISOString();
   return (
     <Container largura="padrao" className="space-y-5 p-4">
       <PageHeader titulo="Comercial" subtitulo="Funil de oportunidades" />
@@ -24,7 +25,7 @@ export default async function ComercialPage() {
           { href: "/comercial/metricas", label: "Métricas do funil" },
         ]}
       />
-      <QuadroComercial oportunidades={oportunidades} usuarios={usuarios} etapas={etapas} />
+      <QuadroComercial oportunidades={oportunidades} usuarios={usuarios} etapas={etapas} agora={agora} />
     </Container>
   );
 }

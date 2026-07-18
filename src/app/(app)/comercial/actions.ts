@@ -119,14 +119,17 @@ export async function listarOportunidades(): Promise<OportunidadeView[]> {
   }));
 }
 
-export async function criarOportunidade(input: OportunidadeInput): Promise<{ ok?: boolean; erro?: string }> {
+export async function criarOportunidade(
+  input: OportunidadeInput,
+  etapaId?: string,
+): Promise<{ ok?: boolean; erro?: string }> {
   const p = await getPerfilAtual();
   if (!p?.ativo || !podeCriarCliente(p.papel)) return { erro: "Sem permissão." };
   if (!input.prospectNome.trim()) return { erro: "Informe o prospect." };
-  const etapaId = await primeiraEtapaAtiva();
-  if (!etapaId) return { erro: "Nenhuma etapa de funil configurada." };
+  const alvo = etapaId ?? (await primeiraEtapaAtiva());
+  if (!alvo) return { erro: "Nenhuma etapa de funil configurada." };
   const supabase = await createServerSupabase();
-  const { error } = await supabase.from("oportunidade").insert({ ...paraColunas(input), etapa_id: etapaId });
+  const { error } = await supabase.from("oportunidade").insert({ ...paraColunas(input), etapa_id: alvo });
   if (error) return { erro: "Falha ao criar." };
   revalidatePath("/comercial");
   return { ok: true };
