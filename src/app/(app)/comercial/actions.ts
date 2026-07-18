@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
-import type { EtapaOportunidade } from "@/lib/comercial/funil";
+import type { Etapa, ChaveEtapa } from "@/lib/comercial/funil";
 
 export type OportunidadeView = {
   id: string;
@@ -16,7 +16,10 @@ export type OportunidadeView = {
   valorEstimado: number | null;
   responsavelId: string | null;
   responsavelNome: string | null;
-  etapa: EtapaOportunidade;
+  etapa: ChaveEtapa;
+  etapaDesde: string;
+  segmento: string | null;
+  regime: string | null;
   observacoes: string | null;
   motivoPerda: string | null;
   clienteId: string | null;
@@ -33,6 +36,8 @@ export type OportunidadeInput = {
   servicoInteresse: string | null;
   valorEstimado: number | null;
   responsavelId: string | null;
+  segmento: string | null;
+  regime: string | null;
   observacoes: string | null;
 };
 
@@ -46,8 +51,31 @@ function paraColunas(input: OportunidadeInput) {
     servico_interesse: input.servicoInteresse,
     valor_estimado: input.valorEstimado,
     responsavel_id: input.responsavelId,
+    segmento: input.segmento,
+    regime: input.regime,
     observacoes: input.observacoes,
   };
+}
+
+export async function listarEtapas(): Promise<Etapa[]> {
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("funil_etapa")
+    .select("id, rotulo, ordem, cor, probabilidade")
+    .eq("arquivada", false)
+    .order("ordem");
+  return (data ?? []).map((e) => ({
+    id: e.id as string,
+    rotulo: e.rotulo as string,
+    ordem: e.ordem as number,
+    cor: e.cor as string,
+    probabilidade: Number(e.probabilidade),
+  }));
+}
+
+async function primeiraEtapaAtiva(): Promise<string | null> {
+  const es = await listarEtapas();
+  return es[0]?.id ?? null;
 }
 
 export async function listarOportunidades(): Promise<OportunidadeView[]> {
@@ -57,7 +85,7 @@ export async function listarOportunidades(): Promise<OportunidadeView[]> {
   const { data } = await supabase
     .from("oportunidade")
     .select(
-      "id, prospect_nome, contato_nome, contato_telefone, contato_email, origem, servico_interesse, valor_estimado, responsavel_id, etapa, observacoes, motivo_perda, cliente_id, criado_em, fechado_em",
+      "id, prospect_nome, contato_nome, contato_telefone, contato_email, origem, servico_interesse, valor_estimado, responsavel_id, etapa_id, desfecho, etapa_desde, segmento, regime, observacoes, motivo_perda, cliente_id, criado_em, fechado_em",
     )
     .order("criado_em", { ascending: false });
   const rows = data ?? [];
@@ -78,7 +106,10 @@ export async function listarOportunidades(): Promise<OportunidadeView[]> {
     valorEstimado: r.valor_estimado != null ? Number(r.valor_estimado) : null,
     responsavelId: (r.responsavel_id as string | null) ?? null,
     responsavelNome: r.responsavel_id ? (usMap.get(r.responsavel_id as string) ?? null) : null,
-    etapa: r.etapa as EtapaOportunidade,
+    etapa: (r.desfecho as string | null) ?? (r.etapa_id as string),
+    etapaDesde: r.etapa_desde as string,
+    segmento: (r.segmento as string | null) ?? null,
+    regime: (r.regime as string | null) ?? null,
     observacoes: (r.observacoes as string | null) ?? null,
     motivoPerda: (r.motivo_perda as string | null) ?? null,
     clienteId: (r.cliente_id as string | null) ?? null,
@@ -88,12 +119,17 @@ export async function listarOportunidades(): Promise<OportunidadeView[]> {
   }));
 }
 
-export async function criarOportunidade(input: OportunidadeInput): Promise<{ ok?: boolean; erro?: string }> {
+export async function criarOportunidade(
+  input: OportunidadeInput,
+  etapaId?: string,
+): Promise<{ ok?: boolean; erro?: string }> {
   const p = await getPerfilAtual();
   if (!p?.ativo || !podeCriarCliente(p.papel)) return { erro: "Sem permissão." };
   if (!input.prospectNome.trim()) return { erro: "Informe o prospect." };
+  const alvo = etapaId ?? (await primeiraEtapaAtiva());
+  if (!alvo) return { erro: "Nenhuma etapa de funil configurada." };
   const supabase = await createServerSupabase();
-  const { error } = await supabase.from("oportunidade").insert(paraColunas(input));
+  const { error } = await supabase.from("oportunidade").insert({ ...paraColunas(input), etapa_id: alvo });
   if (error) return { erro: "Falha ao criar." };
   revalidatePath("/comercial");
   return { ok: true };
@@ -118,14 +154,20 @@ export async function salvarOportunidade(
 
 export async function definirEtapa(
   id: string,
-  etapa: EtapaOportunidade,
+  etapa: ChaveEtapa,
   motivo?: string | null,
 ): Promise<{ ok?: boolean; erro?: string }> {
   const p = await getPerfilAtual();
   if (!p?.ativo || !podeCriarCliente(p.papel)) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
-  const patch: Record<string, unknown> = { etapa, atualizado_em: new Date().toISOString() };
-  patch.fechado_em = etapa === "ganho" || etapa === "perdido" ? new Date().toISOString() : null;
+  const terminal = etapa === "ganho" || etapa === "perdido";
+  const patch: Record<string, unknown> = {
+    etapa_id: terminal ? null : etapa,
+    desfecho: terminal ? etapa : null,
+    etapa_desde: new Date().toISOString(),
+    atualizado_em: new Date().toISOString(),
+    fechado_em: terminal ? new Date().toISOString() : null,
+  };
   if (etapa === "perdido") patch.motivo_perda = motivo ?? null;
   const { error } = await supabase.from("oportunidade").update(patch).eq("id", id);
   if (error) return { erro: "Falha ao mover." };

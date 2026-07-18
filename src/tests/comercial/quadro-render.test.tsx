@@ -8,6 +8,14 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 import { renderToStaticMarkup } from "react-dom/server";
 import { QuadroComercial } from "@/app/(app)/comercial/QuadroComercial";
 import type { OportunidadeView } from "@/app/(app)/comercial/actions";
+import type { Etapa } from "@/lib/comercial/funil";
+
+const ETAPAS: Etapa[] = [
+  { id: "e1", rotulo: "Novo", ordem: 1, cor: "#000", probabilidade: 0.2 },
+  { id: "e2", rotulo: "Contato feito", ordem: 2, cor: "#000", probabilidade: 0.4 },
+  { id: "e3", rotulo: "Proposta enviada", ordem: 3, cor: "#000", probabilidade: 0.6 },
+  { id: "e4", rotulo: "Negociação", ordem: 4, cor: "#000", probabilidade: 0.8 },
+];
 
 const ops: OportunidadeView[] = [
   {
@@ -21,7 +29,10 @@ const ops: OportunidadeView[] = [
     valorEstimado: 400,
     responsavelId: "u1",
     responsavelNome: "Ana",
-    etapa: "novo",
+    etapa: "e1",
+    etapaDesde: "2026-07-01T12:00:00.000Z",
+    segmento: "Padaria",
+    regime: "Simples",
     observacoes: null,
     motivoPerda: null,
     clienteId: null,
@@ -41,6 +52,9 @@ const ops: OportunidadeView[] = [
     responsavelId: null,
     responsavelNome: null,
     etapa: "ganho",
+    etapaDesde: "2026-07-01T12:00:00.000Z",
+    segmento: null,
+    regime: null,
     observacoes: null,
     motivoPerda: null,
     clienteId: null,
@@ -52,14 +66,35 @@ const ops: OportunidadeView[] = [
 
 describe("QuadroComercial", () => {
   it("renderiza colunas e card ativo", () => {
-    const html = renderToStaticMarkup(<QuadroComercial oportunidades={ops} usuarios={[{ id: "u1", nome: "Ana" }]} />);
+    const html = renderToStaticMarkup(
+      <QuadroComercial
+        oportunidades={ops}
+        usuarios={[{ id: "u1", nome: "Ana" }]}
+        etapas={ETAPAS}
+        agora="2026-07-20T00:00:00.000Z"
+      />,
+    );
     expect(html).toContain("Novo");
     expect(html).toContain("Negociação");
     expect(html).toContain("Padaria Sol");
+    expect(html).toContain("Padaria"); // segmento no card
+    expect(html).toContain("Simples"); // badge de regime
     expect(html).toContain('draggable="true"');
+    expect(html).toContain("Buscar negócio…");
+  });
+  it("mostra a faixa de métricas do topo", () => {
+    const html = renderToStaticMarkup(
+      <QuadroComercial oportunidades={ops} usuarios={[]} etapas={ETAPAS} agora="2026-07-20T00:00:00.000Z" />,
+    );
+    expect(html).toContain("Em pipeline");
+    expect(html).toContain("Ponderado");
+    expect(html).toContain("Conversão");
+    expect(html).toContain("Ciclo médio");
   });
   it("mostra seção de fechados", () => {
-    const html = renderToStaticMarkup(<QuadroComercial oportunidades={ops} usuarios={[]} />);
+    const html = renderToStaticMarkup(
+      <QuadroComercial oportunidades={ops} usuarios={[]} etapas={ETAPAS} agora="2026-07-20T00:00:00.000Z" />,
+    );
     expect(html).toContain("Fechados");
   });
 });

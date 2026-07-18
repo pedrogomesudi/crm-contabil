@@ -1,7 +1,7 @@
 "use client";
 import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
-import { ETAPAS_ATIVAS } from "@/lib/comercial/funil";
+import type { Etapa } from "@/lib/comercial/funil";
 import { periodoBounds, metricasFunil, type Granularidade } from "@/lib/comercial/metricas";
 import type { OportunidadeView } from "./actions";
 import { Voltar } from "@/components/ui/Voltar";
@@ -14,11 +14,19 @@ const GRANS: { v: Granularidade; l: string }[] = [
   { v: "ano", l: "Ano" },
 ];
 
-export function MetricasFunil({ oportunidades, hoje }: { oportunidades: OportunidadeView[]; hoje: string }) {
+export function MetricasFunil({
+  oportunidades,
+  etapas,
+  hoje,
+}: {
+  oportunidades: OportunidadeView[];
+  etapas: Etapa[];
+  hoje: string;
+}) {
   const [gran, setGran] = useState<Granularidade>("mes");
   const [offset, setOffset] = useState(0);
   const { inicio, fim, rotulo } = periodoBounds(gran, hoje, offset);
-  const m = metricasFunil(oportunidades, inicio, fim);
+  const m = metricasFunil(oportunidades, etapas, inicio, fim);
   const pct = `${Math.round(m.periodo.taxaConversao * 100)}%`;
 
   return (
@@ -33,11 +41,11 @@ export function MetricasFunil({ oportunidades, hoje }: { oportunidades: Oportuni
             <span className="font-medium text-texto tabular-nums">{brl(m.pipeline.total.total)}</span>
           </p>
           <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {ETAPAS_ATIVAS.map((e) => (
-              <div key={e.chave} className="rounded-lg bg-creme px-2 py-1.5">
+            {etapas.map((e) => (
+              <div key={e.id} className="rounded-lg bg-creme px-2 py-1.5">
                 <div className="text-[11px] uppercase tracking-wide text-cinza">{e.rotulo}</div>
                 <div className="text-sm text-texto tabular-nums">
-                  {m.pipeline.porEtapa[e.chave]!.qtd} · {brl(m.pipeline.porEtapa[e.chave]!.total)}
+                  {m.pipeline.porEtapa[e.id]!.qtd} · {brl(m.pipeline.porEtapa[e.id]!.total)}
                 </div>
               </div>
             ))}

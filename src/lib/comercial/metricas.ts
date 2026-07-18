@@ -1,4 +1,4 @@
-import type { EtapaOportunidade } from "./funil";
+import { diasNaEtapa, type Etapa, type ChaveEtapa } from "./funil";
 
 export type Granularidade = "mes" | "trimestre" | "semestre" | "ano";
 const MESES = [
@@ -55,7 +55,7 @@ export function periodoBounds(
 }
 
 export type OpMetrica = {
-  etapa: EtapaOportunidade;
+  etapa: ChaveEtapa;
   valorEstimado: number | null;
   responsavelNome: string | null;
   motivoPerda: string | null;
@@ -72,11 +72,9 @@ export type MetricasFunil = {
   };
 };
 
-const ATIVAS = ["novo", "contato", "proposta", "negociacao"];
-
-export function metricasFunil(ops: OpMetrica[], inicio: string, fim: string): MetricasFunil {
+export function metricasFunil(ops: OpMetrica[], etapas: Etapa[], inicio: string, fim: string): MetricasFunil {
   const porEtapa: Record<string, { qtd: number; total: number }> = {};
-  for (const e of ATIVAS) porEtapa[e] = { qtd: 0, total: 0 };
+  for (const e of etapas) porEtapa[e.id] = { qtd: 0, total: 0 };
   let totQ = 0,
     totV = 0;
   for (const o of ops) {
@@ -122,5 +120,41 @@ export function metricasFunil(ops: OpMetrica[], inicio: string, fim: string): Me
   return {
     pipeline: { total: { qtd: totQ, total: totV }, porEtapa },
     periodo: { ganhos, perdidos, taxaConversao, porResponsavel, motivosPerda },
+  };
+}
+
+export type OpPipeline = {
+  etapa: ChaveEtapa;
+  valorEstimado: number | null;
+  criadoEm: string;
+  fechadoEm: string | null;
+};
+
+// Média de dias criado→fechado dos GANHOS. 0 se não houver ganho com data.
+export function cicloMedioDias(ops: OpPipeline[]): number {
+  const ganhos = ops.filter((o) => o.etapa === "ganho" && o.fechadoEm != null);
+  if (ganhos.length === 0) return 0;
+  const soma = ganhos.reduce((s, o) => s + diasNaEtapa(o.criadoEm, o.fechadoEm!), 0);
+  return Math.round(soma / ganhos.length);
+}
+
+// Números do topo do pipeline: valor em aberto, ponderado pela probabilidade da etapa,
+// taxa de conversão e ciclo médio (ambos sobre TODO o histórico de fechados).
+export function resumoPipeline(
+  ops: OpPipeline[],
+  etapas: Etapa[],
+): { valorPipeline: number; valorPonderado: number; taxaConversao: number; cicloMedioDias: number } {
+  const prob = new Map(etapas.map((e) => [e.id, e.probabilidade]));
+  const ativas = ops.filter((o) => o.etapa !== "ganho" && o.etapa !== "perdido");
+  const valorPipeline = ativas.reduce((s, o) => s + (o.valorEstimado ?? 0), 0);
+  const valorPonderado = ativas.reduce((s, o) => s + (o.valorEstimado ?? 0) * (prob.get(o.etapa) ?? 0), 0);
+  const ganhos = ops.filter((o) => o.etapa === "ganho").length;
+  const perdidos = ops.filter((o) => o.etapa === "perdido").length;
+  const den = ganhos + perdidos;
+  return {
+    valorPipeline,
+    valorPonderado,
+    taxaConversao: den > 0 ? ganhos / den : 0,
+    cicloMedioDias: cicloMedioDias(ops),
   };
 }
