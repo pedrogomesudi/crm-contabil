@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.10.0] — 2026-07-18
+
+Atendimento — mídia como no WhatsApp: os arquivos abrem rápido (URL assinada) e aparecem com miniatura,
+player, cartão e visualizador.
+
+### Adicionado
+
+- **Atendimento — mídia como no WhatsApp:** os arquivos abrem **rápido** (URL assinada, direto do
+  Storage — o servidor deixa de re-baixar cada arquivo a cada visualização) e aparecem com **cara de
+  WhatsApp**: a imagem é miniatura clicável que abre num visualizador escuro (lightbox), o áudio tem
+  player, e o documento é um cartão com ícone do tipo e botão de baixar.
+
 ## [6.9.0] — 2026-07-17
 
 Atendimento em tempo real: as mensagens do WhatsApp aparecem no instante em que chegam (Supabase Realtime),

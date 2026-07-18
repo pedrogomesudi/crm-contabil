@@ -18,6 +18,7 @@ import {
   type DadosContato,
 } from "./actions";
 import { useRealtimeAtendimento } from "@/lib/whatsapp/useRealtimeAtendimento";
+import { Midia, Lightbox } from "./Midia";
 import {
   filtrarConversas,
   contadores,
@@ -68,6 +69,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [enviandoMidia, setEnviandoMidia] = useState(false);
   const [erroMidia, setErroMidia] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ url: string; nome: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [pend, start] = useTransition();
   const fimRef = useRef<HTMLDivElement>(null);
@@ -484,7 +486,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
                           : "rounded-bl-md border border-linha bg-white text-texto"
                       }`}
                     >
-                      <Midia msg={m} />
+                      <Midia msg={m} onAbrirImagem={(url, nome) => setLightbox({ url, nome })} />
                       {m.texto && <span className={m.midiaPath ? "mt-1 block" : ""}>{m.texto}</span>}
                       <span className="mt-0.5 flex items-center justify-end gap-1 font-mono text-[10px] text-cinza-claro">
                         {horaMsg(m.criado_em)}
@@ -610,35 +612,8 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
           <p className="m-auto px-5 py-10 text-center text-sm text-cinza-claro">Nenhum contato selecionado.</p>
         )}
       </aside>
+      {lightbox && <Lightbox url={lightbox.url} nome={lightbox.nome} onFechar={() => setLightbox(null)} />}
     </div>
-  );
-}
-
-function Midia({ msg }: { msg: MsgConversa }) {
-  if (!msg.midiaTipo || !msg.midiaPath) return null;
-  const src = `/api/atendimento/midia/${msg.id}`;
-  if (msg.midiaTipo === "image") {
-    return (
-      <a href={src} target="_blank" rel="noreferrer" className="block">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={msg.midiaNome ?? "imagem"} className="max-h-64 rounded-lg" />
-      </a>
-    );
-  }
-  if (msg.midiaTipo === "audio") {
-    // Áudio de voz do WhatsApp não tem legendas; a regra de caption não se aplica.
-    // eslint-disable-next-line jsx-a11y/media-has-caption
-    return <audio controls src={src} className="max-w-full" />;
-  }
-  return (
-    <a
-      href={src}
-      download={msg.midiaNome ?? "arquivo"}
-      className="flex items-center gap-2 rounded-lg border border-linha bg-white px-3 py-2 text-texto"
-    >
-      <span aria-hidden>📎</span>
-      <span className="truncate">{msg.midiaNome ?? "arquivo"}</span>
-    </a>
   );
 }
 

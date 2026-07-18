@@ -30,6 +30,7 @@ export function linhaParaMsg(raw: LinhaMensagemRaw): MsgConversa {
     midiaPath: raw.midia_path ?? null,
     midiaNome: raw.midia_nome ?? null,
     midiaMime: raw.midia_mime ?? null,
+    midiaUrl: null, // o evento cru não tem URL assinada; o refetch de ~1s a traz
     cliente: null,
   };
 }
