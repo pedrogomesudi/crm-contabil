@@ -3,7 +3,7 @@ import { useState } from "react";
 import { controleCls } from "@/components/ui/Campo";
 import { StatCard } from "@/components/ui/StatCard";
 import { REGIMES } from "@/lib/tipos";
-import { calcularHonorario, type ConfigPreco } from "@/lib/comercial/precificacao";
+import { calcularHonorario, type ConfigPreco, type Parametros, type ServicoView } from "@/lib/comercial/precificacao";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -11,10 +11,12 @@ export function Calculadora({
   config,
   complexidades,
   servicos,
+  onUsar,
 }: {
   config: ConfigPreco;
   complexidades: { id: string; nome: string }[];
-  servicos: { id: string; nome: string; valor: number; recorrencia: string }[];
+  servicos: ServicoView[];
+  onUsar?: (params: Parametros, servicos: ServicoView[]) => void;
 }) {
   const [regime, setRegime] = useState<string>(REGIMES[0]);
   const [faturamento, setFaturamento] = useState(0);
@@ -159,6 +161,17 @@ export function Calculadora({
             ))}
           </ul>
         </div>
+        {onUsar && (
+          <button
+            type="button"
+            onClick={() =>
+              onUsar({ regime, faturamento, funcionarios, notas, complexidadeId, servicoIds, descontoPct }, servicos)
+            }
+            className="w-full rounded-lg bg-verde px-3 py-2 text-sm font-medium text-white"
+          >
+            Usar na proposta
+          </button>
+        )}
       </div>
     </div>
   );
