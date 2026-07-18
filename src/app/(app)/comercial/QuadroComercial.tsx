@@ -75,7 +75,7 @@ export function QuadroComercial({
   const [ocupado, setOcupado] = useState(false);
   const [soMinhas, setSoMinhas] = useState(false);
   const [busca, setBusca] = useState("");
-  const [form, setForm] = useState<{ id: string | null; input: OportunidadeInput } | null>(null);
+  const [form, setForm] = useState<{ id: string | null; etapaId?: string; input: OportunidadeInput } | null>(null);
   const [arrastando, setArrastando] = useState<{ id: string; etapa: ChaveEtapa } | null>(null);
   const [sobreColuna, setSobreColuna] = useState<string | null>(null);
 
@@ -118,7 +118,9 @@ export function QuadroComercial({
     if (!form) return;
     if (!form.input.prospectNome.trim()) return alert("Informe o prospect.");
     setOcupado(true);
-    const r = await (form.id ? salvarOportunidade(form.id, form.input) : criarOportunidade(form.input));
+    const r = await (form.id
+      ? salvarOportunidade(form.id, form.input)
+      : criarOportunidade(form.input, form.etapaId));
     setOcupado(false);
     if (r?.erro) return alert(r.erro);
     setForm(null);
@@ -176,8 +178,11 @@ export function QuadroComercial({
               className={`min-w-[240px] flex-1 space-y-2 rounded-lg ${sobreColuna === col.id ? "ring-1 ring-verde" : ""}`}
             >
               <div className="rounded-lg bg-creme px-2 py-1.5">
-                <div className="font-display text-xs font-semibold uppercase tracking-wide text-texto">
-                  {col.rotulo}
+                <div className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 flex-none rounded-full" style={{ backgroundColor: col.cor }} />
+                  <div className="font-display text-xs font-semibold uppercase tracking-wide text-texto">
+                    {col.rotulo}
+                  </div>
                 </div>
                 <div className="text-[11px] text-cinza">
                   {rs.qtd} · {brl(rs.total)}
@@ -262,6 +267,13 @@ export function QuadroComercial({
                 </div>
               ))}
               {doCol.length === 0 && <p className="px-1 text-[11px] text-cinza-claro">—</p>}
+              <button
+                type="button"
+                onClick={() => setForm({ id: null, etapaId: col.id, input: vazio() })}
+                className="w-full rounded-lg border border-dashed border-linha py-1 text-[11px] text-cinza hover:text-texto"
+              >
+                + Adicionar
+              </button>
             </div>
           );
         })}
