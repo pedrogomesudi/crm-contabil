@@ -77,7 +77,10 @@ export async function processarFollowup(hoje: string): Promise<Resumo> {
       contato_telefone?: string;
     };
 
-    const { data: jaRaw } = await admin.from("followup_envio").select("etapa_id").eq("proposta_id", p.id as string);
+    const { data: jaRaw } = await admin
+      .from("followup_envio")
+      .select("etapa_id")
+      .eq("proposta_id", p.id as string);
     const jaEnviadas = (jaRaw ?? []).map((r) => r.etapa_id as string);
     const devidas = etapasDevidas(p.enviada_em as string, etapas, jaEnviadas, hoje);
     if (devidas.length === 0) continue;
