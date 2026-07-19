@@ -8,6 +8,9 @@ import { EditorProposta } from "./EditorProposta";
 import { obterProposta } from "../../propostas-actions";
 import { carregarPrecificacao } from "../../../configuracoes/precificacao/actions";
 import { paraConfigPreco } from "@/lib/comercial/precificacao";
+import { carregarEstadoContrato } from "./contrato-status";
+import { ContratoHonorarios } from "./ContratoHonorarios";
+import { passosContrato } from "@/lib/comercial/contratoProposta";
 
 export default async function EditarPropostaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -31,6 +34,10 @@ export default async function EditarPropostaPage({ params }: { params: Promise<{
       valor: s.valor,
       recorrencia: (s.recorrencia === "mensal" ? "mensal" : "unico") as "mensal" | "unico",
     }));
+  const propostaAceita = proposta.status === "aceita";
+  const estado = await carregarEstadoContrato(proposta.oportunidadeId, propostaAceita);
+  const passos = passosContrato(estado);
+  const concluido = passos.every((p) => p.situacao === "feito");
   return (
     <Container largura="estreita" className="space-y-5 p-4">
       <PageHeader titulo={`Proposta nº ${proposta.numero}`} subtitulo={proposta.prospectNome} />
@@ -41,6 +48,7 @@ export default async function EditarPropostaPage({ params }: { params: Promise<{
         complexidades={complexidades}
         servicos={servicos}
       />
+      <ContratoHonorarios passos={passos} propostaAceita={propostaAceita} concluido={concluido} />
     </Container>
   );
 }
