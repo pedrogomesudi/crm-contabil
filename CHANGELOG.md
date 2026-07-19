@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.27.0] — 2026-07-19
+
+RF-040 — anexos em tarefas. **Fecha o RF-040** (o restante — avulsas/recorrentes, checklist, prioridade, prazo — já estava em produção, assim como as vistas Kanban/lista/calendário do RF-042).
+
+### Adicionado
+
+- **Anexos na tarefa:** a página de detalhe da tarefa ganha uma seção **"Anexos"** — enviar arquivos (PDF, PNG
+  ou JPG, até 10 MB), baixar (link temporário) e remover. Anexar/remover é permitido a quem gerencia a tarefa
+  (admin/assistente ou responsável/criador). Os arquivos ficam num acervo separado do GED do cliente, então
+  funcionam também para tarefas internas. Migration `0110` (`tarefa_anexo` com RLS espelhando a da tarefa).
+
 ## [6.26.0] — 2026-07-19
 
 RF-027 (Fatia B) — obrigatoriedade dos campos customizáveis. **Fecha o RF-027.**

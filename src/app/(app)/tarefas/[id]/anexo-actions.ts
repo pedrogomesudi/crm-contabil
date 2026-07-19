@@ -12,11 +12,7 @@ const MAX_BYTES = 10 * 1024 * 1024;
 // Espelha a RLS de tarefa: admin/assistente OU responsável/criador da tarefa.
 async function podeEditarTarefa(perfilId: string, papel: string, tarefaId: string): Promise<boolean> {
   const supabase = await createServerSupabase();
-  const { data } = await supabase
-    .from("tarefa")
-    .select("responsavel_id, criado_por")
-    .eq("id", tarefaId)
-    .maybeSingle();
+  const { data } = await supabase.from("tarefa").select("responsavel_id, criado_por").eq("id", tarefaId).maybeSingle();
   if (!data) return false;
   if (papel === "admin" || papel === "assistente") return true;
   return data.responsavel_id === perfilId || data.criado_por === perfilId;
@@ -79,11 +75,7 @@ export async function listarAnexosTarefa(
 export async function linkDownloadAnexo(anexoId: string): Promise<ResultadoDownload> {
   const supabase = await createServerSupabase();
   // A RLS de tarefa_anexo já garante que o usuário enxerga o anexo (via tarefa).
-  const { data: anexo } = await supabase
-    .from("tarefa_anexo")
-    .select("caminho_storage")
-    .eq("id", anexoId)
-    .maybeSingle();
+  const { data: anexo } = await supabase.from("tarefa_anexo").select("caminho_storage").eq("id", anexoId).maybeSingle();
   if (!anexo) return { erro: "Anexo não encontrado ou sem permissão." };
   const admin = createAdminSupabase();
   const { data: signed, error } = await admin.storage
@@ -100,11 +92,7 @@ export async function excluirAnexo(anexoId: string, tarefaId: string): Promise<R
     return { erro: "Você não pode remover anexos desta tarefa." };
   }
   const admin = createAdminSupabase();
-  const { data: anexo } = await admin
-    .from("tarefa_anexo")
-    .select("caminho_storage")
-    .eq("id", anexoId)
-    .maybeSingle();
+  const { data: anexo } = await admin.from("tarefa_anexo").select("caminho_storage").eq("id", anexoId).maybeSingle();
   if (!anexo) return { erro: "Anexo não encontrado." };
   const { error } = await admin.from("tarefa_anexo").delete().eq("id", anexoId);
   if (error) return { erro: "Falha ao remover o anexo." };

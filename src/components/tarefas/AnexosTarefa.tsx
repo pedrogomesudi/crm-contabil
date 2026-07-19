@@ -57,12 +57,7 @@ export function AnexosTarefa({
               {a.nome}
             </button>
             {podeEditar && (
-              <button
-                type="button"
-                className="text-negativo underline"
-                disabled={busy}
-                onClick={() => remover(a.id)}
-              >
+              <button type="button" className="text-negativo underline" disabled={busy} onClick={() => remover(a.id)}>
                 remover
               </button>
             )}
