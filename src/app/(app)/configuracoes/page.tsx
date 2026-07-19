@@ -30,6 +30,11 @@ const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] 
     label: "Precificação de honorários",
     desc: "Base por regime, acréscimos, complexidade, serviços, piso e desconto.",
   },
+  {
+    href: "/configuracoes/followup",
+    label: "Follow-up de propostas",
+    desc: "Sequência automática (e-mail ou WhatsApp) após o envio da proposta.",
+  },
   { href: "/configuracoes/whatsapp", label: "WhatsApp (Z-API)", desc: "Credenciais do provedor e teste de conexão." },
   { href: "/configuracoes/email", label: "E-mail", desc: "Canal de envio (SMTP ou API), remetente e teste." },
   {
