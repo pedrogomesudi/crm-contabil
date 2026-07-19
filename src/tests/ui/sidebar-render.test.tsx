@@ -22,7 +22,11 @@ describe("Sidebar", () => {
 
   it("cada badge aparece no seu item", () => {
     const html = renderToStaticMarkup(
-      <Sidebar papel="admin" nome="Pedro" badges={{ onboarding: 2, riscos: 3, escalonamento: 1, vencimentos: 5, docsVencidos: 0 }} />,
+      <Sidebar
+        papel="admin"
+        nome="Pedro"
+        badges={{ onboarding: 2, riscos: 3, escalonamento: 1, vencimentos: 5, docsVencidos: 0 }}
+      />,
     );
     expect(html).toContain(">4<"); // Obrigações: riscos + escalonamento
     expect(html).toContain(">5<"); // Vencimentos

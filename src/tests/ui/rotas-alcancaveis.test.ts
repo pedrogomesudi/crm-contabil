@@ -42,9 +42,13 @@ const POR_HUB = ["/financeiro", "/configuracoes", "/usuarios", "/lgpd", "/integr
 const POR_ACAO = ["/clientes/novo", "/clientes/nova-empresa", "/comunicados/novo", "/documentos/retencao"];
 
 describe("nenhuma rota de seção fica órfã", () => {
-  const noMenu = menuDoPapel("admin", { onboarding: 0, riscos: 0, escalonamento: 0, vencimentos: 0, docsVencidos: 0 }).flatMap((g) =>
-    g.itens.map((i) => i.href),
-  );
+  const noMenu = menuDoPapel("admin", {
+    onboarding: 0,
+    riscos: 0,
+    escalonamento: 0,
+    vencimentos: 0,
+    docsVencidos: 0,
+  }).flatMap((g) => g.itens.map((i) => i.href));
 
   it("toda rota é alcançável pelo menu, por SubNav, por hub ou por ação", () => {
     const orfas = rotas(RAIZ).filter((r) => {

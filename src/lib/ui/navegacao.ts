@@ -9,7 +9,13 @@ import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 
 export type ItemMenu = { href: string; label: string; badge?: number };
 export type GrupoMenu = { titulo: string | null; itens: ItemMenu[] };
-export type Badges = { onboarding: number; riscos: number; escalonamento: number; vencimentos: number; docsVencidos: number };
+export type Badges = {
+  onboarding: number;
+  riscos: number;
+  escalonamento: number;
+  vencimentos: number;
+  docsVencidos: number;
+};
 
 // O mapa do menu é DADO, não markup: quem vê o quê é regra, e regra se testa sem DOM.
 // Segue o padrão do projeto (filtroStatus.ts, busca.ts e permissoes.ts são puros e testados).
