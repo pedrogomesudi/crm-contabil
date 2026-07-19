@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { Botao } from "@/components/ui/Botao";
 import { controleCls } from "@/components/ui/Campo";
 import type { EmpresaRelacionada, VinculoTipo } from "@/lib/clientes/vinculos";
-import { definirGrupo, criarGrupo, definirMatriz } from "@/app/(app)/clientes/[id]/vinculos-actions";
+import {
+  definirGrupo,
+  criarGrupo,
+  definirMatriz,
+  adicionarSocio,
+  removerSocio,
+} from "@/app/(app)/clientes/[id]/vinculos-actions";
 
 const ROTULO: Record<VinculoTipo, string> = {
   grupo: "mesmo grupo",
@@ -23,6 +29,7 @@ type VinculosProps = {
   filiais: { id: string; razao_social: string }[];
   candidatosMatriz: { id: string; razao_social: string }[];
   relacionadas: EmpresaRelacionada[];
+  socios: { id: string; nome: string; cpf: string; tambemEm: { id: string; razao_social: string }[] }[];
 };
 
 export function VinculosSection(props: VinculosProps) {
@@ -154,11 +161,98 @@ export function VinculosSection(props: VinculosProps) {
         </div>
       )}
 
+      {/* Sócios */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-grafite">Sócios</p>
+        {props.socios.length === 0 && <p className="text-sm text-cinza">nenhum sócio cadastrado</p>}
+        <ul className="space-y-1 text-sm">
+          {props.socios.map((s) => (
+            <li key={s.id} className="flex flex-wrap items-center gap-2">
+              <span className="text-grafite">{s.nome}</span>
+              <span className="text-cinza">{s.cpf}</span>
+              {s.tambemEm.length > 0 && (
+                <span className="text-cinza">
+                  também em:{" "}
+                  {s.tambemEm.map((e, i) => (
+                    <span key={e.id}>
+                      {i > 0 && ", "}
+                      <Link href={`/clientes/${e.id}`} className="underline">
+                        {e.razao_social}
+                      </Link>
+                    </span>
+                  ))}
+                </span>
+              )}
+              {props.podeEditar && (
+                <button
+                  type="button"
+                  className="text-negativo underline"
+                  disabled={pend}
+                  onClick={() => run(() => removerSocio(props.clienteId, s.id))}
+                >
+                  remover
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+        {props.podeEditar && (
+          <AdicionarSocio
+            clienteId={props.clienteId}
+            pend={pend}
+            onAdd={(nome, cpf) => run(() => adicionarSocio(props.clienteId, nome, cpf))}
+          />
+        )}
+      </div>
+
       {erro && (
         <p role="alert" className="text-sm text-negativo">
           {erro}
         </p>
       )}
     </section>
+  );
+}
+
+function AdicionarSocio({
+  clienteId,
+  pend,
+  onAdd,
+}: {
+  clienteId: string;
+  pend: boolean;
+  onAdd: (nome: string, cpf: string) => void;
+}) {
+  const [nome, setNome] = useState("");
+  const [cpf, setCpf] = useState("");
+  return (
+    <div key={clienteId} className="flex flex-wrap items-center gap-2">
+      <input
+        className={controleCls("compacto")}
+        placeholder="nome do sócio"
+        value={nome}
+        disabled={pend}
+        onChange={(e) => setNome(e.target.value)}
+      />
+      <input
+        className={controleCls("compacto")}
+        placeholder="CPF"
+        value={cpf}
+        disabled={pend}
+        onChange={(e) => setCpf(e.target.value)}
+      />
+      <Botao
+        type="button"
+        variante="secundario"
+        disabled={pend || !nome.trim() || !cpf.trim()}
+        onClick={() => {
+          onAdd(nome, cpf);
+          setNome("");
+          setCpf("");
+        }}
+      >
+        Adicionar sócio
+      </Botao>
+    </div>
   );
 }

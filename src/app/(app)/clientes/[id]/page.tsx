@@ -104,6 +104,36 @@ export default async function FichaClientePage({
     supabase.from("clientes").select("id, razao_social").is("matriz_id", null).neq("id", id).order("razao_social"),
   ]);
   const filiais = (filiaisRows ?? []).map((f) => ({ id: f.id as string, razao_social: f.razao_social as string }));
+
+  // Sócios do cliente e, por CPF compartilhado, os outros clientes de cada sócio (RF-026 Fatia B).
+  const { data: vinc } = await supabase
+    .from("cliente_socio")
+    .select("socio_id, socio(id, nome, cpf)")
+    .eq("cliente_id", id);
+  const socioIds = (vinc ?? []).map((v) => v.socio_id as string);
+  const { data: colegas } = socioIds.length
+    ? await supabase
+        .from("cliente_socio")
+        .select("socio_id, cliente_id, clientes(id, razao_social)")
+        .in("socio_id", socioIds)
+        .neq("cliente_id", id)
+    : { data: [] as { socio_id: string; cliente_id: string; clientes: { id: string; razao_social: string } }[] };
+  const colegaCliente = (c: { clientes: unknown }) => c.clientes as { id: string; razao_social: string };
+  const socios = (vinc ?? []).map((v) => {
+    const s = v.socio as unknown as { id: string; nome: string; cpf: string };
+    const tambemEm = (colegas ?? [])
+      .filter((c) => c.socio_id === v.socio_id)
+      .map((c) => {
+        const cl = colegaCliente(c);
+        return { id: cl.id, razao_social: cl.razao_social };
+      });
+    return { id: s.id, nome: s.nome, cpf: s.cpf, tambemEm };
+  });
+  const empresasSocio = (colegas ?? []).map((c) => {
+    const cl = colegaCliente(c);
+    return { clienteId: cl.id, nome: cl.razao_social };
+  });
+
   const relacionadas = consolidarRelacionadas(id, [
     {
       tipo: "grupo",
@@ -118,6 +148,7 @@ export default async function FichaClientePage({
           },
         ]
       : []),
+    { tipo: "socio", empresas: empresasSocio },
   ]);
 
   // E-mail integrado (RF-051): histórico + o que dá para anexar + templates ativos.
@@ -338,6 +369,7 @@ export default async function FichaClientePage({
                   razao_social: c.razao_social as string,
                 }))}
                 relacionadas={relacionadas}
+                socios={socios}
               />
             )}
             {podeLegalizacao && (
