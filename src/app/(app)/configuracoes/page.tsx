@@ -31,6 +31,11 @@ const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] 
     desc: "Campos extras do cliente — texto, número, data, sim/não e lista.",
   },
   {
+    href: "/configuracoes/tipos-documento",
+    label: "Tipos de documento",
+    desc: "Catálogo do GED — tipos e departamento, para classificar os arquivos do cliente.",
+  },
+  {
     href: "/configuracoes/precificacao",
     label: "Precificação de honorários",
     desc: "Base por regime, acréscimos, complexidade, serviços, piso e desconto.",
