@@ -45,8 +45,8 @@ export function FlagsFiscaisSection({
     <section className="space-y-3 rounded-lg border border-linha bg-white p-4">
       <h3 className="text-sm font-semibold text-grafite">Flags fiscais</h3>
       <p className="text-xs text-cinza">
-        Determinam a incidência de obrigações. &quot;Auto&quot; deriva das inscrições e da folha; mudar vale para
-        a próxima geração.
+        Determinam a incidência de obrigações. &quot;Auto&quot; deriva das inscrições e da folha; mudar vale para a
+        próxima geração.
       </p>
       <div className="space-y-2">
         {(Object.keys(ROTULO) as Campo[]).map((campo) => (
@@ -58,7 +58,9 @@ export function FlagsFiscaisSection({
               disabled={!podeEditar || pend}
               onChange={(e) => mudar(campo, e.target.value)}
             >
-              <option value="">Auto → {derivados[campo] ? "Sim" : "Não"} ({DICA[campo]})</option>
+              <option value="">
+                Auto → {derivados[campo] ? "Sim" : "Não"} ({DICA[campo]})
+              </option>
               <option value="sim">Sim</option>
               <option value="nao">Não</option>
             </select>

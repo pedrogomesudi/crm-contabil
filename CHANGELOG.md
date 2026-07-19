@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.30.0] — 2026-07-19
+
+Flags fiscais explícitas no cadastro. **Fecha o domínio Cadastro do cliente.**
+
+### Adicionado
+
+- **Flags fiscais no cadastro:** nova seção "Flags fiscais" na ficha do cliente com três controles tri-state —
+  **Tem folha**, **Contribui ICMS** e **Contribui ISS** — em **Auto / Sim / Não**. "Auto" mantém a derivação
+  atual (nº de funcionários, inscrições); "Sim"/"Não" sobrescreve, corrigindo a incidência de obrigações quando
+  a heurística erra. Cada controle mostra ao lado o valor que a derivação daria hoje. A mudança vale para a
+  próxima geração de obrigações. Migration `0113` (colunas nullable em `clientes`; clientes atuais seguem em
+  "Auto", sem mudança de comportamento).
+
 ## [6.29.0] — 2026-07-19
 
 RF-060 (Fatia B) — versionamento de documentos. **Fecha o RF-060** (GED: taxonomia + versionamento).
