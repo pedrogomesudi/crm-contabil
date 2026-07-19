@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.21.0] — 2026-07-19
+
+RF-007 — visibilidade do follow-up. **Fecha a RF-007.**
+
+### Adicionado
+
+- **Proposta → Follow-up:** uma seção no editor da proposta com a **agenda** dos passos (D+X e data
+  prevista) e o **histórico** dos envios — enviado (com a data), pendente, agendado, sem contato ou falhou.
+  Só leitura; enquanto a proposta não é enviada, orienta que o follow-up começa no envio.
+
 ## [6.20.0] — 2026-07-19
 
 RF-007 — disparo automático do follow-up. O motor que lê a config e envia entra no ar. A visibilidade na
