@@ -91,6 +91,60 @@ export async function anexarDocumento(
   return { ok: true };
 }
 
+// RF-060 (Fatia B): nova versão de um documento — herda a taxonomia do antigo e grava substitui_id.
+export async function anexarNovaVersao(
+  documentoAntigoId: string,
+  _prev: EstadoUpload,
+  formData: FormData,
+): Promise<EstadoUpload> {
+  const perfil = await getPerfilAtual();
+  if (!perfil || !perfil.ativo) return { erro: "Sessão expirada ou conta inativa." };
+  if (!podeGerenciarDocumentos(perfil.papel)) {
+    return { erro: "Você não tem permissão para anexar documentos." };
+  }
+
+  const supabase = await createServerSupabase();
+  // A RLS prova que o usuário enxerga o documento antigo (logo, o cliente).
+  const { data: antigo } = await supabase
+    .from("documentos")
+    .select("cliente_id, tipo, tipo_id, departamento, competencia")
+    .eq("id", documentoAntigoId)
+    .maybeSingle();
+  if (!antigo) return { erro: "Documento não encontrado ou sem permissão." };
+
+  const file = formData.get("arquivo");
+  if (!(file instanceof File) || file.size === 0) return { erro: "Selecione um arquivo." };
+  if (file.size > MAX_BYTES) return { erro: "Arquivo acima de 10 MB." };
+  if (!TIPOS_OK.includes(file.type)) return { erro: "Tipo não permitido (PDF, PNG ou JPG)." };
+
+  const clienteId = antigo.cliente_id as string;
+  const caminho = `${clienteId}/${crypto.randomUUID()}-${nomeSeguro(file.name)}`;
+  const admin = createAdminSupabase();
+  const up = await admin.storage.from("documentos").upload(caminho, file, { contentType: file.type });
+  if (up.error) {
+    console.error("anexarNovaVersao (upload):", up.error.message);
+    return { erro: "Falha no upload do arquivo." };
+  }
+  const { error: errInsert } = await admin.from("documentos").insert({
+    cliente_id: clienteId,
+    nome: file.name,
+    tipo: antigo.tipo,
+    tipo_id: antigo.tipo_id,
+    departamento: antigo.departamento,
+    competencia: antigo.competencia,
+    caminho_storage: caminho,
+    enviado_por: perfil.id,
+    substitui_id: documentoAntigoId,
+  });
+  if (errInsert) {
+    await admin.storage.from("documentos").remove([caminho]);
+    console.error("anexarNovaVersao (insert):", errInsert.message);
+    return { erro: "Falha ao registrar a nova versão." };
+  }
+  revalidatePath(`/clientes/${clienteId}`);
+  return { ok: true };
+}
+
 export async function gerarLinkDownload(documentoId: string): Promise<ResultadoDownload> {
   const perfil = await getPerfilAtual();
   if (!perfil || !perfil.ativo) return { erro: "Sessão expirada ou conta inativa." };

@@ -1,4 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase/server";
+import { agruparVersoes } from "@/lib/documentos/versoes";
 import { urlDocumento } from "../actions";
 import { BotaoBaixar } from "../BotaoBaixar";
 import { EnviarDocumento } from "./EnviarDocumento";
@@ -11,9 +12,10 @@ export default async function PortalDocumentosPage() {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("documentos")
-    .select("id, nome, tipo, enviado_em, origem")
+    .select("id, nome, tipo, enviado_em, origem, substitui_id")
     .order("enviado_em", { ascending: false });
-  const docs = data ?? [];
+  // RF-060 (Fatia B): o cliente vê só a versão atual (esconde as substituídas).
+  const docs = agruparVersoes(data ?? []).map((g) => g.atual);
 
   return (
     <div className="space-y-4">

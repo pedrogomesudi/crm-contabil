@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.29.0] — 2026-07-19
+
+RF-060 (Fatia B) — versionamento de documentos. **Fecha o RF-060** (GED: taxonomia + versionamento).
+
+### Adicionado
+
+- **Versões de documentos:** a partir de um documento, "Nova versão" envia um arquivo que **substitui** o
+  anterior (herdando tipo/departamento/competência). A listagem do escritório mostra só a **versão atual**, com
+  um selo **"N versões anteriores"** que expande o histórico (baixar cada uma). O **portal do cliente** passa a
+  mostrar só a versão atual — as substituídas ficam guardadas, mas fora da vista do cliente. Migration `0112`
+  (`documentos.substitui_id`).
+
 ## [6.28.0] — 2026-07-19
 
 RF-060 (Fatia A) — taxonomia do GED: catálogo de tipos + eixos departamento/competência + filtros.

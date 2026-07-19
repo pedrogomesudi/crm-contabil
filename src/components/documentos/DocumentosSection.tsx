@@ -5,6 +5,7 @@ import type { Papel } from "@/lib/tipos";
 import { UploadDocumento } from "./UploadDocumento";
 import { DocumentosTabela } from "./DocumentosTabela";
 import { carregarTiposAtivos } from "@/app/(app)/configuracoes/tipos-documento/actions";
+import { agruparVersoes } from "@/lib/documentos/versoes";
 
 // Seção de documentos da ficha do cliente. A lista usa o client com RLS (o
 // usuário só vê documentos de clientes visíveis a ele). Anexar exige papel de
@@ -25,7 +26,7 @@ export async function DocumentosSection({
   const vistos = await ultimosAcessos(clienteId, "documento"); // RF-053: o cliente já viu?
   const { data: documentos, error } = await supabase
     .from("documentos")
-    .select("id, nome, tipo, tipo_id, departamento, competencia, enviado_em, origem")
+    .select("id, nome, tipo, tipo_id, departamento, competencia, enviado_em, origem, substitui_id")
     .eq("cliente_id", clienteId)
     .order("enviado_em", { ascending: false })
     .order("id")
@@ -43,7 +44,7 @@ export async function DocumentosSection({
   const ehAdmin = papel === "admin";
 
   // Achata cada documento (incl. assinatura) num item serializável para a tabela client.
-  const docs = (documentos ?? []).map((d) => {
+  const docsBase = (documentos ?? []).map((d) => {
     const a = porDoc.get(d.id);
     return {
       id: d.id as string,
@@ -61,8 +62,14 @@ export async function DocumentosSection({
             signatarios: (a.assinatura_signatarios ?? []) as { nome: string; papel: string; status: string }[],
           }
         : null,
+      substitui_id: (d.substitui_id as string | null) ?? null,
     };
   });
+  // RF-060 (Fatia B): a lista mostra os atuais; cada um leva suas versões anteriores.
+  const linhas = agruparVersoes(docsBase).map((g) => ({
+    ...g.atual,
+    anteriores: g.anteriores.map((a) => ({ ...a, anteriores: [] })),
+  }));
 
   return (
     <section className="space-y-3 rounded-lg border border-linha bg-white p-4">
@@ -74,9 +81,9 @@ export async function DocumentosSection({
         <p role="alert" className="rounded bg-negativo/10 px-3 py-2 text-sm text-negativo">
           Não foi possível carregar os documentos.
         </p>
-      ) : docs.length > 0 ? (
+      ) : linhas.length > 0 ? (
         <DocumentosTabela
-          docs={docs}
+          docs={linhas}
           clienteId={clienteId}
           clienteNome={clienteNome}
           clienteEmail={clienteEmail}
