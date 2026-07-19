@@ -6,7 +6,61 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeGerenciarDocumentos } from "@/lib/clientes/permissoes";
 import { competenciaParaData } from "@/lib/documentos/taxonomia";
 import { carregarTiposAtivos } from "@/app/(app)/configuracoes/tipos-documento/actions";
+import { escapeLike } from "@/lib/clientes/busca";
+import { agruparVersoes } from "@/lib/documentos/versoes";
+import type { FiltroResolvido } from "@/lib/documentos/busca-metadados";
 import type { EstadoUpload, ResultadoDownload, ResultadoExcluir } from "./estados";
+
+export type DocBusca = {
+  id: string;
+  nome: string;
+  clienteId: string;
+  clienteNome: string;
+  tipo: string | null;
+  departamento: string | null;
+  competencia: string | null;
+  enviado_em: string;
+};
+
+export async function buscarDocumentos(f: FiltroResolvido): Promise<DocBusca[]> {
+  const supabase = await createServerSupabase();
+  let q = supabase
+    .from("documentos")
+    .select(
+      "id, nome, tipo, departamento, competencia, enviado_em, substitui_id, cliente_id, clientes(razao_social)",
+    )
+    .order("enviado_em", { ascending: false })
+    .limit(100);
+  if (f.nome) q = q.ilike("nome", `%${escapeLike(f.nome)}%`);
+  if (f.tipoId) q = q.eq("tipo_id", f.tipoId);
+  if (f.departamento) q = q.eq("departamento", f.departamento);
+  if (f.clienteId) q = q.eq("cliente_id", f.clienteId);
+  if (f.compInicio) q = q.gte("competencia", f.compInicio);
+  if (f.compFim) q = q.lt("competencia", f.compFim);
+  const { data } = await q;
+
+  const linhas = (data ?? []).map((d) => {
+    const cli = d.clientes as unknown as { razao_social: string } | null;
+    return {
+      id: d.id as string,
+      nome: d.nome as string,
+      substitui_id: (d.substitui_id as string | null) ?? null,
+      clienteId: d.cliente_id as string,
+      clienteNome: cli?.razao_social ?? "—",
+      tipo: (d.tipo as string | null) ?? null,
+      departamento: (d.departamento as string | null) ?? null,
+      competencia: (d.competencia as string | null) ?? null,
+      enviado_em: d.enviado_em as string,
+    };
+  });
+  // Só versões atuais entre os resultados (as substituídas herdam a taxonomia, então ambas
+  // aparecem quando o filtro casa — agruparVersoes mantém só a atual).
+  return agruparVersoes(linhas).map((g) => {
+    const { substitui_id: _s, ...rest } = g.atual;
+    void _s;
+    return rest;
+  });
+}
 
 const TIPOS_OK = ["application/pdf", "image/png", "image/jpeg"];
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
