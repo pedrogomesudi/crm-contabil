@@ -105,10 +105,18 @@ export default async function FichaClientePage({
   ]);
   const filiais = (filiaisRows ?? []).map((f) => ({ id: f.id as string, razao_social: f.razao_social as string }));
   const relacionadas = consolidarRelacionadas(id, [
-    { tipo: "grupo", empresas: (gruposMatesRows ?? []).map((g) => ({ clienteId: g.id as string, nome: g.razao_social as string })) },
+    {
+      tipo: "grupo",
+      empresas: (gruposMatesRows ?? []).map((g) => ({ clienteId: g.id as string, nome: g.razao_social as string })),
+    },
     { tipo: "filial", empresas: filiais.map((f) => ({ clienteId: f.id, nome: f.razao_social })) },
     ...(matrizRow
-      ? [{ tipo: "matriz" as const, empresas: [{ clienteId: matrizRow.id as string, nome: matrizRow.razao_social as string }] }]
+      ? [
+          {
+            tipo: "matriz" as const,
+            empresas: [{ clienteId: matrizRow.id as string, nome: matrizRow.razao_social as string }],
+          },
+        ]
       : []),
   ]);
 
@@ -321,9 +329,14 @@ export default async function FichaClientePage({
                 podeEditar={podeCriarCliente(papel)}
                 grupo={grupoRow ? { id: grupoRow.id as string, nome: grupoRow.nome as string } : null}
                 gruposDisponiveis={(gruposRows ?? []).map((g) => ({ id: g.id as string, nome: g.nome as string }))}
-                matriz={matrizRow ? { id: matrizRow.id as string, razao_social: matrizRow.razao_social as string } : null}
+                matriz={
+                  matrizRow ? { id: matrizRow.id as string, razao_social: matrizRow.razao_social as string } : null
+                }
                 filiais={filiais}
-                candidatosMatriz={(candMatrizRows ?? []).map((c) => ({ id: c.id as string, razao_social: c.razao_social as string }))}
+                candidatosMatriz={(candMatrizRows ?? []).map((c) => ({
+                  id: c.id as string,
+                  razao_social: c.razao_social as string,
+                }))}
                 relacionadas={relacionadas}
               />
             )}

@@ -25,11 +25,7 @@ export async function criarGrupo(clienteId: string, nome: string): Promise<{ err
 export async function definirMatriz(clienteId: string, matrizId: string | null): Promise<{ erro?: string }> {
   const supabase = await createServerSupabase();
   if (matrizId) {
-    const { data: alvo } = await supabase
-      .from("clientes")
-      .select("matriz_id")
-      .eq("id", matrizId)
-      .maybeSingle();
+    const { data: alvo } = await supabase.from("clientes").select("matriz_id").eq("id", matrizId).maybeSingle();
     const erro = validarNovaMatriz(clienteId, matrizId, alvo?.matriz_id != null);
     if (erro) return { erro };
   }

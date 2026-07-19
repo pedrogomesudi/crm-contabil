@@ -26,11 +26,7 @@ export function consolidarRelacionadas(
 }
 
 // Retorna a mensagem de erro (ou null) ao definir `matrizId` como matriz de `clienteId`.
-export function validarNovaMatriz(
-  clienteId: string,
-  matrizId: string,
-  matrizEhFilial: boolean,
-): string | null {
+export function validarNovaMatriz(clienteId: string, matrizId: string, matrizEhFilial: boolean): string | null {
   if (matrizId === clienteId) return "Um cliente não pode ser a própria matriz.";
   if (matrizEhFilial) return "O cliente escolhido já é uma filial; escolha a matriz dele.";
   return null;

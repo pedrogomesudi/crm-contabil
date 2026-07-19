@@ -5,7 +5,13 @@ describe("consolidarRelacionadas", () => {
   it("dedup por clienteId e acumula tipos", () => {
     const r = consolidarRelacionadas("self", [
       { tipo: "grupo", empresas: [{ clienteId: "b", nome: "B" }] },
-      { tipo: "socio", empresas: [{ clienteId: "b", nome: "B" }, { clienteId: "c", nome: "C" }] },
+      {
+        tipo: "socio",
+        empresas: [
+          { clienteId: "b", nome: "B" },
+          { clienteId: "c", nome: "C" },
+        ],
+      },
     ]);
     expect(r).toEqual([
       { clienteId: "b", nome: "B", tipos: ["grupo", "socio"] },
@@ -15,7 +21,13 @@ describe("consolidarRelacionadas", () => {
 
   it("exclui o próprio cliente", () => {
     const r = consolidarRelacionadas("self", [
-      { tipo: "grupo", empresas: [{ clienteId: "self", nome: "Eu" }, { clienteId: "b", nome: "B" }] },
+      {
+        tipo: "grupo",
+        empresas: [
+          { clienteId: "self", nome: "Eu" },
+          { clienteId: "b", nome: "B" },
+        ],
+      },
     ]);
     expect(r).toEqual([{ clienteId: "b", nome: "B", tipos: ["grupo"] }]);
   });
