@@ -43,6 +43,7 @@ import { ContratosSection } from "@/components/financeiro/ContratosSection";
 import { OptOutCobranca } from "@/components/clientes/OptOutCobranca";
 import { OptOutLegalizacao } from "@/components/clientes/OptOutLegalizacao";
 import { VinculosSection } from "@/components/clientes/VinculosSection";
+import { FlagsFiscaisSection } from "@/components/clientes/FlagsFiscaisSection";
 import { consolidarRelacionadas } from "@/lib/clientes/vinculos";
 import { carregarCamposAtivos } from "@/app/(app)/configuracoes/campos-custom/actions";
 import { ObrigacoesCliente } from "./ObrigacoesCliente";
@@ -75,7 +76,7 @@ export default async function FichaClientePage({
   const { data: cliente } = await supabase
     .from("clientes")
     .select(
-      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, telefone_ddi, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados, comunicar_legalizacao, grupo_id, matriz_id, campos_custom",
+      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, telefone_ddi, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados, comunicar_legalizacao, grupo_id, matriz_id, campos_custom, flag_tem_folha, flag_contribui_icms, flag_contribui_iss",
     )
     .eq("id", id)
     .maybeSingle();
@@ -154,6 +155,30 @@ export default async function FichaClientePage({
 
   // RF-027: campos customizáveis ativos do escritório (para o formulário de cadastro).
   const camposCustom = await carregarCamposAtivos();
+
+  // Flags fiscais: valor explícito (tri-state) + o que a derivação daria hoje.
+  const { data: finFiscal } = await supabase
+    .from("clientes_financeiro")
+    .select("qtd_funcionarios")
+    .eq("cliente_id", id)
+    .maybeSingle();
+  const cf = cliente as {
+    inscricao_estadual: string | null;
+    inscricao_municipal: string | null;
+    flag_tem_folha: boolean | null;
+    flag_contribui_icms: boolean | null;
+    flag_contribui_iss: boolean | null;
+  };
+  const derivadosFiscais = {
+    folha: ((finFiscal?.qtd_funcionarios as number | null) ?? 0) > 0,
+    icms: !!cf.inscricao_estadual,
+    iss: !!cf.inscricao_municipal,
+  };
+  const valoresFiscais = {
+    folha: cf.flag_tem_folha ?? null,
+    icms: cf.flag_contribui_icms ?? null,
+    iss: cf.flag_contribui_iss ?? null,
+  };
 
   // E-mail integrado (RF-051): histórico + o que dá para anexar + templates ativos.
   const emails = await listarEmails(id);
@@ -376,6 +401,14 @@ export default async function FichaClientePage({
                 }))}
                 relacionadas={relacionadas}
                 socios={socios}
+              />
+            )}
+            {podeCriarCliente(papel) && (
+              <FlagsFiscaisSection
+                clienteId={id}
+                podeEditar={podeCriarCliente(papel)}
+                valores={valoresFiscais}
+                derivados={derivadosFiscais}
               />
             )}
             {podeLegalizacao && (
