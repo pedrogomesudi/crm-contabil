@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.24.0] — 2026-07-19
+
+RF-026 (Fatia B) — sócios em comum no cadastro do cliente. **Fecha o RF-026** (vínculos entre entidades).
+
+### Adicionado
+
+- **Sócios do cliente e "sócios em comum":** na seção "Vínculos" da aba cadastro, o escritório cadastra
+  **sócios** (nome + CPF) e liga ao cliente. Quando o mesmo CPF aparece em mais de um cliente, cada sócio
+  mostra **"também em: X, Y"** (com link) e as empresas entram na lista de **empresas relacionadas** como
+  "mesmo sócio". Migration `0108` (`socio`, `cliente_socio`, RLS por papel).
+
 ## [6.23.0] — 2026-07-19
 
 RF-026 (Fatia A) — vínculos entre entidades no cadastro do cliente: grupo econômico e matriz/filial.

@@ -57,11 +57,7 @@ export async function adicionarSocio(clienteId: string, nome: string, cpf: strin
 
 export async function removerSocio(clienteId: string, socioId: string): Promise<{ erro?: string }> {
   const supabase = await createServerSupabase();
-  const { error } = await supabase
-    .from("cliente_socio")
-    .delete()
-    .eq("cliente_id", clienteId)
-    .eq("socio_id", socioId);
+  const { error } = await supabase.from("cliente_socio").delete().eq("cliente_id", clienteId).eq("socio_id", socioId);
   if (error) return { erro: "Não foi possível remover o sócio (sem permissão?)." };
   rev(clienteId);
   return {};
