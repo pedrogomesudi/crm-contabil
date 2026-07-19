@@ -24,6 +24,7 @@ export default async function ComercialPage() {
           { href: "/comercial/propostas", label: "Propostas" },
           { href: "/comercial/metricas", label: "Métricas do funil" },
           { href: "/comercial/precificacao", label: "Precificação" },
+          { href: "/comercial/receita", label: "Receita" },
         ]}
       />
       <QuadroComercial oportunidades={oportunidades} usuarios={usuarios} etapas={etapas} agora={agora} />

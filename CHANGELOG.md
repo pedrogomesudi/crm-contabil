@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.17.0] — 2026-07-18
+
+RF-008 — receita por origem. **Fecha a RF-008.** Um relatório de quanto cada fonte trouxe de receita.
+
+### Adicionado
+
+- **Comercial → Receita** (`/comercial/receita`): por origem da oportunidade, a quantidade de ganhos, o
+  **valor ganho** e o valor de **proposta aceita** (mensal e único, separados). Seletor de período
+  navegável (mês/trimestre/semestre/ano) + **"Todo o histórico"**, com rodapé de totais.
+
 ## [6.16.0] — 2026-07-18
 
 RF-003 — precificação na proposta. **Fecha a RF-003.** A calculadora agora alimenta a proposta.

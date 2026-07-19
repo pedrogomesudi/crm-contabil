@@ -34,6 +34,7 @@ const POR_SUBNAV = [
   "/comercial/propostas",
   "/comercial/metricas",
   "/comercial/precificacao",
+  "/comercial/receita",
 ];
 // Financeiro e Configurações mantêm hub (16 telas cada): explodir no menu somaria 32 itens.
 const POR_HUB = ["/financeiro", "/configuracoes", "/usuarios", "/lgpd", "/integracoes"];
