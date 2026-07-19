@@ -51,6 +51,7 @@ export function EtapaLinha({ etapa, hoje }: { etapa: Etapa; hoje: string }) {
     const r = await atualizarEtapa(etapa.id, patch);
     setOcupado(false);
     if (r.erro) return alert(r.erro);
+    if (r.aviso) alert(r.aviso);
     router.refresh();
   }
   async function enviar(form: FormData) {
