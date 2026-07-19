@@ -119,10 +119,7 @@ async function avisarClienteEtapa(etapaId: string): Promise<string | null> {
     .select("razao_social, email, telefone, telefone_ddi, comunicar_legalizacao")
     .eq("id", proc.cliente_id as string)
     .maybeSingle();
-  const { data: cfg } = await admin
-    .from("legalizacao_config")
-    .select("canal, ativo, assunto, template")
-    .maybeSingle();
+  const { data: cfg } = await admin.from("legalizacao_config").select("canal, ativo, assunto, template").maybeSingle();
   if (!cli || !cfg) return null;
 
   const gateAviso = deveAvisar(
