@@ -248,11 +248,15 @@ export async function definirStatusProposta(
 ): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
-  const { data: pr } = await supabase.from("proposta").select("oportunidade_id").eq("id", id).maybeSingle();
-  const { error } = await supabase
+  const { data: pr } = await supabase
     .from("proposta")
-    .update({ status, atualizado_em: new Date().toISOString() })
-    .eq("id", id);
+    .select("oportunidade_id, enviada_em")
+    .eq("id", id)
+    .maybeSingle();
+  const patch: Record<string, unknown> = { status, atualizado_em: new Date().toISOString() };
+  // D+0 do follow-up: grava só na 1ª transição para 'enviada' (não reinicia o relógio se reenviada).
+  if (status === "enviada" && !pr?.enviada_em) patch.enviada_em = new Date().toISOString();
+  const { error } = await supabase.from("proposta").update(patch).eq("id", id);
   if (error) return { erro: "Falha ao salvar status." };
   if (pr) {
     const opId = pr.oportunidade_id as string;
