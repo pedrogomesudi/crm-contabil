@@ -42,6 +42,8 @@ import { BotaoAtualizarReceita } from "@/components/clientes/BotaoAtualizarRecei
 import { ContratosSection } from "@/components/financeiro/ContratosSection";
 import { OptOutCobranca } from "@/components/clientes/OptOutCobranca";
 import { OptOutLegalizacao } from "@/components/clientes/OptOutLegalizacao";
+import { VinculosSection } from "@/components/clientes/VinculosSection";
+import { consolidarRelacionadas } from "@/lib/clientes/vinculos";
 import { ObrigacoesCliente } from "./ObrigacoesCliente";
 import { listarInstancias } from "@/app/(app)/obrigacoes/actions";
 import { podeGerenciarMatriz } from "@/lib/obrigacoes/permissoes";
@@ -72,11 +74,51 @@ export default async function FichaClientePage({
   const { data: cliente } = await supabase
     .from("clientes")
     .select(
-      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, telefone_ddi, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados, comunicar_legalizacao",
+      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, telefone_ddi, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados, comunicar_legalizacao, grupo_id, matriz_id",
     )
     .eq("id", id)
     .maybeSingle();
   if (!cliente) notFound();
+
+  // RF-026: vínculos (grupo econômico + matriz/filial).
+  const cli = cliente as { grupo_id: string | null; matriz_id: string | null };
+  const [
+    { data: grupoRow },
+    { data: gruposRows },
+    { data: filiaisRows },
+    { data: matrizRow },
+    { data: gruposMatesRows },
+    { data: candMatrizRows },
+  ] = await Promise.all([
+    cli.grupo_id
+      ? supabase.from("grupo_economico").select("id, nome").eq("id", cli.grupo_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.from("grupo_economico").select("id, nome").order("nome"),
+    supabase.from("clientes").select("id, razao_social").eq("matriz_id", id),
+    cli.matriz_id
+      ? supabase.from("clientes").select("id, razao_social").eq("id", cli.matriz_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    cli.grupo_id
+      ? supabase.from("clientes").select("id, razao_social").eq("grupo_id", cli.grupo_id)
+      : Promise.resolve({ data: [] as { id: string; razao_social: string }[] }),
+    supabase.from("clientes").select("id, razao_social").is("matriz_id", null).neq("id", id).order("razao_social"),
+  ]);
+  const filiais = (filiaisRows ?? []).map((f) => ({ id: f.id as string, razao_social: f.razao_social as string }));
+  const relacionadas = consolidarRelacionadas(id, [
+    {
+      tipo: "grupo",
+      empresas: (gruposMatesRows ?? []).map((g) => ({ clienteId: g.id as string, nome: g.razao_social as string })),
+    },
+    { tipo: "filial", empresas: filiais.map((f) => ({ clienteId: f.id, nome: f.razao_social })) },
+    ...(matrizRow
+      ? [
+          {
+            tipo: "matriz" as const,
+            empresas: [{ clienteId: matrizRow.id as string, nome: matrizRow.razao_social as string }],
+          },
+        ]
+      : []),
+  ]);
 
   // E-mail integrado (RF-051): histórico + o que dá para anexar + templates ativos.
   const emails = await listarEmails(id);
@@ -279,6 +321,23 @@ export default async function FichaClientePage({
                 modelos={(modelosLeg ?? []).map((m) => ({ id: m.id as string, nome: m.nome as string }))}
                 podeGerenciar={podeLegalizacao}
                 hoje={hoje}
+              />
+            )}
+            {podeCriarCliente(papel) && (
+              <VinculosSection
+                clienteId={id}
+                podeEditar={podeCriarCliente(papel)}
+                grupo={grupoRow ? { id: grupoRow.id as string, nome: grupoRow.nome as string } : null}
+                gruposDisponiveis={(gruposRows ?? []).map((g) => ({ id: g.id as string, nome: g.nome as string }))}
+                matriz={
+                  matrizRow ? { id: matrizRow.id as string, razao_social: matrizRow.razao_social as string } : null
+                }
+                filiais={filiais}
+                candidatosMatriz={(candMatrizRows ?? []).map((c) => ({
+                  id: c.id as string,
+                  razao_social: c.razao_social as string,
+                }))}
+                relacionadas={relacionadas}
               />
             )}
             {podeLegalizacao && (

@@ -8,6 +8,23 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.23.0] — 2026-07-19
+
+RF-026 (Fatia A) — vínculos entre entidades no cadastro do cliente: grupo econômico e matriz/filial.
+
+### Adicionado
+
+- **Vínculos do cliente (grupo econômico + matriz/filial):** nova seção "Vínculos" na aba cadastro. O
+  escritório vincula o cliente a um **grupo econômico** (criando o grupo na hora ou escolhendo um existente) e
+  marca **matriz/filial** entre clientes. A seção lista as **empresas relacionadas** (mesmo grupo, matriz,
+  filiais) com link para cada uma. Migration `0107` (`grupo_economico`, colunas `clientes.grupo_id`/`matriz_id`
+  com RLS por papel).
+
+### Melhorado
+
+- **Aviso de CPF/CNPJ duplicado:** ao cadastrar um cliente com documento já existente, a mensagem passa a
+  **citar o nome** do cliente existente e oferece um **link** para abri-lo (antes era só texto).
+
 ## [6.22.0] — 2026-07-19
 
 RF-013 — comunicação automática da legalização. **Fecha a RF-013** e o domínio Onboarding/legalização.
