@@ -24,7 +24,12 @@ export default async function PrecificacaoCalcPage() {
         complexidades={view.complexidades.map((c) => ({ id: c.id, nome: c.nome }))}
         servicos={view.servicos
           .filter((s) => s.ativo)
-          .map((s) => ({ id: s.id, nome: s.nome, valor: s.valor, recorrencia: s.recorrencia }))}
+          .map((s) => ({
+            id: s.id,
+            nome: s.nome,
+            valor: s.valor,
+            recorrencia: s.recorrencia === "mensal" ? "mensal" : "unico",
+          }))}
       />
     </Container>
   );

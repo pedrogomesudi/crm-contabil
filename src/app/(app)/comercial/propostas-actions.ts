@@ -4,6 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { totaisProposta, type ItemRecorrencia } from "@/lib/comercial/proposta";
+import type { SnapshotPreco } from "@/lib/comercial/precificacao";
 
 export type PropostaStatus = "rascunho" | "enviada" | "aceita" | "recusada";
 export type PropostaItemView = {
@@ -42,6 +43,7 @@ export type PropostaView = {
   itens: PropostaItemView[];
   pagamento: Pagamento;
   responsavel: Responsavel;
+  precificacao: SnapshotPreco | null;
 };
 export type ItemInput = { descricao: string; valor: number; recorrencia: ItemRecorrencia };
 
@@ -91,7 +93,7 @@ export async function obterProposta(id: string): Promise<PropostaView | null> {
   const { data: pr } = await supabase
     .from("proposta")
     .select(
-      "id, numero, status, validade, observacoes, oportunidade_id, responsavel_nome, responsavel_email, responsavel_telefone",
+      "id, numero, status, validade, observacoes, oportunidade_id, responsavel_nome, responsavel_email, responsavel_telefone, precificacao",
     )
     .eq("id", id)
     .maybeSingle();
@@ -140,6 +142,7 @@ export async function obterProposta(id: string): Promise<PropostaView | null> {
       email: (pr.responsavel_email as string | null) ?? null,
       telefone: (pr.responsavel_telefone as string | null) ?? null,
     },
+    precificacao: (pr.precificacao as SnapshotPreco | null) ?? null,
   };
 }
 
@@ -199,21 +202,27 @@ export async function criarProposta(oportunidadeId: string): Promise<{ id?: stri
 
 export async function salvarProposta(
   id: string,
-  dados: { validade: string | null; observacoes: string | null; itens: ItemInput[]; responsavel: Responsavel },
+  dados: {
+    validade: string | null;
+    observacoes: string | null;
+    itens: ItemInput[];
+    responsavel: Responsavel;
+    precificacao?: unknown;
+  },
 ): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
-  const { error: e1 } = await supabase
-    .from("proposta")
-    .update({
-      validade: dados.validade,
-      observacoes: dados.observacoes,
-      responsavel_nome: dados.responsavel.nome,
-      responsavel_email: dados.responsavel.email,
-      responsavel_telefone: dados.responsavel.telefone,
-      atualizado_em: new Date().toISOString(),
-    })
-    .eq("id", id);
+  const patch: Record<string, unknown> = {
+    validade: dados.validade,
+    observacoes: dados.observacoes,
+    responsavel_nome: dados.responsavel.nome,
+    responsavel_email: dados.responsavel.email,
+    responsavel_telefone: dados.responsavel.telefone,
+    atualizado_em: new Date().toISOString(),
+  };
+  // Só grava o snapshot quando vier — um save normal não apaga o snapshot existente.
+  if (dados.precificacao !== undefined) patch.precificacao = dados.precificacao;
+  const { error: e1 } = await supabase.from("proposta").update(patch).eq("id", id);
   if (e1) return { erro: "Falha ao salvar." };
   await supabase.from("proposta_item").delete().eq("proposta_id", id);
   const linhas = dados.itens

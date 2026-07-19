@@ -25,6 +25,7 @@ const proposta: PropostaView = {
     documento: "00.000.000/0001-00",
   },
   responsavel: { nome: null, email: null, telefone: null },
+  precificacao: null,
 };
 
 describe("DocumentoProposta", () => {

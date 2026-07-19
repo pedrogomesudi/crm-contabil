@@ -8,6 +8,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.16.0] — 2026-07-18
+
+RF-003 — precificação na proposta. **Fecha a RF-003.** A calculadora agora alimenta a proposta.
+
+### Adicionado
+
+- **Calcular honorários na proposta:** no editor da proposta, o botão abre a calculadora; ao confirmar,
+  gera o item **"Honorários contábeis"** (com desconto) e uma linha por serviço adicional marcado, e salva o
+  **snapshot** do cálculo na proposta.
+- **Recalcular:** o botão vira "Recalcular honorários" quando já há um cálculo — reabre a calculadora
+  pré-preenchida com os parâmetros anteriores e **substitui** os itens gerados (sem duplicar), preservando
+  os itens adicionados à mão. Persiste entre sessões (`proposta.precificacao`).
+
+### Mudado
+
+- **Desconto e piso passam a incidir só no honorário;** os serviços entram depois, sem desconto. A
+  calculadora avulsa reflete a mesma regra (antes o desconto incidia sobre o recorrente com os serviços
+  mensais embutidos).
+
 ## [6.15.0] — 2026-07-18
 
 RF-003 — calculadora de precificação (avulsa). Um simulador de honorários no Comercial, consumindo as

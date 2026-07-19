@@ -4,6 +4,7 @@ import {
   multiplicador,
   calcularHonorario,
   paraConfigPreco,
+  itensProposta,
   type ConfigPreco,
 } from "@/lib/comercial/precificacao";
 
@@ -56,7 +57,7 @@ const cfg: ConfigPreco = {
 };
 
 describe("calcularHonorario", () => {
-  it("compõe base + acréscimos × complexidade + serviços − desconto, com piso depois", () => {
+  it("compõe base + acréscimos × complexidade − desconto (só no honorário) + serviços depois", () => {
     const r = calcularHonorario(
       {
         regime: "Simples",
@@ -69,9 +70,9 @@ describe("calcularHonorario", () => {
       },
       cfg,
     );
-    // base 500 + fat 150 + func (8-5)*25=75 + notas 0 = 725; ×1.2 = 870; + folha 200 = 1070;
-    // desconto 10% = 107 → 963; piso 400 não incide. unico = 900.
-    expect(r.mensal).toBeCloseTo(963);
+    // base 500 + fat 150 + func (8-5)*25=75 + notas 0 = 725; ×1.2 = 870; desconto 10% = 87 → 783;
+    // piso 400 ok; + folha 200 (depois, sem desconto) = 983. unico = 900.
+    expect(r.mensal).toBeCloseTo(983);
     expect(r.unico).toBeCloseTo(900);
   });
   it("desconto respeita o teto e o piso é o chão final", () => {
@@ -141,5 +142,32 @@ describe("paraConfigPreco", () => {
     });
     expect(cfg.faturamento.modo).toBe("faixas"); // modo desconhecido → faixas
     expect(cfg.servicos[0]!.recorrencia).toBe("unico"); // ≠ 'mensal' → unico
+  });
+});
+
+describe("itensProposta", () => {
+  const servicos = [
+    { id: "folha", nome: "Folha", valor: 200, recorrencia: "mensal" as const },
+    { id: "abertura", nome: "Abertura", valor: 900, recorrencia: "unico" as const },
+  ];
+  it("gera o honorário consolidado (com desconto) + uma linha por serviço", () => {
+    const { itens, snapshot } = itensProposta(
+      {
+        regime: "Simples",
+        faturamento: 120000,
+        funcionarios: 8,
+        notas: 0,
+        complexidadeId: "media",
+        servicoIds: ["folha", "abertura"],
+        descontoPct: 10,
+      },
+      cfg,
+      servicos,
+    );
+    // honorário (sem serviços) = 725×1.2=870; −10% = 783; piso 400 ok.
+    expect(itens[0]).toEqual({ descricao: "Honorários contábeis", valor: 783, recorrencia: "mensal" });
+    expect(itens).toContainEqual({ descricao: "Folha", valor: 200, recorrencia: "mensal" });
+    expect(itens).toContainEqual({ descricao: "Abertura", valor: 900, recorrencia: "unico" });
+    expect(snapshot.mensal).toBeCloseTo(983); // honorário + serviços mensais
   });
 });

@@ -6,6 +6,14 @@ import { useRouter } from "next/navigation";
 import { salvarProposta, definirStatusProposta, type PropostaView, type PropostaStatus } from "../../propostas-actions";
 import { gerarDocumentoProposta } from "./gerar-actions";
 import { totaisProposta, type ItemRecorrencia } from "@/lib/comercial/proposta";
+import {
+  itensProposta,
+  type ConfigPreco,
+  type Parametros,
+  type ServicoView,
+  type SnapshotPreco,
+} from "@/lib/comercial/precificacao";
+import { Calculadora } from "../../precificacao/Calculadora";
 import { Botao } from "@/components/ui/Botao";
 import { Voltar } from "@/components/ui/Voltar";
 
@@ -21,12 +29,20 @@ const STATUS: { v: PropostaStatus; l: string }[] = [
 export function EditorProposta({
   proposta,
   responsavelPadrao,
+  config,
+  complexidades,
+  servicos,
 }: {
   proposta: PropostaView;
   responsavelPadrao: { nome: string; email: string };
+  config: ConfigPreco;
+  complexidades: { id: string; nome: string }[];
+  servicos: ServicoView[];
 }) {
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
+  const [calcAberta, setCalcAberta] = useState(false);
+  const [snapshot, setSnapshot] = useState<SnapshotPreco | null>(proposta.precificacao);
   const [validade, setValidade] = useState(proposta.validade ?? "");
   const [observacoes, setObservacoes] = useState(proposta.observacoes ?? "");
   const [respNome, setRespNome] = useState(proposta.responsavel.nome ?? responsavelPadrao.nome);
@@ -49,10 +65,27 @@ export function EditorProposta({
       observacoes: observacoes || null,
       itens,
       responsavel: { nome: respNome || null, email: respEmail || null, telefone: respTelefone || null },
+      precificacao: snapshot ?? undefined,
     });
     setOcupado(false);
     if (r.erro) return alert(r.erro);
     router.refresh();
+  }
+  function aplicarPrecificacao(params: Parametros, servs: ServicoView[]) {
+    const { itens: novos, snapshot: snap } = itensProposta(params, config, servs);
+    // Descrições geradas pelo cálculo ANTERIOR (do snapshot) — para substituir, não duplicar.
+    // Itens que o usuário adicionou à mão não entram aqui e são preservados.
+    const anteriores = new Set<string>();
+    if (snapshot) {
+      anteriores.add("Honorários contábeis");
+      for (const s of servs) if (snapshot.params.servicoIds.includes(s.id)) anteriores.add(s.nome);
+    }
+    setItens((atual) => [
+      ...atual.filter((i) => i.descricao.trim() && !anteriores.has(i.descricao.trim())),
+      ...novos.map((n) => ({ descricao: n.descricao, valor: n.valor, recorrencia: n.recorrencia })),
+    ]);
+    setSnapshot(snap);
+    setCalcAberta(false);
   }
   async function gerar() {
     setOcupado(true);
@@ -154,13 +187,22 @@ export function EditorProposta({
             </button>
           </div>
         ))}
-        <button
-          type="button"
-          onClick={() => setItens([...itens, { descricao: "", valor: 0, recorrencia: "mensal" }])}
-          className="text-xs text-verde underline"
-        >
-          + item
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setItens([...itens, { descricao: "", valor: 0, recorrencia: "mensal" }])}
+            className="text-xs text-verde underline"
+          >
+            + item
+          </button>
+          <button
+            type="button"
+            onClick={() => setCalcAberta(true)}
+            className="rounded-lg border border-verde px-2 py-1 text-xs text-verde"
+          >
+            {snapshot ? "Recalcular honorários" : "Calcular honorários"}
+          </button>
+        </div>
         <p className="pt-1 text-sm text-texto">
           Total: <span className="font-medium tabular-nums">Mensal {brl(t.mensal)}</span> ·{" "}
           <span className="font-medium tabular-nums">Único {brl(t.unico)}</span>
@@ -223,6 +265,26 @@ export function EditorProposta({
           Salvar
         </Botao>
       </div>
+
+      {calcAberta && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 p-4">
+          <div className="w-full max-w-3xl space-y-3 rounded-2xl bg-creme p-5">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-sm font-semibold text-texto">Calcular honorários</h3>
+              <button type="button" onClick={() => setCalcAberta(false)} className="text-sm text-cinza underline">
+                Fechar
+              </button>
+            </div>
+            <Calculadora
+              config={config}
+              complexidades={complexidades}
+              servicos={servicos}
+              onUsar={aplicarPrecificacao}
+              inicial={snapshot?.params}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
