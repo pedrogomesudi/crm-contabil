@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.31.0] — 2026-07-19
+
+RF-056 — portal do cliente como PWA instalável. **Fecha o RF-056** (e o RF-055 já estava concluído).
+
+### Adicionado
+
+- **Portal instalável (PWA):** o portal do cliente agora pode ser "adicionado à tela inicial" e abre como app
+  (standalone), com ícone e cor da marca. Inclui manifest escopado a `/portal`, ícones (192/512 + maskable),
+  service worker mínimo e uma página de **offline** (`/portal/offline`) quando a rede cai. Os dados seguem
+  online (sem cache offline). Sem migration.
+
 ## [6.30.0] — 2026-07-19
 
 Flags fiscais explícitas no cadastro. **Fecha o domínio Cadastro do cliente.**

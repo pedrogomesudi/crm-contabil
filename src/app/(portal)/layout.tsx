@@ -4,6 +4,13 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { ehCliente } from "@/lib/portal/permissoes";
 import { sair } from "@/app/login/actions";
+import { RegistrarServiceWorker } from "@/components/portal/RegistrarServiceWorker";
+
+export const metadata = {
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, statusBarStyle: "default" as const, title: "Portal" },
+};
+export const viewport = { themeColor: "#0FA968" };
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const perfil = await getPerfilAtual();
@@ -31,6 +38,7 @@ export default async function PortalLayout({ children }: { children: React.React
 
   return (
     <div className="min-h-screen bg-creme">
+      <RegistrarServiceWorker />
       <header className="border-b border-linha bg-white">
         <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-2 p-4">
           <div>
