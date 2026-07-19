@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.18.0] — 2026-07-18
+
+RF-005 — contrato de honorários a partir da proposta. **Fecha a RF-005.** A proposta ganha a ponte até o
+contrato assinado.
+
+### Adicionado
+
+- **Proposta → Contrato de honorários:** um cartão guiado no editor da proposta com os três passos —
+  **Converter em cliente → Gerar contrato → Enviar para assinatura** — cada um com seu status e um link para
+  a tela que já resolve o passo. O passo de assinatura mostra o status por extenso (enviado/assinado/
+  recusado); quando tudo está feito, o cartão indica "Contrato de honorários assinado". Reusa a geração de
+  contrato e a assinatura eletrônica (Clicksign) já existentes no cliente.
+
 ## [6.17.0] — 2026-07-18
 
 RF-008 — receita por origem. **Fecha a RF-008.** Um relatório de quanto cada fonte trouxe de receita.
