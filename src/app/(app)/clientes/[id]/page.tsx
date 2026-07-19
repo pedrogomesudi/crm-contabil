@@ -44,6 +44,7 @@ import { OptOutCobranca } from "@/components/clientes/OptOutCobranca";
 import { OptOutLegalizacao } from "@/components/clientes/OptOutLegalizacao";
 import { VinculosSection } from "@/components/clientes/VinculosSection";
 import { consolidarRelacionadas } from "@/lib/clientes/vinculos";
+import { carregarCamposAtivos } from "@/app/(app)/configuracoes/campos-custom/actions";
 import { ObrigacoesCliente } from "./ObrigacoesCliente";
 import { listarInstancias } from "@/app/(app)/obrigacoes/actions";
 import { podeGerenciarMatriz } from "@/lib/obrigacoes/permissoes";
@@ -74,7 +75,7 @@ export default async function FichaClientePage({
   const { data: cliente } = await supabase
     .from("clientes")
     .select(
-      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, telefone_ddi, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados, comunicar_legalizacao, grupo_id, matriz_id",
+      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, telefone_ddi, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados, comunicar_legalizacao, grupo_id, matriz_id, campos_custom",
     )
     .eq("id", id)
     .maybeSingle();
@@ -150,6 +151,9 @@ export default async function FichaClientePage({
       : []),
     { tipo: "socio", empresas: empresasSocio },
   ]);
+
+  // RF-027: campos customizáveis ativos do escritório (para o formulário de cadastro).
+  const camposCustom = await carregarCamposAtivos();
 
   // E-mail integrado (RF-051): histórico + o que dá para anexar + templates ativos.
   const emails = await listarEmails(id);
@@ -344,6 +348,8 @@ export default async function FichaClientePage({
               cliente={cliente as ClienteDefaults}
               modo="editar"
               contadorEditavel={contadorEditavel}
+              camposCustom={camposCustom}
+              valoresCustom={(cliente as { campos_custom?: Record<string, unknown> }).campos_custom ?? {}}
             />
             {podeCriarCliente(papel) && (
               <LegalizacaoSection

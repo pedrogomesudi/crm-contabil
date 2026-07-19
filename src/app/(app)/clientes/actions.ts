@@ -13,6 +13,21 @@ import { ehContadorValido } from "@/lib/clientes/contadores";
 import { podeExcluirCliente } from "@/lib/clientes/permissoes";
 import { normalizarExtensaoFinanceira } from "@/lib/financeiro/extensaoCliente";
 import type { EstadoCliente, EstadoHonorario } from "./estados";
+import { carregarCamposAtivos } from "@/app/(app)/configuracoes/campos-custom/actions";
+import { validarCampos } from "@/lib/clientes/campos-custom";
+
+// Lê os valores dos campos customizados do form e valida contra o catálogo ativo.
+// Fatia A: `faltando` (obrigatórios vazios) é ignorado — a obrigatoriedade entra na Fatia B.
+async function lerCamposCustom(
+  formData: FormData,
+): Promise<{ valores: Record<string, unknown> } | { erro: string }> {
+  const defs = await carregarCamposAtivos();
+  const crus: Record<string, string> = {};
+  for (const d of defs) crus[d.id] = String(formData.get(`custom_${d.id}`) ?? "");
+  const r = validarCampos(defs, crus);
+  if ("erro" in r) return { erro: r.erro };
+  return { valores: r.valores };
+}
 
 // Normaliza TODA string vazia para null (campos uuid/date/text opcionais). Os
 // obrigatórios (razao_social/cpf_cnpj) nunca são "" (min(1)); enums nunca são "".
@@ -85,6 +100,9 @@ export async function criarCliente(
     return { erro: "Contador selecionado é inválido." };
   }
 
+  const cc = await lerCamposCustom(formData);
+  if ("erro" in cc) return { erro: cc.erro };
+
   const supabase = await createServerSupabase();
   // status não entra no payload de criação (DB default 'ativo'); criado_por e
   // contador_id (p/ contador) são forçados pelo trigger no banco.
@@ -96,6 +114,7 @@ export async function criarCliente(
       ...payload,
       endereco: montarEndereco(formData),
       representante: montarRepresentante(formData),
+      campos_custom: cc.valores,
     })
     .select("id");
   if (error) {
@@ -153,6 +172,9 @@ export async function atualizarCliente(
   const original = String(formData.get("atualizado_em") ?? "");
   if (!original) return { erro: "Recarregue a página e tente novamente." };
 
+  const cc = await lerCamposCustom(formData);
+  if ("erro" in cc) return { erro: cc.erro };
+
   const supabase = await createServerSupabase();
   const { data, error } = await supabase
     .from("clientes")
@@ -160,6 +182,7 @@ export async function atualizarCliente(
       ...limparVazios(parsed.data),
       endereco: montarEndereco(formData),
       representante: montarRepresentante(formData),
+      campos_custom: cc.valores,
     })
     .eq("id", clienteId)
     .eq("atualizado_em", original) // concorrência otimista (instante; PostgREST compara por valor)
