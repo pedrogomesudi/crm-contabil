@@ -1,13 +1,10 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { ultimosAcessos } from "@/lib/portal/rastreio";
-import { formatarData } from "@/lib/format";
 import { podeGerenciarDocumentos } from "@/lib/clientes/permissoes";
 import type { Papel } from "@/lib/tipos";
 import { UploadDocumento } from "./UploadDocumento";
-import { BotaoBaixar } from "./BotaoBaixar";
-import { BotaoExcluirDocumento } from "./BotaoExcluirDocumento";
-import { EnviarAssinatura } from "@/components/assinatura/EnviarAssinatura";
-import { StatusAssinatura } from "@/components/assinatura/StatusAssinatura";
+import { DocumentosTabela } from "./DocumentosTabela";
+import { carregarTiposAtivos } from "@/app/(app)/configuracoes/tipos-documento/actions";
 
 // Seção de documentos da ficha do cliente. A lista usa o client com RLS (o
 // usuário só vê documentos de clientes visíveis a ele). Anexar exige papel de
@@ -24,10 +21,11 @@ export async function DocumentosSection({
   clienteEmail: string;
 }) {
   const supabase = await createServerSupabase();
+  const tipos = await carregarTiposAtivos(); // RF-060: catálogo p/ classificar no upload
   const vistos = await ultimosAcessos(clienteId, "documento"); // RF-053: o cliente já viu?
   const { data: documentos, error } = await supabase
     .from("documentos")
-    .select("id, nome, tipo, enviado_em, origem")
+    .select("id, nome, tipo, tipo_id, departamento, competencia, enviado_em, origem")
     .eq("cliente_id", clienteId)
     .order("enviado_em", { ascending: false })
     .order("id")
@@ -44,81 +42,47 @@ export async function DocumentosSection({
   const podeGerenciar = podeGerenciarDocumentos(papel);
   const ehAdmin = papel === "admin";
 
+  // Achata cada documento (incl. assinatura) num item serializável para a tabela client.
+  const docs = (documentos ?? []).map((d) => {
+    const a = porDoc.get(d.id);
+    return {
+      id: d.id as string,
+      nome: d.nome as string,
+      origem: d.origem as string,
+      enviado_em: d.enviado_em as string,
+      visto: vistos.has(d.id) ? (vistos.get(d.id) as string) : null,
+      tipo: (d.tipo as string | null) ?? null,
+      departamento: (d.departamento as string | null) ?? null,
+      competencia: (d.competencia as string | null) ?? null,
+      ehContrato: d.tipo === "Contrato" && (d.nome as string).toLowerCase().endsWith(".pdf"),
+      assinatura: a
+        ? {
+            status: a.status as string,
+            signatarios: (a.assinatura_signatarios ?? []) as { nome: string; papel: string; status: string }[],
+          }
+        : null,
+    };
+  });
+
   return (
     <section className="space-y-3 rounded-lg border border-linha bg-white p-4">
       <h2 className="text-sm font-semibold text-texto">Documentos</h2>
 
-      {podeGerenciar && <UploadDocumento clienteId={clienteId} />}
+      {podeGerenciar && <UploadDocumento clienteId={clienteId} tipos={tipos} />}
 
       {error ? (
         <p role="alert" className="rounded bg-negativo/10 px-3 py-2 text-sm text-negativo">
           Não foi possível carregar os documentos.
         </p>
-      ) : documentos && documentos.length > 0 ? (
-        <div className="overflow-hidden rounded border border-linha">
-          <table className="w-full text-sm">
-            <caption className="sr-only">Documentos do cliente</caption>
-            <thead className="bg-creme text-left text-cinza">
-              <tr>
-                <th className="p-2 font-medium">Nome</th>
-                <th className="p-2 font-medium">Tipo</th>
-                <th className="p-2 font-medium">Enviado em</th>
-                <th className="p-2 font-medium">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documentos.map((d) => (
-                <tr key={d.id} className="border-t border-linha/70 align-top">
-                  <td className="p-2 text-texto">
-                    {d.nome}
-                    {d.origem === "cliente" && (
-                      <span className="ml-2 rounded-full bg-violeta/10 px-2 py-0.5 text-xs text-violeta">
-                        enviado pelo cliente
-                      </span>
-                    )}
-                    <span className="ml-2 text-xs text-cinza">
-                      {vistos.has(d.id)
-                        ? `· visto em ${formatarData(vistos.get(d.id) as string)}`
-                        : "· não visualizado"}
-                    </span>
-                  </td>
-                  <td className="p-2 text-cinza">{d.tipo ?? "—"}</td>
-                  <td className="p-2 text-cinza">
-                    <time dateTime={d.enviado_em}>{formatarData(d.enviado_em)}</time>
-                  </td>
-                  <td className="p-2">
-                    <div className="flex flex-wrap gap-2">
-                      <BotaoBaixar documentoId={d.id} nome={d.nome} />
-                      {ehAdmin && <BotaoExcluirDocumento documentoId={d.id} clienteId={clienteId} nome={d.nome} />}
-                    </div>
-                    {d.tipo === "Contrato" && d.nome.toLowerCase().endsWith(".pdf") && podeGerenciar && (
-                      <div className="mt-2 space-y-2">
-                        {porDoc.get(d.id) && (
-                          <StatusAssinatura
-                            status={porDoc.get(d.id)!.status}
-                            signatarios={porDoc.get(d.id)!.assinatura_signatarios}
-                          />
-                        )}
-                        {(() => {
-                          const st = porDoc.get(d.id)?.status;
-                          // Sem assinatura ativa (nova, recusada ou cancelada) => permite (re)enviar.
-                          return !st || st === "recusado" || st === "cancelado";
-                        })() && (
-                          <EnviarAssinatura
-                            documentoId={d.id}
-                            clienteId={clienteId}
-                            clienteNome={clienteNome}
-                            clienteEmail={clienteEmail}
-                          />
-                        )}
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      ) : docs.length > 0 ? (
+        <DocumentosTabela
+          docs={docs}
+          clienteId={clienteId}
+          clienteNome={clienteNome}
+          clienteEmail={clienteEmail}
+          podeGerenciar={podeGerenciar}
+          ehAdmin={ehAdmin}
+        />
       ) : (
         <p className="text-sm text-cinza-claro">Nenhum documento anexado.</p>
       )}

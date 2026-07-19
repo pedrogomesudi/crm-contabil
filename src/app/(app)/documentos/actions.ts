@@ -4,6 +4,8 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeGerenciarDocumentos } from "@/lib/clientes/permissoes";
+import { competenciaParaData } from "@/lib/documentos/taxonomia";
+import { carregarTiposAtivos } from "@/app/(app)/configuracoes/tipos-documento/actions";
 import type { EstadoUpload, ResultadoDownload, ResultadoExcluir } from "./estados";
 
 const TIPOS_OK = ["application/pdf", "image/png", "image/jpeg"];
@@ -50,13 +52,31 @@ export async function anexarDocumento(
     return { erro: "Falha no upload do arquivo." };
   }
 
-  const tipo = String(formData.get("tipo") ?? "")
-    .trim()
-    .slice(0, 60);
+  // Taxonomia (RF-060): tipo do catálogo (denormaliza o nome em `tipo` para não quebrar o caso
+  // `d.tipo === "Contrato"`), departamento (do form ou sugerido pelo tipo) e competência (mês/ano).
+  const tipoId = String(formData.get("tipo_id") ?? "") || null;
+  const tipos = tipoId ? await carregarTiposAtivos() : [];
+  const tipoSel = tipoId ? tipos.find((t) => t.id === tipoId) : undefined;
+  if (tipoId && !tipoSel) {
+    await admin.storage.from("documentos").remove([caminho]);
+    return { erro: "Tipo de documento inválido." };
+  }
+  const depRaw = String(formData.get("departamento") ?? "").trim();
+  const departamento = depRaw || tipoSel?.departamento || null;
+  const competencia = competenciaParaData(String(formData.get("competencia") ?? ""));
+  const tipoLabel =
+    tipoSel?.nome ??
+    (String(formData.get("tipo") ?? "")
+      .trim()
+      .slice(0, 60) ||
+      null);
   const { error: errInsert } = await admin.from("documentos").insert({
     cliente_id: clienteId,
     nome: file.name,
-    tipo: tipo || null,
+    tipo: tipoLabel,
+    tipo_id: tipoId,
+    departamento,
+    competencia,
     caminho_storage: caminho,
     enviado_por: perfil.id,
   });
