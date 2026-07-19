@@ -27,6 +27,7 @@ export function menuDoPapel(papel: Papel, badges: Badges): GrupoMenu[] {
       titulo: "Operação",
       itens: [
         { href: "/clientes", label: "Clientes" },
+        { href: "/documentos", label: "Documentos" },
         ...(equipe ? [{ href: "/obrigacoes", label: "Obrigações", badge: badges.riscos + badges.escalonamento }] : []),
         ...(podeGerenciarVencimentos(papel)
           ? [{ href: "/vencimentos", label: "Vencimentos", badge: badges.vencimentos }]
