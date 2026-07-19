@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.19.0] — 2026-07-19
+
+RF-007 — follow-up de propostas (fundação). O escritório configura a sequência; o disparo automático vem a
+seguir.
+
+### Adicionado
+
+- **Configurações → Follow-up de propostas** (admin): **canal** (e-mail ou WhatsApp), um interruptor
+  **Ativo**, e as **etapas** da sequência (dias após o envio, assunto, mensagem com variáveis), com
+  adicionar/remover/reordenar. A proposta passa a registrar a **data de envio** (`enviada_em`) — o D+0 da
+  sequência. Migration `0105`.
+
 ## [6.18.0] — 2026-07-18
 
 RF-005 — contrato de honorários a partir da proposta. **Fecha a RF-005.** A proposta ganha a ponte até o
