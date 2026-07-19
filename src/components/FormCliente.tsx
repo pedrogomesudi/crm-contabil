@@ -355,11 +355,11 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
       {estado.erro && (
         <div role="alert" className="text-sm text-negativo">
           {estado.erro}
-          {estado.reativarId && (
+          {estado.duplicadoId && (
             <>
               {" "}
-              <Link href={`/clientes/${estado.reativarId}`} className="underline">
-                Abrir cliente inativo
+              <Link href={`/clientes/${estado.duplicadoId}`} className="underline">
+                Abrir cliente existente
               </Link>
             </>
           )}

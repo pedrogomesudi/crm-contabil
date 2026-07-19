@@ -102,16 +102,17 @@ export async function criarCliente(
     if (error.code === "23505") {
       const { data: existente } = await supabase
         .from("clientes")
-        .select("id, status")
+        .select("id, status, razao_social")
         .eq("cpf_cnpj", parsed.data.cpf_cnpj)
         .maybeSingle();
+      const nome = existente?.razao_social ? ` (${existente.razao_social})` : "";
       if (existente?.status === "inativo") {
-        return { erro: "CPF/CNPJ já cadastrado em um cliente INATIVO.", reativarId: existente.id };
+        return { erro: `CPF/CNPJ já cadastrado em um cliente INATIVO${nome}.`, reativarId: existente.id, duplicadoId: existente.id };
       }
       if (existente?.status === "ativo") {
-        return { erro: "CPF/CNPJ já cadastrado em um cliente ativo." };
+        return { erro: `CPF/CNPJ já cadastrado em um cliente ativo${nome}.`, duplicadoId: existente?.id };
       }
-      return { erro: "CPF/CNPJ já cadastrado. Procure um administrador." };
+      return { erro: `CPF/CNPJ já cadastrado${nome}. Procure um administrador.`, duplicadoId: existente?.id };
     }
     console.error("criarCliente:", error.code, error.message);
     return { erro: "Não foi possível salvar o cliente (sem permissão?)." };
