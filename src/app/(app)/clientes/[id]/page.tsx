@@ -41,6 +41,7 @@ import { AcoesExclusaoCliente } from "@/components/clientes/AcoesExclusaoCliente
 import { BotaoAtualizarReceita } from "@/components/clientes/BotaoAtualizarReceita";
 import { ContratosSection } from "@/components/financeiro/ContratosSection";
 import { OptOutCobranca } from "@/components/clientes/OptOutCobranca";
+import { OptOutLegalizacao } from "@/components/clientes/OptOutLegalizacao";
 import { ObrigacoesCliente } from "./ObrigacoesCliente";
 import { listarInstancias } from "@/app/(app)/obrigacoes/actions";
 import { podeGerenciarMatriz } from "@/lib/obrigacoes/permissoes";
@@ -71,7 +72,7 @@ export default async function FichaClientePage({
   const { data: cliente } = await supabase
     .from("clientes")
     .select(
-      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, telefone_ddi, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados",
+      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, telefone_ddi, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados, comunicar_legalizacao",
     )
     .eq("id", id)
     .maybeSingle();
@@ -279,6 +280,14 @@ export default async function FichaClientePage({
                 podeGerenciar={podeLegalizacao}
                 hoje={hoje}
               />
+            )}
+            {podeLegalizacao && (
+              <section className="rounded-lg border border-linha bg-white p-4">
+                <OptOutLegalizacao
+                  clienteId={id}
+                  ligado={(cliente as { comunicar_legalizacao?: boolean }).comunicar_legalizacao !== false}
+                />
+              </section>
             )}
             {podeExcluirCliente(papel) && (
               <AcoesExclusaoCliente

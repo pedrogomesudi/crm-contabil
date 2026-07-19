@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.22.0] — 2026-07-19
+
+RF-013 — comunicação automática da legalização. **Fecha a RF-013** e o domínio Onboarding/legalização.
+
+### Adicionado
+
+- **Aviso automático de status da legalização ao cliente:** ao concluir uma etapa marcada "avisar cliente",
+  o sistema envia o andamento por **e-mail ou WhatsApp** (canal configurável em Configurações → Legalização),
+  no lugar do checkbox manual. **Opt-out por cliente** na ficha ("Avisar automaticamente o andamento da
+  legalização", ligado por padrão). A falha de envio não trava a conclusão — avisa o operador. Migration
+  `0106`.
+
 ## [6.21.0] — 2026-07-19
 
 RF-007 — visibilidade do follow-up. **Fecha a RF-007.**
