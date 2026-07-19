@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { sugerirPerfil } from "@/lib/onboarding/processo";
 import { instanciasDaCompetencia, cutoffCompetencia, type ObrigacaoMatriz, type ClienteFiscal } from "./geracao";
 import { regimeEm, type VigenciaRegime } from "./vigencia";
+import { resolverFlag } from "./flags";
 
 type Row = Record<string, unknown>;
 
@@ -39,7 +40,7 @@ export async function gerarInstancias(
   let q = supabase
     .from("clientes")
     .select(
-      "id, tipo_pessoa, regime_tributario, cnae, inscricao_estadual, inscricao_municipal, contador_id, endereco, competencia_inicial, data_inicio, clientes_financeiro(qtd_funcionarios), regime_vigencia(vigente_de, regime)",
+      "id, tipo_pessoa, regime_tributario, cnae, inscricao_estadual, inscricao_municipal, contador_id, endereco, competencia_inicial, data_inicio, flag_tem_folha, flag_contribui_icms, flag_contribui_iss, clientes_financeiro(qtd_funcionarios), regime_vigencia(vigente_de, regime)",
     )
     .is("excluido_em", null)
     .eq("status", "ativo");
@@ -65,9 +66,9 @@ export async function gerarInstancias(
       uf: endereco.uf ?? null,
       cnae: (cl.cnae as string | null) ?? null,
       flags: {
-        tem_folha: (qtd ?? 0) > 0,
-        contribui_icms: !!cl.inscricao_estadual,
-        contribui_iss: !!cl.inscricao_municipal,
+        tem_folha: resolverFlag((cl.flag_tem_folha as boolean | null) ?? null, (qtd ?? 0) > 0),
+        contribui_icms: resolverFlag((cl.flag_contribui_icms as boolean | null) ?? null, !!cl.inscricao_estadual),
+        contribui_iss: resolverFlag((cl.flag_contribui_iss as boolean | null) ?? null, !!cl.inscricao_municipal),
       },
     };
     const cutoff = cutoffCompetencia(
