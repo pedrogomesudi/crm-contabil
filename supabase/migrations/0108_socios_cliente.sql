@@ -22,6 +22,13 @@ create policy socio_write on socio for all
   using (auth_papel() in ('admin','assistente')) with check (auth_papel() in ('admin','assistente'));
 drop policy if exists cliente_socio_read  on cliente_socio;
 drop policy if exists cliente_socio_write on cliente_socio;
-create policy cliente_socio_read  on cliente_socio for select using (auth_papel() in ('admin','assistente','contador'));
+-- Leitura espelha a visibilidade de clientes: contador só vê os vínculos dos PRÓPRIOS clientes.
+create policy cliente_socio_read on cliente_socio for select
+  using (
+    auth_papel() in ('admin','assistente')
+    or (auth_papel() = 'contador' and exists (
+      select 1 from clientes c where c.id = cliente_socio.cliente_id and c.contador_id = auth.uid()
+    ))
+  );
 create policy cliente_socio_write on cliente_socio for all
   using (auth_papel() in ('admin','assistente')) with check (auth_papel() in ('admin','assistente'));

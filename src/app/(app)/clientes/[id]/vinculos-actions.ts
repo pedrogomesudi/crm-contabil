@@ -40,16 +40,20 @@ export async function adicionarSocio(clienteId: string, nome: string, cpf: strin
   const cpfDigitos = cpf.replace(/\D/g, "");
   if (!nomeLimpo || !cpfDigitos) return { erro: "Informe nome e CPF do sócio." };
   const supabase = await createServerSupabase();
-  // Upsert do sócio por CPF (reusa a pessoa → é assim que "em comum" acontece).
-  const { data: socio, error: errSocio } = await supabase
-    .from("socio")
-    .upsert({ nome: nomeLimpo, cpf: cpfDigitos }, { onConflict: "cpf" })
-    .select("id")
-    .single();
-  if (errSocio || !socio) return { erro: "Não foi possível salvar o sócio (sem permissão?)." };
-  const { error } = await supabase
-    .from("cliente_socio")
-    .upsert({ cliente_id: clienteId, socio_id: socio.id as string });
+  // Reusa a pessoa por CPF SEM sobrescrever o nome já cadastrado (é assim que "em comum"
+  // acontece); só cria quando o CPF ainda não existe.
+  const { data: existente } = await supabase.from("socio").select("id").eq("cpf", cpfDigitos).maybeSingle();
+  let socioId = existente?.id as string | undefined;
+  if (!socioId) {
+    const { data: novo, error: errNovo } = await supabase
+      .from("socio")
+      .insert({ nome: nomeLimpo, cpf: cpfDigitos })
+      .select("id")
+      .single();
+    if (errNovo || !novo) return { erro: "Não foi possível salvar o sócio (sem permissão?)." };
+    socioId = novo.id as string;
+  }
+  const { error } = await supabase.from("cliente_socio").upsert({ cliente_id: clienteId, socio_id: socioId });
   if (error) return { erro: "Não foi possível vincular o sócio (sem permissão?)." };
   rev(clienteId);
   return {};

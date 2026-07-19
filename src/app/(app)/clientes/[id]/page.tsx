@@ -118,21 +118,21 @@ export default async function FichaClientePage({
         .in("socio_id", socioIds)
         .neq("cliente_id", id)
     : { data: [] as { socio_id: string; cliente_id: string; clientes: { id: string; razao_social: string } }[] };
-  const colegaCliente = (c: { clientes: unknown }) => c.clientes as { id: string; razao_social: string };
+  // O embed `clientes(...)` respeita a RLS: um cliente colega invisível ao usuário volta null.
+  const colegaCliente = (c: { clientes: unknown }) => c.clientes as { id: string; razao_social: string } | null;
   const socios = (vinc ?? []).map((v) => {
     const s = v.socio as unknown as { id: string; nome: string; cpf: string };
     const tambemEm = (colegas ?? [])
       .filter((c) => c.socio_id === v.socio_id)
-      .map((c) => {
-        const cl = colegaCliente(c);
-        return { id: cl.id, razao_social: cl.razao_social };
-      });
+      .map(colegaCliente)
+      .filter((cl): cl is { id: string; razao_social: string } => cl != null)
+      .map((cl) => ({ id: cl.id, razao_social: cl.razao_social }));
     return { id: s.id, nome: s.nome, cpf: s.cpf, tambemEm };
   });
-  const empresasSocio = (colegas ?? []).map((c) => {
-    const cl = colegaCliente(c);
-    return { clienteId: cl.id, nome: cl.razao_social };
-  });
+  const empresasSocio = (colegas ?? [])
+    .map(colegaCliente)
+    .filter((cl): cl is { id: string; razao_social: string } => cl != null)
+    .map((cl) => ({ clienteId: cl.id, nome: cl.razao_social }));
 
   const relacionadas = consolidarRelacionadas(id, [
     {
