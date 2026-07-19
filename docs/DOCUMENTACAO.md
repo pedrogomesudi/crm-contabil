@@ -661,10 +661,12 @@ clientes.
   dados cifrados irrecuperáveis).
 - **Auditoria:** acesso a documentos, revelação de senhas do cofre e estornos financeiros são
   registrados (quem/quando), de forma não-forjável.
-- **Agendamentos (pg_cron, em produção):** três jobs ativos no banco —
+- **Agendamentos (pg_cron, em produção):** cinco jobs ativos no banco —
   1. `gerar-mensalidades-mensal` (`0 6 1 * *`) — chama a função SQL `gerar_mensalidades_automatico()`.
   2. `regua-cobranca-diaria` (`0 12 * * *`) — via `pg_net`, faz `POST` em `/api/cron/regua-cobranca`.
   3. `gerar-obrigacoes-mensal` (`0 12 1 * *`) — via `pg_net`, faz `POST` em `/api/cron/gerar-obrigacoes`.
+  4. `tarefas-recorrentes-diaria` (`0 9 * * *`) — via `pg_net`, faz `POST` em `/api/cron/tarefas-recorrentes`.
+  5. `followup-proposta-diaria` (`0 12 * * *`) — via `pg_net`, faz `POST` em `/api/cron/followup-proposta` (RF-007).
 
   As rotas HTTP são protegidas por Bearer `CRON_SECRET` (comparação em tempo constante). Como os jobs 2
   e 3 carregam o segredo no header, eles **não vivem numa migration** (seria commitá-lo). São recriados
@@ -686,6 +688,7 @@ clientes.
 | `POST /api/webhooks/boleto/[secret]` | Recebe eventos de pagamento de boleto (baixa automática). |
 | `POST /api/cron/regua-cobranca` | Execução agendada da régua de cobrança (Bearer `CRON_SECRET`). |
 | `POST /api/cron/gerar-obrigacoes` | Geração mensal das instâncias de obrigações (Bearer `CRON_SECRET`). |
+| `POST /api/cron/followup-proposta` | Disparo diário do follow-up de propostas — RF-007 (Bearer `CRON_SECRET`). |
 | `GET /api/atendimento/midia/[id]` | Serve a mídia de atendimento (com controle de acesso). |
 
 ---
