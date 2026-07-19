@@ -34,3 +34,35 @@ export async function definirMatriz(clienteId: string, matrizId: string | null):
   rev(clienteId);
   return {};
 }
+
+export async function adicionarSocio(clienteId: string, nome: string, cpf: string): Promise<{ erro?: string }> {
+  const nomeLimpo = nome.trim();
+  const cpfDigitos = cpf.replace(/\D/g, "");
+  if (!nomeLimpo || !cpfDigitos) return { erro: "Informe nome e CPF do sócio." };
+  const supabase = await createServerSupabase();
+  // Upsert do sócio por CPF (reusa a pessoa → é assim que "em comum" acontece).
+  const { data: socio, error: errSocio } = await supabase
+    .from("socio")
+    .upsert({ nome: nomeLimpo, cpf: cpfDigitos }, { onConflict: "cpf" })
+    .select("id")
+    .single();
+  if (errSocio || !socio) return { erro: "Não foi possível salvar o sócio (sem permissão?)." };
+  const { error } = await supabase
+    .from("cliente_socio")
+    .upsert({ cliente_id: clienteId, socio_id: socio.id as string });
+  if (error) return { erro: "Não foi possível vincular o sócio (sem permissão?)." };
+  rev(clienteId);
+  return {};
+}
+
+export async function removerSocio(clienteId: string, socioId: string): Promise<{ erro?: string }> {
+  const supabase = await createServerSupabase();
+  const { error } = await supabase
+    .from("cliente_socio")
+    .delete()
+    .eq("cliente_id", clienteId)
+    .eq("socio_id", socioId);
+  if (error) return { erro: "Não foi possível remover o sócio (sem permissão?)." };
+  rev(clienteId);
+  return {};
+}
