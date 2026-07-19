@@ -1,0 +1,146 @@
+"use client";
+import { useMemo, useState } from "react";
+import { formatarData } from "@/lib/format";
+import { rotuloDepartamento, type Departamento } from "@/lib/clientes/departamentos";
+import { competenciaRotulo } from "@/lib/documentos/taxonomia";
+import { controleCls } from "@/components/ui/Campo";
+import { BotaoBaixar } from "./BotaoBaixar";
+import { BotaoExcluirDocumento } from "./BotaoExcluirDocumento";
+import { StatusAssinatura } from "@/components/assinatura/StatusAssinatura";
+import { EnviarAssinatura } from "@/components/assinatura/EnviarAssinatura";
+
+type DocItem = {
+  id: string;
+  nome: string;
+  origem: string;
+  enviado_em: string;
+  visto: string | null;
+  tipo: string | null;
+  departamento: string | null;
+  competencia: string | null;
+  ehContrato: boolean;
+  assinatura: { status: string; signatarios: { nome: string; papel: string; status: string }[] } | null;
+};
+
+const dep = (d: string) => rotuloDepartamento(d as Departamento);
+
+export function DocumentosTabela({
+  docs,
+  clienteId,
+  clienteNome,
+  clienteEmail,
+  podeGerenciar,
+  ehAdmin,
+}: {
+  docs: DocItem[];
+  clienteId: string;
+  clienteNome: string;
+  clienteEmail: string;
+  podeGerenciar: boolean;
+  ehAdmin: boolean;
+}) {
+  const [depF, setDepF] = useState("");
+  const [tipoF, setTipoF] = useState("");
+  const [compF, setCompF] = useState(""); // "YYYY-MM"
+
+  const deps = useMemo(() => [...new Set(docs.map((d) => d.departamento).filter(Boolean))] as string[], [docs]);
+  const tipos = useMemo(() => [...new Set(docs.map((d) => d.tipo).filter(Boolean))] as string[], [docs]);
+
+  const filtrados = docs.filter(
+    (d) =>
+      (!depF || d.departamento === depF) &&
+      (!tipoF || d.tipo === tipoF) &&
+      (!compF || (d.competencia ?? "").startsWith(compF)),
+  );
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        <select value={depF} onChange={(e) => setDepF(e.target.value)} className={controleCls("compacto")}>
+          <option value="">todos os departamentos</option>
+          {deps.map((d) => (
+            <option key={d} value={d}>
+              {dep(d)}
+            </option>
+          ))}
+        </select>
+        <select value={tipoF} onChange={(e) => setTipoF(e.target.value)} className={controleCls("compacto")}>
+          <option value="">todos os tipos</option>
+          {tipos.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+        <input type="month" value={compF} onChange={(e) => setCompF(e.target.value)} className={controleCls("compacto")} />
+      </div>
+
+      <div className="overflow-hidden rounded border border-linha">
+        <table className="w-full text-sm">
+          <caption className="sr-only">Documentos do cliente</caption>
+          <thead className="bg-creme text-left text-cinza">
+            <tr>
+              <th className="p-2 font-medium">Nome</th>
+              <th className="p-2 font-medium">Tipo</th>
+              <th className="p-2 font-medium">Departamento</th>
+              <th className="p-2 font-medium">Competência</th>
+              <th className="p-2 font-medium">Enviado em</th>
+              <th className="p-2 font-medium">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtrados.map((d) => (
+              <tr key={d.id} className="border-t border-linha/70 align-top">
+                <td className="p-2 text-texto">
+                  {d.nome}
+                  {d.origem === "cliente" && (
+                    <span className="ml-2 rounded-full bg-violeta/10 px-2 py-0.5 text-xs text-violeta">
+                      enviado pelo cliente
+                    </span>
+                  )}
+                  <span className="ml-2 text-xs text-cinza">
+                    {d.visto ? `· visto em ${formatarData(d.visto)}` : "· não visualizado"}
+                  </span>
+                </td>
+                <td className="p-2 text-cinza">{d.tipo ?? "—"}</td>
+                <td className="p-2 text-cinza">{d.departamento ? dep(d.departamento) : "—"}</td>
+                <td className="p-2 text-cinza">{competenciaRotulo(d.competencia)}</td>
+                <td className="p-2 text-cinza">
+                  <time dateTime={d.enviado_em}>{formatarData(d.enviado_em)}</time>
+                </td>
+                <td className="p-2">
+                  <div className="flex flex-wrap gap-2">
+                    <BotaoBaixar documentoId={d.id} nome={d.nome} />
+                    {ehAdmin && <BotaoExcluirDocumento documentoId={d.id} clienteId={clienteId} nome={d.nome} />}
+                  </div>
+                  {d.ehContrato && podeGerenciar && (
+                    <div className="mt-2 space-y-2">
+                      {d.assinatura && (
+                        <StatusAssinatura status={d.assinatura.status} signatarios={d.assinatura.signatarios} />
+                      )}
+                      {(!d.assinatura || d.assinatura.status === "recusado" || d.assinatura.status === "cancelado") && (
+                        <EnviarAssinatura
+                          documentoId={d.id}
+                          clienteId={clienteId}
+                          clienteNome={clienteNome}
+                          clienteEmail={clienteEmail}
+                        />
+                      )}
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {filtrados.length === 0 && (
+              <tr>
+                <td colSpan={6} className="p-3 text-center text-cinza-claro">
+                  Nenhum documento com esses filtros.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
