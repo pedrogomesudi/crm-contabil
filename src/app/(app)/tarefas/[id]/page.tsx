@@ -11,6 +11,8 @@ import { sessaoAtual } from "@/app/(app)/timesheet/actions";
 import type { TarefaPrioridade, TarefaStatus } from "@/lib/tarefas/tarefa";
 import type { Departamento } from "@/lib/clientes/departamentos";
 import { Voltar } from "@/components/ui/Voltar";
+import { AnexosTarefa } from "@/components/tarefas/AnexosTarefa";
+import { listarAnexosTarefa } from "./anexo-actions";
 
 export default async function TarefaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,7 +21,7 @@ export default async function TarefaPage({ params }: { params: Promise<{ id: str
   const supabase = await createServerSupabase();
   const { data: t } = await supabase
     .from("tarefa")
-    .select("id, titulo, descricao, responsavel_id, cliente_id, departamento, prioridade, prazo, status")
+    .select("id, titulo, descricao, responsavel_id, criado_por, cliente_id, departamento, prioridade, prazo, status")
     .eq("id", id)
     .maybeSingle();
   if (!t) notFound();
@@ -41,6 +43,14 @@ export default async function TarefaPage({ params }: { params: Promise<{ id: str
   const minutosTotal = (horas ?? []).reduce((s, h) => s + (h.minutos as number), 0);
   const sessao = await sessaoAtual();
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+
+  // Anexos (RF-040): edição espelha a RLS de tarefa — admin/assistente ou responsável/criador.
+  const anexos = await listarAnexosTarefa(id);
+  const podeEditarAnexos =
+    perfil.papel === "admin" ||
+    perfil.papel === "assistente" ||
+    (t.responsavel_id as string | null) === perfil.id ||
+    (t.criado_por as string | null) === perfil.id;
   const tarefa = {
     id: t.id as string,
     titulo: t.titulo as string,
@@ -73,6 +83,7 @@ export default async function TarefaPage({ params }: { params: Promise<{ id: str
         minutosSessao={sessao?.minutos ?? 0}
         hoje={hoje}
       />
+      <AnexosTarefa tarefaId={id} podeEditar={podeEditarAnexos} anexos={anexos} />
     </Container>
   );
 }
