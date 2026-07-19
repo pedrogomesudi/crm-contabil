@@ -9,7 +9,8 @@ export async function carregarReceitaPorOrigem(inicio: string | null, fim: strin
   if (!p?.ativo || !podeCriarCliente(p.papel)) return [];
   const supabase = await createServerSupabase();
 
-  let q = supabase.from("oportunidade").select("id, origem, valor_estimado").eq("etapa", "ganho");
+  // O estado "ganho" vive em `desfecho` (a coluna enum `etapa` virou vestígio na RF-002).
+  let q = supabase.from("oportunidade").select("id, origem, valor_estimado").eq("desfecho", "ganho");
   if (inicio && fim) q = q.gte("fechado_em", inicio).lt("fechado_em", fim);
   const { data: ops } = await q;
   const ganhas = ops ?? [];
