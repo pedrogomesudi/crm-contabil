@@ -24,6 +24,7 @@ const JOBS = [
   "regua-cobranca-diaria",
   "gerar-obrigacoes-mensal",
   "tarefas-recorrentes-diaria",
+  "followup-proposta-diaria",
 ];
 
 const db = new pg.Client({
@@ -59,7 +60,7 @@ try {
     const nomes = j.rows.map((r) => r.jobname);
     const faltam = JOBS.filter((x) => !nomes.includes(x));
     temCron = faltam.length === 0;
-    check(temCron, "jobs de cron", faltam.length ? `faltam: ${faltam.join(", ")} — rode cron:bootstrap` : "4/4");
+    check(temCron, "jobs de cron", faltam.length ? `faltam: ${faltam.join(", ")} — rode cron:bootstrap` : "5/5");
   } catch {
     check(false, "jobs de cron", "cron.job inacessível — extensão pg_cron?");
   }

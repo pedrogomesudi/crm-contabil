@@ -69,6 +69,12 @@ const JOBS = [
     comando: httpPost("tarefas-recorrentes", true),
     nota: "gera as ocorrências das tarefas recorrentes (RF-040)",
   },
+  {
+    nome: "followup-proposta-diaria",
+    agenda: "0 12 * * *",
+    comando: httpPost("followup-proposta", false),
+    nota: "dispara o follow-up de propostas (RF-007); sem body, como a régua",
+  },
 ];
 
 // Nunca imprime o segredo.
