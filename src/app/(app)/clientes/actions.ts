@@ -18,9 +18,7 @@ import { validarCampos } from "@/lib/clientes/campos-custom";
 
 // Lê os valores dos campos customizados do form e valida contra o catálogo ativo.
 // Fatia A: `faltando` (obrigatórios vazios) é ignorado — a obrigatoriedade entra na Fatia B.
-async function lerCamposCustom(
-  formData: FormData,
-): Promise<{ valores: Record<string, unknown> } | { erro: string }> {
+async function lerCamposCustom(formData: FormData): Promise<{ valores: Record<string, unknown> } | { erro: string }> {
   const defs = await carregarCamposAtivos();
   const crus: Record<string, string> = {};
   for (const d of defs) crus[d.id] = String(formData.get(`custom_${d.id}`) ?? "");

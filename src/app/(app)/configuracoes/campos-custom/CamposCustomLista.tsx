@@ -45,7 +45,12 @@ export function CamposCustomLista({ campos }: { campos: CampoRow[] }) {
             {c.obrigatorio && <span className="text-cinza">obrigatório</span>}
             {c.tipo === "lista" && <span className="text-cinza">[{c.opcoes.join(", ")}]</span>}
             <span className="ml-auto flex items-center gap-2">
-              <button type="button" disabled={pend} onClick={() => run(() => moverCampo(c.id, "cima"))} aria-label="Subir">
+              <button
+                type="button"
+                disabled={pend}
+                onClick={() => run(() => moverCampo(c.id, "cima"))}
+                aria-label="Subir"
+              >
                 ↑
               </button>
               <button
@@ -83,21 +88,14 @@ export function CamposCustomLista({ campos }: { campos: CampoRow[] }) {
         className="flex flex-wrap items-end gap-2 rounded-lg border border-linha bg-white p-3"
       >
         <input name="nome" placeholder="nome do campo" className={controleCls("compacto")} />
-        <select
-          name="tipo"
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value)}
-          className={controleCls("compacto")}
-        >
+        <select name="tipo" value={tipo} onChange={(e) => setTipo(e.target.value)} className={controleCls("compacto")}>
           {Object.entries(TIPO_ROTULO).map(([v, r]) => (
             <option key={v} value={v}>
               {r}
             </option>
           ))}
         </select>
-        {tipo === "lista" && (
-          <input name="opcoes" placeholder="opções (vírgula)" className={controleCls("compacto")} />
-        )}
+        {tipo === "lista" && <input name="opcoes" placeholder="opções (vírgula)" className={controleCls("compacto")} />}
         <label className="flex items-center gap-1 text-sm text-cinza">
           <input type="checkbox" name="obrigatorio" /> obrigatório
         </label>

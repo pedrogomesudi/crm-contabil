@@ -1,13 +1,7 @@
 import { controleCls } from "@/components/ui/Campo";
 import type { CampoDef } from "@/lib/clientes/campos-custom";
 
-export function CamposComplementares({
-  campos,
-  valores,
-}: {
-  campos: CampoDef[];
-  valores: Record<string, unknown>;
-}) {
+export function CamposComplementares({ campos, valores }: { campos: CampoDef[]; valores: Record<string, unknown> }) {
   if (campos.length === 0) return null;
   return (
     <div className="grid gap-3 sm:grid-cols-2">
