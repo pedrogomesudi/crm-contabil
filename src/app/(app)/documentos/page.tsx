@@ -56,7 +56,12 @@ export default async function DocumentosBuscaPage({
             </option>
           ))}
         </select>
-        <input type="month" name="competencia" defaultValue={filtro.competencia ?? ""} className={controleCls("compacto")} />
+        <input
+          type="month"
+          name="competencia"
+          defaultValue={filtro.competencia ?? ""}
+          className={controleCls("compacto")}
+        />
         <select name="cliente" defaultValue={filtro.clienteId ?? ""} className={controleCls("compacto")}>
           <option value="">todos os clientes</option>
           {(clientes ?? []).map((c) => (

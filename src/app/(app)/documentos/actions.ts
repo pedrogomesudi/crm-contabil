@@ -26,9 +26,7 @@ export async function buscarDocumentos(f: FiltroResolvido): Promise<DocBusca[]> 
   const supabase = await createServerSupabase();
   let q = supabase
     .from("documentos")
-    .select(
-      "id, nome, tipo, departamento, competencia, enviado_em, substitui_id, cliente_id, clientes(razao_social)",
-    )
+    .select("id, nome, tipo, departamento, competencia, enviado_em, substitui_id, cliente_id, clientes(razao_social)")
     .order("enviado_em", { ascending: false })
     .limit(100);
   if (f.nome) q = q.ilike("nome", `%${escapeLike(f.nome)}%`);

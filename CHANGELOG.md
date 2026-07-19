@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.32.0] — 2026-07-19
+
+RF-061 (busca por metadados) — busca central de documentos.
+
+### Adicionado
+
+- **Busca de documentos:** nova tela **Documentos** (menu da equipe) para achar qualquer documento por **nome,
+  tipo, departamento, competência e cliente**, de qualquer lugar — respeitando a visibilidade (RLS) de cada
+  usuário e mostrando só a versão atual. Os resultados trazem o cliente (com link para a ficha) e o download.
+  A busca no **conteúdo** do documento (full-text/OCR) fica para uma etapa futura. Sem migration.
+
 ## [6.31.0] — 2026-07-19
 
 RF-056 — portal do cliente como PWA instalável. **Fecha o RF-056** (e o RF-055 já estava concluído).
