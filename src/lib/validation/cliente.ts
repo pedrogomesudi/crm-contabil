@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { validarDocumento } from "./documento";
+import { ehDataValida } from "./data";
 import { TIPOS_PESSOA, REGIMES, STATUS_CLIENTE, type TipoPessoa, type RegimeTributario } from "@/lib/tipos";
 
 const combinacoes: Record<TipoPessoa, RegimeTributario[]> = {
@@ -7,13 +8,6 @@ const combinacoes: Record<TipoPessoa, RegimeTributario[]> = {
   PF: ["Isento/PF"],
   MEI: ["MEI"],
 };
-
-// Valida data de calendário real (não só o formato): "2026-13-45" é rejeitada.
-function ehDataValida(s: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
-  const d = new Date(`${s}T00:00:00Z`);
-  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
-}
 
 export const clienteSchema = z
   .object({
