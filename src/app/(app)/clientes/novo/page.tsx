@@ -7,6 +7,7 @@ import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { criarCliente } from "../actions";
+import { carregarCamposAtivos } from "@/app/(app)/configuracoes/campos-custom/actions";
 
 export const metadata = { title: "Novo cliente" };
 
@@ -20,6 +21,7 @@ export default async function NovoClientePage({ searchParams }: { searchParams: 
   const contadorEditavel = podeAtribuirContador(papel, "novo");
   const contadores = contadorEditavel ? await listarContadores() : [];
 
+  const camposCustom = await carregarCamposAtivos();
   const oportunidadeId = (await searchParams).oportunidade ?? null;
   let defaults: ClienteDefaults | undefined;
   if (oportunidadeId) {
@@ -50,6 +52,8 @@ export default async function NovoClientePage({ searchParams }: { searchParams: 
           cliente={defaults}
           modo="novo"
           contadorEditavel={contadorEditavel}
+          camposCustom={camposCustom}
+          valoresCustom={{}}
         />
       </div>
     </Container>

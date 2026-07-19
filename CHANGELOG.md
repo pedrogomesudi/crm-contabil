@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.25.0] — 2026-07-19
+
+RF-027 (Fatia A) — campos customizáveis por escritório no cadastro do cliente.
+
+### Adicionado
+
+- **Campos do cadastro (customizáveis):** nova tela **Configurações → Campos do cadastro** (admin) onde o
+  escritório define campos extras do cliente — **texto, número, data, sim/não e lista de opções** — com ordem
+  (setas) e ativar/desativar. Os campos ativos aparecem na seção **"Informações complementares"** do cadastro
+  (criar e editar) e são gravados por cliente; a validação de **tipo** (número, data, opção da lista) acontece
+  ao salvar. Migration `0109` (`campo_custom` + `clientes.campos_custom` jsonb, RLS admin na escrita).
+
 ## [6.24.0] — 2026-07-19
 
 RF-026 (Fatia B) — sócios em comum no cadastro do cliente. **Fecha o RF-026** (vínculos entre entidades).

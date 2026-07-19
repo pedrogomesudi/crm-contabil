@@ -4,6 +4,8 @@ import Link from "next/link";
 import { TIPOS_PESSOA, REGIMES } from "@/lib/tipos";
 import { controleCls } from "@/components/ui/Campo";
 import { Secao } from "@/components/ui/Secao";
+import { CamposComplementares } from "@/components/clientes/CamposComplementares";
+import type { CampoDef } from "@/lib/clientes/campos-custom";
 import { FormGrid, FormCampo } from "@/components/ui/FormGrid";
 import { Botao } from "@/components/ui/Botao";
 import { consultarCnpjParaFormulario } from "@/app/(app)/clientes/consultaReceita";
@@ -38,9 +40,19 @@ type Props = {
   // Só admin (e assistente/contador na criação) pode atribuir contador; o trigger
   // congela contador_id p/ não-admin no UPDATE. Quando false, mostra read-only.
   contadorEditavel: boolean;
+  camposCustom: CampoDef[];
+  valoresCustom: Record<string, unknown>;
 };
 
-export function FormCliente({ action, contadores, cliente, modo, contadorEditavel }: Props) {
+export function FormCliente({
+  action,
+  contadores,
+  cliente,
+  modo,
+  contadorEditavel,
+  camposCustom,
+  valoresCustom,
+}: Props) {
   const [estado, formAction, pending] = useActionState<EstadoCliente, FormData>(action, {});
   const c = cliente ?? {};
   const end = c.endereco ?? {};
@@ -351,6 +363,12 @@ export function FormCliente({ action, contadores, cliente, modo, contadorEditave
           </FormCampo>
         </FormGrid>
       </Secao>
+
+      {camposCustom.length > 0 && (
+        <Secao titulo="Informações complementares">
+          <CamposComplementares campos={camposCustom} valores={valoresCustom} />
+        </Secao>
+      )}
 
       {estado.erro && (
         <div role="alert" className="text-sm text-negativo">
