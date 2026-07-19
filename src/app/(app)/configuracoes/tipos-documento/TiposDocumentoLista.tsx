@@ -35,10 +35,20 @@ export function TiposDocumentoLista({ tipos }: { tipos: TipoDocRow[] }) {
             <span className={t.ativo ? "text-grafite" : "text-cinza line-through"}>{t.nome}</span>
             {t.departamento && <span className="text-cinza">{rotuloDepartamento(t.departamento as Departamento)}</span>}
             <span className="ml-auto flex items-center gap-2">
-              <button type="button" disabled={pend} onClick={() => run(() => moverTipoDoc(t.id, "cima"))} aria-label="Subir">
+              <button
+                type="button"
+                disabled={pend}
+                onClick={() => run(() => moverTipoDoc(t.id, "cima"))}
+                aria-label="Subir"
+              >
                 ↑
               </button>
-              <button type="button" disabled={pend} onClick={() => run(() => moverTipoDoc(t.id, "baixo"))} aria-label="Descer">
+              <button
+                type="button"
+                disabled={pend}
+                onClick={() => run(() => moverTipoDoc(t.id, "baixo"))}
+                aria-label="Descer"
+              >
                 ↓
               </button>
               <button

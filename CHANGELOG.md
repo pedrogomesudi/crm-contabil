@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.28.0] — 2026-07-19
+
+RF-060 (Fatia A) — taxonomia do GED: catálogo de tipos + eixos departamento/competência + filtros.
+
+### Adicionado
+
+- **Taxonomia dos documentos:** nova tela **Configurações → Tipos de documento** (admin) para montar o
+  catálogo de tipos do GED (com departamento sugerido, ordem e ativo). No upload, o documento passa a ser
+  classificado por **tipo** (do catálogo), **departamento** e **competência** (mês/ano). A listagem de
+  documentos ganha as colunas **Departamento** e **Competência** e **filtros** por departamento, tipo e
+  competência. Migration `0111` (`tipo_documento` + colunas `documentos.tipo_id/departamento/competencia`, RLS
+  admin na escrita do catálogo). O versionamento fica para a Fatia B.
+
 ## [6.27.0] — 2026-07-19
 
 RF-040 — anexos em tarefas. **Fecha o RF-040** (o restante — avulsas/recorrentes, checklist, prioridade, prazo — já estava em produção, assim como as vistas Kanban/lista/calendário do RF-042).

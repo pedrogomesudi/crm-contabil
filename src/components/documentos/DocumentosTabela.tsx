@@ -72,7 +72,12 @@ export function DocumentosTabela({
             </option>
           ))}
         </select>
-        <input type="month" value={compF} onChange={(e) => setCompF(e.target.value)} className={controleCls("compacto")} />
+        <input
+          type="month"
+          value={compF}
+          onChange={(e) => setCompF(e.target.value)}
+          className={controleCls("compacto")}
+        />
       </div>
 
       <div className="overflow-hidden rounded border border-linha">

@@ -11,10 +11,7 @@ const DEPS = DEPARTAMENTOS.map((d) => d.valor as string);
 
 export async function listarTiposDocumento(): Promise<TipoDocRow[]> {
   const supabase = await createServerSupabase();
-  const { data } = await supabase
-    .from("tipo_documento")
-    .select("id, nome, departamento, ordem, ativo")
-    .order("ordem");
+  const { data } = await supabase.from("tipo_documento").select("id, nome, departamento, ordem, ativo").order("ordem");
   return (data ?? []).map((r) => ({
     id: r.id as string,
     nome: r.nome as string,
