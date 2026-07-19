@@ -11,6 +11,8 @@ import { paraConfigPreco } from "@/lib/comercial/precificacao";
 import { carregarEstadoContrato } from "./contrato-status";
 import { ContratoHonorarios } from "./ContratoHonorarios";
 import { passosContrato } from "@/lib/comercial/contratoProposta";
+import { carregarAgendaFollowup } from "./followup-status";
+import { FollowupProposta } from "./FollowupProposta";
 
 export default async function EditarPropostaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -38,6 +40,8 @@ export default async function EditarPropostaPage({ params }: { params: Promise<{
   const estado = await carregarEstadoContrato(proposta.oportunidadeId, propostaAceita);
   const passos = passosContrato(estado);
   const concluido = passos.every((p) => p.situacao === "feito");
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const agenda = await carregarAgendaFollowup(proposta.id, hoje);
   return (
     <Container largura="estreita" className="space-y-5 p-4">
       <PageHeader titulo={`Proposta nº ${proposta.numero}`} subtitulo={proposta.prospectNome} />
@@ -49,6 +53,7 @@ export default async function EditarPropostaPage({ params }: { params: Promise<{
         servicos={servicos}
       />
       <ContratoHonorarios passos={passos} propostaAceita={propostaAceita} concluido={concluido} />
+      <FollowupProposta enviada={agenda.enviada} passos={agenda.passos} />
     </Container>
   );
 }
