@@ -101,6 +101,7 @@ describe("só existe um jeito de voltar", () => {
     "src/app/(app)/comercial/QuadroComercial.tsx": "move o card para a etapa anterior do funil",
     "src/app/(app)/tarefas/PainelTarefas.tsx": "move a tarefa para o status anterior do kanban",
     "src/app/(app)/comercial/MetricasFunil.tsx": "pagina o período (faz par com o → seguinte)",
+    "src/app/(app)/comercial/receita/ReceitaPorOrigem.tsx": "pagina o período (faz par com o → seguinte)",
     "src/app/(app)/tarefas/Calendario.tsx": "mês anterior (faz par com o 'seguinte →')",
   };
 
