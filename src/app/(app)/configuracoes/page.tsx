@@ -26,6 +26,11 @@ const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] 
     desc: "Etapas do pipeline — rótulo, cor, probabilidade e ordem.",
   },
   {
+    href: "/configuracoes/campos-custom",
+    label: "Campos do cadastro",
+    desc: "Campos extras do cliente — texto, número, data, sim/não e lista.",
+  },
+  {
     href: "/configuracoes/precificacao",
     label: "Precificação de honorários",
     desc: "Base por regime, acréscimos, complexidade, serviços, piso e desconto.",
