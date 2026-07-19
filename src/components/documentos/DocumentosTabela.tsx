@@ -1,9 +1,12 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatarData } from "@/lib/format";
 import { rotuloDepartamento, type Departamento } from "@/lib/clientes/departamentos";
 import { competenciaRotulo } from "@/lib/documentos/taxonomia";
 import { controleCls } from "@/components/ui/Campo";
+import type { EstadoUpload } from "@/app/(app)/documentos/estados";
+import { anexarNovaVersao } from "@/app/(app)/documentos/actions";
 import { BotaoBaixar } from "./BotaoBaixar";
 import { BotaoExcluirDocumento } from "./BotaoExcluirDocumento";
 import { StatusAssinatura } from "@/components/assinatura/StatusAssinatura";
@@ -20,6 +23,8 @@ type DocItem = {
   competencia: string | null;
   ehContrato: boolean;
   assinatura: { status: string; signatarios: { nome: string; papel: string; status: string }[] } | null;
+  substitui_id: string | null;
+  anteriores: DocItem[];
 };
 
 const dep = (d: string) => rotuloDepartamento(d as Departamento);
@@ -106,6 +111,22 @@ export function DocumentosTabela({
                   <span className="ml-2 text-xs text-cinza">
                     {d.visto ? `· visto em ${formatarData(d.visto)}` : "· não visualizado"}
                   </span>
+                  {d.anteriores.length > 0 && (
+                    <details className="mt-1">
+                      <summary className="cursor-pointer text-xs text-cinza">
+                        {d.anteriores.length} versões anteriores
+                      </summary>
+                      <ul className="mt-1 space-y-1">
+                        {d.anteriores.map((a) => (
+                          <li key={a.id} className="flex items-center gap-2 text-xs text-cinza">
+                            <span>{a.nome}</span>
+                            <time dateTime={a.enviado_em}>{formatarData(a.enviado_em)}</time>
+                            <BotaoBaixar documentoId={a.id} nome={a.nome} />
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
                 </td>
                 <td className="p-2 text-cinza">{d.tipo ?? "—"}</td>
                 <td className="p-2 text-cinza">{d.departamento ? dep(d.departamento) : "—"}</td>
@@ -133,6 +154,7 @@ export function DocumentosTabela({
                       )}
                     </div>
                   )}
+                  {podeGerenciar && <NovaVersao documentoId={d.id} />}
                 </td>
               </tr>
             ))}
@@ -147,5 +169,35 @@ export function DocumentosTabela({
         </table>
       </div>
     </div>
+  );
+}
+
+function NovaVersao({ documentoId }: { documentoId: string }) {
+  const router = useRouter();
+  const [estado, formAction, pending] = useActionState<EstadoUpload, FormData>(
+    anexarNovaVersao.bind(null, documentoId),
+    {},
+  );
+  const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (estado.ok) {
+      formRef.current?.reset();
+      router.refresh();
+    }
+  }, [estado.ok, router]);
+  return (
+    <form ref={formRef} action={formAction} className="mt-2 flex flex-wrap items-center gap-2">
+      <input
+        name="arquivo"
+        type="file"
+        required
+        accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+        className={controleCls("compacto")}
+      />
+      <button type="submit" disabled={pending} className="text-xs text-verde underline disabled:opacity-60">
+        {pending ? "Enviando..." : "Nova versão"}
+      </button>
+      {estado.erro && <span className="text-xs text-negativo">{estado.erro}</span>}
+    </form>
   );
 }
