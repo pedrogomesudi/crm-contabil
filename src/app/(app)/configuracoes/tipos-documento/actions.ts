@@ -4,18 +4,29 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { moverNaOrdem } from "@/lib/comercial/funilConfig";
 import { DEPARTAMENTOS } from "@/lib/clientes/departamentos";
 
-export type TipoDocRow = { id: string; nome: string; departamento: string | null; ordem: number; ativo: boolean };
+export type TipoDocRow = {
+  id: string;
+  nome: string;
+  departamento: string | null;
+  retencaoMeses: number | null;
+  ordem: number;
+  ativo: boolean;
+};
 
 const rev = () => revalidatePath("/configuracoes/tipos-documento");
 const DEPS = DEPARTAMENTOS.map((d) => d.valor as string);
 
 export async function listarTiposDocumento(): Promise<TipoDocRow[]> {
   const supabase = await createServerSupabase();
-  const { data } = await supabase.from("tipo_documento").select("id, nome, departamento, ordem, ativo").order("ordem");
+  const { data } = await supabase
+    .from("tipo_documento")
+    .select("id, nome, departamento, retencao_meses, ordem, ativo")
+    .order("ordem");
   return (data ?? []).map((r) => ({
     id: r.id as string,
     nome: r.nome as string,
     departamento: (r.departamento as string | null) ?? null,
+    retencaoMeses: (r.retencao_meses as number | null) ?? null,
     ordem: r.ordem as number,
     ativo: r.ativo as boolean,
   }));
@@ -48,8 +59,19 @@ export async function criarTipoDoc(fd: FormData): Promise<{ erro?: string }> {
     .limit(1)
     .maybeSingle();
   const ordem = ((max?.ordem as number | undefined) ?? -1) + 1;
-  const { error } = await supabase.from("tipo_documento").insert({ nome, departamento, ordem });
+  const retStr = String(fd.get("retencao") ?? "").trim();
+  const retencao_meses = retStr ? Math.max(0, parseInt(retStr, 10)) || null : null;
+  const { error } = await supabase.from("tipo_documento").insert({ nome, departamento, retencao_meses, ordem });
   if (error) return { erro: "Não foi possível criar o tipo (sem permissão?)." };
+  rev();
+  return {};
+}
+
+export async function definirRetencaoTipo(id: string, meses: number | null): Promise<{ erro?: string }> {
+  const supabase = await createServerSupabase();
+  const valor = meses != null && Number.isFinite(meses) && meses >= 0 ? Math.floor(meses) : null;
+  const { error } = await supabase.from("tipo_documento").update({ retencao_meses: valor }).eq("id", id);
+  if (error) return { erro: "Não foi possível salvar a retenção (sem permissão?)." };
   rev();
   return {};
 }
