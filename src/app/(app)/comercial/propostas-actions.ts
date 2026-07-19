@@ -248,11 +248,7 @@ export async function definirStatusProposta(
 ): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
-  const { data: pr } = await supabase
-    .from("proposta")
-    .select("oportunidade_id, enviada_em")
-    .eq("id", id)
-    .maybeSingle();
+  const { data: pr } = await supabase.from("proposta").select("oportunidade_id, enviada_em").eq("id", id).maybeSingle();
   const patch: Record<string, unknown> = { status, atualizado_em: new Date().toISOString() };
   // D+0 do follow-up: grava só na 1ª transição para 'enviada' (não reinicia o relógio se reenviada).
   if (status === "enviada" && !pr?.enviada_em) patch.enviada_em = new Date().toISOString();
