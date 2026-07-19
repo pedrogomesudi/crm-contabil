@@ -12,19 +12,21 @@ export function Calculadora({
   complexidades,
   servicos,
   onUsar,
+  inicial,
 }: {
   config: ConfigPreco;
   complexidades: { id: string; nome: string }[];
   servicos: ServicoView[];
   onUsar?: (params: Parametros, servicos: ServicoView[]) => void;
+  inicial?: Parametros;
 }) {
-  const [regime, setRegime] = useState<string>(REGIMES[0]);
-  const [faturamento, setFaturamento] = useState(0);
-  const [funcionarios, setFuncionarios] = useState(0);
-  const [notas, setNotas] = useState(0);
-  const [complexidadeId, setComplexidadeId] = useState<string | null>(null);
-  const [servicoIds, setServicoIds] = useState<string[]>([]);
-  const [descontoPct, setDescontoPct] = useState(0);
+  const [regime, setRegime] = useState<string>(inicial?.regime ?? REGIMES[0]);
+  const [faturamento, setFaturamento] = useState(inicial?.faturamento ?? 0);
+  const [funcionarios, setFuncionarios] = useState(inicial?.funcionarios ?? 0);
+  const [notas, setNotas] = useState(inicial?.notas ?? 0);
+  const [complexidadeId, setComplexidadeId] = useState<string | null>(inicial?.complexidadeId ?? null);
+  const [servicoIds, setServicoIds] = useState<string[]>(inicial?.servicoIds ?? []);
+  const [descontoPct, setDescontoPct] = useState(inicial?.descontoPct ?? 0);
 
   const r = calcularHonorario(
     { regime, faturamento, funcionarios, notas, complexidadeId, servicoIds, descontoPct },

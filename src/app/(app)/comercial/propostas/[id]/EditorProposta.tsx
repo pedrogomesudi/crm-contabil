@@ -42,7 +42,7 @@ export function EditorProposta({
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [calcAberta, setCalcAberta] = useState(false);
-  const [snapshot, setSnapshot] = useState<SnapshotPreco | null>(null);
+  const [snapshot, setSnapshot] = useState<SnapshotPreco | null>(proposta.precificacao);
   const [validade, setValidade] = useState(proposta.validade ?? "");
   const [observacoes, setObservacoes] = useState(proposta.observacoes ?? "");
   const [respNome, setRespNome] = useState(proposta.responsavel.nome ?? responsavelPadrao.nome);
@@ -73,8 +73,15 @@ export function EditorProposta({
   }
   function aplicarPrecificacao(params: Parametros, servs: ServicoView[]) {
     const { itens: novos, snapshot: snap } = itensProposta(params, config, servs);
+    // Descrições geradas pelo cálculo ANTERIOR (do snapshot) — para substituir, não duplicar.
+    // Itens que o usuário adicionou à mão não entram aqui e são preservados.
+    const anteriores = new Set<string>();
+    if (snapshot) {
+      anteriores.add("Honorários contábeis");
+      for (const s of servs) if (snapshot.params.servicoIds.includes(s.id)) anteriores.add(s.nome);
+    }
     setItens((atual) => [
-      ...atual.filter((i) => i.descricao.trim()),
+      ...atual.filter((i) => i.descricao.trim() && !anteriores.has(i.descricao.trim())),
       ...novos.map((n) => ({ descricao: n.descricao, valor: n.valor, recorrencia: n.recorrencia })),
     ]);
     setSnapshot(snap);
@@ -193,7 +200,7 @@ export function EditorProposta({
             onClick={() => setCalcAberta(true)}
             className="rounded-lg border border-verde px-2 py-1 text-xs text-verde"
           >
-            Calcular honorários
+            {snapshot ? "Recalcular honorários" : "Calcular honorários"}
           </button>
         </div>
         <p className="pt-1 text-sm text-texto">
@@ -273,6 +280,7 @@ export function EditorProposta({
               complexidades={complexidades}
               servicos={servicos}
               onUsar={aplicarPrecificacao}
+              inicial={snapshot?.params}
             />
           </div>
         </div>

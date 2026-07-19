@@ -4,6 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
 import { totaisProposta, type ItemRecorrencia } from "@/lib/comercial/proposta";
+import type { SnapshotPreco } from "@/lib/comercial/precificacao";
 
 export type PropostaStatus = "rascunho" | "enviada" | "aceita" | "recusada";
 export type PropostaItemView = {
@@ -42,6 +43,7 @@ export type PropostaView = {
   itens: PropostaItemView[];
   pagamento: Pagamento;
   responsavel: Responsavel;
+  precificacao: SnapshotPreco | null;
 };
 export type ItemInput = { descricao: string; valor: number; recorrencia: ItemRecorrencia };
 
@@ -91,7 +93,7 @@ export async function obterProposta(id: string): Promise<PropostaView | null> {
   const { data: pr } = await supabase
     .from("proposta")
     .select(
-      "id, numero, status, validade, observacoes, oportunidade_id, responsavel_nome, responsavel_email, responsavel_telefone",
+      "id, numero, status, validade, observacoes, oportunidade_id, responsavel_nome, responsavel_email, responsavel_telefone, precificacao",
     )
     .eq("id", id)
     .maybeSingle();
@@ -140,6 +142,7 @@ export async function obterProposta(id: string): Promise<PropostaView | null> {
       email: (pr.responsavel_email as string | null) ?? null,
       telefone: (pr.responsavel_telefone as string | null) ?? null,
     },
+    precificacao: (pr.precificacao as SnapshotPreco | null) ?? null,
   };
 }
 

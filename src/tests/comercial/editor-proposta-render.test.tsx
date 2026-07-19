@@ -30,6 +30,7 @@ const proposta: PropostaView = {
   itens: [{ id: "i1", descricao: "Honorário mensal", valor: 500, recorrencia: "mensal", ordem: 0 }],
   pagamento: { pixChave: null, banco: null, agencia: null, conta: null, titular: null, documento: null },
   responsavel: { nome: null, email: null, telefone: null },
+  precificacao: null,
 };
 
 describe("EditorProposta", () => {
