@@ -8,6 +8,22 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.20.0] — 2026-07-19
+
+RF-007 — disparo automático do follow-up. O motor que lê a config e envia entra no ar. A visibilidade na
+proposta (Fatia C) fecha a RF.
+
+### Adicionado
+
+- **Motor + cron do follow-up de propostas:** um job diário (`POST /api/cron/followup-proposta`, protegido
+  por `CRON_SECRET`) que envia os passos vencidos (D+X após o envio) por e-mail ou WhatsApp, só para
+  propostas ainda `enviada`, registrando cada envio (idempotente — não reenvia). Reusa os canais existentes.
+
+### Operação
+
+- A URL do cron precisa ser **adicionada ao agendador diário** que já dispara a régua de cobrança — senão o
+  motor não roda. A automação só age com o follow-up **ligado** e etapas configuradas.
+
 ## [6.19.0] — 2026-07-19
 
 RF-007 — follow-up de propostas (fundação). O escritório configura a sequência; o disparo automático vem a
