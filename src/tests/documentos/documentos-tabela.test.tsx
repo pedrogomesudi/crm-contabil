@@ -38,7 +38,14 @@ describe("DocumentosTabela", () => {
     const anterior = { ...doc, id: "d0", nome: "guia-v1.pdf" };
     const atual = { ...doc, id: "d1", nome: "guia-v2.pdf", substitui_id: "d0", anteriores: [anterior] };
     const html = renderToStaticMarkup(
-      <DocumentosTabela docs={[atual]} clienteId="c1" clienteNome="X" clienteEmail="x@x" podeGerenciar ehAdmin={false} />,
+      <DocumentosTabela
+        docs={[atual]}
+        clienteId="c1"
+        clienteNome="X"
+        clienteEmail="x@x"
+        podeGerenciar
+        ehAdmin={false}
+      />,
     );
     expect(html).toContain("guia-v2.pdf");
     expect(html).toContain("versões");
