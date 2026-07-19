@@ -3,7 +3,7 @@ import { useState } from "react";
 import { controleCls } from "@/components/ui/Campo";
 import { StatCard } from "@/components/ui/StatCard";
 import { REGIMES } from "@/lib/tipos";
-import { calcularHonorario, type ConfigPreco } from "@/lib/comercial/precificacao";
+import { calcularHonorario, type ConfigPreco, type Parametros, type ServicoView } from "@/lib/comercial/precificacao";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -11,18 +11,22 @@ export function Calculadora({
   config,
   complexidades,
   servicos,
+  onUsar,
+  inicial,
 }: {
   config: ConfigPreco;
   complexidades: { id: string; nome: string }[];
-  servicos: { id: string; nome: string; valor: number; recorrencia: string }[];
+  servicos: ServicoView[];
+  onUsar?: (params: Parametros, servicos: ServicoView[]) => void;
+  inicial?: Parametros;
 }) {
-  const [regime, setRegime] = useState<string>(REGIMES[0]);
-  const [faturamento, setFaturamento] = useState(0);
-  const [funcionarios, setFuncionarios] = useState(0);
-  const [notas, setNotas] = useState(0);
-  const [complexidadeId, setComplexidadeId] = useState<string | null>(null);
-  const [servicoIds, setServicoIds] = useState<string[]>([]);
-  const [descontoPct, setDescontoPct] = useState(0);
+  const [regime, setRegime] = useState<string>(inicial?.regime ?? REGIMES[0]);
+  const [faturamento, setFaturamento] = useState(inicial?.faturamento ?? 0);
+  const [funcionarios, setFuncionarios] = useState(inicial?.funcionarios ?? 0);
+  const [notas, setNotas] = useState(inicial?.notas ?? 0);
+  const [complexidadeId, setComplexidadeId] = useState<string | null>(inicial?.complexidadeId ?? null);
+  const [servicoIds, setServicoIds] = useState<string[]>(inicial?.servicoIds ?? []);
+  const [descontoPct, setDescontoPct] = useState(inicial?.descontoPct ?? 0);
 
   const r = calcularHonorario(
     { regime, faturamento, funcionarios, notas, complexidadeId, servicoIds, descontoPct },
@@ -159,6 +163,17 @@ export function Calculadora({
             ))}
           </ul>
         </div>
+        {onUsar && (
+          <button
+            type="button"
+            onClick={() =>
+              onUsar({ regime, faturamento, funcionarios, notas, complexidadeId, servicoIds, descontoPct }, servicos)
+            }
+            className="w-full rounded-lg bg-verde px-3 py-2 text-sm font-medium text-white"
+          >
+            Usar na proposta
+          </button>
+        )}
       </div>
     </div>
   );

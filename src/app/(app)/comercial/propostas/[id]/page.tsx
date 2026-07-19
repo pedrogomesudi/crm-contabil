@@ -6,6 +6,8 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EditorProposta } from "./EditorProposta";
 import { obterProposta } from "../../propostas-actions";
+import { carregarPrecificacao } from "../../../configuracoes/precificacao/actions";
+import { paraConfigPreco } from "@/lib/comercial/precificacao";
 
 export default async function EditarPropostaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,10 +20,27 @@ export default async function EditarPropostaPage({ params }: { params: Promise<{
     data: { user },
   } = await supabase.auth.getUser();
   const responsavelPadrao = { nome: perfil.nome, email: user?.email ?? "" };
+  const view = await carregarPrecificacao();
+  const config = paraConfigPreco(view);
+  const complexidades = view.complexidades.map((c) => ({ id: c.id, nome: c.nome }));
+  const servicos = view.servicos
+    .filter((s) => s.ativo)
+    .map((s) => ({
+      id: s.id,
+      nome: s.nome,
+      valor: s.valor,
+      recorrencia: (s.recorrencia === "mensal" ? "mensal" : "unico") as "mensal" | "unico",
+    }));
   return (
     <Container largura="estreita" className="space-y-5 p-4">
       <PageHeader titulo={`Proposta nº ${proposta.numero}`} subtitulo={proposta.prospectNome} />
-      <EditorProposta proposta={proposta} responsavelPadrao={responsavelPadrao} />
+      <EditorProposta
+        proposta={proposta}
+        responsavelPadrao={responsavelPadrao}
+        config={config}
+        complexidades={complexidades}
+        servicos={servicos}
+      />
     </Container>
   );
 }
