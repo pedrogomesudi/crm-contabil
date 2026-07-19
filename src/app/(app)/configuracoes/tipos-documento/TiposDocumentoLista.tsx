@@ -9,10 +9,11 @@ import {
   moverTipoDoc,
   alternarAtivoTipoDoc,
   removerTipoDoc,
+  definirRetencaoTipo,
   type TipoDocRow,
 } from "@/app/(app)/configuracoes/tipos-documento/actions";
 
-export function TiposDocumentoLista({ tipos }: { tipos: TipoDocRow[] }) {
+export function TiposDocumentoLista({ tipos, global }: { tipos: TipoDocRow[]; global: number }) {
   const router = useRouter();
   const [pend, start] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
@@ -34,6 +35,20 @@ export function TiposDocumentoLista({ tipos }: { tipos: TipoDocRow[] }) {
           >
             <span className={t.ativo ? "text-grafite" : "text-cinza line-through"}>{t.nome}</span>
             {t.departamento && <span className="text-cinza">{rotuloDepartamento(t.departamento as Departamento)}</span>}
+            <label className="flex items-center gap-1 text-xs text-cinza">
+              retenção
+              <input
+                type="number"
+                min={0}
+                defaultValue={t.retencaoMeses ?? ""}
+                placeholder={`${global} (padrão)`}
+                disabled={pend}
+                onBlur={(e) =>
+                  run(() => definirRetencaoTipo(t.id, e.target.value === "" ? null : Number(e.target.value)))
+                }
+                className={`${controleCls("compacto")} w-24`}
+              />
+            </label>
             <span className="ml-auto flex items-center gap-2">
               <button
                 type="button"
@@ -86,6 +101,13 @@ export function TiposDocumentoLista({ tipos }: { tipos: TipoDocRow[] }) {
             </option>
           ))}
         </select>
+        <input
+          name="retencao"
+          type="number"
+          min={0}
+          placeholder="retenção (meses)"
+          className={`${controleCls("compacto")} w-36`}
+        />
         <Botao type="submit" variante="secundario" disabled={pend}>
           Adicionar tipo
         </Botao>

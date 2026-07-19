@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { menuDoPapel, type Badges } from "@/lib/ui/navegacao";
 
-const ZERO: Badges = { onboarding: 0, riscos: 0, escalonamento: 0, vencimentos: 0 };
+const ZERO: Badges = { onboarding: 0, riscos: 0, escalonamento: 0, vencimentos: 0, docsVencidos: 0 };
 const hrefs = (papel: Parameters<typeof menuDoPapel>[0], b: Badges = ZERO) =>
   menuDoPapel(papel, b).flatMap((g) => g.itens.map((i) => i.href));
 const titulos = (papel: Parameters<typeof menuDoPapel>[0]) => menuDoPapel(papel, ZERO).map((g) => g.titulo);
@@ -37,7 +37,7 @@ describe("menuDoPapel", () => {
   });
 
   it("cada badge fica no seu item, em vez de somado em Clientes", () => {
-    const menu = menuDoPapel("admin", { onboarding: 2, riscos: 3, escalonamento: 1, vencimentos: 5 });
+    const menu = menuDoPapel("admin", { onboarding: 2, riscos: 3, escalonamento: 1, vencimentos: 5, docsVencidos: 0 });
     const item = (href: string) => menu.flatMap((g) => g.itens).find((i) => i.href === href);
     expect(item("/obrigacoes")?.badge).toBe(4); // riscos + escalonamento: os dois vivem em Obrigações
     expect(item("/vencimentos")?.badge).toBe(5);

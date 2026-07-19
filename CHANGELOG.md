@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.33.0] — 2026-07-19
+
+RF-062 — retenção de documentos por tipo + alertas de expurgo.
+
+### Adicionado
+
+- **Retenção por tipo de documento:** no catálogo (Configurações → Tipos de documento), cada tipo ganha um
+  **prazo de retenção (meses)**; vazio usa o padrão global do escritório.
+- **Alerta de expurgo:** o sistema calcula o vencimento da retenção de cada documento (a partir da competência,
+  ou da data de envio) e sinaliza os **vencidos** com um **badge** no menu "Documentos". A tela **Retenção**
+  (admin) lista os vencidos para **revisão e expurgo manual** (baixar/excluir) — nada é apagado automaticamente.
+  Migration `0114` (`tipo_documento.retencao_meses` + view `documento_retencao`).
+
 ## [6.32.0] — 2026-07-19
 
 RF-061 (busca por metadados) — busca central de documentos.

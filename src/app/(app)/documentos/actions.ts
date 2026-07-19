@@ -60,6 +60,46 @@ export async function buscarDocumentos(f: FiltroResolvido): Promise<DocBusca[]> 
   });
 }
 
+const hojeSP = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+
+export type DocVencido = {
+  id: string;
+  nome: string;
+  clienteId: string;
+  clienteNome: string;
+  tipo: string | null;
+  competencia: string | null;
+  venceEm: string;
+};
+
+export async function listarVencidos(): Promise<DocVencido[]> {
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("documento_retencao")
+    .select("id, nome, cliente_id, cliente_nome, tipo, competencia, vence_em")
+    .lt("vence_em", hojeSP())
+    .order("vence_em", { ascending: true })
+    .limit(100);
+  return (data ?? []).map((d) => ({
+    id: d.id as string,
+    nome: d.nome as string,
+    clienteId: d.cliente_id as string,
+    clienteNome: (d.cliente_nome as string | null) ?? "—",
+    tipo: (d.tipo as string | null) ?? null,
+    competencia: (d.competencia as string | null) ?? null,
+    venceEm: d.vence_em as string,
+  }));
+}
+
+export async function contarDocsVencidos(): Promise<number> {
+  const supabase = await createServerSupabase();
+  const { count } = await supabase
+    .from("documento_retencao")
+    .select("id", { count: "exact", head: true })
+    .lt("vence_em", hojeSP());
+  return count ?? 0;
+}
+
 const TIPOS_OK = ["application/pdf", "image/png", "image/jpeg"];
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 

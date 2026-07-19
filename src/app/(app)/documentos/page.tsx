@@ -6,8 +6,9 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { controleCls } from "@/components/ui/Campo";
 import { DEPARTAMENTOS } from "@/lib/clientes/departamentos";
 import { carregarTiposAtivos } from "@/app/(app)/configuracoes/tipos-documento/actions";
+import Link from "next/link";
 import { lerFiltroBusca } from "@/lib/documentos/busca-metadados";
-import { buscarDocumentos } from "./actions";
+import { buscarDocumentos, contarDocsVencidos } from "./actions";
 import { TabelaResultadosBusca } from "@/components/documentos/TabelaResultadosBusca";
 
 export const metadata = { title: "Documentos" };
@@ -24,15 +25,24 @@ export default async function DocumentosBuscaPage({
   const filtro = lerFiltroBusca(sp);
 
   const supabase = await createServerSupabase();
-  const [{ data: clientes }, tipos, docs] = await Promise.all([
+  const [{ data: clientes }, tipos, docs, vencidos] = await Promise.all([
     supabase.from("clientes").select("id, razao_social").is("excluido_em", null).order("razao_social").limit(500),
     carregarTiposAtivos(),
     buscarDocumentos(filtro),
+    perfil.papel === "admin" ? contarDocsVencidos() : Promise.resolve(0),
   ]);
 
   return (
     <Container className="space-y-5 p-4">
       <PageHeader titulo="Documentos" subtitulo="Busca por nome, tipo, departamento, competência e cliente" />
+      {perfil.papel === "admin" && vencidos > 0 && (
+        <Link
+          href="/documentos/retencao"
+          className="block rounded-lg border border-linha bg-creme px-3 py-2 text-sm text-texto underline"
+        >
+          {vencidos} documento(s) vencido(s) na retenção — revisar
+        </Link>
+      )}
       <form method="get" className="flex flex-wrap items-end gap-2">
         <input
           name="nome"
