@@ -17,13 +17,14 @@ import { carregarCamposAtivos } from "@/app/(app)/configuracoes/campos-custom/ac
 import { validarCampos } from "@/lib/clientes/campos-custom";
 
 // Lê os valores dos campos customizados do form e valida contra o catálogo ativo.
-// Fatia A: `faltando` (obrigatórios vazios) é ignorado — a obrigatoriedade entra na Fatia B.
+// Erro de tipo ou campo obrigatório vazio bloqueiam o salvar (RF-027 completo).
 async function lerCamposCustom(formData: FormData): Promise<{ valores: Record<string, unknown> } | { erro: string }> {
   const defs = await carregarCamposAtivos();
   const crus: Record<string, string> = {};
   for (const d of defs) crus[d.id] = String(formData.get(`custom_${d.id}`) ?? "");
   const r = validarCampos(defs, crus);
   if ("erro" in r) return { erro: r.erro };
+  if (r.faltando.length > 0) return { erro: `Preencha os campos obrigatórios: ${r.faltando.join(", ")}.` };
   return { valores: r.valores };
 }
 
