@@ -4,6 +4,7 @@ import { formatarData } from "@/lib/format";
 import { podeGerenciarDocumentos } from "@/lib/clientes/permissoes";
 import type { Papel } from "@/lib/tipos";
 import { UploadDocumento } from "./UploadDocumento";
+import { carregarTiposAtivos } from "@/app/(app)/configuracoes/tipos-documento/actions";
 import { BotaoBaixar } from "./BotaoBaixar";
 import { BotaoExcluirDocumento } from "./BotaoExcluirDocumento";
 import { EnviarAssinatura } from "@/components/assinatura/EnviarAssinatura";
@@ -24,6 +25,7 @@ export async function DocumentosSection({
   clienteEmail: string;
 }) {
   const supabase = await createServerSupabase();
+  const tipos = await carregarTiposAtivos(); // RF-060: catálogo p/ classificar no upload
   const vistos = await ultimosAcessos(clienteId, "documento"); // RF-053: o cliente já viu?
   const { data: documentos, error } = await supabase
     .from("documentos")
@@ -48,7 +50,7 @@ export async function DocumentosSection({
     <section className="space-y-3 rounded-lg border border-linha bg-white p-4">
       <h2 className="text-sm font-semibold text-texto">Documentos</h2>
 
-      {podeGerenciar && <UploadDocumento clienteId={clienteId} />}
+      {podeGerenciar && <UploadDocumento clienteId={clienteId} tipos={tipos} />}
 
       {error ? (
         <p role="alert" className="rounded bg-negativo/10 px-3 py-2 text-sm text-negativo">

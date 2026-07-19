@@ -3,8 +3,11 @@ import { useActionState, useEffect, useRef } from "react";
 import { anexarDocumento } from "@/app/(app)/documentos/actions";
 import type { EstadoUpload } from "@/app/(app)/documentos/estados";
 import { Campo, controleCls } from "@/components/ui/Campo";
+import { DEPARTAMENTOS } from "@/lib/clientes/departamentos";
 
-export function UploadDocumento({ clienteId }: { clienteId: string }) {
+type TipoAtivo = { id: string; nome: string; departamento: string | null };
+
+export function UploadDocumento({ clienteId, tipos }: { clienteId: string; tipos: TipoAtivo[] }) {
   const action = anexarDocumento.bind(null, clienteId);
   const [estado, formAction, pending] = useActionState<EstadoUpload, FormData>(action, {});
   const formRef = useRef<HTMLFormElement>(null);
@@ -25,14 +28,40 @@ export function UploadDocumento({ clienteId }: { clienteId: string }) {
             className={`${controleCls()} w-full`}
           />
         </Campo>
-        <Campo label="Tipo (opcional)">
-          <input
-            name="tipo"
-            type="text"
-            maxLength={60}
-            placeholder="Ex.: Contrato, Balanço"
-            className={`${controleCls()} w-full`}
-          />
+        {tipos.length > 0 ? (
+          <Campo label="Tipo (opcional)">
+            <select name="tipo_id" defaultValue="" className={`${controleCls()} w-full`}>
+              <option value="">— tipo —</option>
+              {tipos.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.nome}
+                </option>
+              ))}
+            </select>
+          </Campo>
+        ) : (
+          <Campo label="Tipo (opcional)">
+            <input
+              name="tipo"
+              type="text"
+              maxLength={60}
+              placeholder="Ex.: Contrato, Balanço"
+              className={`${controleCls()} w-full`}
+            />
+          </Campo>
+        )}
+        <Campo label="Departamento (opcional)">
+          <select name="departamento" defaultValue="" className={`${controleCls()} w-full`}>
+            <option value="">— usar o do tipo —</option>
+            {DEPARTAMENTOS.map((d) => (
+              <option key={d.valor} value={d.valor}>
+                {d.rotulo}
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <Campo label="Competência (opcional)">
+          <input name="competencia" type="month" className={`${controleCls()} w-full`} />
         </Campo>
       </div>
       {estado.erro && (
