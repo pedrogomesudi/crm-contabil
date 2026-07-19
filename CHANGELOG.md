@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.26.0] — 2026-07-19
+
+RF-027 (Fatia B) — obrigatoriedade dos campos customizáveis. **Fecha o RF-027.**
+
+### Adicionado
+
+- **Campo customizado obrigatório bloqueia o salvar:** ao criar ou editar um cliente, um campo do cadastro
+  marcado como obrigatório e deixado vazio impede o salvamento, com aviso citando os campos faltantes.
+
 ## [6.25.0] — 2026-07-19
 
 RF-027 (Fatia A) — campos customizáveis por escritório no cadastro do cliente.
