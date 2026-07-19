@@ -14,6 +14,14 @@ import {
 } from "@/lib/legalizacao/tipos";
 import { montarTermoHtml } from "@/lib/legalizacao/termo";
 import { converterPdfHtml } from "@/lib/contrato/gerar";
+import { deveAvisar } from "@/lib/legalizacao/aviso";
+import { aplicarVariaveis } from "@/lib/comercial/followup";
+import { enviarEmail } from "@/lib/email/enviar";
+import { enviarTexto, type ZapiConfig } from "@/lib/whatsapp/zapi";
+import { decifrarDominio } from "@/lib/cripto/envelope";
+import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
+import { rotuloOrgao } from "@/lib/legalizacao/tipos";
+import { formatarData } from "@/lib/format";
 import { sanitizarHtml } from "@/lib/comercial/gerar-proposta";
 import { formatarEnderecoLinha } from "@/lib/comercial/proposta-template";
 
@@ -89,7 +97,86 @@ type EtapaPatch = {
   clienteAvisado?: boolean;
 };
 
-export async function atualizarEtapa(etapaId: string, patch: EtapaPatch): Promise<{ ok?: boolean; erro?: string }> {
+// Envia o aviso automático de status da etapa (RF-013). Retorna uma mensagem de aviso se algo impediu
+// o envio (sem travar a conclusão); null se enviou ou se não havia o que fazer.
+async function avisarClienteEtapa(etapaId: string): Promise<string | null> {
+  const admin = createAdminSupabase();
+  const { data: et } = await admin
+    .from("legalizacao_etapa")
+    .select("titulo, orgao, orgao_outro, protocolo, status, avisar_cliente, cliente_avisado_em, processo_id")
+    .eq("id", etapaId)
+    .maybeSingle();
+  if (!et) return null;
+  const concluida = et.status === "concluido" || et.status === "isenta";
+  const { data: proc } = await admin
+    .from("legalizacao_processo")
+    .select("titulo, cliente_id")
+    .eq("id", et.processo_id as string)
+    .maybeSingle();
+  if (!proc) return null;
+  const { data: cli } = await admin
+    .from("clientes")
+    .select("razao_social, email, telefone, telefone_ddi, comunicar_legalizacao")
+    .eq("id", proc.cliente_id as string)
+    .maybeSingle();
+  const { data: cfg } = await admin.from("legalizacao_config").select("canal, ativo, assunto, template").maybeSingle();
+  if (!cli || !cfg) return null;
+
+  const gateAviso = deveAvisar(
+    { ativo: Boolean(cfg.ativo), canal: cfg.canal as "email" | "whatsapp" },
+    Boolean(cli.comunicar_legalizacao),
+    { avisarCliente: Boolean(et.avisar_cliente), jaAvisado: et.cliente_avisado_em != null, concluida },
+  );
+  if (!gateAviso) return null;
+
+  const vars: Record<string, string> = {
+    cliente: (cli.razao_social as string) ?? "",
+    processo: (proc.titulo as string) ?? "",
+    etapa: (et.titulo as string) ?? "",
+    orgao: rotuloOrgao(et.orgao as LegOrgao, (et.orgao_outro as string | null) ?? null),
+    protocolo: (et.protocolo as string | null) ?? "",
+    data: formatarData(new Date().toISOString().slice(0, 10)),
+  };
+  const corpo = aplicarVariaveis(cfg.template as string, vars);
+  const canal = cfg.canal as "email" | "whatsapp";
+
+  let ok = false;
+  if (canal === "email") {
+    const dest = (cli.email as string | null) ?? "";
+    if (!dest.trim()) return "Etapa concluída, mas o cliente não tem e-mail para o aviso.";
+    const r = await enviarEmail({
+      para: dest,
+      assunto: aplicarVariaveis((cfg.assunto as string | null) ?? "", vars),
+      corpo,
+    });
+    ok = r.ok;
+  } else {
+    const { data: w } = await admin
+      .from("whatsapp_config")
+      .select("instance, token_cifrado, client_token_cifrado")
+      .eq("id", 1)
+      .maybeSingle();
+    if (!(w?.instance && w.token_cifrado && w.client_token_cifrado))
+      return "Etapa concluída, mas o WhatsApp não está configurado.";
+    const zapi: ZapiConfig = {
+      instance: w.instance as string,
+      token: (await decifrarDominio("whatsapp", w.token_cifrado as string)).toString("utf8"),
+      clientToken: (await decifrarDominio("whatsapp", w.client_token_cifrado as string)).toString("utf8"),
+    };
+    const tel = normalizarTelefone((cli.telefone as string | null) ?? "", (cli.telefone_ddi as string | null) ?? "55");
+    if (!tel) return "Etapa concluída, mas o cliente não tem telefone válido para o aviso.";
+    const r = await enviarTexto(zapi, tel, corpo);
+    ok = r.ok;
+  }
+  if (!ok) return "Etapa concluída, mas o aviso ao cliente falhou no envio.";
+  await admin.from("legalizacao_etapa").update({ cliente_avisado_em: new Date().toISOString() }).eq("id", etapaId);
+  return null;
+}
+
+export async function atualizarEtapa(
+  etapaId: string,
+  patch: EtapaPatch,
+): Promise<{ ok?: boolean; erro?: string; aviso?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
   const upd: Record<string, unknown> = {};
@@ -106,6 +193,10 @@ export async function atualizarEtapa(etapaId: string, patch: EtapaPatch): Promis
   const { error } = await supabase.from("legalizacao_etapa").update(upd).eq("id", etapaId);
   if (error) return { erro: "Falha ao atualizar a etapa." };
   if (et) revalidatePath(`/legalizacao/${et.processo_id}`);
+  if (patch.status === "concluido" || patch.status === "isenta") {
+    const aviso = await avisarClienteEtapa(etapaId);
+    if (aviso) return { ok: true, aviso };
+  }
   return { ok: true };
 }
 
