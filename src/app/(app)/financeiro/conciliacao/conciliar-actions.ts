@@ -25,6 +25,15 @@ async function gate() {
   return p;
 }
 
+async function tolerancia(supabase: Awaited<ReturnType<typeof createServerSupabase>>): Promise<number> {
+  const { data } = await supabase
+    .from("escritorio_config")
+    .select("tolerancia_conciliacao")
+    .eq("id", 1)
+    .maybeSingle();
+  return Number(data?.tolerancia_conciliacao ?? 0.01);
+}
+
 async function carregarMovimento(supabase: Awaited<ReturnType<typeof createServerSupabase>>, id: string) {
   const { data } = await supabase
     .from("movimento_bancario")
@@ -65,14 +74,14 @@ async function baixasDisponiveis(
 async function titulosAbertos(
   supabase: Awaited<ReturnType<typeof createServerSupabase>>,
   tipo: "RECEBER" | "PAGAR",
-  valorAbs: number,
 ): Promise<TituloAberto[]> {
+  // Sem filtro por valor: o candidatosMovimento decide exato/parcial pelo saldo + tolerância.
   const { data } = await supabase
     .from("titulo")
     .select("id, valor, tipo, vencimento, descricao, baixa(valor_recebido, estornada)")
-    .in("status", ["ABERTO", "VENCIDO"])
+    .in("status", ["ABERTO", "VENCIDO", "BAIXADO_PARCIAL"])
     .eq("tipo", tipo)
-    .eq("valor", valorAbs);
+    .limit(300);
   return (data ?? []).map((t) => {
     const bxs = (Array.isArray(t.baixa) ? t.baixa : t.baixa ? [t.baixa] : []) as {
       valor_recebido: number;
@@ -98,11 +107,12 @@ export async function candidatosDoMovimento(movimentoId: string): Promise<Candid
   const valor = Number(mov.valor);
   const valorAbs = Math.abs(valor);
   const tipo = valor > 0 ? "RECEBER" : "PAGAR";
-  const [baixas, titulos] = await Promise.all([
+  const [baixas, titulos, tol] = await Promise.all([
     baixasDisponiveis(supabase, mov.conta_bancaria_id as string, valorAbs),
-    titulosAbertos(supabase, tipo, valorAbs),
+    titulosAbertos(supabase, tipo),
+    tolerancia(supabase),
   ]);
-  return candidatosMovimento({ id: mov.id as string, valor, data: mov.data as string }, baixas, titulos);
+  return candidatosMovimento({ id: mov.id as string, valor, data: mov.data as string }, baixas, titulos, tol);
 }
 
 export async function conciliarComBaixa(
@@ -161,7 +171,8 @@ export async function conciliarComTitulo(
     .select("id, valor, tipo, status, baixa(valor_recebido, estornada)")
     .eq("id", tituloId)
     .maybeSingle();
-  if (!tit || !["ABERTO", "VENCIDO"].includes(tit.status as string)) return { erro: "Título indisponível." };
+  if (!tit || !["ABERTO", "VENCIDO", "BAIXADO_PARCIAL"].includes(tit.status as string))
+    return { erro: "Título indisponível." };
   const credito = Number(mov.valor) > 0;
   if ((credito && tit.tipo !== "RECEBER") || (!credito && tit.tipo !== "PAGAR"))
     return { erro: "Tipo do título não confere com o movimento." };
@@ -170,8 +181,11 @@ export async function conciliarComTitulo(
     estornada: boolean;
   }[];
   const baixado = bxs.filter((x) => !x.estornada).reduce((s, x) => s + Number(x.valor_recebido), 0);
-  if (Math.abs(saldoTitulo({ valor: Number(tit.valor), baixado }) - Math.abs(Number(mov.valor))) >= 0.005)
-    return { erro: "Saldo do título não confere com o movimento." };
+  // Parcial: o movimento pode quitar parte do saldo; só recusa se o supera (fora da tolerância).
+  const tol = await tolerancia(supabase);
+  const saldo = saldoTitulo({ valor: Number(tit.valor), baixado });
+  if (Math.abs(Number(mov.valor)) > saldo + tol)
+    return { erro: "O valor do movimento supera o saldo do título." };
   const hoje = hojeSP();
   const { data: nova, error } = await supabase
     .from("baixa")
