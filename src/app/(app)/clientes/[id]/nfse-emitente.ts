@@ -11,6 +11,7 @@ import { enviarDps, ehErroTransitorio } from "@/lib/nfse/envio";
 import { emitenteParaConfig } from "@/lib/nfse/emitente";
 import { consultarCnpj } from "@/lib/receita/brasilapi";
 import { municipioIbgePorCep } from "@/lib/nfse/municipio";
+import { enderecoTomadorDoForm } from "@/lib/nfse/tomador";
 import type { Tomador } from "@/lib/nfse/tipos";
 
 export type EstadoEmitente = { erro?: string; ok?: boolean };
@@ -147,6 +148,13 @@ export async function emitirNfseDoCliente(
     return { status: "erro", motivo: "Documento do tomador inválido." };
   if (!dados.tomadorEndereco?.cep || !dados.tomadorEndereco?.logradouro)
     return { status: "erro", motivo: "Endereço do tomador incompleto (CEP e logradouro)." };
+  // Rede de segurança contra o E0240: sem o IBGE do município do tomador, o cMun
+  // cairia no do prestador (CEP de um município + cMun de outro = rejeição).
+  // Resolve pelo CEP, como o fluxo de lote (nfse.ts).
+  if (!dados.tomadorEndereco.codigo_municipio) {
+    const ibge = await municipioIbgePorCep(dados.tomadorEndereco.cep);
+    if (ibge) dados.tomadorEndereco.codigo_municipio = ibge;
+  }
   if (!dados.valor || dados.valor <= 0) return { status: "erro", motivo: "Valor inválido." };
 
   const { data: certRow } = await supabase
@@ -241,18 +249,7 @@ export async function emitirComoEmitente(
   const dados: DadosEmissaoCliente = {
     tomadorDocumento: String(formData.get("tomador_documento") ?? ""),
     tomadorRazaoSocial: String(formData.get("tomador_razao_social") ?? "").trim(),
-    tomadorEndereco: {
-      cep: String(formData.get("tom_cep") ?? "").replace(/\D/g, ""),
-      logradouro: String(formData.get("tom_logradouro") ?? "").trim(),
-      numero: String(formData.get("tom_numero") ?? "").trim(),
-      bairro: String(formData.get("tom_bairro") ?? "").trim(),
-      cidade: String(formData.get("tom_cidade") ?? "").trim(),
-      uf: String(formData.get("tom_uf") ?? "")
-        .trim()
-        .toUpperCase()
-        .slice(0, 2),
-      cMun: String(formData.get("tom_cmun") ?? "").trim(),
-    },
+    tomadorEndereco: enderecoTomadorDoForm((campo) => String(formData.get(campo) ?? "")),
     descricaoServico: String(formData.get("descricao_servico") ?? "").trim(),
     valor,
     competencia,
