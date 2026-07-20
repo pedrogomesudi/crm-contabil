@@ -5,6 +5,8 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { cifrarCredencial } from "@/lib/boleto/cripto";
 import type { ConfigBoletoView } from "@/lib/boleto/config";
+import { adaptadorAtivo } from "@/lib/boleto/ativo";
+import { urlWebhookEsperada, verdictWebhook, type StatusWebhook } from "@/lib/boleto/webhook";
 
 export type SalvarInput = {
   provedor: "nenhum" | "inter" | "asaas";
@@ -83,4 +85,38 @@ export async function salvarConfigBoleto(input: SalvarInput): Promise<{ ok?: boo
   if (error) return { erro: "Falha ao salvar." };
   revalidatePath("/configuracoes/boletos");
   return { ok: true };
+}
+
+export async function cadastrarWebhookInter(): Promise<{ ok?: true; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  const appUrl = process.env.APP_URL ?? "";
+  const secret = process.env.BOLETO_WEBHOOK_SECRET ?? "";
+  if (!appUrl || !secret) return { erro: "APP_URL ou BOLETO_WEBHOOK_SECRET não configurados." };
+  const ativo = await adaptadorAtivo();
+  if ("erro" in ativo) return { erro: ativo.erro };
+  if (ativo.provedor !== "inter" || typeof ativo.adaptador.registrarWebhook !== "function")
+    return { erro: "Cadastro de webhook disponível apenas para o Banco Inter." };
+  try {
+    await ativo.adaptador.registrarWebhook(urlWebhookEsperada(appUrl, secret));
+  } catch (e) {
+    return { erro: `Falha ao cadastrar no Inter: ${(e as Error).message}` };
+  }
+  revalidatePath("/configuracoes/boletos");
+  return { ok: true };
+}
+
+export async function statusWebhookInter(): Promise<StatusWebhook | "indisponivel"> {
+  if (!(await gate())) return "indisponivel";
+  const appUrl = process.env.APP_URL ?? "";
+  const secret = process.env.BOLETO_WEBHOOK_SECRET ?? "";
+  if (!appUrl || !secret) return "indisponivel";
+  const ativo = await adaptadorAtivo();
+  if ("erro" in ativo || ativo.provedor !== "inter" || typeof ativo.adaptador.consultarWebhook !== "function")
+    return "indisponivel";
+  try {
+    const registrada = await ativo.adaptador.consultarWebhook();
+    return verdictWebhook(registrada, urlWebhookEsperada(appUrl, secret));
+  } catch {
+    return "indisponivel";
+  }
 }
