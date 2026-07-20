@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.46.2] — 2026-07-20
+
+### Corrigido
+
+- **Cancelamento de boleto no Inter falhava com "other side closed".** O Inter fechava a conexão keep-alive
+  no POST de cancelamento, e o undici não re-tenta POST automaticamente (só métodos idempotentes). O
+  cancelamento passa a **re-tentar uma vez** numa conexão nova quando a conexão é fechada — seguro porque o
+  desfecho é idempotente (o boleto acaba cancelado). A emissão **não** re-tenta (evita boleto duplicado).
+
 ## [6.46.1] — 2026-07-20
 
 ### Corrigido
