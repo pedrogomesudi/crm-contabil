@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.41.0] — 2026-07-20
+
+Financeiro — 2ª via em PDF do boleto do Banco Inter (Fatia A: equipe).
+
+### Adicionado
+
+- **Baixar boleto em PDF (2ª via) do Inter** em Contas a Receber: os boletos do Inter (que não têm URL de
+  PDF pronta como o Asaas) ganharam um botão **"Baixar PDF (2ª via)"**. Na primeira solicitação, o PDF é
+  buscado no Inter, guardado no Storage e servido por link de download; nas próximas, vem direto do
+  Storage. A 2ª via no **portal do cliente** vem na próxima fatia.
+
 ## [6.40.2] — 2026-07-20
 
 ### Corrigido
