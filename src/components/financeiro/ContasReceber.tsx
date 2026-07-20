@@ -148,7 +148,11 @@ export function ContasReceber({
                   <tr key={t.id} className="border-t border-linha/70">
                     <td className="p-2">{t.cliente}</td>
                     <td className="p-2">
-                      {t.origem === "DECIMO_TERCEIRO" ? "13º" : t.origem === "RECEITA_AVULSA" ? "Avulsa" : "Mensalidade"}
+                      {t.origem === "DECIMO_TERCEIRO"
+                        ? "13º"
+                        : t.origem === "RECEITA_AVULSA"
+                          ? "Avulsa"
+                          : "Mensalidade"}
                     </td>
                     <td className="p-2">{formatarData(t.vencimento)}</td>
                     <td className="p-2">{formatarMoeda(t.valor)}</td>
