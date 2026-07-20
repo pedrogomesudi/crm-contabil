@@ -1,4 +1,4 @@
-import { createServerSupabase } from "@/lib/supabase/server";
+import { createAdminSupabase } from "@/lib/supabase/admin";
 import { decifrarCredencial } from "./cripto";
 import { criarAdaptadorAsaas } from "./asaas";
 import { criarAdaptadorInter } from "./inter";
@@ -7,7 +7,7 @@ import type { ProvedorBoleto } from "./tipos";
 export async function adaptadorAtivo(): Promise<
   { adaptador: ProvedorBoleto; provedor: "inter" | "asaas" } | { erro: string }
 > {
-  const supabase = await createServerSupabase();
+  const supabase = createAdminSupabase();
   const { data } = await supabase
     .from("boleto_config")
     .select(
