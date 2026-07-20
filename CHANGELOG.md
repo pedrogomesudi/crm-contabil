@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.40.0] — 2026-07-20
+
+Financeiro — cobrança avulsa (Fatia A).
+
+### Adicionado
+
+- **Cobrança avulsa em Contas a Receber:** novo botão **"Nova cobrança avulsa"** cria um título a receber
+  em aberto para um cliente existente — sem depender de honorário recorrente. O formulário pede cliente,
+  descrição, valor, vencimento e categoria (obrigatória), com a opção **"emitir boleto agora"**. Se a
+  emissão do boleto falhar, a cobrança permanece criada e um aviso explica o motivo. Cobranças avulsas
+  aparecem na lista com o rótulo **"Avulsa"**.
+
 ## [6.39.1] — 2026-07-20
 
 ### Corrigido
