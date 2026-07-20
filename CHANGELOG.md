@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.39.1] — 2026-07-20
+
+### Corrigido
+
+- **Emissão de NFS-e "cliente como emitente" — rejeição E0240.** O código do município (IBGE) do
+  tomador era gravado numa chave (`cMun`) diferente da que o montador do XML lê (`codigo_municipio`),
+  então o código do tomador era ignorado e a nota saía com o município do **prestador** — o CEP de um
+  município com o `cMun` de outro, que o SEFIN rejeita ("O CEP informado para o endereço nacional do
+  tomador do serviço não existe ou não pertence ao município do endereço do tomador"). A chave foi
+  padronizada (igual ao fluxo de lote) e, como rede de segurança, o município passa a ser resolvido
+  pelo CEP quando não vier preenchido.
+
 ## [6.39.0] — 2026-07-20
 
 Financeiro — preparação para ativar os boletos (Banco Inter).
