@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.46.3] — 2026-07-20
+
+### Corrigido
+
+- **Cancelamento de boleto no Inter — endpoint errado.** O path correto é `POST /cobrancas/{cod}/cancelar`
+  (o código usava `/cancelamento`, que o gateway do Inter derrubava no nível de conexão — daí o "other side
+  closed"). Corrigido, e o motivo é truncado em 50 caracteres (limite da API). O cancelamento de boleto e de
+  título passa a funcionar.
+
 ## [6.46.2] — 2026-07-20
 
 ### Corrigido

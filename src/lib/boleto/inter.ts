@@ -232,7 +232,13 @@ export function criarAdaptadorInter(
     async cancelar(codigoSolicitacao: string, motivo: string): Promise<void> {
       const tk = await obterToken();
       // Endpoint correto: /cancelar (não /cancelamento). motivoCancelamento: texto livre, máx 50 chars.
-      await req("POST", `/cobrancas/${codigoSolicitacao}/cancelar`, tk, { motivoCancelamento: motivo.slice(0, 50) }, true);
+      await req(
+        "POST",
+        `/cobrancas/${codigoSolicitacao}/cancelar`,
+        tk,
+        { motivoCancelamento: motivo.slice(0, 50) },
+        true,
+      );
     },
   };
 }
