@@ -81,6 +81,12 @@ export function extrairPdfBase64Inter(resp: Record<string, unknown>): string | n
   return typeof p === "string" && p.length > 0 ? p : null;
 }
 
+// A consulta de webhook do Inter devolve a URL cadastrada no campo `webhookUrl`.
+export function extrairWebhookUrlInter(resp: Record<string, unknown>): string | null {
+  const u = resp.webhookUrl;
+  return typeof u === "string" && u.length > 0 ? u : null;
+}
+
 export function interpretarWebhookInter(payload: unknown): EventoPagamento | null {
   if (typeof payload !== "object" || payload === null) return null;
   const p = payload as Record<string, unknown>;
