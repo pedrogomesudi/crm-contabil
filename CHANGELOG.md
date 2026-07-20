@@ -8,6 +8,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.40.2] — 2026-07-20
+
+### Corrigido
+
+- **Cobrança avulsa limitada a uma por cliente/mês.** A unique index `uq_titulo_honorario` (uma
+  mensalidade por cliente/competência) pegava também a receita avulsa, impedindo lançar mais de uma
+  cobrança avulsa para o mesmo cliente no mesmo mês. O índice foi recriado excluindo `RECEITA_AVULSA` —
+  a trava continua valendo só para mensalidade/13º.
+- **Erro de criação da cobrança agora é explícito** — em vez de "Falha ao criar a cobrança" genérico, a
+  tela mostra o motivo real (e uma mensagem clara em caso de duplicidade).
+
+## [6.40.1] — 2026-07-20
+
+### Corrigido
+
+- **Emissão de boleto pelo Banco Inter — conta corrente com zero à esquerda.** O Inter exige o header
+  `x-conta-corrente` no padrão `[1-9]\d*` (só dígitos, sem zero à esquerda) e rejeitava com 400 uma conta
+  como `0545835844`. A conta corrente agora é normalizada no adaptador (remove não-dígitos e zeros à
+  esquerda) antes de ir no header.
+
 ## [6.40.0] — 2026-07-20
 
 Financeiro — cobrança avulsa (Fatia A).
