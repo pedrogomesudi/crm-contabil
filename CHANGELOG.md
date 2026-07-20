@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.35.0] — 2026-07-20
+
+Aprovação de pagamento com alçada (Financeiro).
+
+### Adicionado
+
+- **Aprovação de despesas por alçada:** em Configurações → Dados de pagamento, o admin define uma **alçada**
+  (valor-limite). Despesas lançadas acima dela nascem **pendentes de aprovação** e não podem ser pagas até que
+  **outro admin** (diferente de quem lançou — segregação de funções) as **aprove** na tela de Contas a pagar.
+  Abaixo da alçada (ou sem alçada), o fluxo segue normal. Migration `0115` (`titulo.aprovacao`/`aprovado_por`/
+  `aprovado_em` + `escritorio_config.alcada_pagamento`).
+
 ## [6.34.0] — 2026-07-19
 
 RF-064 — devolução de acervo em rescisão. **Fecha o RF-064.**

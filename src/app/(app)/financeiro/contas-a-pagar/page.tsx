@@ -23,6 +23,8 @@ export default async function ContasPagarPage() {
         contas={contas.data ?? []}
         fornecedores={fornecedores.data ?? []}
         categorias={categorias.data ?? []}
+        papel={perfil.papel}
+        perfilId={perfil.id}
       />
     </Container>
   );

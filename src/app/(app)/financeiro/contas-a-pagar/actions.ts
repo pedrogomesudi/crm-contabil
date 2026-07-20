@@ -5,6 +5,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { parcelas } from "@/lib/financeiro/parcelamento";
+import { requerAprovacao, podeAprovar } from "@/lib/financeiro/aprovacao";
 
 export type TituloPagar = {
   id: string;
@@ -16,6 +17,8 @@ export type TituloPagar = {
   valor: number;
   somaBaixado: number;
   status: string;
+  aprovacao: string | null;
+  criadoPor: string | null;
 };
 export type Recorrente = {
   id: string;
@@ -39,7 +42,7 @@ export async function listarTitulosPagar(competencia: string): Promise<TituloPag
   const { data } = await supabase
     .from("titulo")
     .select(
-      "id, origem, descricao, competencia, vencimento, valor, status, fornecedor(nome), baixa(valor_recebido, estornada)",
+      "id, origem, descricao, competencia, vencimento, valor, status, aprovacao, criado_por, fornecedor(nome), baixa(valor_recebido, estornada)",
     )
     .eq("tipo", "PAGAR")
     .eq("competencia", competencia)
@@ -57,6 +60,8 @@ export async function listarTitulosPagar(competencia: string): Promise<TituloPag
       valor: Number(t.valor),
       somaBaixado: baixas.filter((b) => !b.estornada).reduce((s, b) => s + Number(b.valor_recebido), 0),
       status: t.status as string,
+      aprovacao: (t.aprovacao as string | null) ?? null,
+      criadoPor: (t.criado_por as string | null) ?? null,
     };
   });
 }
@@ -94,6 +99,9 @@ export async function lancarDespesa(fd: FormData) {
   }
 
   if (!venc) return { erro: "Informe o vencimento." };
+  // Alçada: cada parcela acima do limite nasce pendente de aprovação.
+  const { data: cfg } = await supabase.from("escritorio_config").select("alcada_pagamento").eq("id", 1).maybeSingle();
+  const alcada = (cfg?.alcada_pagamento as number | null) ?? null;
   const comp = `${venc.slice(0, 7)}-01`;
   const n = modo === "parcelada" ? Math.max(2, Number(fd.get("total_parcelas") ?? 2)) : 1;
   const grupo = n > 1 ? crypto.randomUUID() : null;
@@ -111,6 +119,7 @@ export async function lancarDespesa(fd: FormData) {
     parcela: n > 1 ? p.parcela : null,
     total_parcelas: n > 1 ? n : null,
     grupo_parcelamento_id: grupo,
+    aprovacao: requerAprovacao(p.valor, alcada) ? "pendente" : null,
     criado_por: perfil.id,
     atualizado_por: perfil.id,
   }));
@@ -141,6 +150,8 @@ export async function registrarPagamento(fd: FormData) {
   const data = String(fd.get("data_recebimento") ?? "");
   if (!tituloId || !(valor > 0) || !conta || !forma || !data) return { erro: "Preencha valor, data, conta e forma." };
   const supabase = await createServerSupabase();
+  const { data: tit } = await supabase.from("titulo").select("aprovacao").eq("id", tituloId).maybeSingle();
+  if (tit?.aprovacao === "pendente") return { erro: "Este pagamento aguarda aprovação." };
   const { error } = await supabase.from("baixa").insert({
     titulo_id: tituloId,
     data_recebimento: data,
@@ -153,6 +164,26 @@ export async function registrarPagamento(fd: FormData) {
     criado_por: perfil.id,
   });
   if (error) return { erro: "Falha ao registrar o pagamento." };
+  revalidatePath(ROTA);
+  return { ok: true };
+}
+
+// Aprova um título pendente — só admin, e não o próprio lançador (segregação).
+export async function aprovarTitulo(tituloId: string): Promise<{ ok?: boolean; erro?: string }> {
+  const perfil = await gate();
+  if (!perfil) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { data: t } = await supabase.from("titulo").select("aprovacao, criado_por").eq("id", tituloId).maybeSingle();
+  if (!t) return { erro: "Título não encontrado." };
+  if (t.aprovacao !== "pendente") return { ok: true };
+  if (!podeAprovar(perfil.papel, perfil.id, (t.criado_por as string | null) ?? null)) {
+    return { erro: "Aprovação exige um admin diferente de quem lançou a despesa." };
+  }
+  const { error } = await supabase
+    .from("titulo")
+    .update({ aprovacao: "aprovado", aprovado_por: perfil.id, aprovado_em: new Date().toISOString() })
+    .eq("id", tituloId);
+  if (error) return { erro: "Falha ao aprovar." };
   revalidatePath(ROTA);
   return { ok: true };
 }
