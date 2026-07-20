@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.43.0] — 2026-07-20
+
+Financeiro — flag "tem honorários recorrentes" no cliente (cobrança avulsa, Fatia B).
+
+### Adicionado
+
+- **Marcar cliente como "sem honorários recorrentes":** a aba Financeiro do cliente ganhou um checkbox
+  **"Cliente tem honorários recorrentes"**. Desmarcado, o cliente é **excluído da geração automática de
+  mensalidade** — funciona como interruptor mestre e **prevalece sobre contrato ativo** (a tela avisa se
+  houver esse conflito). Assim dá para ter clientes cobrados só por **cobrança avulsa**. O campo de
+  honorário mensal fica desabilitado quando a flag está desmarcada, preservando o valor histórico.
+
 ## [6.42.0] — 2026-07-20
 
 Financeiro — 2ª via em PDF do boleto do Inter no portal do cliente (Fatia B).
