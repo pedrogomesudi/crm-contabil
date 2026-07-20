@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.38.0] — 2026-07-20
+
+Financeiro — suspensão por inadimplência: trava do portal do cliente (Fatia B).
+
+### Adicionado
+
+- **Trava do portal por suspensão financeira:** o cliente suspenso perde o acesso a **documentos, notas fiscais e
+  guias** e não abre nova solicitação nem envia documento. **Boletos e situação financeira seguem visíveis** —
+  para o cliente conseguir se regularizar. Assim que os boletos são pagos e o admin reativa, o acesso volta.
+- **Defesa em profundidade:** a trava é imposta no banco (função `auth_cliente_suspenso()` + recriação das
+  policies RLS do portal) e reforçada na interface — um **banner** no topo do portal e uma **tela de bloqueio**
+  nas seções travadas, ambos com atalho para os boletos.
+
 ## [6.37.0] — 2026-07-20
 
 Financeiro — suspensão por inadimplência com trava e alçada (Fatia A: núcleo).
