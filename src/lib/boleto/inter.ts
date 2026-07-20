@@ -75,6 +75,12 @@ export function precisaReconsultarInter(b: BoletoEmitido): boolean {
   return b.linhaDigitavel === null && b.pixCopiaCola === null;
 }
 
+// A exportação de PDF do Inter devolve o arquivo em base64 no campo `pdf`.
+export function extrairPdfBase64Inter(resp: Record<string, unknown>): string | null {
+  const p = resp.pdf;
+  return typeof p === "string" && p.length > 0 ? p : null;
+}
+
 export function interpretarWebhookInter(payload: unknown): EventoPagamento | null {
   if (typeof payload !== "object" || payload === null) return null;
   const p = payload as Record<string, unknown>;
