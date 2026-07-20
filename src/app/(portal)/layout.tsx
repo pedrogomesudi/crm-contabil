@@ -5,6 +5,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { ehCliente } from "@/lib/portal/permissoes";
 import { sair } from "@/app/login/actions";
 import { RegistrarServiceWorker } from "@/components/portal/RegistrarServiceWorker";
+import { AvisoSuspensao } from "@/components/portal/AvisoSuspensao";
 
 export const metadata = {
   manifest: "/manifest.webmanifest",
@@ -24,7 +25,7 @@ export default async function PortalLayout({ children }: { children: React.React
 
   const supabase = await createServerSupabase();
   // A RLS do portal só devolve o próprio cadastro.
-  const { data: cliente } = await supabase.from("clientes").select("razao_social").maybeSingle();
+  const { data: cliente } = await supabase.from("clientes").select("razao_social, suspenso").maybeSingle();
   const { data: marca } = await supabase.from("escritorio_config").select("nome").eq("id", 1).maybeSingle();
 
   const nav = [
@@ -59,7 +60,10 @@ export default async function PortalLayout({ children }: { children: React.React
           ))}
         </nav>
       </header>
-      <main className="mx-auto max-w-[1280px] p-4">{children}</main>
+      <main className="mx-auto max-w-[1280px] space-y-4 p-4">
+        {cliente?.suspenso ? <AvisoSuspensao variante="banner" /> : null}
+        {children}
+      </main>
     </div>
   );
 }

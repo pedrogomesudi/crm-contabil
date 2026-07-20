@@ -1,5 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { portalSuspenso } from "@/lib/portal/suspensao";
+import { AvisoSuspensao } from "@/components/portal/AvisoSuspensao";
 import { urlComprovanteObrigacao } from "../actions";
 import { BotaoBaixar } from "../BotaoBaixar";
 
@@ -9,6 +11,7 @@ const dataBR = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5
 const mesAno = (iso: string) => `${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 
 export default async function PortalGuiasPage() {
+  if (await portalSuspenso()) return <AvisoSuspensao variante="bloqueio" recurso="Guias" />;
   const supabase = await createServerSupabase();
   // RLS: só as instâncias do próprio cliente.
   const { data } = await supabase
