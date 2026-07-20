@@ -5,6 +5,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { ehCliente } from "@/lib/portal/permissoes";
 import { tipoComprovante } from "@/lib/legalizacao/processo";
+import { garantirPdfBoleto, assinarPdfBoleto } from "@/app/(app)/financeiro/contas-a-receber/boleto-pdf";
 
 // PADRÃO DE SEGURANÇA (obrigatório em todo download do portal):
 // 1) lê o registro com o cliente Supabase DO USUÁRIO — a RLS prova a titularidade;
@@ -70,6 +71,25 @@ export async function urlComprovanteObrigacao(id: string): Promise<{ url?: strin
 }
 
 // A 2ª via do boleto é um link externo do provedor: aqui só registramos o acesso.
+export async function urlBoletoPdf(id: string): Promise<{ url?: string; erro?: string }> {
+  const perfil = await gate();
+  if (!perfil) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  // RLS (boleto_portal_sel) prova que o boleto é do próprio cliente.
+  const { data: b } = await supabase.from("boleto").select("id, numero, url_pdf").eq("id", id).maybeSingle();
+  if (!b) return { erro: "Boleto não encontrado." };
+  let url: string | null;
+  if (b.url_pdf) url = b.url_pdf as string;
+  else {
+    const caminho = await garantirPdfBoleto(id);
+    if (!caminho) return { erro: "PDF não disponível." };
+    url = await assinarPdfBoleto(caminho, Number(b.numero));
+  }
+  if (!url) return { erro: "Falha ao gerar o link." };
+  await registrar(perfil.clienteId!, perfil.id, "boleto", id);
+  return { url };
+}
+
 export async function registrarAcessoBoleto(id: string): Promise<{ ok?: boolean; erro?: string }> {
   const perfil = await gate();
   if (!perfil) return { erro: "Sem permissão." };
