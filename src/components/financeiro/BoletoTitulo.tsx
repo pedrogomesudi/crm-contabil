@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   emitirBoleto,
   urlBoletoPdfEquipe,
+  cancelarBoleto,
   type BoletoView,
 } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
 
@@ -30,6 +31,13 @@ export function BoletoTitulo({
     const r = await urlBoletoPdfEquipe(boleto!.id);
     if (r.erro) return alert(r.erro);
     if (r.url) window.open(r.url, "_blank", "noopener,noreferrer");
+  }
+  async function cancelar() {
+    const motivo = prompt("Motivo do cancelamento do boleto?") ?? "";
+    if (motivo.trim().length < 3) return;
+    const r = await cancelarBoleto(boleto!.id, motivo);
+    if (r.erro) return alert(r.erro);
+    onMudou();
   }
   if (!boleto) {
     return (
@@ -63,6 +71,11 @@ export function BoletoTitulo({
       <span className="block">
         Boleto #{boleto.numero} · {boleto.status}
       </span>
+      {boleto.status === "emitido" && (
+        <button type="button" onClick={cancelar} className="block text-left text-negativo underline">
+          Cancelar boleto
+        </button>
+      )}
     </div>
   );
 }

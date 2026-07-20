@@ -195,5 +195,9 @@ export function criarAdaptadorInter(
       const j = await req("GET", `/cobrancas/${codigoSolicitacao}`, tk);
       return interpretarSituacaoInter(codigoSolicitacao, j);
     },
+    async cancelar(codigoSolicitacao: string, motivo: string): Promise<void> {
+      const tk = await obterToken();
+      await req("POST", `/cobrancas/${codigoSolicitacao}/cancelamento`, tk, { motivoCancelamento: motivo });
+    },
   };
 }

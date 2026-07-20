@@ -40,4 +40,5 @@ export interface ProvedorBoleto {
   registrarWebhook?(url: string): Promise<void>;
   consultarWebhook?(): Promise<string | null>;
   consultarPagamento?(provedorBoletoId: string): Promise<EventoPagamento | null>;
+  cancelar?(provedorBoletoId: string, motivo: string): Promise<void>;
 }

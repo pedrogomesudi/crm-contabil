@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.46.0] — 2026-07-20
+
+Financeiro — cancelar boleto e cancelar título.
+
+### Adicionado
+
+- **Cancelar boleto** (em Contas a Receber, na linha do boleto): cancela a cobrança no Inter e marca o
+  boleto como cancelado, **mantendo o título em aberto** para reemitir ou cobrar de outro jeito.
+- **Cancelar título** (na linha do título, quando em aberto e sem baixa): marca o título como **CANCELADO**
+  (some do "a receber") e, se houver um boleto ativo, **cancela também no Inter** — resolve cobranças
+  duplicadas num clique. Ambos exigem justificativa; pagos/baixados ficam protegidos.
+
 ## [6.45.0] — 2026-07-20
 
 Financeiro — sincronização de boletos pagos com o Banco Inter (Fatia A: manual).

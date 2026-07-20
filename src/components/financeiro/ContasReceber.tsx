@@ -16,8 +16,10 @@ import { cobrarViaWhatsapp } from "@/app/(app)/financeiro/contas-a-receber/whats
 import {
   listarBoletosDaCompetencia,
   sincronizarBoletosInter,
+  cancelarTitulo,
   type BoletoView,
 } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
+import { podeCancelarTitulo } from "@/lib/boleto/cancelamento";
 import { BoletoTitulo } from "./BoletoTitulo";
 import { saldoTitulo, ehVencido, LABEL_STATUS } from "@/lib/financeiro/titulos";
 import { Badge } from "@/components/ui/Badge";
@@ -214,6 +216,26 @@ export function ContasReceber({
                           }
                         >
                           Cobrar (WhatsApp)
+                        </button>
+                      )}
+                      {podeCancelarTitulo(status, t.somaBaixado) && (
+                        <button
+                          type="button"
+                          className="ml-2 text-negativo underline"
+                          onClick={() =>
+                            start(async () => {
+                              const motivo = prompt("Motivo do cancelamento do título?") ?? "";
+                              if (motivo.trim().length < 3) return;
+                              const r = await cancelarTitulo(t.id, motivo);
+                              setMsg(r.erro ?? "Título cancelado.");
+                              if (!r.erro) {
+                                setTitulos(await listarTitulos(competencia));
+                                setBoletos(await listarBoletosDaCompetencia(competencia));
+                              }
+                            })
+                          }
+                        >
+                          Cancelar
                         </button>
                       )}
                       <div className="mt-1">
