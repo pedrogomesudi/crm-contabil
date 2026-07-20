@@ -142,34 +142,55 @@ export function criarAdaptadorInter(
     return token.valor;
   }
 
+  // Detecta erro de conexão fechada (undici não re-tenta POST nessa situação).
+  const ehErroConexao = (e: unknown): boolean => {
+    const cause = (e as { cause?: { code?: string } }).cause;
+    const cod = cause?.code ?? "";
+    const msg = ((e as Error).message ?? "") + " " + ((cause as { message?: string })?.message ?? "");
+    return /UND_ERR_SOCKET|ECONNRESET|other side closed|socket hang up/i.test(cod + " " + msg);
+  };
+
   async function req(
     method: "GET" | "POST" | "PUT",
     path: string,
     tk: string,
     body?: unknown,
+    // retriavel: re-tenta 1x em conexão fechada. Use só onde o desfecho é seguro
+    // repetir (cancelamento, consulta) — NUNCA na emissão (evita boleto duplicado).
+    retriavel = false,
   ): Promise<Record<string, unknown>> {
-    let r: Response;
+    const enviar = async (): Promise<Record<string, unknown>> => {
+      let r: Response;
+      try {
+        r = await fetch(`${urls.cobranca}${path}`, {
+          method,
+          headers: {
+            Authorization: `Bearer ${tk}`,
+            "Content-Type": "application/json",
+            "x-conta-corrente": contaHeader,
+          },
+          body: body === undefined ? undefined : JSON.stringify(body),
+          dispatcher,
+        } as RequestInit & { dispatcher: Agent });
+      } catch (e) {
+        // O "fetch failed" do undici esconde a causa real (ECONNRESET, timeout, TLS...)
+        // em error.cause. Expõe pra diagnosticar falhas de transporte com o Inter.
+        const cause = (e as { cause?: { code?: string; message?: string } }).cause;
+        const detalhe = cause ? `${cause.code ?? ""} ${cause.message ?? ""}`.trim() : (e as Error).message;
+        const err = new Error(`Inter ${method} ${path} — falha de conexão: ${detalhe}`);
+        (err as { conexao?: boolean }).conexao = ehErroConexao(e);
+        throw err;
+      }
+      const j = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!r.ok) throw new Error(`Inter ${r.status}: ${JSON.stringify(j)}`);
+      return j;
+    };
     try {
-      r = await fetch(`${urls.cobranca}${path}`, {
-        method,
-        headers: {
-          Authorization: `Bearer ${tk}`,
-          "Content-Type": "application/json",
-          "x-conta-corrente": contaHeader,
-        },
-        body: body === undefined ? undefined : JSON.stringify(body),
-        dispatcher,
-      } as RequestInit & { dispatcher: Agent });
+      return await enviar();
     } catch (e) {
-      // O "fetch failed" do undici esconde a causa real (ECONNRESET, timeout, TLS...)
-      // em error.cause. Expõe pra diagnosticar falhas de transporte com o Inter.
-      const cause = (e as { cause?: { code?: string; message?: string } }).cause;
-      const detalhe = cause ? `${cause.code ?? ""} ${cause.message ?? ""}`.trim() : (e as Error).message;
-      throw new Error(`Inter ${method} ${path} — falha de conexão: ${detalhe}`);
+      if (retriavel && (e as { conexao?: boolean }).conexao) return await enviar();
+      throw e;
     }
-    const j = (await r.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!r.ok) throw new Error(`Inter ${r.status}: ${JSON.stringify(j)}`);
-    return j;
   }
 
   return {
@@ -210,7 +231,7 @@ export function criarAdaptadorInter(
     },
     async cancelar(codigoSolicitacao: string, motivo: string): Promise<void> {
       const tk = await obterToken();
-      await req("POST", `/cobrancas/${codigoSolicitacao}/cancelamento`, tk, { motivoCancelamento: motivo });
+      await req("POST", `/cobrancas/${codigoSolicitacao}/cancelamento`, tk, { motivoCancelamento: motivo }, true);
     },
   };
 }
