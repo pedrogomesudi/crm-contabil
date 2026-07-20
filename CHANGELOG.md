@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.45.0] — 2026-07-20
+
+Financeiro — sincronização de boletos pagos com o Banco Inter (Fatia A: manual).
+
+### Adicionado
+
+- **Botão "Sincronizar boletos pagos (Inter)"** em Contas a Receber: consulta no Inter a situação dos
+  boletos em aberto e **baixa os que já estão pagos lá** — cobrindo pagamentos que o webhook perdeu (queda,
+  webhook não cadastrado na hora do pagamento, etc.). A baixa reusa exatamente a mesma lógica idempotente
+  do webhook. O cron diário que roda isso sozinho vem na próxima fatia.
+
 ## [6.44.0] — 2026-07-20
 
 Financeiro — cadastrar o webhook de cobrança no Banco Inter (baixa automática ponta a ponta).
