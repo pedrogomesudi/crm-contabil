@@ -8,6 +8,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.46.1] — 2026-07-20
+
+### Corrigido
+
+- **Diagnóstico de falha de conexão com o Inter:** o "fetch failed" genérico do Node escondia a causa real
+  (ECONNRESET, timeout, TLS...). As chamadas ao Inter agora expõem a causa subjacente na mensagem de erro,
+  para diagnosticar falhas de transporte (ex.: no cancelamento de boleto).
+
 ## [6.46.0] — 2026-07-20
 
 Financeiro — cancelar boleto e cancelar título.
