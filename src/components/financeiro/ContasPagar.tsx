@@ -8,8 +8,10 @@ import {
   lancarDespesa,
   gerarDespesasRecorrentes,
   registrarPagamento,
+  aprovarTitulo,
   type TituloPagar,
 } from "@/app/(app)/financeiro/contas-a-pagar/actions";
+import { podeAprovar } from "@/lib/financeiro/aprovacao";
 import { saldoTitulo } from "@/lib/financeiro/titulos";
 import { formatarMoeda, formatarData } from "@/lib/format";
 
@@ -17,10 +19,14 @@ export function ContasPagar({
   contas,
   fornecedores,
   categorias,
+  papel,
+  perfilId,
 }: {
   contas: { id: string; nome: string }[];
   fornecedores: { id: string; nome: string }[];
   categorias: { id: string; nome: string }[];
+  papel: string;
+  perfilId: string;
 }) {
   const [mes, setMes] = useState("");
   const [titulos, setTitulos] = useState<TituloPagar[]>([]);
@@ -39,6 +45,12 @@ export function ContasPagar({
       const r = await gerarDespesasRecorrentes(competencia);
       setMsg(r.erro ?? `Geradas ${r.gerados}, puladas ${r.pulados}.`);
       if (!r.erro) setTitulos(await listarTitulosPagar(competencia));
+    });
+  const aprovar = (id: string) =>
+    start(async () => {
+      const r = await aprovarTitulo(id);
+      setMsg(r.erro ?? "Aprovado.");
+      if (!r.erro && competencia) setTitulos(await listarTitulosPagar(competencia));
     });
 
   return (
@@ -165,7 +177,17 @@ export function ContasPagar({
                       <Badge variante={badgeStatusTitulo(t.status)}>{t.status}</Badge>
                     </td>
                     <td className="p-2 text-right">
-                      {saldo > 0 ? (
+                      {t.aprovacao === "pendente" ? (
+                        podeAprovar(papel, perfilId, t.criadoPor) ? (
+                          <button type="button" className="text-verde underline" onClick={() => aprovar(t.id)}>
+                            Aprovar
+                          </button>
+                        ) : (
+                          <span className="text-cinza-claro" title="Aguarda aprovação de outro admin">
+                            aguarda aprovação
+                          </span>
+                        )
+                      ) : saldo > 0 ? (
                         <button type="button" className="text-blue-600 underline" onClick={() => setPagando(t.id)}>
                           Pagar
                         </button>
