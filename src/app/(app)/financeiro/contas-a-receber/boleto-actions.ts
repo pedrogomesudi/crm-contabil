@@ -5,8 +5,11 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { adaptadorAtivo } from "@/lib/boleto/ativo";
 import { dadosEmissaoDeTitulo } from "@/lib/boleto/emissao";
+import { createAdminSupabase } from "@/lib/supabase/admin";
 import { garantirPdfBoleto, assinarPdfBoleto } from "./boleto-pdf";
 import { sincronizarBoletosCore } from "./sincronizar";
+import { cancelarBoletoNoInter } from "@/lib/boleto/cancelar-exec";
+import { podeCancelarTitulo } from "@/lib/boleto/cancelamento";
 
 export type BoletoView = {
   id: string;
@@ -135,4 +138,75 @@ export async function sincronizarBoletosInter(): Promise<{ baixados?: number; er
   } catch (e) {
     return { erro: `Falha na sincronização: ${(e as Error).message}` };
   }
+}
+
+export async function cancelarBoleto(boletoId: string, motivo: string): Promise<{ ok?: boolean; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  if (!motivo || motivo.trim().length < 3) return { erro: "Informe a justificativa do cancelamento." };
+  const admin = createAdminSupabase();
+  const { data: b } = await admin
+    .from("boleto")
+    .select("id, provedor, provedor_boleto_id, status")
+    .eq("id", boletoId)
+    .maybeSingle();
+  if (!b) return { erro: "Boleto não encontrado." };
+  if (b.status !== "emitido") return { erro: "Só é possível cancelar boleto emitido." };
+  try {
+    await cancelarBoletoNoInter(
+      admin,
+      {
+        id: b.id as string,
+        provedor: b.provedor as string,
+        provedor_boleto_id: (b.provedor_boleto_id as string | null) ?? null,
+        status: b.status as string,
+      },
+      motivo.trim(),
+    );
+  } catch (e) {
+    return { erro: `Falha ao cancelar no provedor: ${(e as Error).message}` };
+  }
+  revalidatePath("/financeiro/contas-a-receber");
+  return { ok: true };
+}
+
+export async function cancelarTitulo(tituloId: string, motivo: string): Promise<{ ok?: boolean; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  if (!motivo || motivo.trim().length < 3) return { erro: "Informe a justificativa do cancelamento." };
+  const admin = createAdminSupabase();
+  const { data: t } = await admin
+    .from("titulo")
+    .select("id, status, baixa(valor_recebido, estornada)")
+    .eq("id", tituloId)
+    .maybeSingle();
+  if (!t) return { erro: "Título não encontrado." };
+  const somaBaixado = ((t.baixa ?? []) as { valor_recebido: number; estornada: boolean }[])
+    .filter((x) => !x.estornada)
+    .reduce((s, x) => s + Number(x.valor_recebido), 0);
+  if (!podeCancelarTitulo(t.status as string, somaBaixado))
+    return { erro: "Título não pode ser cancelado (baixado, pago ou já cancelado)." };
+  const { data: bol } = await admin
+    .from("boleto")
+    .select("id, provedor, provedor_boleto_id, status")
+    .eq("titulo_id", tituloId)
+    .eq("status", "emitido")
+    .maybeSingle();
+  if (bol) {
+    try {
+      await cancelarBoletoNoInter(
+        admin,
+        {
+          id: bol.id as string,
+          provedor: bol.provedor as string,
+          provedor_boleto_id: (bol.provedor_boleto_id as string | null) ?? null,
+          status: bol.status as string,
+        },
+        motivo.trim(),
+      );
+    } catch (e) {
+      return { erro: `Falha ao cancelar o boleto no provedor: ${(e as Error).message}` };
+    }
+  }
+  await admin.from("titulo").update({ status: "CANCELADO" }).eq("id", tituloId);
+  revalidatePath("/financeiro/contas-a-receber");
+  return { ok: true };
 }
