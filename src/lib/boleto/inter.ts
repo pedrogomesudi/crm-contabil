@@ -148,12 +148,25 @@ export function criarAdaptadorInter(
     tk: string,
     body?: unknown,
   ): Promise<Record<string, unknown>> {
-    const r = await fetch(`${urls.cobranca}${path}`, {
-      method,
-      headers: { Authorization: `Bearer ${tk}`, "Content-Type": "application/json", "x-conta-corrente": contaHeader },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      dispatcher,
-    } as RequestInit & { dispatcher: Agent });
+    let r: Response;
+    try {
+      r = await fetch(`${urls.cobranca}${path}`, {
+        method,
+        headers: {
+          Authorization: `Bearer ${tk}`,
+          "Content-Type": "application/json",
+          "x-conta-corrente": contaHeader,
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        dispatcher,
+      } as RequestInit & { dispatcher: Agent });
+    } catch (e) {
+      // O "fetch failed" do undici esconde a causa real (ECONNRESET, timeout, TLS...)
+      // em error.cause. Expõe pra diagnosticar falhas de transporte com o Inter.
+      const cause = (e as { cause?: { code?: string; message?: string } }).cause;
+      const detalhe = cause ? `${cause.code ?? ""} ${cause.message ?? ""}`.trim() : (e as Error).message;
+      throw new Error(`Inter ${method} ${path} — falha de conexão: ${detalhe}`);
+    }
     const j = (await r.json().catch(() => ({}))) as Record<string, unknown>;
     if (!r.ok) throw new Error(`Inter ${r.status}: ${JSON.stringify(j)}`);
     return j;
