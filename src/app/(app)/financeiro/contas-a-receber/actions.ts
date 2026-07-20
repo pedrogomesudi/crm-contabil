@@ -108,7 +108,11 @@ export async function criarCobrancaAvulsa(
     })
     .select("id")
     .single();
-  if (error || !data) return { erro: "Falha ao criar a cobrança." };
+  if (error || !data) {
+    if (error?.code === "23505")
+      return { erro: "Já existe uma cobrança desse tipo para este cliente nesta competência." };
+    return { erro: error?.message ? `Falha ao criar a cobrança: ${error.message}` : "Falha ao criar a cobrança." };
+  }
   const tituloId = data.id as string;
   revalidatePath(ROTA);
   if (emitirBoletoAgora) {

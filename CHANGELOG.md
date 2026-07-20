@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.40.2] — 2026-07-20
+
+### Corrigido
+
+- **Cobrança avulsa limitada a uma por cliente/mês.** A unique index `uq_titulo_honorario` (uma
+  mensalidade por cliente/competência) pegava também a receita avulsa, impedindo lançar mais de uma
+  cobrança avulsa para o mesmo cliente no mesmo mês. O índice foi recriado excluindo `RECEITA_AVULSA` —
+  a trava continua valendo só para mensalidade/13º.
+- **Erro de criação da cobrança agora é explícito** — em vez de "Falha ao criar a cobrança" genérico, a
+  tela mostra o motivo real (e uma mensagem clara em caso de duplicidade).
+
 ## [6.40.1] — 2026-07-20
 
 ### Corrigido
