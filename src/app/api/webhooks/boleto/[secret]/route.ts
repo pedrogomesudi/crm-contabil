@@ -3,7 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { interpretarWebhookAsaas } from "@/lib/boleto/asaas";
 import { interpretarWebhookInter } from "@/lib/boleto/inter";
-import { dadosBaixaBoleto } from "@/lib/boleto/baixa";
+import { baixarBoletoPago } from "@/lib/boleto/baixar";
 
 function segredoOk(recebido: string): boolean {
   const esperado = process.env.BOLETO_WEBHOOK_SECRET;
@@ -44,19 +44,15 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
       .select("id, titulo_id, valor, status")
       .eq("provedor_boleto_id", evento.provedorBoletoId)
       .maybeSingle();
-    if (!bol || bol.status === "pago" || bol.status === "cancelado") continue;
-    if (!cfg.conta_bancaria_id) continue;
-    const d = dadosBaixaBoleto(evento, Number(bol.valor), hoje);
-    const { error: eBaixa } = await admin.from("baixa").insert({
-      titulo_id: bol.titulo_id,
-      data_recebimento: d.dataRecebimento,
-      valor_recebido: d.valorRecebido,
-      conta_bancaria_id: cfg.conta_bancaria_id,
-      forma_pagamento: "BOLETO",
-    });
-    if (eBaixa) continue;
-    await admin.from("boleto").update({ status: "pago", atualizado_em: new Date().toISOString() }).eq("id", bol.id);
-    baixados++;
+    if (!bol) continue;
+    const baixou = await baixarBoletoPago(
+      admin,
+      { id: bol.id as string, titulo_id: bol.titulo_id as string, valor: Number(bol.valor), status: bol.status as string },
+      evento,
+      cfg.conta_bancaria_id as string | null,
+      hoje,
+    );
+    if (baixou) baixados++;
   }
   return NextResponse.json({ ok: true, baixados });
 }
