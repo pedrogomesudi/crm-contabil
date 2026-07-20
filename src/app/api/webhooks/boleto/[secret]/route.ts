@@ -47,7 +47,12 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
     if (!bol) continue;
     const baixou = await baixarBoletoPago(
       admin,
-      { id: bol.id as string, titulo_id: bol.titulo_id as string, valor: Number(bol.valor), status: bol.status as string },
+      {
+        id: bol.id as string,
+        titulo_id: bol.titulo_id as string,
+        valor: Number(bol.valor),
+        status: bol.status as string,
+      },
       evento,
       cfg.conta_bancaria_id as string | null,
       hoje,
