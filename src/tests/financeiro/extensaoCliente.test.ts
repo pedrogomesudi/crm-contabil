@@ -19,6 +19,7 @@ describe("normalizarExtensaoFinanceira", () => {
       data_saida: null,
       indice_reajuste: "SALARIO_MINIMO",
       percentual_reajuste: null,
+      tem_honorarios_recorrentes: false,
     });
   });
   it("rejeita dia de vencimento fora de 1..28", () => {
@@ -38,6 +39,7 @@ describe("normalizarExtensaoFinanceira", () => {
       data_saida: null,
       indice_reajuste: "SALARIO_MINIMO",
       percentual_reajuste: null,
+      tem_honorarios_recorrentes: false,
     });
   });
 });
