@@ -1,6 +1,10 @@
 "use client";
 import { useState } from "react";
-import { emitirBoleto, type BoletoView } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
+import {
+  emitirBoleto,
+  urlBoletoPdfEquipe,
+  type BoletoView,
+} from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
 
 export function BoletoTitulo({
   tituloId,
@@ -21,6 +25,11 @@ export function BoletoTitulo({
   }
   function copiar(txt: string) {
     void navigator.clipboard?.writeText(txt);
+  }
+  async function baixarPdf() {
+    const r = await urlBoletoPdfEquipe(boleto!.id);
+    if (r.erro) return alert(r.erro);
+    if (r.url) window.open(r.url, "_blank", "noopener,noreferrer");
   }
   if (!boleto) {
     return (
@@ -45,6 +54,11 @@ export function BoletoTitulo({
         <a href={boleto.urlPdf} target="_blank" rel="noreferrer" className="block underline">
           PDF
         </a>
+      )}
+      {!boleto.urlPdf && (
+        <button type="button" onClick={baixarPdf} className="block text-left underline">
+          Baixar PDF (2ª via)
+        </button>
       )}
       <span className="block">
         Boleto #{boleto.numero} · {boleto.status}

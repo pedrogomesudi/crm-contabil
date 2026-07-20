@@ -5,6 +5,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { adaptadorAtivo } from "@/lib/boleto/ativo";
 import { dadosEmissaoDeTitulo } from "@/lib/boleto/emissao";
+import { garantirPdfBoleto, assinarPdfBoleto } from "./boleto-pdf";
 
 export type BoletoView = {
   id: string;
@@ -80,6 +81,19 @@ export async function emitirBoleto(tituloId: string): Promise<{ ok?: boolean; er
   if (error) return { erro: "Boleto emitido no provedor, mas falhou ao gravar. Verifique antes de reemitir." };
   revalidatePath("/financeiro/contas-a-receber");
   return { ok: true };
+}
+
+export async function urlBoletoPdfEquipe(boletoId: string): Promise<{ url?: string; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const { data: b } = await supabase.from("boleto").select("id, numero, url_pdf").eq("id", boletoId).maybeSingle();
+  if (!b) return { erro: "Boleto não encontrado." };
+  if (b.url_pdf) return { url: b.url_pdf as string };
+  const caminho = await garantirPdfBoleto(boletoId);
+  if (!caminho) return { erro: "PDF não disponível para este boleto." };
+  const url = await assinarPdfBoleto(caminho, Number(b.numero));
+  if (!url) return { erro: "Falha ao gerar o PDF." };
+  return { url };
 }
 
 export async function listarBoletosDaCompetencia(competencia: string): Promise<Record<string, BoletoView>> {
