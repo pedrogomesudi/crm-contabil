@@ -3,6 +3,13 @@
 -- Estado corrente (barato para UI e, na Fatia B, para RLS do portal).
 alter table clientes add column if not exists suspenso boolean not null default false;
 
+-- Blindagem da alçada NO BANCO, não só na server action. A policy clientes_update
+-- (0003) deixa assistente e contador (nos próprios clientes) atualizarem a linha do
+-- cliente; sem esta trava por coluna, eles poderiam flipar `suspenso` direto pela API
+-- (supabase.from('clientes').update({ suspenso:false })) e furar a alçada "só admin
+-- reativa". A action escreve via service_role, que ignora grants e RLS — segue funcionando.
+revoke update (suspenso) on clientes from authenticated, anon;
+
 -- Trilha de auditoria append-only: quem suspendeu/reativou, por quê e contra qual dívida.
 create table if not exists cliente_suspensao (
   id            uuid primary key default gen_random_uuid(),
@@ -21,8 +28,14 @@ create index if not exists idx_cliente_suspensao_cliente on cliente_suspensao(cl
 alter table cliente_suspensao enable row level security;
 drop policy if exists cliente_suspensao_read  on cliente_suspensao;
 drop policy if exists cliente_suspensao_write on cliente_suspensao;
+-- Leitura espelha a visibilidade de clientes: contador só vê a auditoria dos PRÓPRIOS clientes.
 create policy cliente_suspensao_read on cliente_suspensao for select
-  using (auth_papel() in ('admin','contador','assistente','financeiro'));
+  using (
+    auth_papel() in ('admin','assistente','financeiro')
+    or (auth_papel() = 'contador' and exists (
+      select 1 from clientes c where c.id = cliente_suspensao.cliente_id and c.contador_id = auth.uid()
+    ))
+  );
 create policy cliente_suspensao_write on cliente_suspensao for all
   using (auth_papel() in ('admin','financeiro')) with check (auth_papel() in ('admin','financeiro'));
 
