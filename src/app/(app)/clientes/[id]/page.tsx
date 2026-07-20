@@ -44,6 +44,7 @@ import { OptOutCobranca } from "@/components/clientes/OptOutCobranca";
 import { OptOutLegalizacao } from "@/components/clientes/OptOutLegalizacao";
 import { VinculosSection } from "@/components/clientes/VinculosSection";
 import { FlagsFiscaisSection } from "@/components/clientes/FlagsFiscaisSection";
+import { DevolucaoAcervo } from "@/components/clientes/DevolucaoAcervo";
 import { consolidarRelacionadas } from "@/lib/clientes/vinculos";
 import { carregarCamposAtivos } from "@/app/(app)/configuracoes/campos-custom/actions";
 import { ObrigacoesCliente } from "./ObrigacoesCliente";
@@ -411,6 +412,7 @@ export default async function FichaClientePage({
                 derivados={derivadosFiscais}
               />
             )}
+            {podeCriarCliente(papel) && <DevolucaoAcervo clienteId={id} />}
             {podeLegalizacao && (
               <section className="rounded-lg border border-linha bg-white p-4">
                 <OptOutLegalizacao
