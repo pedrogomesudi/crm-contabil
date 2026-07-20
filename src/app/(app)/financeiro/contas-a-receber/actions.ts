@@ -4,6 +4,8 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
+import { validarCobrancaAvulsa, competenciaDoVencimento } from "@/lib/financeiro/cobranca-avulsa";
+import { emitirBoleto } from "./boleto-actions";
 
 export type TituloView = {
   id: string;
@@ -54,6 +56,66 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
       temTelefone: Boolean(cliente?.telefone),
     };
   });
+}
+
+export async function listarClientesAtivos(): Promise<{ id: string; nome: string }[]> {
+  if (!(await gateGerir())) return [];
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("clientes")
+    .select("id, razao_social")
+    .is("excluido_em", null)
+    .order("razao_social");
+  return (data ?? []).map((c) => ({ id: c.id as string, nome: c.razao_social as string }));
+}
+
+export async function listarCategoriasReceita(): Promise<{ id: string; nome: string }[]> {
+  if (!(await gateGerir())) return [];
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("categoria")
+    .select("id, nome, natureza")
+    .eq("ativa", true)
+    .eq("natureza", "RECEITA")
+    .order("nome");
+  return (data ?? []).map((c) => ({ id: c.id as string, nome: c.nome as string }));
+}
+
+export type ResultadoAvulsa = { ok: true; tituloId: string; avisoBoleto?: string } | { erro: string };
+
+export async function criarCobrancaAvulsa(
+  input: { clienteId: string; valor: number; vencimento: string; categoriaId: string; descricao: string },
+  emitirBoletoAgora: boolean,
+): Promise<ResultadoAvulsa> {
+  const perfil = await gateGerir();
+  if (!perfil) return { erro: "Sem permissão." };
+  const v = validarCobrancaAvulsa(input);
+  if (!v.ok) return { erro: v.erro };
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("titulo")
+    .insert({
+      tipo: "RECEBER",
+      origem: "RECEITA_AVULSA",
+      status: "ABERTO",
+      cliente_id: input.clienteId,
+      valor: input.valor,
+      vencimento: input.vencimento,
+      competencia: competenciaDoVencimento(input.vencimento),
+      categoria_id: input.categoriaId,
+      descricao: input.descricao.trim() || null,
+      criado_por: perfil.id,
+    })
+    .select("id")
+    .single();
+  if (error || !data) return { erro: "Falha ao criar a cobrança." };
+  const tituloId = data.id as string;
+  revalidatePath(ROTA);
+  if (emitirBoletoAgora) {
+    const b = await emitirBoleto(tituloId);
+    if (b.erro) return { ok: true, tituloId, avisoBoleto: b.erro };
+  }
+  return { ok: true, tituloId };
 }
 
 export async function gerarMensalidades(competencia: string) {
