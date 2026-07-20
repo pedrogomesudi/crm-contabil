@@ -36,4 +36,5 @@ export type EventoPagamento = {
 export interface ProvedorBoleto {
   emitir(dados: DadosEmissao): Promise<BoletoEmitido>;
   interpretarWebhook(payload: unknown): EventoPagamento | null;
+  pdf?(provedorBoletoId: string): Promise<string | null>;
 }

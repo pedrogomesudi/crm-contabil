@@ -159,5 +159,10 @@ export function criarAdaptadorInter(
     interpretarWebhook(payload: unknown): EventoPagamento | null {
       return interpretarWebhookInter(payload);
     },
+    async pdf(codigoSolicitacao: string): Promise<string | null> {
+      const tk = await obterToken();
+      const j = await req("GET", `/cobrancas/${codigoSolicitacao}/pdf`, tk);
+      return extrairPdfBase64Inter(j);
+    },
   };
 }
