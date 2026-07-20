@@ -3,6 +3,20 @@ import { revalidatePath } from "next/cache";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 
+export async function salvarAlcada(formData: FormData): Promise<void> {
+  const perfil = await getPerfilAtual();
+  if (!perfil?.ativo || perfil.papel !== "admin") return;
+  const raw = String(formData.get("alcada") ?? "")
+    .trim()
+    .replace(/\./g, "")
+    .replace(",", ".");
+  const alcada = raw === "" ? null : Number(raw);
+  if (alcada != null && (!Number.isFinite(alcada) || alcada < 0)) return;
+  const admin = createAdminSupabase();
+  await admin.from("escritorio_config").update({ alcada_pagamento: alcada }).eq("id", 1);
+  revalidatePath("/configuracoes/pagamento");
+}
+
 export type EstadoPagamento = { ok?: boolean; erro?: string };
 
 export async function salvarDadosPagamento(_prev: EstadoPagamento, formData: FormData): Promise<EstadoPagamento> {
