@@ -132,7 +132,7 @@ export function criarAdaptadorInter(
   }
 
   async function req(
-    method: "GET" | "POST",
+    method: "GET" | "POST" | "PUT",
     path: string,
     tk: string,
     body?: unknown,
@@ -169,6 +169,15 @@ export function criarAdaptadorInter(
       const tk = await obterToken();
       const j = await req("GET", `/cobrancas/${codigoSolicitacao}/pdf`, tk);
       return extrairPdfBase64Inter(j);
+    },
+    async registrarWebhook(url: string): Promise<void> {
+      const tk = await obterToken();
+      await req("PUT", "/cobrancas/webhook", tk, { webhookUrl: url });
+    },
+    async consultarWebhook(): Promise<string | null> {
+      const tk = await obterToken();
+      const j = await req("GET", "/cobrancas/webhook", tk);
+      return extrairWebhookUrlInter(j);
     },
   };
 }

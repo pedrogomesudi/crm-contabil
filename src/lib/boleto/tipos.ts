@@ -37,4 +37,6 @@ export interface ProvedorBoleto {
   emitir(dados: DadosEmissao): Promise<BoletoEmitido>;
   interpretarWebhook(payload: unknown): EventoPagamento | null;
   pdf?(provedorBoletoId: string): Promise<string | null>;
+  registrarWebhook?(url: string): Promise<void>;
+  consultarWebhook?(): Promise<string | null>;
 }
