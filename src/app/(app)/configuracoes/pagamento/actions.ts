@@ -17,6 +17,31 @@ export async function salvarAlcada(formData: FormData): Promise<void> {
   revalidatePath("/configuracoes/pagamento");
 }
 
+export async function salvarConfigSuspensao(formData: FormData): Promise<void> {
+  const perfil = await getPerfilAtual();
+  if (!perfil?.ativo || perfil.papel !== "admin") return;
+  const num = (k: string): number | null => {
+    const raw = String(formData.get(k) ?? "")
+      .trim()
+      .replace(/\./g, "")
+      .replace(",", ".");
+    if (raw === "") return null;
+    const n = Number(raw);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
+  const dias = num("suspensao_dias_tolerancia");
+  const valor = num("suspensao_valor_minimo");
+  const admin = createAdminSupabase();
+  await admin
+    .from("escritorio_config")
+    .update({
+      suspensao_dias_tolerancia: dias == null ? null : Math.round(dias),
+      suspensao_valor_minimo: valor,
+    })
+    .eq("id", 1);
+  revalidatePath("/configuracoes/pagamento");
+}
+
 export type EstadoPagamento = { ok?: boolean; erro?: string };
 
 export async function salvarDadosPagamento(_prev: EstadoPagamento, formData: FormData): Promise<EstadoPagamento> {

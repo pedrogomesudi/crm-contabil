@@ -14,6 +14,7 @@ const ITENS = [
   { href: "/financeiro/contas-a-receber", label: "Contas a receber" },
   { href: "/financeiro/contas-a-pagar", label: "Contas a pagar" },
   { href: "/financeiro/regua-cobranca", label: "Régua de cobrança" },
+  { href: "/financeiro/inadimplencia", label: "Inadimplência e suspensão" },
   { href: "/financeiro/reajuste", label: "Reajuste anual de honorários" },
   { href: "/financeiro/conciliacao", label: "Conciliação bancária" },
   { href: "/financeiro/rentabilidade", label: "Rentabilidade por cliente" },
