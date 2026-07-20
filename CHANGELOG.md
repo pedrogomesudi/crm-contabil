@@ -8,6 +8,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.44.0] — 2026-07-20
+
+Financeiro — cadastrar o webhook de cobrança no Banco Inter (baixa automática ponta a ponta).
+
+### Adicionado
+
+- **Botão "Cadastrar webhook no Inter"** em Configurações → Boletos: registra no Inter a URL para onde ele
+  deve enviar as notificações de pagamento (`PUT` na API de cobrança), completando a **baixa automática** —
+  antes o sistema só sabia receber o webhook, não o cadastrava. A URL é montada no servidor a partir do
+  `BOLETO_WEBHOOK_SECRET`, que nunca é exibido.
+- **Status do webhook** no painel de boletos: mostra se ele já está **cadastrado e apontando para o SALDO**,
+  se **aponta para outro lugar** ou se **não está cadastrado** — um veredito calculado no servidor, sem
+  revelar o segredo nem a URL.
+
 ## [6.43.0] — 2026-07-20
 
 Financeiro — flag "tem honorários recorrentes" no cliente (cobrança avulsa, Fatia B).
