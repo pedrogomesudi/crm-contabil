@@ -7,6 +7,7 @@ export type ExtensaoFinanceira = {
   data_saida: string | null;
   indice_reajuste: string | null;
   percentual_reajuste: number | null;
+  tem_honorarios_recorrentes: boolean;
 };
 
 const INDICES_REAJUSTE = ["SALARIO_MINIMO", "IPCA", "IGPM", "INPC", "PERCENTUAL_FIXO", "SEM_REAJUSTE"];
@@ -61,5 +62,6 @@ export function normalizarExtensaoFinanceira(fd: FormData): ExtensaoFinanceira |
     data_saida: dataRaw || null,
     indice_reajuste,
     percentual_reajuste,
+    tem_honorarios_recorrentes: fd.get("tem_honorarios_recorrentes") != null,
   };
 }

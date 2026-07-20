@@ -282,12 +282,13 @@ export default async function FichaClientePage({
     data_saida: null as string | null,
     indice_reajuste: null as string | null,
     percentual_reajuste: null as number | null,
+    tem_honorarios_recorrentes: true,
   };
   if (mostrarHonorario) {
     const { data: fin } = await supabase
       .from("clientes_financeiro")
       .select(
-        "honorario_mensal, dia_vencimento, qtd_funcionarios, faixa_faturamento, data_saida, cobranca_whatsapp, cobranca_email, indice_reajuste, percentual_reajuste",
+        "honorario_mensal, dia_vencimento, qtd_funcionarios, faixa_faturamento, data_saida, cobranca_whatsapp, cobranca_email, indice_reajuste, percentual_reajuste, tem_honorarios_recorrentes",
       )
       .eq("cliente_id", id)
       .maybeSingle();
@@ -302,11 +303,13 @@ export default async function FichaClientePage({
         data_saida: fin.data_saida ?? null,
         indice_reajuste: fin.indice_reajuste ?? null,
         percentual_reajuste: fin.percentual_reajuste != null ? Number(fin.percentual_reajuste) : null,
+        tem_honorarios_recorrentes: fin.tem_honorarios_recorrentes !== false,
       };
     }
   }
 
   const contratos = mostrarHonorario ? await listarContratos(id) : [];
+  const temContratoAtivo = contratos.some((ct) => ct.status === "ATIVO");
 
   const hojeObrigacoes = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
   const anoObrigacoes = Number(hojeObrigacoes.slice(0, 4));
@@ -432,7 +435,12 @@ export default async function FichaClientePage({
 
         {aba === "financeiro" && mostrarHonorario && (
           <div className="space-y-4">
-            <HonorarioForm clienteId={id} valorAtual={valorHonorario} extensao={extensaoFinanceira} />
+            <HonorarioForm
+              clienteId={id}
+              valorAtual={valorHonorario}
+              extensao={extensaoFinanceira}
+              temContratoAtivo={temContratoAtivo}
+            />
             <LinhaTempoVigencias clienteId={id} papel={papel} />
             <ContratosSection clienteId={id} contratos={contratos} />
             <section className="rounded-lg border border-linha bg-white p-4">

@@ -1,5 +1,5 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { salvarHonorario } from "@/app/(app)/clientes/actions";
 import type { EstadoHonorario } from "@/app/(app)/clientes/estados";
 import { Campo, controleCls } from "@/components/ui/Campo";
@@ -12,23 +12,42 @@ export type ExtensaoFinanceiraForm = {
   data_saida: string | null;
   indice_reajuste: string | null;
   percentual_reajuste: number | null;
+  tem_honorarios_recorrentes: boolean;
 };
 
 export function HonorarioForm({
   clienteId,
   valorAtual,
   extensao,
+  temContratoAtivo,
 }: {
   clienteId: string;
   valorAtual: number | null;
   extensao: ExtensaoFinanceiraForm;
+  temContratoAtivo: boolean;
 }) {
   const action = salvarHonorario.bind(null, clienteId);
   const [estado, formAction, pending] = useActionState<EstadoHonorario, FormData>(action, {});
+  const [recorrente, setRecorrente] = useState(extensao.tem_honorarios_recorrentes);
   const valorBR = valorAtual != null ? valorAtual.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "";
   return (
     <form action={formAction} className="space-y-3 rounded-lg border border-linha bg-white p-4">
       <h2 className="text-sm font-semibold text-texto">Honorário</h2>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="tem_honorarios_recorrentes"
+          checked={recorrente}
+          onChange={(e) => setRecorrente(e.target.checked)}
+        />
+        Cliente tem honorários recorrentes
+      </label>
+      {!recorrente && <p className="text-xs text-cinza">Cliente sem cobrança recorrente — só avulsa.</p>}
+      {!recorrente && temContratoAtivo && (
+        <p role="alert" className="text-xs text-negativo">
+          Este cliente tem contrato ativo, mas está marcado como não-recorrente — não gerará mensalidade.
+        </p>
+      )}
       <Campo label="Honorário mensal (R$)">
         <input
           name="honorario_mensal"
@@ -36,6 +55,7 @@ export function HonorarioForm({
           inputMode="decimal"
           defaultValue={valorBR}
           placeholder="0,00"
+          disabled={!recorrente}
           className={`${controleCls()} w-48`}
         />
       </Campo>
