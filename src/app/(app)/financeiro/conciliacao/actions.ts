@@ -1,8 +1,29 @@
 "use server";
+import { revalidatePath } from "next/cache";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { dedupHash, type MovimentoBruto } from "@/lib/conciliacao/parse";
+
+export async function carregarTolerancia(): Promise<number> {
+  const supabase = await createServerSupabase();
+  const { data } = await supabase.from("escritorio_config").select("tolerancia_conciliacao").eq("id", 1).maybeSingle();
+  return Number(data?.tolerancia_conciliacao ?? 0.01);
+}
+
+export async function salvarTolerancia(formData: FormData): Promise<void> {
+  const perfil = await getPerfilAtual();
+  if (!perfil?.ativo || perfil.papel !== "admin") return;
+  const raw = String(formData.get("tolerancia") ?? "")
+    .trim()
+    .replace(",", ".");
+  const tol = Number(raw);
+  if (!Number.isFinite(tol) || tol < 0) return;
+  const admin = createAdminSupabase();
+  await admin.from("escritorio_config").update({ tolerancia_conciliacao: tol }).eq("id", 1);
+  revalidatePath("/financeiro/conciliacao");
+}
 
 export type MovimentoView = { id: string; data: string; descricao: string; valor: number; status: string };
 

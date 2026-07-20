@@ -32,7 +32,8 @@ describe("candidatosMovimento", () => {
   it("casa baixa por valor assinado (crédito)", () => {
     const r = candidatosMovimento({ id: "m1", valor: 300, data: "2026-08-21" }, baixas, titulos);
     expect(r.baixas.map((b) => b.baixaId)).toEqual(["b1"]);
-    expect(r.titulos).toEqual([]);
+    // t1 (saldo 500) agora aparece como candidato PARCIAL para um movimento de 300.
+    expect(r.titulos.map((t) => ({ id: t.tituloId, parcial: t.parcial }))).toEqual([{ id: "t1", parcial: true }]);
   });
   it("casa título por saldo e tipo pelo sinal (crédito → RECEBER)", () => {
     const r = candidatosMovimento({ id: "m2", valor: 500, data: "2026-08-11" }, baixas, titulos);

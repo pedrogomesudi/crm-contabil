@@ -108,7 +108,8 @@ export function AcaoMovimento({
               onClick={() => acao(() => conciliarComTitulo(mov.id, t.tituloId))}
               className="w-fit text-left text-verde underline"
             >
-              ↔ título {t.descricao || "—"} · {formatarMoeda(t.saldo)}
+              ↔ título {t.descricao || "—"} · saldo {formatarMoeda(t.saldo)}
+              {t.parcial && <span className="ml-1 text-xs text-ambar">(pagamento parcial)</span>}
             </button>
           ))}
           {cand.baixas.length === 0 && cand.titulos.length === 0 && !lanc && (
