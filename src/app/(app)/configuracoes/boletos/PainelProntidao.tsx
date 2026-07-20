@@ -1,13 +1,17 @@
 import { prontidaoBoleto, type ConfigBoletoView } from "@/lib/boleto/config";
+import type { StatusWebhook } from "@/lib/boleto/webhook";
+import { BotaoWebhook } from "./BotaoWebhook";
 
 export function PainelProntidao({
   config,
   webhookSecretDefinido,
   appUrl,
+  statusWebhook,
 }: {
   config: ConfigBoletoView;
   webhookSecretDefinido: boolean;
   appUrl: string | null;
+  statusWebhook: StatusWebhook | "indisponivel";
 }) {
   const itens = prontidaoBoleto(config, webhookSecretDefinido);
   const base = (appUrl ?? "https://app.seusaldo.ai").replace(/\/+$/, "");
@@ -29,6 +33,20 @@ export function PainelProntidao({
             {base}/api/webhooks/boleto/&lt;BOLETO_WEBHOOK_SECRET&gt;
           </code>
           <p>Troque &lt;BOLETO_WEBHOOK_SECRET&gt; pelo valor definido no ambiente (não é exibido aqui).</p>
+        </div>
+      )}
+      {config.provedor === "inter" && (
+        <div className="space-y-2 border-t border-linha pt-3 text-xs text-cinza">
+          <p>
+            {statusWebhook === "ok"
+              ? "✓ Webhook cadastrado no Inter (aponta para o SALDO)."
+              : statusWebhook === "divergente"
+                ? "⚠ Um webhook diferente está cadastrado no Inter."
+                : statusWebhook === "ausente"
+                  ? "✗ Webhook não cadastrado no Inter — a baixa automática não vai disparar."
+                  : "Status do webhook indisponível."}
+          </p>
+          <BotaoWebhook />
         </div>
       )}
     </section>

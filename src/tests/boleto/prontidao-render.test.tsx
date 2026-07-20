@@ -1,5 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }) }));
+
 import { PainelProntidao } from "@/app/(app)/configuracoes/boletos/PainelProntidao";
 import type { ConfigBoletoView } from "@/lib/boleto/config";
 
@@ -18,14 +21,24 @@ const cfg: ConfigBoletoView = {
 describe("PainelProntidao", () => {
   it("mostra ✗ para o que falta (conta destino e webhook)", () => {
     const html = renderToStaticMarkup(
-      <PainelProntidao config={cfg} webhookSecretDefinido={false} appUrl="https://app.seusaldo.ai" />,
+      <PainelProntidao
+        config={cfg}
+        webhookSecretDefinido={false}
+        appUrl="https://app.seusaldo.ai"
+        statusWebhook="indisponivel"
+      />,
     );
     expect(html).toContain("Conta bancária de destino da baixa");
     expect(html).toContain("✗");
   });
   it("mostra a URL do webhook como template, sem o valor do segredo", () => {
     const html = renderToStaticMarkup(
-      <PainelProntidao config={cfg} webhookSecretDefinido={true} appUrl="https://app.seusaldo.ai" />,
+      <PainelProntidao
+        config={cfg}
+        webhookSecretDefinido={true}
+        appUrl="https://app.seusaldo.ai"
+        statusWebhook="indisponivel"
+      />,
     );
     expect(html).toContain("/api/webhooks/boleto/");
     expect(html).toContain("BOLETO_WEBHOOK_SECRET"); // template, não o valor
