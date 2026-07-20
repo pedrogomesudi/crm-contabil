@@ -13,7 +13,11 @@ import {
 import { NovaCobrancaAvulsa } from "./NovaCobrancaAvulsa";
 import { estornarBaixaDoTitulo } from "@/app/(app)/financeiro/contas-a-pagar/actions";
 import { cobrarViaWhatsapp } from "@/app/(app)/financeiro/contas-a-receber/whatsapp";
-import { listarBoletosDaCompetencia, type BoletoView } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
+import {
+  listarBoletosDaCompetencia,
+  sincronizarBoletosInter,
+  type BoletoView,
+} from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
 import { BoletoTitulo } from "./BoletoTitulo";
 import { saldoTitulo, ehVencido, LABEL_STATUS } from "@/lib/financeiro/titulos";
 import { Badge } from "@/components/ui/Badge";
@@ -46,6 +50,16 @@ export function ContasReceber({
       if (clientesAv.length === 0) setClientesAv(await listarClientesAtivos());
       if (categoriasAv.length === 0) setCategoriasAv(await listarCategoriasReceita());
       setAvulsaAberta(true);
+    });
+
+  const sincronizar = () =>
+    start(async () => {
+      const r = await sincronizarBoletosInter();
+      setMsg(r.erro ?? `${r.baixados ?? 0} boleto(s) baixado(s).`);
+      if (!r.erro && competencia) {
+        setTitulos(await listarTitulos(competencia));
+        setBoletos(await listarBoletosDaCompetencia(competencia));
+      }
     });
 
   const aposCriarAvulsa = (competenciaNova: string) => {
@@ -112,13 +126,20 @@ export function ContasReceber({
           Gerar automaticamente todo mês
         </label>
       </div>
-      <div>
+      <div className="flex flex-wrap gap-2">
         <button
           onClick={abrirAvulsa}
           disabled={pend}
           className="rounded border border-linha px-3 py-1 disabled:opacity-60"
         >
           Nova cobrança avulsa
+        </button>
+        <button
+          onClick={sincronizar}
+          disabled={pend}
+          className="rounded border border-linha px-3 py-1 disabled:opacity-60"
+        >
+          Sincronizar boletos pagos (Inter)
         </button>
       </div>
       {avulsaAberta && (
