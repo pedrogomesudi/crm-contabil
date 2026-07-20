@@ -16,6 +16,7 @@ export type DadosTermo = {
   cliente: string;
   marca: { nome: string | null; cnpj: string | null; enderecoLinha: string };
   itens: string[];
+  arquivos?: string[]; // relação dos arquivos do pacote (RF-064); ausente na transferência
   data: string; // ISO yyyy-mm-dd
   responsavel: string | null;
 };
@@ -40,6 +41,11 @@ export function montarTermoHtml(d: DadosTermo): string {
   const marcaLinha = [d.marca.cnpj && `CNPJ ${esc(d.marca.cnpj)}`, esc(d.marca.enderecoLinha)]
     .filter(Boolean)
     .join(" · ");
+  const arquivosLi = (d.arquivos ?? [])
+    .filter((a) => a.trim())
+    .map((a) => `<li>${esc(a.trim())}</li>`)
+    .join("");
+  const secaoArquivos = arquivosLi ? `<p>Documentos incluídos no pacote:</p><ul>${arquivosLi}</ul>` : "";
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <style>
   body{font-family:-apple-system,system-ui,Arial,sans-serif;color:#111;max-width:720px;margin:32px auto;padding:0 16px;line-height:1.5}
@@ -58,6 +64,7 @@ export function montarTermoHtml(d: DadosTermo): string {
   <p>Declaramos, para os devidos fins, que foi ${verbo} referente ao cliente
   <strong>${esc(d.cliente)}</strong>, o acervo documental composto pelos itens a seguir:</p>
   <ul>${itens}</ul>
+  ${secaoArquivos}
   <p class="data">Local e data: ______________________, ${dataBR(d.data)}.</p>
   <div class="assin">
     <div>${esc(d.responsavel ?? "")}<br>${esc(d.marca.nome ?? "Escritório")}</div>
