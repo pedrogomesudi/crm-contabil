@@ -20,6 +20,14 @@ export function tipoPessoaPorDoc(documento: string): "FISICA" | "JURIDICA" {
   return documento.replace(/\D/g, "").length === 11 ? "FISICA" : "JURIDICA";
 }
 
+// O Inter exige o header x-conta-corrente no padrão [1-9]\d*: só dígitos e SEM
+// zeros à esquerda. "0545835844" é rejeitado (400); vira "545835844".
+export function normalizarContaCorrenteInter(cc: string): string {
+  return String(cc ?? "")
+    .replace(/\D/g, "")
+    .replace(/^0+/, "");
+}
+
 export function corpoCobrancaInter(dados: DadosEmissao): Record<string, unknown> {
   const e = dados.pagadorEndereco ?? null;
   const pagador: Record<string, unknown> = {
@@ -90,6 +98,7 @@ export function criarAdaptadorInter(
   esperar: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)),
 ): ProvedorBoleto {
   const urls = baseUrlInter(ambiente);
+  const contaHeader = normalizarContaCorrenteInter(contaCorrente);
   const dispatcher = new Agent({ connect: { cert: certPem, key: keyPem } });
   let token: { valor: string; expiraEm: number } | null = null;
 
@@ -118,7 +127,7 @@ export function criarAdaptadorInter(
   ): Promise<Record<string, unknown>> {
     const r = await fetch(`${urls.cobranca}${path}`, {
       method,
-      headers: { Authorization: `Bearer ${tk}`, "Content-Type": "application/json", "x-conta-corrente": contaCorrente },
+      headers: { Authorization: `Bearer ${tk}`, "Content-Type": "application/json", "x-conta-corrente": contaHeader },
       body: body === undefined ? undefined : JSON.stringify(body),
       dispatcher,
     } as RequestInit & { dispatcher: Agent });
