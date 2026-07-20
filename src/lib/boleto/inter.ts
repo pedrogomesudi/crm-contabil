@@ -63,6 +63,10 @@ export function parsearConsultaInter(codigoSolicitacao: string, consulta: Record
   };
 }
 
+export function precisaReconsultarInter(b: BoletoEmitido): boolean {
+  return b.linhaDigitavel === null && b.pixCopiaCola === null;
+}
+
 export function interpretarWebhookInter(payload: unknown): EventoPagamento | null {
   if (typeof payload !== "object" || payload === null) return null;
   const p = payload as Record<string, unknown>;
@@ -83,6 +87,7 @@ export function criarAdaptadorInter(
   certPem: string,
   keyPem: string,
   ambiente: "sandbox" | "producao",
+  esperar: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)),
 ): ProvedorBoleto {
   const urls = baseUrlInter(ambiente);
   const dispatcher = new Agent({ connect: { cert: certPem, key: keyPem } });
@@ -127,8 +132,14 @@ export function criarAdaptadorInter(
       const tk = await obterToken();
       const criada = await req("POST", "/cobrancas", tk, corpoCobrancaInter(dados));
       const cod = String(criada.codigoSolicitacao ?? "");
-      const consulta = await req("GET", `/cobrancas/${cod}`, tk);
-      return parsearConsultaInter(cod, consulta);
+      let emitido = parsearConsultaInter(cod, await req("GET", `/cobrancas/${cod}`, tk));
+      // A cobrança do Inter processa async: no GET imediato a linha/PIX podem vir nulos.
+      // Reconsulta uma vez após uma pausa curta antes de gravar um boleto "vazio".
+      if (precisaReconsultarInter(emitido)) {
+        await esperar(1500);
+        emitido = parsearConsultaInter(cod, await req("GET", `/cobrancas/${cod}`, tk));
+      }
+      return emitido;
     },
     interpretarWebhook(payload: unknown): EventoPagamento | null {
       return interpretarWebhookInter(payload);

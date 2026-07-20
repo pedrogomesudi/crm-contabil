@@ -24,3 +24,16 @@ export function statusConfigBoleto(c: ConfigBoletoView): { provedor: string; con
     };
   return { provedor: "nenhum", configurado: false };
 }
+
+export function prontidaoBoleto(
+  c: ConfigBoletoView,
+  webhookSecretDefinido: boolean,
+): { rotulo: string; ok: boolean }[] {
+  const { configurado } = statusConfigBoleto(c);
+  return [
+    { rotulo: "Provedor selecionado", ok: c.provedor !== "nenhum" },
+    { rotulo: "Credenciais do provedor completas", ok: c.provedor !== "nenhum" && configurado },
+    { rotulo: "Conta bancária de destino da baixa", ok: c.contaBancariaId != null },
+    { rotulo: "Segredo do webhook (BOLETO_WEBHOOK_SECRET)", ok: webhookSecretDefinido },
+  ];
+}
