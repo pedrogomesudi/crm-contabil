@@ -100,6 +100,17 @@ export function interpretarWebhookInter(payload: unknown): EventoPagamento | nul
   };
 }
 
+// Interpreta a situação vinda do GET /cobrancas/{cod} (reconciliação/sincronização).
+export function interpretarSituacaoInter(cod: string, resp: Record<string, unknown>): EventoPagamento | null {
+  const cob =
+    typeof resp.cobranca === "object" && resp.cobranca !== null ? (resp.cobranca as Record<string, unknown>) : null;
+  const situacao = cob?.situacao;
+  if (situacao !== "RECEBIDO" && situacao !== "MARCADO_RECEBIDO" && situacao !== "PAGO") return null;
+  const valor = cob && typeof cob.valorTotalRecebido === "number" ? (cob.valorTotalRecebido as number) : null;
+  const data = cob && typeof cob.dataSituacao === "string" ? (cob.dataSituacao as string) : null;
+  return { provedorBoletoId: cod, pago: true, valorPago: valor, pagoEm: data };
+}
+
 export function criarAdaptadorInter(
   clientId: string,
   clientSecret: string,
