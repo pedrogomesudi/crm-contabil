@@ -8,6 +8,28 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.37.0] — 2026-07-20
+
+Financeiro — suspensão por inadimplência com trava e alçada (Fatia A: núcleo).
+
+### Adicionado
+
+- **Suspensão de cliente por inadimplência:** nova tela **Financeiro → Inadimplência e suspensão** com três
+  blocos — **sugeridos** (clientes elegíveis pela regra), **suspensos** e **suspensos sem pendência** (quitaram,
+  prontos para reativar). Suspender um cliente marca todos os contratos `ATIVO` dele como `SUSPENSO`, cessando a
+  geração automática de mensalidades, e registra a ação numa trilha de auditoria (quem, quando, motivo, saldo
+  devedor e dias de atraso).
+- **Alçada segregada:** o papel **financeiro** (e admin) pode **suspender**; **apenas admin** pode **reativar**.
+  Suspensão e reativação exigem **motivo** obrigatório.
+- **Regra configurável (admin):** em **Configurações → Dados de pagamento**, os parâmetros **dias de tolerância**
+  (atraso mínimo) e **piso de valor** (saldo devedor mínimo) definem quem entra na fila de sugestão. Dias vazio/0
+  desliga a suspensão; piso vazio = sem piso.
+
+### Notas
+
+- A trava efetiva do **portal do cliente** (bloquear documentos/notas/guias mantendo boletos e situação
+  financeira) vem na **Fatia B**. Nesta fatia a suspensão já cessa o faturamento e registra a auditoria.
+
 ## [6.36.0] — 2026-07-20
 
 Conciliação bancária — casamento parcial + tolerância configurável.
