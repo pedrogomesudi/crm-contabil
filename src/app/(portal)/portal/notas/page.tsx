@@ -1,4 +1,6 @@
 import { createServerSupabase } from "@/lib/supabase/server";
+import { portalSuspenso } from "@/lib/portal/suspensao";
+import { AvisoSuspensao } from "@/components/portal/AvisoSuspensao";
 import { urlDanfse } from "../actions";
 import { BotaoBaixar } from "../BotaoBaixar";
 
@@ -8,6 +10,7 @@ const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", curren
 const mesAno = (iso: string) => `${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 
 export default async function PortalNotasPage() {
+  if (await portalSuspenso()) return <AvisoSuspensao variante="bloqueio" recurso="Notas fiscais" />;
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("nfse")

@@ -1,5 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { agruparVersoes } from "@/lib/documentos/versoes";
+import { portalSuspenso } from "@/lib/portal/suspensao";
+import { AvisoSuspensao } from "@/components/portal/AvisoSuspensao";
 import { urlDocumento } from "../actions";
 import { BotaoBaixar } from "../BotaoBaixar";
 import { EnviarDocumento } from "./EnviarDocumento";
@@ -9,6 +11,7 @@ export const metadata = { title: "Documentos" };
 const dataBR = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "—");
 
 export default async function PortalDocumentosPage() {
+  if (await portalSuspenso()) return <AvisoSuspensao variante="bloqueio" recurso="Documentos" />;
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("documentos")
