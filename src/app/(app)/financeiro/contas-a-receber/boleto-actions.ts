@@ -6,6 +6,7 @@ import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { adaptadorAtivo } from "@/lib/boleto/ativo";
 import { dadosEmissaoDeTitulo } from "@/lib/boleto/emissao";
 import { garantirPdfBoleto, assinarPdfBoleto } from "./boleto-pdf";
+import { sincronizarBoletosCore } from "./sincronizar";
 
 export type BoletoView = {
   id: string;
@@ -123,4 +124,15 @@ export async function listarBoletosDaCompetencia(competencia: string): Promise<R
     };
   }
   return mapa;
+}
+
+export async function sincronizarBoletosInter(): Promise<{ baixados?: number; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  try {
+    const r = await sincronizarBoletosCore();
+    revalidatePath("/financeiro/contas-a-receber");
+    return { baixados: r.baixados };
+  } catch (e) {
+    return { erro: `Falha na sincronização: ${(e as Error).message}` };
+  }
 }
