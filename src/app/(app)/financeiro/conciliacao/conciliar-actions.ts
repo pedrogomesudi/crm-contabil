@@ -26,11 +26,7 @@ async function gate() {
 }
 
 async function tolerancia(supabase: Awaited<ReturnType<typeof createServerSupabase>>): Promise<number> {
-  const { data } = await supabase
-    .from("escritorio_config")
-    .select("tolerancia_conciliacao")
-    .eq("id", 1)
-    .maybeSingle();
+  const { data } = await supabase.from("escritorio_config").select("tolerancia_conciliacao").eq("id", 1).maybeSingle();
   return Number(data?.tolerancia_conciliacao ?? 0.01);
 }
 
@@ -184,8 +180,7 @@ export async function conciliarComTitulo(
   // Parcial: o movimento pode quitar parte do saldo; só recusa se o supera (fora da tolerância).
   const tol = await tolerancia(supabase);
   const saldo = saldoTitulo({ valor: Number(tit.valor), baixado });
-  if (Math.abs(Number(mov.valor)) > saldo + tol)
-    return { erro: "O valor do movimento supera o saldo do título." };
+  if (Math.abs(Number(mov.valor)) > saldo + tol) return { erro: "O valor do movimento supera o saldo do título." };
   const hoje = hojeSP();
   const { data: nova, error } = await supabase
     .from("baixa")

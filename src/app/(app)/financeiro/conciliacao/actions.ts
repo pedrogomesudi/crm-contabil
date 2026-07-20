@@ -8,11 +8,7 @@ import { dedupHash, type MovimentoBruto } from "@/lib/conciliacao/parse";
 
 export async function carregarTolerancia(): Promise<number> {
   const supabase = await createServerSupabase();
-  const { data } = await supabase
-    .from("escritorio_config")
-    .select("tolerancia_conciliacao")
-    .eq("id", 1)
-    .maybeSingle();
+  const { data } = await supabase.from("escritorio_config").select("tolerancia_conciliacao").eq("id", 1).maybeSingle();
   return Number(data?.tolerancia_conciliacao ?? 0.01);
 }
 

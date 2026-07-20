@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.36.0] — 2026-07-20
+
+Conciliação bancária — casamento parcial + tolerância configurável.
+
+### Adicionado
+
+- **Conciliação parcial (1 título ↔ vários movimentos):** um movimento bancário pode quitar **parte** do saldo
+  de um título; o título fica "baixado parcial" até que os próximos movimentos o zerem. Na conciliação, os
+  títulos que casam só em parte aparecem como candidatos marcados **"pagamento parcial"** (com o saldo).
+- **Tolerância de valor configurável:** o admin define, na tela de conciliação, uma margem (R$) para casar
+  movimentos com pequenas diferenças (arredondamento/tarifas) — antes era fixa. O auto-casamento continua só no
+  valor exato. Migration `0116` (`escritorio_config.tolerancia_conciliacao`).
+
 ## [6.35.0] — 2026-07-20
 
 Aprovação de pagamento com alçada (Financeiro).
