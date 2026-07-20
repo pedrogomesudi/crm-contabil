@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.42.0] — 2026-07-20
+
+Financeiro — 2ª via em PDF do boleto do Inter no portal do cliente (Fatia B).
+
+### Adicionado
+
+- **Baixar boleto em PDF no portal do cliente:** na aba Boletos do portal, boletos do Inter ganharam o
+  botão **"baixar boleto (PDF)"** — o cliente pega a própria 2ª via sem acionar o escritório. Usa a mesma
+  geração/armazenamento da Fatia A, com prova de titularidade por RLS e registro de acesso (RF-053).
+
 ## [6.41.0] — 2026-07-20
 
 Financeiro — 2ª via em PDF do boleto do Banco Inter (Fatia A: equipe).
