@@ -6,8 +6,11 @@ import {
   gerarMensalidades,
   registrarBaixa,
   setAutomacao,
+  listarClientesAtivos,
+  listarCategoriasReceita,
   type TituloView,
 } from "@/app/(app)/financeiro/contas-a-receber/actions";
+import { NovaCobrancaAvulsa } from "./NovaCobrancaAvulsa";
 import { estornarBaixaDoTitulo } from "@/app/(app)/financeiro/contas-a-pagar/actions";
 import { cobrarViaWhatsapp } from "@/app/(app)/financeiro/contas-a-receber/whatsapp";
 import { listarBoletosDaCompetencia, type BoletoView } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
@@ -32,8 +35,27 @@ export function ContasReceber({
   const [auto, setAuto] = useState(automacaoInicial);
   const [baixando, setBaixando] = useState<string | null>(null);
   const [boletos, setBoletos] = useState<Record<string, BoletoView>>({});
+  const [avulsaAberta, setAvulsaAberta] = useState(false);
+  const [clientesAv, setClientesAv] = useState<{ id: string; nome: string }[]>([]);
+  const [categoriasAv, setCategoriasAv] = useState<{ id: string; nome: string }[]>([]);
   const [pend, start] = useTransition();
   const competencia = mes ? `${mes}-01` : "";
+
+  const abrirAvulsa = () =>
+    start(async () => {
+      if (clientesAv.length === 0) setClientesAv(await listarClientesAtivos());
+      if (categoriasAv.length === 0) setCategoriasAv(await listarCategoriasReceita());
+      setAvulsaAberta(true);
+    });
+
+  const aposCriarAvulsa = (competenciaNova: string) => {
+    setAvulsaAberta(false);
+    setMes(competenciaNova.slice(0, 7));
+    start(async () => {
+      setTitulos(await listarTitulos(competenciaNova));
+      setBoletos(await listarBoletosDaCompetencia(competenciaNova));
+    });
+  };
 
   const carregar = () =>
     start(async () => {
@@ -90,6 +112,18 @@ export function ContasReceber({
           Gerar automaticamente todo mês
         </label>
       </div>
+      <div>
+        <button
+          onClick={abrirAvulsa}
+          disabled={pend}
+          className="rounded border border-linha px-3 py-1 disabled:opacity-60"
+        >
+          Nova cobrança avulsa
+        </button>
+      </div>
+      {avulsaAberta && (
+        <NovaCobrancaAvulsa clientes={clientesAv} categorias={categoriasAv} onCriado={aposCriarAvulsa} />
+      )}
       {msg && <p className="text-cinza">{msg}</p>}
 
       {titulos.length > 0 && (
@@ -113,7 +147,9 @@ export function ContasReceber({
                 return (
                   <tr key={t.id} className="border-t border-linha/70">
                     <td className="p-2">{t.cliente}</td>
-                    <td className="p-2">{t.origem === "DECIMO_TERCEIRO" ? "13º" : "Mensalidade"}</td>
+                    <td className="p-2">
+                      {t.origem === "DECIMO_TERCEIRO" ? "13º" : t.origem === "RECEITA_AVULSA" ? "Avulsa" : "Mensalidade"}
+                    </td>
                     <td className="p-2">{formatarData(t.vencimento)}</td>
                     <td className="p-2">{formatarMoeda(t.valor)}</td>
                     <td className="p-2">{formatarMoeda(saldo)}</td>
