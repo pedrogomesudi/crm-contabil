@@ -8,6 +8,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.39.0] — 2026-07-20
+
+Financeiro — preparação para ativar os boletos (Banco Inter).
+
+### Adicionado
+
+- **Painel de prontidão** em Configurações → Boletos: um checklist que mostra o que ainda falta para
+  operar (provedor selecionado, credenciais completas, conta bancária de destino da baixa, e o segredo
+  do webhook no ambiente) e exibe a **URL do webhook** a cadastrar no provedor — como template, sem
+  revelar o segredo.
+- **Runbook de ativação** (`docs/ATIVAR-BOLETOS-INTER.md`): passo a passo para criar a aplicação no Inter
+  Empresas, preencher as credenciais, definir o segredo do webhook e emitir um boleto de teste.
+- `BOLETO_WEBHOOK_SECRET` agora documentado no `.env.local.example`.
+
+### Corrigido
+
+- **Emissão de boleto pelo Inter:** a cobrança do Inter é processada de forma assíncrona; a consulta
+  imediata podia devolver linha digitável e PIX nulos, gravando um boleto "vazio". Agora há uma
+  reconsulta curta antes de gravar, evitando boletos sem linha digitável/PIX no primeiro uso.
+
 ## [6.38.0] — 2026-07-20
 
 Financeiro — suspensão por inadimplência: trava do portal do cliente (Fatia B).
