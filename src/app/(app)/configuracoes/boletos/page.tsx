@@ -6,7 +6,7 @@ import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FormBoletos } from "./FormBoletos";
 import { PainelProntidao } from "./PainelProntidao";
-import { obterConfigBoleto } from "./actions";
+import { obterConfigBoleto, statusWebhookInter } from "./actions";
 
 export default async function BoletosConfigPage() {
   const perfil = await getPerfilAtual();
@@ -16,10 +16,16 @@ export default async function BoletosConfigPage() {
   const { data: contas } = await supabase.from("conta_bancaria").select("id, nome").eq("ativa", true).order("nome");
   const webhookSecretDefinido = Boolean(process.env.BOLETO_WEBHOOK_SECRET);
   const appUrl = process.env.APP_URL ?? null;
+  const statusWebhook = await statusWebhookInter();
   return (
     <Container largura="estreita" className="space-y-5 p-4">
       <PageHeader titulo="Boletos" subtitulo="Provedor de emissão (Inter ou Asaas)" />
-      <PainelProntidao config={config} webhookSecretDefinido={webhookSecretDefinido} appUrl={appUrl} />
+      <PainelProntidao
+        config={config}
+        webhookSecretDefinido={webhookSecretDefinido}
+        appUrl={appUrl}
+        statusWebhook={statusWebhook}
+      />
       <FormBoletos config={config} contas={(contas as { id: string; nome: string }[] | null) ?? []} />
     </Container>
   );
