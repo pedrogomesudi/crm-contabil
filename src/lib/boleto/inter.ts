@@ -190,5 +190,10 @@ export function criarAdaptadorInter(
       const j = await req("GET", "/cobrancas/webhook", tk);
       return extrairWebhookUrlInter(j);
     },
+    async consultarPagamento(codigoSolicitacao: string): Promise<EventoPagamento | null> {
+      const tk = await obterToken();
+      const j = await req("GET", `/cobrancas/${codigoSolicitacao}`, tk);
+      return interpretarSituacaoInter(codigoSolicitacao, j);
+    },
   };
 }
