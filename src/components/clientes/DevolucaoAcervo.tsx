@@ -29,8 +29,8 @@ export function DevolucaoAcervo({ clienteId }: { clienteId: string }) {
     <section className="space-y-2 rounded-lg border border-linha bg-white p-4">
       <h3 className="text-sm font-semibold text-grafite">Devolução de acervo</h3>
       <p className="text-xs text-cinza">
-        Gera um pacote (ZIP) com o Termo de acervo (NBC PG 01) e os documentos do cliente, para a entrega na
-        rescisão do contrato.
+        Gera um pacote (ZIP) com o Termo de acervo (NBC PG 01) e os documentos do cliente, para a entrega na rescisão do
+        contrato.
       </p>
       <Botao type="button" variante="secundario" disabled={pend} onClick={gerar}>
         {pend ? "Gerando..." : "Gerar pacote de devolução (rescisão)"}

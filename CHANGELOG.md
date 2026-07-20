@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.34.0] — 2026-07-19
+
+RF-064 — devolução de acervo em rescisão. **Fecha o RF-064.**
+
+### Adicionado
+
+- **Pacote de devolução de acervo:** a ficha do cliente ganha "Devolução de acervo" — um botão que gera, sob
+  demanda, um **ZIP** com o **Termo de acervo (NBC PG 01)** e **todos os documentos atuais do cliente** (do
+  GED), para a entrega na rescisão do contrato. O termo lista tanto as categorias padrão do acervo quanto a
+  relação dos arquivos incluídos, e é anexado ao GED como registro. Sem migration.
+
 ## [6.33.0] — 2026-07-19
 
 RF-062 — retenção de documentos por tipo + alertas de expurgo.
