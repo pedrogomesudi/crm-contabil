@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.51.0] — 2026-07-21
+
+NPS — coleta no portal (RF-074, Fatia A).
+
+### Adicionado
+
+- **Pesquisa de satisfação (NPS) no portal do cliente:** quando ligada, o cliente vê no portal um card
+  *"De 0 a 10, quanto você recomendaria…"* + comentário opcional, e responde ali mesmo. A pesquisa é
+  **lazy** (aparece quando passou a periodicidade desde a última resposta do cliente — padrão 90 dias),
+  sem e-mail, sem cron. Resposta gravada com RLS por cliente e imutável.
+- **Configuração em Configurações → Pesquisa de satisfação (NPS):** liga/desliga, periodicidade (dias) e
+  texto customizável da pergunta.
+
 ## [6.50.0] — 2026-07-20
 
 Produtividade por colaborador (RF-073).

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { npsDevido } from "@/lib/nps/devido";
+import { CardNps } from "./CardNps";
 
 export const metadata = { title: "Portal do cliente" };
 
@@ -21,8 +23,29 @@ export default async function PortalInicioPage() {
     { href: "/portal/boletos", label: "Boletos", n: boletos.count ?? 0 },
   ];
 
+  // NPS lazy: a config é legível por qualquer autenticado; a RLS de nps_resposta já
+  // restringe a última resposta ao próprio cliente.
+  const [cfgRes, ultimaRes] = await Promise.all([
+    supabase
+      .from("escritorio_config")
+      .select("nps_ativo, nps_periodicidade_dias, nps_pergunta")
+      .eq("id", 1)
+      .maybeSingle(),
+    supabase.from("nps_resposta").select("criada_em").order("criada_em", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const npsAberto = npsDevido({
+    ativo: cfgRes.data?.nps_ativo ?? false,
+    periodicidadeDias: cfgRes.data?.nps_periodicidade_dias ?? 90,
+    ultimaRespostaIso: (ultimaRes.data?.criada_em as string | null) ?? null,
+    hojeIso: hoje,
+  });
+  const npsPergunta =
+    (cfgRes.data?.nps_pergunta as string | null) || "De 0 a 10, quanto você recomendaria nosso escritório a um colega?";
+
   return (
     <div className="space-y-4">
+      {npsAberto && <CardNps pergunta={npsPergunta} />}
       <h1 className="font-display text-xl font-bold text-texto">Bem-vindo</h1>
       <p className="text-sm text-cinza">
         Aqui você consulta e baixa os seus documentos, notas fiscais, guias e boletos.
