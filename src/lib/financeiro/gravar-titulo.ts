@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { validarCobrancaAvulsa, competenciaDoVencimento } from "@/lib/financeiro/cobranca-avulsa";
+import { emitir } from "@/lib/webhooks/emitir";
 
 export type TituloAvulsoNucleoInput = {
   clienteId: string;
@@ -36,5 +37,7 @@ export async function criarTituloAvulsoNucleo(
       return { ok: false, codigo: "duplicado", erro: "Já existe cobrança desse tipo nesta competência." };
     return { ok: false, codigo: "erro", erro: "Falha ao criar a cobrança." };
   }
-  return { ok: true, tituloId: data.id as string };
+  const tituloId = data.id as string;
+  await emitir("titulo.criado", tituloId);
+  return { ok: true, tituloId };
 }

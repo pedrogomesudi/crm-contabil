@@ -5,6 +5,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeGerenciarDocumentos } from "@/lib/clientes/permissoes";
 import { anexarDocumentoNucleo } from "@/lib/documentos/gravar";
+import { emitir } from "@/lib/webhooks/emitir";
 import { escapeLike } from "@/lib/clientes/busca";
 import { agruparVersoes } from "@/lib/documentos/versoes";
 import { extrairTextoPdf } from "@/lib/documentos/extrair-texto";
@@ -228,6 +229,7 @@ export async function anexarNovaVersao(
     return { erro: "Falha ao registrar a nova versão." };
   }
   await indexarConteudo(admin, novo.id, file);
+  await emitir("documento.enviado", novo.id as string);
   revalidatePath(`/clientes/${clienteId}`);
   return { ok: true };
 }

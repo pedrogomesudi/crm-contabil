@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dadosBaixaBoleto } from "./baixa";
 import type { EventoPagamento } from "./tipos";
+import { emitir } from "@/lib/webhooks/emitir";
 
 type BoletoBaixa = { id: string; titulo_id: string; valor: number; status: string };
 
@@ -26,5 +27,6 @@ export async function baixarBoletoPago(
   });
   if (error) return false;
   await admin.from("boleto").update({ status: "pago", atualizado_em: new Date().toISOString() }).eq("id", boleto.id);
+  await emitir("titulo.pago", boleto.titulo_id);
   return true;
 }

@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { emitir } from "@/lib/webhooks/emitir";
 
 const MAX = 10 * 1024 * 1024;
 const TIPOS = ["application/pdf", "image/png", "image/jpeg"];
@@ -54,5 +55,6 @@ export async function darBaixaObrigacaoNucleo(
     if (tem && comprovantePath) await ctx.admin.storage.from("documentos").remove([comprovantePath]);
     return { ok: false, erro: "Falha ao registrar a baixa." };
   }
+  await emitir("obrigacao.entregue", input.instanciaId);
   return { ok: true, clienteId: inst.cliente_id as string };
 }

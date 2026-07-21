@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { emitir } from "@/lib/webhooks/emitir";
 
 export type BaixaNucleoInput = {
   tituloId: string;
@@ -36,5 +37,6 @@ export async function registrarBaixaNucleo(
     criado_por: ctx.autorId,
   });
   if (error) return { ok: false, erro: "Falha ao registrar a baixa." };
+  await emitir("titulo.pago", input.tituloId);
   return { ok: true };
 }

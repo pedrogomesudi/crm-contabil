@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { competenciaParaData } from "@/lib/documentos/taxonomia";
 import { carregarTiposAtivos } from "@/app/(app)/configuracoes/tipos-documento/actions";
 import { extrairTextoPdf } from "@/lib/documentos/extrair-texto";
+import { emitir } from "@/lib/webhooks/emitir";
 
 const MAX = 10 * 1024 * 1024;
 const TIPOS_OK = ["application/pdf", "image/png", "image/jpeg"];
@@ -78,6 +79,8 @@ export async function anexarDocumentoNucleo(
     await ctx.admin.storage.from("documentos").remove([caminho]);
     return { ok: false, erro: "Falha ao registrar o documento." };
   }
-  await indexar(ctx.admin, novo.id as string, mime, bytes);
-  return { ok: true, id: novo.id as string };
+  const id = novo.id as string;
+  await indexar(ctx.admin, id, mime, bytes);
+  await emitir("documento.enviado", id);
+  return { ok: true, id };
 }
