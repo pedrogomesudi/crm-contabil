@@ -50,7 +50,7 @@ export async function relatorioRentabilidade(de: string, ate: string): Promise<R
 
   const { data: clientes } = await admin
     .from("clientes")
-    .select("id, razao_social, clientes_financeiro(honorario_mensal)")
+    .select("id, razao_social, regime_tributario, clientes_financeiro(honorario_mensal)")
     .is("excluido_em", null)
     .neq("status", "inativo");
 
@@ -101,6 +101,7 @@ export async function relatorioRentabilidade(de: string, ate: string): Promise<R
     return {
       clienteId: id,
       clienteNome: (c.razao_social as string) ?? "—",
+      regime: (c.regime_tributario as string | null) ?? null,
       minutos,
       custo: custoPorCliente.get(id) ?? 0,
       recebido: recebidoPorCliente.get(id) ?? 0,

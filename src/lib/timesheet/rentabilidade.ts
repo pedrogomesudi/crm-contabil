@@ -3,6 +3,7 @@ export type Vigencia = { custoHora: number; inicio: string; fim: string | null }
 export type LinhaRentab = {
   clienteId: string;
   clienteNome: string;
+  regime: string | null;
   minutos: number;
   custo: number;
   recebido: number;
@@ -26,7 +27,11 @@ export function custoDoApontamento(minutos: number, custoHora: number | null): n
   return (minutos / 60) * custoHora;
 }
 
-export function margem(l: LinhaRentab): { valor: number; pct: number | null; porHora: number | null } {
+export function margem(l: { custo: number; recebido: number; minutos: number }): {
+  valor: number;
+  pct: number | null;
+  porHora: number | null;
+} {
   const valor = l.recebido - l.custo;
   // Recebido zero não vira Infinity nem NaN — vira "não dá para calcular".
   const pct = l.recebido > 0 ? Math.round((valor / l.recebido) * 100) : null;

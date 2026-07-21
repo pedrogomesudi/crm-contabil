@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.48.0] — 2026-07-20
+
+Financeiro — rentabilidade por segmento (RF-072, Fatia A: regime).
+
+### Adicionado
+
+- **Agrupar a rentabilidade por segmento:** a tela de Rentabilidade ganhou um seletor **"Agrupar por:
+  Cliente / Regime tributário / Porte"**. Ao agrupar, os mesmos números (horas, custo, recebido, contratado,
+  margem R$/%) são somados por grupo — permitindo comparar a margem entre Simples × Presumido × Real. O
+  export acompanha o agrupamento. (O agrupamento por Porte entra na próxima fatia, quando o campo é criado.)
+
 ## [6.47.0] — 2026-07-20
 
 Financeiro — sincronização automática de boletos com o Inter (Fatia B: cron).
