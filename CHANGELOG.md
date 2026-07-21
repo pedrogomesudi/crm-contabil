@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.55.0] — 2026-07-21
+
+Monitoramento da Receita — automação (RF-084, Fatia B).
+
+### Adicionado
+
+- **Reconsulta automática:** um processo diário revisita a situação cadastral e a opção pelo Simples dos
+  clientes cujo dado está vencido, espaçando as chamadas para respeitar o limite da fonte pública, e gera
+  os alertas de mudança sozinho. Com isso o RF-084 fica completo (consulta manual + monitoramento).
+- **Configuração em Configurações → Monitoramento da Receita:** liga/desliga a reconsulta automática,
+  frequência por cliente (padrão 7 dias) e o contador de alertas no menu.
+
 ## [6.54.0] — 2026-07-21
 
 Monitoramento da Receita — situação cadastral + Simples (RF-084, Fatia A).
