@@ -8,6 +8,24 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.60.0] — 2026-07-21
+
+API pública — webhooks de saída (RF-080, Fatia D).
+
+### Adicionado
+
+- **Webhooks de saída:** o CRM passa a empurrar eventos para URLs cadastradas pelo escritório — `cliente.criado`,
+  `cliente.atualizado`, `titulo.criado`, `titulo.pago`, `obrigacao.entregue` e `documento.enviado` —, com o mesmo
+  formato de dados da API de leitura. Cada envio é **assinado por HMAC-SHA256** (header `X-Assinatura`), entregue
+  por um processo a cada 5 min com **repetição automática** (backoff) em caso de falha.
+- **Configuração em Configurações → Webhooks de saída** (admin): cadastrar URLs, escolher os eventos e obter o
+  segredo de assinatura (mostrado uma única vez), ativar/desativar e remover.
+
+### Observação
+
+- Mensalidades geradas automaticamente (por rotina do banco) ainda não emitem `titulo.criado` — apenas as
+  cobranças avulsas. Fica para uma fatia futura.
+
 ## [6.59.0] — 2026-07-21
 
 API pública — escrita de obrigação e documento (RF-080, Fatia C, onda 2).
