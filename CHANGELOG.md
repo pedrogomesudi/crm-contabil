@@ -8,6 +8,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.62.0] — 2026-07-21
+
+Automação — maturidade de webhooks (RF-083, onda 1).
+
+### Adicionado
+
+- **Deduplicação de webhooks:** cada entrega agora traz um `id` e `criado_em` no corpo (envelope
+  `{ id, evento, criado_em, dados }`) e nos headers `X-Webhook-Id`, `X-Webhook-Timestamp` e
+  `X-Webhook-Tentativa` — o consumidor deduplica pelo `id` (o retry reenvia o mesmo id).
+- **Testar e acompanhar webhooks** (Configurações → Webhooks de saída): botão **"Enviar teste"** que dispara um
+  evento na hora para validar a URL e a assinatura, e uma tabela de **entregas recentes** (status, tentativas,
+  quando) com **reenvio manual** das que falharam.
+- **`GET /api/v1/eventos`:** lista os tipos de evento disponíveis para integrações.
+
 ## [6.61.0] — 2026-07-21
 
 API pública — documentação OpenAPI (RF-080, Fatia E). **RF-080 completo.**
