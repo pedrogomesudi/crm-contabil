@@ -2,6 +2,7 @@ import { competenciaParaData } from "./taxonomia";
 
 export type FiltroResolvido = {
   nome?: string;
+  conteudo?: string;
   tipoId?: string;
   departamento?: string;
   clienteId?: string;
@@ -25,11 +26,12 @@ function primeiroDiaMesSeguinte(aaaaMM: string): string | null {
 
 export function lerFiltroBusca(sp: Record<string, string | undefined>): FiltroResolvido {
   const nome = (sp.nome ?? "").trim().slice(0, 100) || undefined;
+  const conteudo = (sp.conteudo ?? "").trim().slice(0, 100) || undefined;
   const tipoId = (sp.tipo ?? "").trim() || undefined;
   const departamento = (sp.departamento ?? "").trim() || undefined;
   const clienteId = (sp.cliente ?? "").trim() || undefined;
   const competencia = /^\d{4}-\d{2}$/.test(sp.competencia ?? "") ? sp.competencia : undefined;
   const compInicio = competencia ? (competenciaParaData(competencia) ?? undefined) : undefined;
   const compFim = competencia ? (primeiroDiaMesSeguinte(competencia) ?? undefined) : undefined;
-  return { nome, tipoId, departamento, clienteId, competencia, compInicio, compFim };
+  return { nome, conteudo, tipoId, departamento, clienteId, competencia, compInicio, compFim };
 }

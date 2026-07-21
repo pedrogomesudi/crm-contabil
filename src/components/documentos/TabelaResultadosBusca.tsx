@@ -24,7 +24,12 @@ export function TabelaResultadosBusca({ docs }: { docs: DocBusca[] }) {
         <tbody>
           {docs.map((d) => (
             <tr key={d.id} className="border-t border-linha/70">
-              <td className="p-2 text-texto">{d.nome}</td>
+              <td className="p-2 text-texto">
+                {d.nome}
+                {d.textoStatus === "vazio" && (
+                  <span className="block text-xs text-cinza-claro">digitalização — sem texto pesquisável</span>
+                )}
+              </td>
               <td className="p-2">
                 <Link href={`/clientes/${d.clienteId}?aba=documentos`} className="underline">
                   {d.clienteNome}

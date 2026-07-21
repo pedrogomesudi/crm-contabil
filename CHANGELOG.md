@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.53.0] — 2026-07-21
+
+Documentos — busca no conteúdo de PDFs (RF-061).
+
+### Adicionado
+
+- **Busca no conteúdo dos documentos:** a busca de documentos ganhou o campo "texto no conteúdo (PDF)",
+  que procura dentro do texto dos PDFs digitais (full-text em português). O texto é extraído
+  automaticamente no upload (sem serviço externo) e o acervo já existente foi reprocessado. PDFs
+  escaneados/imagens aparecem marcados como *"digitalização — sem texto pesquisável"* (OCR fica para depois).
+
 ## [6.52.0] — 2026-07-21
 
 NPS — painel da equipe (RF-074, Fatia B).
