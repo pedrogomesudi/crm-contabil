@@ -9,6 +9,7 @@ import type { RelatorioExportavel } from "@/lib/exportar/tipos";
 import { formatarData, formatarMoeda } from "@/lib/format";
 import { formatarHoras } from "@/lib/timesheet/apontamento";
 import { margem } from "@/lib/timesheet/rentabilidade";
+import { agruparRentabilidade, type GrupoRentab } from "@/lib/timesheet/segmento";
 import { relatorioRentabilidade } from "./actions";
 import { controleCls } from "@/components/ui/Campo";
 
@@ -17,7 +18,7 @@ export const metadata = { title: "Rentabilidade por cliente" };
 export default async function RentabilidadePage({
   searchParams,
 }: {
-  searchParams: Promise<{ de?: string; ate?: string }>;
+  searchParams: Promise<{ de?: string; ate?: string; agrupar?: string }>;
 }) {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeGerenciarFinanceiro(perfil.papel)) redirect("/");
@@ -33,46 +34,86 @@ export default async function RentabilidadePage({
   const semApontamento = rel.linhas.filter((l) => l.semApontamento).length;
   const totalMargem = rel.totais.recebido - rel.totais.custo;
 
+  const agrupar: "cliente" | "regime" | "porte" =
+    sp.agrupar === "regime" || sp.agrupar === "porte" ? sp.agrupar : "cliente";
+  const grupos: GrupoRentab[] = agrupar === "cliente" ? [] : agruparRentabilidade(rel.linhas, agrupar);
+
   // Margem, % e R$/hora são derivados (não estão em LinhaRentab); "Horas" vai como
   // texto ("12h30"), igual à tela — hora decimal na planilha seria outro relatório.
-  const relatorio: RelatorioExportavel = {
-    titulo: "Rentabilidade por cliente",
-    subtitulo: `${formatarData(de)} a ${formatarData(ate)}`,
-    colunas: [
-      { chave: "cliente", rotulo: "Cliente", formato: "texto" },
-      { chave: "horas", rotulo: "Horas", formato: "texto" },
-      { chave: "custo", rotulo: "Custo", formato: "moeda" },
-      { chave: "recebido", rotulo: "Recebido", formato: "moeda" },
-      { chave: "contratado", rotulo: "Contratado", formato: "moeda" },
-      { chave: "margem", rotulo: "Margem", formato: "moeda" },
-      { chave: "pct", rotulo: "%", formato: "percent" },
-      { chave: "porHora", rotulo: "R$/hora", formato: "moeda" },
-    ],
-    linhas: rel.linhas.map((l) => {
-      const m = margem(l);
-      return {
-        cliente: l.clienteNome,
-        horas: formatarHoras(l.minutos),
-        custo: l.custo,
-        recebido: l.recebido,
-        contratado: l.contratado,
-        margem: m.valor,
-        pct: m.pct,
-        porHora: m.porHora,
-      };
-    }),
-    // Como no rodapé da tela: % e R$/hora ficam vazios — média de razão não é razão de médias.
-    totais: {
-      cliente: "Total",
-      horas: formatarHoras(rel.totais.minutos),
-      custo: rel.totais.custo,
-      recebido: rel.totais.recebido,
-      contratado: rel.totais.contratado,
-      margem: totalMargem,
-      pct: null,
-      porHora: null,
-    },
-  };
+  const relatorio: RelatorioExportavel =
+    agrupar === "cliente"
+      ? {
+          titulo: "Rentabilidade por cliente",
+          subtitulo: `${formatarData(de)} a ${formatarData(ate)}`,
+          colunas: [
+            { chave: "cliente", rotulo: "Cliente", formato: "texto" },
+            { chave: "horas", rotulo: "Horas", formato: "texto" },
+            { chave: "custo", rotulo: "Custo", formato: "moeda" },
+            { chave: "recebido", rotulo: "Recebido", formato: "moeda" },
+            { chave: "contratado", rotulo: "Contratado", formato: "moeda" },
+            { chave: "margem", rotulo: "Margem", formato: "moeda" },
+            { chave: "pct", rotulo: "%", formato: "percent" },
+            { chave: "porHora", rotulo: "R$/hora", formato: "moeda" },
+          ],
+          linhas: rel.linhas.map((l) => {
+            const m = margem(l);
+            return {
+              cliente: l.clienteNome,
+              horas: formatarHoras(l.minutos),
+              custo: l.custo,
+              recebido: l.recebido,
+              contratado: l.contratado,
+              margem: m.valor,
+              pct: m.pct,
+              porHora: m.porHora,
+            };
+          }),
+          // Como no rodapé da tela: % e R$/hora ficam vazios — média de razão não é razão de médias.
+          totais: {
+            cliente: "Total",
+            horas: formatarHoras(rel.totais.minutos),
+            custo: rel.totais.custo,
+            recebido: rel.totais.recebido,
+            contratado: rel.totais.contratado,
+            margem: totalMargem,
+            pct: null,
+            porHora: null,
+          },
+        }
+      : {
+          titulo: `Rentabilidade por ${agrupar === "regime" ? "regime" : "porte"}`,
+          subtitulo: `${formatarData(de)} a ${formatarData(ate)}`,
+          colunas: [
+            { chave: "grupo", rotulo: agrupar === "regime" ? "Regime" : "Porte", formato: "texto" },
+            { chave: "horas", rotulo: "Horas", formato: "texto" },
+            { chave: "custo", rotulo: "Custo", formato: "moeda" },
+            { chave: "recebido", rotulo: "Recebido", formato: "moeda" },
+            { chave: "contratado", rotulo: "Contratado", formato: "moeda" },
+            { chave: "margem", rotulo: "Margem", formato: "moeda" },
+            { chave: "pct", rotulo: "%", formato: "percent" },
+          ],
+          linhas: grupos.map((g) => {
+            const m = margem(g);
+            return {
+              grupo: g.grupo,
+              horas: formatarHoras(g.minutos),
+              custo: g.custo,
+              recebido: g.recebido,
+              contratado: g.contratado,
+              margem: m.valor,
+              pct: m.pct,
+            };
+          }),
+          totais: {
+            grupo: "Total",
+            horas: formatarHoras(rel.totais.minutos),
+            custo: rel.totais.custo,
+            recebido: rel.totais.recebido,
+            contratado: rel.totais.contratado,
+            margem: totalMargem,
+            pct: null,
+          },
+        };
 
   return (
     <Container largura="larga" className="space-y-5 p-4">
@@ -89,6 +130,14 @@ export default async function RentabilidadePage({
         <label className="text-xs text-cinza">
           Até
           <input type="date" name="ate" defaultValue={ate} className={`${controleCls("compacto")} mt-0.5 block`} />
+        </label>
+        <label className="text-xs text-cinza">
+          Agrupar por
+          <select name="agrupar" defaultValue={agrupar} className={`${controleCls("compacto")} mt-0.5 block`}>
+            <option value="cliente">Cliente</option>
+            <option value="regime">Regime tributário</option>
+            <option value="porte">Porte</option>
+          </select>
         </label>
         <button className="rounded-lg bg-verde px-3 py-1.5 text-white">Aplicar</button>
         <div className="ml-auto print:hidden">
@@ -113,69 +162,124 @@ export default async function RentabilidadePage({
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="border-b border-linha text-xs text-cinza">
-              <th className="px-3 py-2 text-left font-medium">Cliente</th>
-              <th className="px-3 py-2 text-right font-medium">Horas</th>
-              <th className="px-3 py-2 text-right font-medium">Custo</th>
-              <th className="px-3 py-2 text-right font-medium">Recebido</th>
-              <th className="px-3 py-2 text-right font-medium">Contratado</th>
-              <th className="px-3 py-2 text-right font-medium">Margem</th>
-              <th className="px-3 py-2 text-right font-medium">%</th>
-              <th className="px-3 py-2 text-right font-medium">R$/hora</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rel.linhas.map((l) => {
-              const m = margem(l);
-              const atrasado = l.contratado > 0 && l.recebido < l.contratado;
-              return (
-                <tr key={l.clienteId} className="border-b border-linha/60 hover:bg-creme">
-                  <td className="px-3 py-2">
-                    <Link href={`/clientes/${l.clienteId}`} className="text-verde underline">
-                      {l.clienteNome}
-                    </Link>
-                    {l.semApontamento && <span className="ml-1 text-xs text-cinza">(sem apontamento)</span>}
-                    {l.semCusto && <span className="ml-1 text-xs text-atencao">(sem custo)</span>}
-                  </td>
-                  <td className="px-3 py-2 text-right text-cinza">{formatarHoras(l.minutos)}</td>
-                  <td className="px-3 py-2 text-right text-cinza">{formatarMoeda(l.custo)}</td>
-                  <td className="px-3 py-2 text-right text-texto">{formatarMoeda(l.recebido)}</td>
-                  <td className={`px-3 py-2 text-right ${atrasado ? "text-atencao" : "text-cinza"}`}>
-                    {formatarMoeda(l.contratado)}
-                  </td>
-                  <td className={`px-3 py-2 text-right font-medium ${m.valor < 0 ? "text-negativo" : "text-texto"}`}>
-                    {formatarMoeda(m.valor)}
-                  </td>
-                  <td
-                    className={`px-3 py-2 text-right ${m.pct !== null && m.pct < 0 ? "text-negativo" : "text-cinza"}`}
-                  >
-                    {m.pct === null ? "—" : `${m.pct}%`}
-                  </td>
-                  <td className="px-3 py-2 text-right text-cinza">
-                    {m.porHora === null ? "—" : formatarMoeda(m.porHora)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-          <tfoot>
-            <tr className="border-t border-linha bg-creme text-sm font-medium">
-              <td className="px-3 py-2 text-texto">Total</td>
-              <td className="px-3 py-2 text-right text-texto">{formatarHoras(rel.totais.minutos)}</td>
-              <td className="px-3 py-2 text-right text-texto">{formatarMoeda(rel.totais.custo)}</td>
-              <td className="px-3 py-2 text-right text-texto">{formatarMoeda(rel.totais.recebido)}</td>
-              <td className="px-3 py-2 text-right text-texto">{formatarMoeda(rel.totais.contratado)}</td>
-              <td className={`px-3 py-2 text-right ${totalMargem < 0 ? "text-negativo" : "text-texto"}`}>
-                {formatarMoeda(totalMargem)}
-              </td>
-              <td colSpan={2} />
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+      {agrupar === "cliente" && (
+        <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-linha text-xs text-cinza">
+                <th className="px-3 py-2 text-left font-medium">Cliente</th>
+                <th className="px-3 py-2 text-right font-medium">Horas</th>
+                <th className="px-3 py-2 text-right font-medium">Custo</th>
+                <th className="px-3 py-2 text-right font-medium">Recebido</th>
+                <th className="px-3 py-2 text-right font-medium">Contratado</th>
+                <th className="px-3 py-2 text-right font-medium">Margem</th>
+                <th className="px-3 py-2 text-right font-medium">%</th>
+                <th className="px-3 py-2 text-right font-medium">R$/hora</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rel.linhas.map((l) => {
+                const m = margem(l);
+                const atrasado = l.contratado > 0 && l.recebido < l.contratado;
+                return (
+                  <tr key={l.clienteId} className="border-b border-linha/60 hover:bg-creme">
+                    <td className="px-3 py-2">
+                      <Link href={`/clientes/${l.clienteId}`} className="text-verde underline">
+                        {l.clienteNome}
+                      </Link>
+                      {l.semApontamento && <span className="ml-1 text-xs text-cinza">(sem apontamento)</span>}
+                      {l.semCusto && <span className="ml-1 text-xs text-atencao">(sem custo)</span>}
+                    </td>
+                    <td className="px-3 py-2 text-right text-cinza">{formatarHoras(l.minutos)}</td>
+                    <td className="px-3 py-2 text-right text-cinza">{formatarMoeda(l.custo)}</td>
+                    <td className="px-3 py-2 text-right text-texto">{formatarMoeda(l.recebido)}</td>
+                    <td className={`px-3 py-2 text-right ${atrasado ? "text-atencao" : "text-cinza"}`}>
+                      {formatarMoeda(l.contratado)}
+                    </td>
+                    <td className={`px-3 py-2 text-right font-medium ${m.valor < 0 ? "text-negativo" : "text-texto"}`}>
+                      {formatarMoeda(m.valor)}
+                    </td>
+                    <td
+                      className={`px-3 py-2 text-right ${m.pct !== null && m.pct < 0 ? "text-negativo" : "text-cinza"}`}
+                    >
+                      {m.pct === null ? "—" : `${m.pct}%`}
+                    </td>
+                    <td className="px-3 py-2 text-right text-cinza">
+                      {m.porHora === null ? "—" : formatarMoeda(m.porHora)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="border-t border-linha bg-creme text-sm font-medium">
+                <td className="px-3 py-2 text-texto">Total</td>
+                <td className="px-3 py-2 text-right text-texto">{formatarHoras(rel.totais.minutos)}</td>
+                <td className="px-3 py-2 text-right text-texto">{formatarMoeda(rel.totais.custo)}</td>
+                <td className="px-3 py-2 text-right text-texto">{formatarMoeda(rel.totais.recebido)}</td>
+                <td className="px-3 py-2 text-right text-texto">{formatarMoeda(rel.totais.contratado)}</td>
+                <td className={`px-3 py-2 text-right ${totalMargem < 0 ? "text-negativo" : "text-texto"}`}>
+                  {formatarMoeda(totalMargem)}
+                </td>
+                <td colSpan={2} />
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+
+      {agrupar !== "cliente" && (
+        <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-linha text-xs text-cinza">
+                <th className="px-3 py-2 text-left font-medium">{agrupar === "regime" ? "Regime" : "Porte"}</th>
+                <th className="px-3 py-2 text-right font-medium">Horas</th>
+                <th className="px-3 py-2 text-right font-medium">Custo</th>
+                <th className="px-3 py-2 text-right font-medium">Recebido</th>
+                <th className="px-3 py-2 text-right font-medium">Contratado</th>
+                <th className="px-3 py-2 text-right font-medium">Margem</th>
+                <th className="px-3 py-2 text-right font-medium">%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {grupos.map((g) => {
+                const m = margem(g);
+                return (
+                  <tr key={g.grupo} className="border-b border-linha/60 hover:bg-creme">
+                    <td className="px-3 py-2 text-texto">{g.grupo}</td>
+                    <td className="px-3 py-2 text-right text-cinza">{formatarHoras(g.minutos)}</td>
+                    <td className="px-3 py-2 text-right text-cinza">{formatarMoeda(g.custo)}</td>
+                    <td className="px-3 py-2 text-right text-texto">{formatarMoeda(g.recebido)}</td>
+                    <td className="px-3 py-2 text-right text-cinza">{formatarMoeda(g.contratado)}</td>
+                    <td className={`px-3 py-2 text-right font-medium ${m.valor < 0 ? "text-negativo" : "text-texto"}`}>
+                      {formatarMoeda(m.valor)}
+                    </td>
+                    <td
+                      className={`px-3 py-2 text-right ${m.pct !== null && m.pct < 0 ? "text-negativo" : "text-cinza"}`}
+                    >
+                      {m.pct === null ? "—" : `${m.pct}%`}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="border-t border-linha bg-creme text-sm font-medium">
+                <td className="px-3 py-2 text-texto">Total</td>
+                <td className="px-3 py-2 text-right text-texto">{formatarHoras(rel.totais.minutos)}</td>
+                <td className="px-3 py-2 text-right text-texto">{formatarMoeda(rel.totais.custo)}</td>
+                <td className="px-3 py-2 text-right text-texto">{formatarMoeda(rel.totais.recebido)}</td>
+                <td className="px-3 py-2 text-right text-texto">{formatarMoeda(rel.totais.contratado)}</td>
+                <td className={`px-3 py-2 text-right ${totalMargem < 0 ? "text-negativo" : "text-texto"}`}>
+                  {formatarMoeda(totalMargem)}
+                </td>
+                <td />
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
 
       <p className="text-xs text-cinza">
         <strong>Recebido</strong> = baixas não estornadas no período. <strong>Contratado</strong> = honorário mensal ×
