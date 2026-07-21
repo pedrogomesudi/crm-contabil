@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.57.0] — 2026-07-21
+
+API pública — leitura (RF-080, Fatia B).
+
+### Adicionado
+
+- **Endpoints de leitura `GET /api/v1`** para integrações externas: `clientes`, `titulos`, `boletos`,
+  `obrigacoes` e `documentos` (metadados), autenticados por API key com o escopo `<recurso>:read`. Cada
+  lista tem paginação (`limit`/`offset`, máx 200) e filtros (por cliente, status, competência, CNPJ etc.),
+  com envelope JSON padronizado (`{ dados, paginacao }`).
+- **Proteções:** rate limit por chave (120 req/min, com `Retry-After`) e serialização que esconde campos
+  internos e dados sensíveis (caminhos de storage, texto extraído, snapshots do ERP, sócios).
+
 ## [6.56.0] — 2026-07-21
 
 API pública — fundação de chaves (RF-080, Fatia A).
