@@ -3,6 +3,7 @@ export type Vigencia = { custoHora: number; inicio: string; fim: string | null }
 export type LinhaRentab = {
   clienteId: string;
   clienteNome: string;
+  regime: string | null;
   minutos: number;
   custo: number;
   recebido: number;
