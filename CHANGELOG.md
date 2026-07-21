@@ -22,6 +22,12 @@ Automação — maturidade de webhooks (RF-083, onda 1).
   quando) com **reenvio manual** das que falharam.
 - **`GET /api/v1/eventos`:** lista os tipos de evento disponíveis para integrações.
 
+### Segurança
+
+- **Proteção contra SSRF** nos webhooks de saída: URLs de endpoint são validadas (só https público) e endereços
+  internos — loopback, faixas privadas, link-local e o IP de metadados de cloud (169.254.169.254) — são recusados
+  no cadastro, no teste e na entrega.
+
 ## [6.61.0] — 2026-07-21
 
 API pública — documentação OpenAPI (RF-080, Fatia E). **RF-080 completo.**
