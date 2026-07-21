@@ -55,6 +55,11 @@ const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] 
     label: "Monitoramento da Receita",
     desc: "Reconsulta automática de situação cadastral e Simples: liga/desliga, frequência e badge.",
   },
+  {
+    href: "/configuracoes/api",
+    label: "API pública",
+    desc: "Chaves de acesso e escopos para integrações externas via /api/v1.",
+  },
   { href: "/configuracoes/whatsapp", label: "WhatsApp (Z-API)", desc: "Credenciais do provedor e teste de conexão." },
   { href: "/configuracoes/email", label: "E-mail", desc: "Canal de envio (SMTP ou API), remetente e teste." },
   {
