@@ -1,7 +1,9 @@
 import { protegerRota } from "@/lib/api/rota";
-import { normalizarPaginacao, okJson } from "@/lib/api/http";
+import { normalizarPaginacao, okJson, umJson, erroJson } from "@/lib/api/http";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { serializarCliente, COLS_CLIENTE } from "@/lib/api/serializar";
+import { clienteSchema } from "@/lib/validation/cliente";
+import { criarClienteNucleo } from "@/lib/clientes/gravar";
 
 export function GET(req: Request) {
   return protegerRota(req, "clientes:read", async () => {
@@ -20,5 +22,21 @@ export function GET(req: Request) {
     if (status) q = q.eq("status", status);
     const { data, count } = await q;
     return okJson((data ?? []).map(serializarCliente), { limit, offset, total: count ?? 0 });
+  });
+}
+
+export function POST(req: Request) {
+  return protegerRota(req, "clientes:write", async () => {
+    const body = (await req.json().catch(() => null)) as { endereco?: unknown } | null;
+    const parsed = clienteSchema.safeParse(body);
+    if (!parsed.success) return erroJson("validacao", parsed.error.issues[0]?.message ?? "Payload inválido.", 422);
+    const endereco =
+      body?.endereco && typeof body.endereco === "object" ? (body.endereco as Record<string, string>) : null;
+    const r = await criarClienteNucleo(
+      { dados: parsed.data, endereco, representante: null, camposCustom: {} },
+      { db: createAdminSupabase(), autorId: null },
+    );
+    if (!r.ok) return erroJson(r.codigo, r.erro, r.codigo === "duplicado" ? 409 : 400);
+    return umJson({ id: r.id });
   });
 }

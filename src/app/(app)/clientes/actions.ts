@@ -9,7 +9,7 @@ import { aplicarBusca } from "@/lib/clientes/busca";
 import { normalizarFiltro, aplicarFiltroStatus } from "@/lib/clientes/filtroStatus";
 import { exportar } from "@/app/(app)/exportar/actions";
 import type { ArquivoExportado, FormatoExportacao, RelatorioExportavel } from "@/lib/exportar/tipos";
-import { ehContadorValido } from "@/lib/clientes/contadores";
+import { criarClienteNucleo, atualizarClienteNucleo } from "@/lib/clientes/gravar";
 import { podeExcluirCliente } from "@/lib/clientes/permissoes";
 import { normalizarExtensaoFinanceira } from "@/lib/financeiro/extensaoCliente";
 import type { EstadoCliente, EstadoHonorario } from "./estados";
@@ -26,16 +26,6 @@ async function lerCamposCustom(formData: FormData): Promise<{ valores: Record<st
   if ("erro" in r) return { erro: r.erro };
   if (r.faltando.length > 0) return { erro: `Preencha os campos obrigatórios: ${r.faltando.join(", ")}.` };
   return { valores: r.valores };
-}
-
-// Normaliza TODA string vazia para null (campos uuid/date/text opcionais). Os
-// obrigatórios (razao_social/cpf_cnpj) nunca são "" (min(1)); enums nunca são "".
-function limparVazios(d: Record<string, unknown>): Record<string, unknown> {
-  const out = { ...d };
-  for (const k of Object.keys(out)) {
-    if (out[k] === "" || out[k] === undefined) out[k] = null;
-  }
-  return out;
 }
 
 // Monta o endereco (jsonb) a partir dos campos planos do form (normalizado).
@@ -94,57 +84,41 @@ export async function criarCliente(
   const parsed = lerEValidar(formData);
   if (!parsed.success) return { erro: mensagensErro(parsed.error.issues) };
 
-  // contador_id, se informado, deve ser de um contador ativo (ACH-03).
-  if (parsed.data.contador_id && !(await ehContadorValido(parsed.data.contador_id))) {
-    return { erro: "Contador selecionado é inválido." };
-  }
-
   const cc = await lerCamposCustom(formData);
   if ("erro" in cc) return { erro: cc.erro };
 
-  const supabase = await createServerSupabase();
-  // status não entra no payload de criação (DB default 'ativo'); criado_por e
-  // contador_id (p/ contador) são forçados pelo trigger no banco.
-  const payload = limparVazios(parsed.data);
-  delete payload.status;
-  const { data, error } = await supabase
-    .from("clientes")
-    .insert({
-      ...payload,
+  // Regra e persistência no núcleo compartilhado (reusado pela API pública). criado_por e
+  // contador_id (p/ contador) são forçados pelo trigger no banco, daí autorId: null.
+  const r = await criarClienteNucleo(
+    {
+      dados: parsed.data,
       endereco: montarEndereco(formData),
       representante: montarRepresentante(formData),
-      campos_custom: cc.valores,
-    })
-    .select("id");
-  if (error) {
-    if (error.code === "23505") {
-      const { data: existente } = await supabase
-        .from("clientes")
-        .select("id, status, razao_social")
-        .eq("cpf_cnpj", parsed.data.cpf_cnpj)
-        .maybeSingle();
-      const nome = existente?.razao_social ? ` (${existente.razao_social})` : "";
-      if (existente?.status === "inativo") {
+      camposCustom: cc.valores,
+    },
+    { db: await createServerSupabase(), autorId: null },
+  );
+  if (!r.ok) {
+    if (r.codigo === "duplicado") {
+      const nome = r.duplicado?.razao_social ? ` (${r.duplicado.razao_social})` : "";
+      if (r.duplicado?.status === "inativo") {
         return {
           erro: `CPF/CNPJ já cadastrado em um cliente INATIVO${nome}.`,
-          reativarId: existente.id,
-          duplicadoId: existente.id,
+          reativarId: r.duplicado.id,
+          duplicadoId: r.duplicado.id,
         };
       }
-      if (existente?.status === "ativo") {
-        return { erro: `CPF/CNPJ já cadastrado em um cliente ativo${nome}.`, duplicadoId: existente?.id };
+      if (r.duplicado?.status === "ativo") {
+        return { erro: `CPF/CNPJ já cadastrado em um cliente ativo${nome}.`, duplicadoId: r.duplicado.id };
       }
-      return { erro: `CPF/CNPJ já cadastrado${nome}. Procure um administrador.`, duplicadoId: existente?.id };
+      return { erro: `CPF/CNPJ já cadastrado${nome}. Procure um administrador.`, duplicadoId: r.duplicado?.id };
     }
-    console.error("criarCliente:", error.code, error.message);
-    return { erro: "Não foi possível salvar o cliente (sem permissão?)." };
+    return { erro: r.erro };
   }
-  if (!data || data.length === 0) {
-    return { erro: "Não foi possível salvar o cliente (sem permissão)." };
-  }
-  const novoId = data[0]!.id as string;
+  const novoId = r.id;
   revalidatePath("/clientes");
   if (oportunidadeId) {
+    const supabase = await createServerSupabase();
     await supabase
       .from("oportunidade")
       .update({ cliente_id: novoId, etapa: "ganho", atualizado_em: new Date().toISOString() })
@@ -162,10 +136,6 @@ export async function atualizarCliente(
   const parsed = lerEValidar(formData);
   if (!parsed.success) return { erro: mensagensErro(parsed.error.issues) };
 
-  if (parsed.data.contador_id && !(await ehContadorValido(parsed.data.contador_id))) {
-    return { erro: "Contador selecionado é inválido." };
-  }
-
   // Token de concorrência obrigatório (vindo do hidden); sem ele, recusa para
   // não sobrescrever cegamente (ACH-02). O valor é o atualizado_em do render.
   const original = String(formData.get("atualizado_em") ?? "");
@@ -174,27 +144,21 @@ export async function atualizarCliente(
   const cc = await lerCamposCustom(formData);
   if ("erro" in cc) return { erro: cc.erro };
 
-  const supabase = await createServerSupabase();
-  const { data, error } = await supabase
-    .from("clientes")
-    .update({
-      ...limparVazios(parsed.data),
+  const r = await atualizarClienteNucleo(
+    clienteId,
+    {
+      dados: parsed.data,
       endereco: montarEndereco(formData),
       representante: montarRepresentante(formData),
-      campos_custom: cc.valores,
-    })
-    .eq("id", clienteId)
-    .eq("atualizado_em", original) // concorrência otimista (instante; PostgREST compara por valor)
-    .select("id");
-  if (error) {
-    if (error.code === "23505") return { erro: "CPF/CNPJ já cadastrado em outro cliente." };
-    console.error("atualizarCliente:", error.code, error.message);
-    return { erro: "Não foi possível atualizar o cliente." };
-  }
-  if (!data || data.length === 0) {
-    return {
-      erro: "Não foi salvo: sem permissão ou o cliente foi alterado por outra pessoa. Recarregue a página.",
-    };
+      camposCustom: cc.valores,
+      atualizadoEmEsperado: original,
+    },
+    { db: await createServerSupabase(), autorId: null },
+  );
+  if (!r.ok) {
+    if (r.codigo === "conflito")
+      return { erro: "Não foi salvo: sem permissão ou o cliente foi alterado por outra pessoa. Recarregue a página." };
+    return { erro: r.erro };
   }
   revalidatePath(`/clientes/${clienteId}`);
   redirect("/clientes?ok=1");

@@ -8,6 +8,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.58.0] — 2026-07-21
+
+API pública — escrita de cadastro e financeiro (RF-080, Fatia C, onda 1).
+
+### Adicionado
+
+- **Escrita via API** (escopo `<recurso>:write`): `POST/PATCH /api/v1/clientes` (criar/editar cliente, com
+  controle de concorrência via `atualizado_em`), `POST /api/v1/titulos` (cobrança avulsa) e
+  `POST /api/v1/titulos/:id/baixa` (registrar recebimento — o status do título é recalculado automaticamente).
+
+### Interno
+
+- A regra de cada operação foi extraída para um **núcleo compartilhado** (`gravarCliente`, `criarTituloAvulso`,
+  `registrarBaixa`), agora usado tanto pela tela quanto pela API — a validação vive num lugar só.
+
 ## [6.57.0] — 2026-07-21
 
 API pública — leitura (RF-080, Fatia B).

@@ -1,7 +1,9 @@
 import { protegerRota } from "@/lib/api/rota";
-import { normalizarPaginacao, okJson } from "@/lib/api/http";
+import { normalizarPaginacao, okJson, umJson, erroJson } from "@/lib/api/http";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { serializarTitulo, COLS_TITULO } from "@/lib/api/serializar";
+import { tituloAvulsoSchema } from "@/lib/validation/api-escrita";
+import { criarTituloAvulsoNucleo } from "@/lib/financeiro/gravar-titulo";
 
 export function GET(req: Request) {
   return protegerRota(req, "titulos:read", async () => {
@@ -23,5 +25,16 @@ export function GET(req: Request) {
     if (tipo) q = q.eq("tipo", tipo);
     const { data, count } = await q;
     return okJson((data ?? []).map(serializarTitulo), { limit, offset, total: count ?? 0 });
+  });
+}
+
+export function POST(req: Request) {
+  return protegerRota(req, "titulos:write", async () => {
+    const body = await req.json().catch(() => null);
+    const parsed = tituloAvulsoSchema.safeParse(body);
+    if (!parsed.success) return erroJson("validacao", parsed.error.issues[0]?.message ?? "Payload inválido.", 422);
+    const r = await criarTituloAvulsoNucleo(parsed.data, { db: createAdminSupabase(), autorId: null });
+    if (!r.ok) return erroJson(r.codigo, r.erro, r.codigo === "duplicado" ? 409 : 400);
+    return umJson({ id: r.tituloId });
   });
 }

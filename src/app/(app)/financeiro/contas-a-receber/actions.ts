@@ -4,7 +4,8 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
-import { validarCobrancaAvulsa, competenciaDoVencimento } from "@/lib/financeiro/cobranca-avulsa";
+import { criarTituloAvulsoNucleo } from "@/lib/financeiro/gravar-titulo";
+import { registrarBaixaNucleo } from "@/lib/financeiro/gravar-baixa";
 import { emitirBoleto } from "./boleto-actions";
 
 export type TituloView = {
@@ -89,31 +90,9 @@ export async function criarCobrancaAvulsa(
 ): Promise<ResultadoAvulsa> {
   const perfil = await gateGerir();
   if (!perfil) return { erro: "Sem permissão." };
-  const v = validarCobrancaAvulsa(input);
-  if (!v.ok) return { erro: v.erro };
-  const supabase = await createServerSupabase();
-  const { data, error } = await supabase
-    .from("titulo")
-    .insert({
-      tipo: "RECEBER",
-      origem: "RECEITA_AVULSA",
-      status: "ABERTO",
-      cliente_id: input.clienteId,
-      valor: input.valor,
-      vencimento: input.vencimento,
-      competencia: competenciaDoVencimento(input.vencimento),
-      categoria_id: input.categoriaId,
-      descricao: input.descricao.trim() || null,
-      criado_por: perfil.id,
-    })
-    .select("id")
-    .single();
-  if (error || !data) {
-    if (error?.code === "23505")
-      return { erro: "Já existe uma cobrança desse tipo para este cliente nesta competência." };
-    return { erro: error?.message ? `Falha ao criar a cobrança: ${error.message}` : "Falha ao criar a cobrança." };
-  }
-  const tituloId = data.id as string;
+  const r = await criarTituloAvulsoNucleo(input, { db: await createServerSupabase(), autorId: perfil.id });
+  if (!r.ok) return { erro: r.erro };
+  const tituloId = r.tituloId;
   revalidatePath(ROTA);
   if (emitirBoletoAgora) {
     const b = await emitirBoleto(tituloId);
@@ -136,25 +115,20 @@ export async function gerarMensalidades(competencia: string) {
 export async function registrarBaixa(fd: FormData) {
   const perfil = await gateGerir();
   if (!perfil) return { erro: "Sem permissão." };
-  const tituloId = String(fd.get("titulo_id") ?? "");
-  const valor = Number(fd.get("valor_recebido") ?? 0);
-  const conta = String(fd.get("conta_bancaria_id") ?? "");
-  const forma = String(fd.get("forma_pagamento") ?? "");
-  const data = String(fd.get("data_recebimento") ?? "");
-  if (!tituloId || !(valor > 0) || !conta || !forma || !data) return { erro: "Preencha valor, data, conta e forma." };
-  const supabase = await createServerSupabase();
-  const { error } = await supabase.from("baixa").insert({
-    titulo_id: tituloId,
-    data_recebimento: data,
-    valor_recebido: valor,
-    juros: Number(fd.get("juros") ?? 0) || 0,
-    multa: Number(fd.get("multa") ?? 0) || 0,
-    desconto: Number(fd.get("desconto") ?? 0) || 0,
-    conta_bancaria_id: conta,
-    forma_pagamento: forma,
-    criado_por: perfil.id,
-  });
-  if (error) return { erro: "Falha ao registrar a baixa." };
+  const r = await registrarBaixaNucleo(
+    {
+      tituloId: String(fd.get("titulo_id") ?? ""),
+      dataRecebimento: String(fd.get("data_recebimento") ?? ""),
+      valorRecebido: Number(fd.get("valor_recebido") ?? 0),
+      juros: Number(fd.get("juros") ?? 0) || 0,
+      multa: Number(fd.get("multa") ?? 0) || 0,
+      desconto: Number(fd.get("desconto") ?? 0) || 0,
+      contaBancariaId: String(fd.get("conta_bancaria_id") ?? ""),
+      formaPagamento: String(fd.get("forma_pagamento") ?? ""),
+    },
+    { db: await createServerSupabase(), autorId: perfil.id },
+  );
+  if (!r.ok) return { erro: r.erro };
   revalidatePath(ROTA);
   return { ok: true };
 }
