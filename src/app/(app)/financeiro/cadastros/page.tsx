@@ -18,6 +18,7 @@ const ITENS = [
   { href: "/financeiro/reajuste", label: "Reajuste anual de honorários" },
   { href: "/financeiro/conciliacao", label: "Conciliação bancária" },
   { href: "/financeiro/rentabilidade", label: "Rentabilidade por cliente" },
+  { href: "/financeiro/produtividade", label: "Produtividade por colaborador", adminOnly: true },
   { href: "/financeiro/relatorios", label: "Relatórios" },
   { href: "/financeiro/cadastros/contas", label: "Contas bancárias" },
   { href: "/financeiro/cadastros/plano-de-contas", label: "Plano de contas" },
@@ -29,6 +30,7 @@ const ITENS = [
 export default async function CadastrosHubPage() {
   const perfil = await getPerfilAtual();
   if (!perfil || !podeGerenciarFinanceiro(perfil.papel)) redirect("/");
+  const itens = ITENS.filter((i) => !("adminOnly" in i && i.adminOnly) || perfil.papel === "admin");
   return (
     <Container largura="estreita" className="space-y-5 p-4">
       <Voltar href="/" />
@@ -37,7 +39,7 @@ export default async function CadastrosHubPage() {
           um rótulo de duas linhas ("Reajuste anual de honorários") fica mais alta que as
           outras, e o grid vira uma escada. O h-full abaixo estica o card até a linha. */}
       <ul className="grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {ITENS.map((i) => (
+        {itens.map((i) => (
           <li key={i.href}>
             {/* h-full: sem isso o card cresce quando o rótulo quebra em duas linhas ("Reajuste
                 anual de honorários") e os vizinhos da mesma linha ficam menores que ele. */}
