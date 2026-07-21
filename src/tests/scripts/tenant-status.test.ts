@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+// @ts-expect-error — .mjs de ferramental (JS puro), sem tipos.
 import { compararVersao, classificar, resumo } from "../../../scripts/_tenant-status.mjs";
 
 describe("compararVersao", () => {
