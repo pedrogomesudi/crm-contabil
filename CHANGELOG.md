@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.64.0] — 2026-07-21
+
+Operação multi-tenant — status dos escritórios (RNF-01, modelo físico).
+
+### Adicionado
+
+- **`npm run tenant:status`:** ferramenta de operador que lista os escritórios cadastrados e consulta o
+  `/api/health` de cada um, mostrando a versão no ar e a saúde (fora do ar / ok). Com `--esperado <versao>`
+  sinaliza **quem ainda não implantou** um release (e sai com código de erro), fechando a lacuna de visibilidade
+  que já causou releases sem deploy. O isolamento entre escritórios segue **físico** (um banco/app por escritório).
+
 ## [6.63.0] — 2026-07-21
 
 Automação — OpenAPI enriquecido + guia (RF-083, onda 2). **RF-083 completo** (no que é versionável).
