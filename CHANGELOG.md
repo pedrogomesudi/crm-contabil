@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.49.0] — 2026-07-20
+
+Financeiro — rentabilidade por porte (RF-072, Fatia B).
+
+### Adicionado
+
+- **Campo "Porte" no cadastro do cliente** (MEI / ME / EPP / Demais), opcional.
+- **Agrupar a rentabilidade por porte:** a opção "Porte" do seletor de agrupamento (que já existia) passa a
+  somar de verdade — margem por faixa de porte. Com isso o RF-072 fica completo (regime + porte).
+
 ## [6.48.0] — 2026-07-20
 
 Financeiro — rentabilidade por segmento (RF-072, Fatia A: regime).
