@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { validarDocumento } from "./documento";
 import { ehDataValida } from "./data";
-import { TIPOS_PESSOA, REGIMES, STATUS_CLIENTE, type TipoPessoa, type RegimeTributario } from "@/lib/tipos";
+import { TIPOS_PESSOA, REGIMES, STATUS_CLIENTE, PORTES, type TipoPessoa, type RegimeTributario } from "@/lib/tipos";
 
 const combinacoes: Record<TipoPessoa, RegimeTributario[]> = {
   PJ: ["Simples", "Presumido", "Real"],
@@ -16,6 +16,7 @@ export const clienteSchema = z
     nome_fantasia: z.string().trim().max(200).optional(),
     cpf_cnpj: z.string().trim().min(1, "CPF/CNPJ é obrigatório").max(20),
     regime_tributario: z.enum(REGIMES, { message: "Regime tributário inválido" }),
+    porte: z.preprocess((v) => (v === "" || v == null ? undefined : v), z.enum(PORTES).optional()),
     inscricao_estadual: z.string().trim().max(30).optional(),
     inscricao_municipal: z.string().trim().max(30).optional(),
     email: z.union([z.email("E-mail inválido").max(120), z.literal("")]).optional(),

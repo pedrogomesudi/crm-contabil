@@ -65,6 +65,7 @@ describe("margem", () => {
     clienteId: "c",
     clienteNome: "Cliente",
     regime: null,
+    porte: null,
     minutos: 600,
     custo: 500,
     recebido: 1000,

@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useState, type ChangeEvent } from "react";
 import Link from "next/link";
-import { TIPOS_PESSOA, REGIMES } from "@/lib/tipos";
+import { TIPOS_PESSOA, REGIMES, PORTES } from "@/lib/tipos";
 import { controleCls } from "@/components/ui/Campo";
 import { Secao } from "@/components/ui/Secao";
 import { CamposComplementares } from "@/components/clientes/CamposComplementares";
@@ -17,6 +17,7 @@ export type ClienteDefaults = {
   nome_fantasia?: string;
   cpf_cnpj?: string;
   regime_tributario?: string;
+  porte?: string;
   inscricao_estadual?: string;
   inscricao_municipal?: string;
   email?: string;
@@ -193,6 +194,16 @@ export function FormCliente({
               {REGIMES.map((r) => (
                 <option key={r} value={r}>
                   {r}
+                </option>
+              ))}
+            </select>
+          </FormCampo>
+          <FormCampo label="Porte" span={2}>
+            <select name="porte" defaultValue={c.porte ?? ""} className={`${controleCls()} w-full`}>
+              <option value="">—</option>
+              {PORTES.map((p) => (
+                <option key={p} value={p}>
+                  {p}
                 </option>
               ))}
             </select>

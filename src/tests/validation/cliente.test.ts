@@ -12,6 +12,19 @@ describe("clienteSchema", () => {
   it("aceita PJ + Simples + CNPJ válido", () => {
     expect(clienteSchema.safeParse(base).success).toBe(true);
   });
+  it("aceita porte válido e o mantém", () => {
+    const r = clienteSchema.safeParse({ ...base, porte: "ME" });
+    expect(r.success).toBe(true);
+    expect(r.success && r.data.porte).toBe("ME");
+  });
+  it("trata porte vazio como ausente (não erro)", () => {
+    const r = clienteSchema.safeParse({ ...base, porte: "" });
+    expect(r.success).toBe(true);
+    expect(r.success && r.data.porte).toBeUndefined();
+  });
+  it("rejeita porte inválido", () => {
+    expect(clienteSchema.safeParse({ ...base, porte: "GRANDE" }).success).toBe(false);
+  });
   it("rejeita PF com regime Simples (tipo×regime)", () => {
     const r = clienteSchema.safeParse({
       ...base,
