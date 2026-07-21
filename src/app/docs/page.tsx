@@ -1,4 +1,5 @@
 import { ENDPOINTS } from "@/lib/api/openapi";
+import { EVENTOS_WEBHOOK } from "@/lib/webhooks/sinal";
 
 export const metadata = { title: "SALDO API — Documentação" };
 
@@ -46,6 +47,20 @@ export default function DocsPage() {
           ))}
         </tbody>
       </table>
+
+      <h2 style={{ marginTop: 32 }}>Webhooks de saída</h2>
+      <p>
+        Cadastre uma URL https em Configurações → Webhooks. Eventos disponíveis:{" "}
+        {EVENTOS_WEBHOOK.map((e) => (
+          <code key={e} style={{ marginRight: 8 }}>
+            {e}
+          </code>
+        ))}
+        . Cada entrega é um POST com o corpo <code>{`{ id, evento, criado_em, dados }`}</code> e os headers{" "}
+        <code>X-Webhook-Id</code>, <code>X-Webhook-Timestamp</code>, <code>X-Webhook-Tentativa</code> e{" "}
+        <code>X-Assinatura</code> (HMAC-SHA256 do corpo cru). Deduplique pelo <code>X-Webhook-Id</code>. Guia completo
+        em <code>docs/INTEGRACAO.md</code>.
+      </p>
     </main>
   );
 }
