@@ -16,8 +16,19 @@ export type DadosReceita = {
   razaoSocial: string | null;
   nomeFantasia: string | null;
   situacao: string | null;
+  optanteSimples: boolean | null;
   endereco: EnderecoReceita;
 };
+
+// BrasilAPI: opcao_pelo_simples / opcao_pelo_mei (boolean|null). Optante do Simples OU do MEI
+// conta como optante. Ausência de ambos → null (desconhecido, não sobrescreve baseline).
+export function lerOptante(d: Record<string, unknown>): boolean | null {
+  const s = d.opcao_pelo_simples;
+  const m = d.opcao_pelo_mei;
+  if (s === true || m === true) return true;
+  if (s === false || m === false) return false;
+  return null;
+}
 
 const UA = "crm-contabil/1.0 (+integracao-receita)";
 const limpar = (v: unknown): string | undefined => {
@@ -48,6 +59,7 @@ export function mapearReceita(d: Record<string, unknown>): DadosReceita {
     razaoSocial: limpar(d.razao_social) ?? null,
     nomeFantasia: limpar(d.nome_fantasia) ?? null,
     situacao: limpar(d.descricao_situacao_cadastral) ?? null,
+    optanteSimples: lerOptante(d),
     endereco,
   };
 }
@@ -71,6 +83,13 @@ export function mapearReceitaWs(d: Record<string, unknown>): DadosReceita {
     razaoSocial: limpar(d.nome) ?? null,
     nomeFantasia: limpar(d.fantasia) ?? null,
     situacao: limpar(d.situacao) ?? null,
+    optanteSimples: (() => {
+      const s = (d.simples as { optante?: boolean } | undefined)?.optante;
+      const m = (d.simei as { optante?: boolean } | undefined)?.optante;
+      if (s === true || m === true) return true;
+      if (s === false || m === false) return false;
+      return null;
+    })(),
     endereco,
   };
 }
@@ -82,6 +101,7 @@ export function mesclarDados(primario: DadosReceita, secundario: DadosReceita): 
     razaoSocial: primario.razaoSocial ?? secundario.razaoSocial,
     nomeFantasia: primario.nomeFantasia ?? secundario.nomeFantasia,
     situacao: primario.situacao ?? secundario.situacao,
+    optanteSimples: primario.optanteSimples ?? secundario.optanteSimples,
     endereco: { ...secundario.endereco, ...primario.endereco },
   };
 }
