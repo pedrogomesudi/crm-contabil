@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ClienteInput } from "@/lib/validation/cliente";
 import { ehContadorValido } from "@/lib/clientes/contadores";
+import { emitir } from "@/lib/webhooks/emitir";
 
 export type CtxEscrita = { db: SupabaseClient; autorId: string | null };
 export type ClienteEscrita = {
@@ -62,7 +63,9 @@ export async function criarClienteNucleo(input: ClienteEscrita, ctx: CtxEscrita)
     return { ok: false, codigo: "erro", erro: "Não foi possível salvar o cliente." };
   }
   if (!data || data.length === 0) return { ok: false, codigo: "erro", erro: "Não foi possível salvar o cliente." };
-  return { ok: true, id: data[0]!.id as string };
+  const id = data[0]!.id as string;
+  await emitir("cliente.criado", id);
+  return { ok: true, id };
 }
 
 export async function atualizarClienteNucleo(
@@ -92,5 +95,6 @@ export async function atualizarClienteNucleo(
   }
   if (!data || data.length === 0)
     return { ok: false, codigo: "conflito", erro: "Sem permissão ou alterado por outra pessoa. Recarregue." };
+  await emitir("cliente.atualizado", clienteId);
   return { ok: true };
 }

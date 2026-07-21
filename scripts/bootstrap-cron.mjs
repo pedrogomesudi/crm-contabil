@@ -87,6 +87,12 @@ const JOBS = [
     comando: httpPost("monitorar-receita", true),
     nota: "reconsulta situação cadastral/Simples dos clientes vencidos (RF-084); a config controla a cadência real",
   },
+  {
+    nome: "entregar-webhooks",
+    agenda: "*/5 * * * *",
+    comando: httpPost("entregar-webhooks", true),
+    nota: "entrega webhooks de saída pendentes com retry (RF-080 Fatia D)",
+  },
 ];
 
 // Nunca imprime o segredo.
