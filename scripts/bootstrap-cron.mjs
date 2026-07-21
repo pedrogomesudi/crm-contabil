@@ -75,6 +75,12 @@ const JOBS = [
     comando: httpPost("followup-proposta", false),
     nota: "dispara o follow-up de propostas (RF-007); sem body, como a régua",
   },
+  {
+    nome: "sincronizar-boletos-diaria",
+    agenda: "0 14 * * *",
+    comando: httpPost("sincronizar-boletos", true),
+    nota: "reconcilia boletos pagos no Inter que o webhook perdeu (RF-081)",
+  },
 ];
 
 // Nunca imprime o segredo.
