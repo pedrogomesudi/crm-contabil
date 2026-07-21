@@ -50,6 +50,12 @@ export default async function DocumentosBuscaPage({
           placeholder="nome do arquivo"
           className={controleCls("compacto")}
         />
+        <input
+          name="conteudo"
+          defaultValue={filtro.conteudo ?? ""}
+          placeholder="texto no conteúdo (PDF)"
+          className={controleCls("compacto")}
+        />
         <select name="tipo" defaultValue={filtro.tipoId ?? ""} className={controleCls("compacto")}>
           <option value="">todos os tipos</option>
           {tipos.map((t) => (

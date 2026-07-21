@@ -12,6 +12,7 @@ const doc = {
   departamento: "fiscal",
   competencia: "2026-07-01",
   enviado_em: "2026-07-19T00:00:00Z",
+  textoStatus: "ok",
 };
 
 describe("TabelaResultadosBusca", () => {
@@ -21,6 +22,10 @@ describe("TabelaResultadosBusca", () => {
     expect(html).toContain("Padaria X");
     expect(html).toContain("07/2026");
     expect(html).toContain("Fiscal");
+  });
+  it("sinaliza digitalização sem texto pesquisável", () => {
+    const html = renderToStaticMarkup(<TabelaResultadosBusca docs={[{ ...doc, textoStatus: "vazio" }]} />);
+    expect(html).toContain("sem texto pesquisável");
   });
   it("estado vazio", () => {
     const html = renderToStaticMarkup(<TabelaResultadosBusca docs={[]} />);

@@ -41,16 +41,20 @@ export type DocBusca = {
   departamento: string | null;
   competencia: string | null;
   enviado_em: string;
+  textoStatus: string | null;
 };
 
 export async function buscarDocumentos(f: FiltroResolvido): Promise<DocBusca[]> {
   const supabase = await createServerSupabase();
   let q = supabase
     .from("documentos")
-    .select("id, nome, tipo, departamento, competencia, enviado_em, substitui_id, cliente_id, clientes(razao_social)")
+    .select(
+      "id, nome, tipo, departamento, competencia, enviado_em, substitui_id, cliente_id, texto_status, clientes(razao_social)",
+    )
     .order("enviado_em", { ascending: false })
     .limit(100);
   if (f.nome) q = q.ilike("nome", `%${escapeLike(f.nome)}%`);
+  if (f.conteudo) q = q.textSearch("conteudo", f.conteudo, { type: "websearch", config: "portuguese" });
   if (f.tipoId) q = q.eq("tipo_id", f.tipoId);
   if (f.departamento) q = q.eq("departamento", f.departamento);
   if (f.clienteId) q = q.eq("cliente_id", f.clienteId);
@@ -70,6 +74,7 @@ export async function buscarDocumentos(f: FiltroResolvido): Promise<DocBusca[]> 
       departamento: (d.departamento as string | null) ?? null,
       competencia: (d.competencia as string | null) ?? null,
       enviado_em: d.enviado_em as string,
+      textoStatus: (d.texto_status as string | null) ?? null,
     };
   });
   // Só versões atuais entre os resultados (as substituídas herdam a taxonomia, então ambas
