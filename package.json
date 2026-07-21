@@ -25,6 +25,7 @@
     "tenant:novo": "node scripts/tenant-novo.mjs",
     "tenant:adotar": "node scripts/tenant-adotar.mjs",
     "tenant:doctor": "node scripts/tenant-doctor.mjs",
+    "tenant:status": "node scripts/tenant-status.mjs",
     "db:migrate:all": "node scripts/tenants-all.mjs db-migrate",
     "db:test:all": "node scripts/tenants-all.mjs db-test-rls",
     "cron:bootstrap:all": "node scripts/tenants-all.mjs bootstrap-cron",
