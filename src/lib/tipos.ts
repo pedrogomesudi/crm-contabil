@@ -17,5 +17,8 @@ export type TipoPessoa = (typeof TIPOS_PESSOA)[number];
 export const REGIMES = ["Simples", "Presumido", "Real", "MEI", "Isento/PF"] as const;
 export type RegimeTributario = (typeof REGIMES)[number];
 
+export const PORTES = ["MEI", "ME", "EPP", "DEMAIS"] as const;
+export type Porte = (typeof PORTES)[number];
+
 export const STATUS_CLIENTE = ["ativo", "inativo"] as const;
 export type StatusCliente = (typeof STATUS_CLIENTE)[number];
