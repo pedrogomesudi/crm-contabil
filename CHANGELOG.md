@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.56.0] — 2026-07-21
+
+API pública — fundação de chaves (RF-080, Fatia A).
+
+### Adicionado
+
+- **Chaves de API para integrações externas** (Configurações → API pública, admin): criar chave com escopos
+  (a chave em claro aparece **uma única vez**), listar (prefixo, escopos, último uso) e revogar. As chaves
+  são guardadas só como hash (sha256).
+- **Base da API `/api/v1`:** autenticação por `Authorization: Bearer <chave>` com verificação de escopo, e a
+  rota `GET /api/v1/ping` para testar a credencial. Os recursos (leitura/escrita) e webhooks vêm nas próximas fatias.
+
 ## [6.55.0] — 2026-07-21
 
 Monitoramento da Receita — automação (RF-084, Fatia B).
