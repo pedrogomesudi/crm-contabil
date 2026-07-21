@@ -8,6 +8,22 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.59.0] — 2026-07-21
+
+API pública — escrita de obrigação e documento (RF-080, Fatia C, onda 2).
+
+### Adicionado
+
+- **Escrita via API** (escopo `<recurso>:write`): `PATCH /api/v1/obrigacoes/:id` marca uma obrigação como
+  entregue (com comprovante opcional via `multipart/form-data`) e `POST /api/v1/documentos` envia um documento
+  ao GED (`multipart/form-data`), com a mesma indexação de conteúdo do upload pela tela. Com isso a escrita da
+  API (Fatia C) fica completa nos 4 recursos.
+
+### Interno
+
+- Núcleos compartilhados `darBaixaObrigacao` e `anexarDocumento` extraídos das Server Actions (a tela passa a
+  chamá-los) — a validação e o upload vivem num lugar só.
+
 ## [6.58.0] — 2026-07-21
 
 API pública — escrita de cadastro e financeiro (RF-080, Fatia C, onda 1).

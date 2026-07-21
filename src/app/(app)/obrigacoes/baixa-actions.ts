@@ -4,10 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeCriarCliente } from "@/lib/clientes/permissoes";
-
-const MAX_ANEXO = 10 * 1024 * 1024;
-const TIPOS = ["application/pdf", "image/png", "image/jpeg"];
-const nomeSeguro = (n: string) => n.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
+import { darBaixaObrigacaoNucleo } from "@/lib/obrigacoes/gravar-baixa";
 
 async function gate() {
   const p = await getPerfilAtual();
@@ -27,46 +24,23 @@ async function instanciaComContexto(supabase: Awaited<ReturnType<typeof createSe
 export async function darBaixa(instanciaId: string, formData: FormData): Promise<{ ok?: boolean; erro?: string }> {
   const perfil = await gate();
   if (!perfil) return { erro: "Sem permissão." };
-  const supabase = await createServerSupabase();
-  const inst = await instanciaComContexto(supabase, instanciaId);
-  if (!inst) return { erro: "Instância não encontrada ou sem permissão." };
-  const obr = (Array.isArray(inst.obrigacao) ? inst.obrigacao[0] : inst.obrigacao) as {
-    comprovante_obrigatorio?: boolean;
-  } | null;
   const file = formData.get("comprovante");
-  const observacao = String(formData.get("observacao") ?? "").trim() || null;
-  const data =
-    String(formData.get("data") ?? "") || new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
-  const temArquivo = file instanceof File && file.size > 0;
-
-  if (obr?.comprovante_obrigatorio && !temArquivo) return { erro: "Comprovante obrigatório para esta obrigação." };
-  let comprovantePath: string | null = (inst.comprovante_path as string | null) ?? null;
-  const admin = createAdminSupabase();
-  if (temArquivo) {
-    const f = file as File;
-    if (f.size > MAX_ANEXO) return { erro: "Arquivo acima de 10 MB." };
-    if (!TIPOS.includes(f.type)) return { erro: "Tipo não permitido (PDF, PNG ou JPG)." };
-    const caminho = `obrigacoes/${inst.cliente_id}/${instanciaId}/${crypto.randomUUID()}-${nomeSeguro(f.name)}`;
-    const up = await admin.storage.from("documentos").upload(caminho, f, { contentType: f.type });
-    if (up.error) return { erro: "Falha no upload." };
-    comprovantePath = caminho;
-  }
-  const { error } = await admin
-    .from("obrigacao_instancia")
-    .update({
-      status: "pendente",
-      entregue_em: data,
-      entregue_por: perfil.id,
-      observacao,
-      comprovante_path: comprovantePath,
-    })
-    .eq("id", instanciaId);
-  if (error) {
-    if (temArquivo && comprovantePath) await admin.storage.from("documentos").remove([comprovantePath]);
-    return { erro: "Falha ao registrar a baixa." };
-  }
+  const comprovante =
+    file instanceof File && file.size > 0
+      ? { bytes: new Uint8Array(await file.arrayBuffer()), nome: file.name, mime: file.type }
+      : null;
+  const r = await darBaixaObrigacaoNucleo(
+    {
+      instanciaId,
+      data: String(formData.get("data") ?? "") || undefined,
+      observacao: String(formData.get("observacao") ?? "").trim() || null,
+      comprovante,
+    },
+    { admin: createAdminSupabase(), autorId: perfil.id },
+  );
+  if (!r.ok) return { erro: r.erro };
   revalidatePath("/obrigacoes");
-  revalidatePath(`/clientes/${inst.cliente_id}`);
+  revalidatePath(`/clientes/${r.clienteId}`);
   return { ok: true };
 }
 

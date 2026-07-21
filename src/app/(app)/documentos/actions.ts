@@ -4,8 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeGerenciarDocumentos } from "@/lib/clientes/permissoes";
-import { competenciaParaData } from "@/lib/documentos/taxonomia";
-import { carregarTiposAtivos } from "@/app/(app)/configuracoes/tipos-documento/actions";
+import { anexarDocumentoNucleo } from "@/lib/documentos/gravar";
 import { escapeLike } from "@/lib/clientes/busca";
 import { agruparVersoes } from "@/lib/documentos/versoes";
 import { extrairTextoPdf } from "@/lib/documentos/extrair-texto";
@@ -157,59 +156,19 @@ export async function anexarDocumento(
 
   const file = formData.get("arquivo");
   if (!(file instanceof File) || file.size === 0) return { erro: "Selecione um arquivo." };
-  if (file.size > MAX_BYTES) return { erro: "Arquivo acima de 10 MB." };
-  if (!TIPOS_OK.includes(file.type)) return { erro: "Tipo não permitido (PDF, PNG ou JPG)." };
 
-  // caminho_storage === object name em storage.objects (sem o prefixo do bucket).
-  // UUID garante unicidade (evita colisão do índice UNIQUE em uploads simultâneos).
-  const caminho = `${clienteId}/${crypto.randomUUID()}-${nomeSeguro(file.name)}`;
-  const admin = createAdminSupabase();
-  const up = await admin.storage.from("documentos").upload(caminho, file, { contentType: file.type });
-  if (up.error) {
-    console.error("anexarDocumento (upload):", up.error.message);
-    return { erro: "Falha no upload do arquivo." };
-  }
-
-  // Taxonomia (RF-060): tipo do catálogo (denormaliza o nome em `tipo` para não quebrar o caso
-  // `d.tipo === "Contrato"`), departamento (do form ou sugerido pelo tipo) e competência (mês/ano).
-  const tipoId = String(formData.get("tipo_id") ?? "") || null;
-  const tipos = tipoId ? await carregarTiposAtivos() : [];
-  const tipoSel = tipoId ? tipos.find((t) => t.id === tipoId) : undefined;
-  if (tipoId && !tipoSel) {
-    await admin.storage.from("documentos").remove([caminho]);
-    return { erro: "Tipo de documento inválido." };
-  }
-  const depRaw = String(formData.get("departamento") ?? "").trim();
-  const departamento = depRaw || tipoSel?.departamento || null;
-  const competencia = competenciaParaData(String(formData.get("competencia") ?? ""));
-  const tipoLabel =
-    tipoSel?.nome ??
-    (String(formData.get("tipo") ?? "")
-      .trim()
-      .slice(0, 60) ||
-      null);
-  const { data: novo, error: errInsert } = await admin
-    .from("documentos")
-    .insert({
-      cliente_id: clienteId,
-      nome: file.name,
-      tipo: tipoLabel,
-      tipo_id: tipoId,
-      departamento,
-      competencia,
-      caminho_storage: caminho,
-      enviado_por: perfil.id,
-    })
-    .select("id")
-    .single();
-  if (errInsert || !novo) {
-    // Evita arquivo órfão no Storage se o registro no banco falhar.
-    await admin.storage.from("documentos").remove([caminho]);
-    console.error("anexarDocumento (insert):", errInsert?.message);
-    return { erro: "Falha ao registrar o documento." };
-  }
-
-  await indexarConteudo(admin, novo.id, file);
+  const r = await anexarDocumentoNucleo(
+    {
+      clienteId,
+      arquivo: { bytes: new Uint8Array(await file.arrayBuffer()), nome: file.name, mime: file.type },
+      tipoId: String(formData.get("tipo_id") ?? "") || null,
+      departamentoManual: String(formData.get("departamento") ?? ""),
+      competenciaRaw: String(formData.get("competencia") ?? ""),
+      tipoTextoLivre: String(formData.get("tipo") ?? ""),
+    },
+    { admin: createAdminSupabase(), autorId: perfil.id },
+  );
+  if (!r.ok) return { erro: r.erro };
   revalidatePath(`/clientes/${clienteId}`);
   return { ok: true };
 }
