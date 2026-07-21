@@ -15,7 +15,10 @@ export default async function ApiConfigPage() {
   return (
     <Container largura="larga" className="space-y-5 p-4">
       <Voltar href="/configuracoes" label="Configurações" />
-      <PageHeader titulo="API pública" subtitulo="Chaves de acesso para integrações externas (/api/v1)" />
+      <PageHeader
+        titulo="API pública"
+        subtitulo="Chaves de acesso para integrações externas (/api/v1). Documentação em /docs."
+      />
       <GestaoChaves chaves={chaves} />
     </Container>
   );
