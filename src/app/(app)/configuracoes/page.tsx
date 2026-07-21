@@ -45,6 +45,11 @@ const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] 
     label: "Follow-up de propostas",
     desc: "Sequência automática (e-mail ou WhatsApp) após o envio da proposta.",
   },
+  {
+    href: "/configuracoes/nps",
+    label: "Pesquisa de satisfação (NPS)",
+    desc: "Coleta de NPS no portal: liga/desliga, periodicidade e texto da pergunta.",
+  },
   { href: "/configuracoes/whatsapp", label: "WhatsApp (Z-API)", desc: "Credenciais do provedor e teste de conexão." },
   { href: "/configuracoes/email", label: "E-mail", desc: "Canal de envio (SMTP ou API), remetente e teste." },
   {
