@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.63.0] — 2026-07-21
+
+Automação — OpenAPI enriquecido + guia (RF-083, onda 2). **RF-083 completo** (no que é versionável).
+
+### Adicionado
+
+- **OpenAPI com schemas:** `/api/v1/openapi.json` agora descreve os campos de cada recurso (`components.schemas`
+  para cliente, título, boleto, obrigação e documento) e o formato de request/response — o que permite gerar
+  conectores automaticamente (ex.: importar como custom app no Make).
+- **Guia de integração:** `docs/INTEGRACAO.md` (autenticação, leitura/escrita, webhooks, verificação da assinatura
+  HMAC e deduplicação) e uma seção de webhooks na página pública `/docs`.
+
 ## [6.62.0] — 2026-07-21
 
 Automação — maturidade de webhooks (RF-083, onda 1).
