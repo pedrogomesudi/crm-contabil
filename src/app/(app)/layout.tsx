@@ -8,6 +8,7 @@ import { contarAlertas } from "@/app/(app)/onboarding/alertas-actions";
 import { contarRiscos } from "@/app/(app)/obrigacoes/actions";
 import { contarEscalonamento } from "@/app/(app)/obrigacoes/escalonamento-actions";
 import { contarDocsVencidos } from "@/app/(app)/documentos/actions";
+import { contarAlertasReceita } from "@/app/(app)/clientes/alertas-receita/actions";
 import { Sidebar } from "@/components/Sidebar";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -30,6 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const escalonamento = podeCriarCliente(perfil.papel) ? await contarEscalonamento() : 0;
   const vencimentos = podeGerenciarVencimentos(perfil.papel) ? await contarVencimentos() : 0;
   const docsVencidos = perfil.papel === "admin" ? await contarDocsVencidos() : 0;
+  const monitoramentoReceita = podeCriarCliente(perfil.papel) ? await contarAlertasReceita() : 0;
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
@@ -42,7 +44,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar
         papel={perfil.papel}
         nome={perfil.nome}
-        badges={{ onboarding: alertasOnboarding, riscos: riscosObrigacoes, escalonamento, vencimentos, docsVencidos }}
+        badges={{
+          onboarding: alertasOnboarding,
+          riscos: riscosObrigacoes,
+          escalonamento,
+          vencimentos,
+          docsVencidos,
+          monitoramentoReceita,
+        }}
       />
       <main id="conteudo" className="flex-1 bg-creme p-4 md:p-6">
         {children}

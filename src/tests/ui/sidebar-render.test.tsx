@@ -4,7 +4,7 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/clientes" }));
 import { renderToStaticMarkup } from "react-dom/server";
 import { Sidebar } from "@/components/Sidebar";
 
-const ZERO = { onboarding: 0, riscos: 0, escalonamento: 0, vencimentos: 0, docsVencidos: 0 };
+const ZERO = { onboarding: 0, riscos: 0, escalonamento: 0, vencimentos: 0, docsVencidos: 0, monitoramentoReceita: 0 };
 
 describe("Sidebar", () => {
   it("mostra os títulos de grupo", () => {
@@ -25,7 +25,14 @@ describe("Sidebar", () => {
       <Sidebar
         papel="admin"
         nome="Pedro"
-        badges={{ onboarding: 2, riscos: 3, escalonamento: 1, vencimentos: 5, docsVencidos: 0 }}
+        badges={{
+          onboarding: 2,
+          riscos: 3,
+          escalonamento: 1,
+          vencimentos: 5,
+          docsVencidos: 0,
+          monitoramentoReceita: 0,
+        }}
       />,
     );
     expect(html).toContain(">4<"); // Obrigações: riscos + escalonamento
