@@ -5,6 +5,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { EVENTOS_WEBHOOK } from "@/lib/webhooks/sinal";
 import { enviarWebhook } from "@/lib/webhooks/enviar";
+import { urlWebhookSegura } from "@/lib/webhooks/url-segura";
 
 export type EndpointView = { id: string; url: string; eventos: string[]; ativo: boolean };
 
@@ -31,7 +32,8 @@ export async function listarEndpoints(): Promise<EndpointView[]> {
 export async function criarEndpoint(url: string, eventos: string[]): Promise<{ secret?: string; erro?: string }> {
   const p = await getPerfilAtual();
   if (!p?.ativo || p.papel !== "admin") return { erro: "Sem permissão." };
-  if (!/^https:\/\/.+/.test(url.trim())) return { erro: "Informe uma URL https válida." };
+  const seguranca = urlWebhookSegura(url.trim());
+  if (!seguranca.ok) return { erro: seguranca.erro ?? "URL não permitida." };
   const validos = eventos.filter((e) => (EVENTOS_WEBHOOK as readonly string[]).includes(e));
   if (validos.length === 0) return { erro: "Selecione ao menos um evento." };
   const secret = randomBytes(24).toString("hex");
@@ -67,6 +69,8 @@ export async function enviarTeste(endpointId: string): Promise<{ ok?: boolean; s
   const admin = createAdminSupabase();
   const { data: ep } = await admin.from("webhook_endpoint").select("url, secret").eq("id", endpointId).maybeSingle();
   if (!ep) return { erro: "Endpoint não encontrado." };
+  const seguranca = urlWebhookSegura(ep.url as string);
+  if (!seguranca.ok) return { erro: seguranca.erro ?? "URL não permitida." };
   const env = {
     id: randomUUID(),
     evento: "webhook.teste",

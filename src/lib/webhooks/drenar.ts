@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { proximoRetry } from "./sinal";
 import { enviarWebhook, montarEnvelope } from "./enviar";
+import { urlWebhookSegura } from "./url-segura";
 
 const MAX_TENTATIVAS = 4;
 
@@ -23,7 +24,7 @@ export async function drenarWebhooks(): Promise<{ entregues: number; falhas: num
       secret: string;
       ativo: boolean;
     } | null;
-    if (!ep || !ep.ativo) {
+    if (!ep || !ep.ativo || !urlWebhookSegura(ep.url).ok) {
       await admin.from("webhook_entrega").update({ status: "falhou" }).eq("id", e.id);
       continue;
     }
