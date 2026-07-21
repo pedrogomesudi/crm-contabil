@@ -81,6 +81,12 @@ const JOBS = [
     comando: httpPost("sincronizar-boletos", true),
     nota: "reconcilia boletos pagos no Inter que o webhook perdeu (RF-081)",
   },
+  {
+    nome: "monitorar-receita-diaria",
+    agenda: "0 8 * * *",
+    comando: httpPost("monitorar-receita", true),
+    nota: "reconsulta situação cadastral/Simples dos clientes vencidos (RF-084); a config controla a cadência real",
+  },
 ];
 
 // Nunca imprime o segredo.
