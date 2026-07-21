@@ -64,6 +64,7 @@ describe("margem", () => {
   const linha = (over: Partial<LinhaRentab>): LinhaRentab => ({
     clienteId: "c",
     clienteNome: "Cliente",
+    regime: null,
     minutos: 600,
     custo: 500,
     recebido: 1000,
