@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.54.0] — 2026-07-21
+
+Monitoramento da Receita — situação cadastral + Simples (RF-084, Fatia A).
+
+### Adicionado
+
+- **Alertas da Receita:** ao consultar um cliente pela Receita ("Atualizar pela Receita"), o sistema agora
+  **guarda** a situação cadastral e a opção pelo Simples/MEI e **avisa a equipe quando mudam** (ex.: ficou
+  INAPTA, ou saiu do Simples). Os avisos aparecem num contador no menu e na tela **Alertas Receita**, onde
+  cada mudança ("de → para") pode ser resolvida. O alerta não altera o status do cliente — é sinal para agir.
+
 ## [6.53.0] — 2026-07-21
 
 Documentos — busca no conteúdo de PDFs (RF-061).

@@ -15,6 +15,7 @@ export type Badges = {
   escalonamento: number;
   vencimentos: number;
   docsVencidos: number;
+  monitoramentoReceita: number;
 };
 
 // O mapa do menu é DADO, não markup: quem vê o quê é regra, e regra se testa sem DOM.
@@ -40,6 +41,9 @@ export function menuDoPapel(papel: Papel, badges: Badges): GrupoMenu[] {
           : []),
         { href: "/tarefas", label: "Tarefas" },
         { href: "/timesheet", label: "Timesheet" },
+        ...(equipe
+          ? [{ href: "/clientes/alertas-receita", label: "Alertas Receita", badge: badges.monitoramentoReceita }]
+          : []),
       ],
     },
     {

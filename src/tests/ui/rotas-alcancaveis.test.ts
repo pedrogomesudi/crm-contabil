@@ -48,6 +48,7 @@ describe("nenhuma rota de seção fica órfã", () => {
     escalonamento: 0,
     vencimentos: 0,
     docsVencidos: 0,
+    monitoramentoReceita: 0,
   }).flatMap((g) => g.itens.map((i) => i.href));
 
   it("toda rota é alcançável pelo menu, por SubNav, por hub ou por ação", () => {

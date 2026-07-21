@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mapearReceita, mapearReceitaWs, mesclarDados } from "@/lib/receita/brasilapi";
+import { mapearReceita, mapearReceitaWs, mesclarDados, lerOptante } from "@/lib/receita/brasilapi";
 
 describe("mapearReceita", () => {
   it("extrai razão social, situação e endereço completo", () => {
@@ -83,12 +83,14 @@ describe("mesclarDados", () => {
       razaoSocial: "LEONEL BATISTA SOARES",
       nomeFantasia: null,
       situacao: "ATIVA",
+      optanteSimples: null,
       endereco: { bairro: "MORUMBI", cep: "38407162", cidade: "UBERLANDIA", uf: "MG" },
     };
     const secundario = {
       razaoSocial: "LEONEL BATISTA SOARES",
       nomeFantasia: null,
       situacao: "ATIVA",
+      optanteSimples: null,
       endereco: {
         logradouro: "RUA INGA",
         numero: "127",
@@ -108,12 +110,40 @@ describe("mesclarDados", () => {
 
   it("primário vence onde tem valor", () => {
     const r = mesclarDados(
-      { razaoSocial: "A", nomeFantasia: null, situacao: null, endereco: { logradouro: "RUA A" } },
-      { razaoSocial: "B", nomeFantasia: "FANT", situacao: "ATIVA", endereco: { logradouro: "RUA B", numero: "9" } },
+      { razaoSocial: "A", nomeFantasia: null, situacao: null, optanteSimples: null, endereco: { logradouro: "RUA A" } },
+      {
+        razaoSocial: "B",
+        nomeFantasia: "FANT",
+        situacao: "ATIVA",
+        optanteSimples: true,
+        endereco: { logradouro: "RUA B", numero: "9" },
+      },
     );
     expect(r.razaoSocial).toBe("A");
     expect(r.situacao).toBe("ATIVA"); // primário null → usa secundário
     expect(r.endereco.logradouro).toBe("RUA A"); // primário vence
     expect(r.endereco.numero).toBe("9"); // secundário completa
+    expect(r.optanteSimples).toBe(true); // primário null → usa secundário
+  });
+});
+
+describe("lerOptante", () => {
+  it("optante do Simples → true", () => {
+    expect(lerOptante({ opcao_pelo_simples: true, opcao_pelo_mei: false })).toBe(true);
+  });
+  it("optante do MEI (sem Simples) → true", () => {
+    expect(lerOptante({ opcao_pelo_simples: false, opcao_pelo_mei: true })).toBe(true);
+  });
+  it("não optante → false", () => {
+    expect(lerOptante({ opcao_pelo_simples: false, opcao_pelo_mei: false })).toBe(false);
+  });
+  it("ausência de ambos → null", () => {
+    expect(lerOptante({})).toBeNull();
+  });
+});
+
+describe("mapearReceita — optante", () => {
+  it("mapeia opcao_pelo_simples para optanteSimples", () => {
+    expect(mapearReceita({ razao_social: "X", opcao_pelo_simples: true }).optanteSimples).toBe(true);
   });
 });
