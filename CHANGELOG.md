@@ -8,6 +8,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.61.0] — 2026-07-21
+
+API pública — documentação OpenAPI (RF-080, Fatia E). **RF-080 completo.**
+
+### Adicionado
+
+- **Especificação OpenAPI** importável em `GET /api/v1/openapi.json` (pública) — Postman, Insomnia, n8n e Zapier
+  importam direto, com todos os endpoints de leitura e escrita e o esquema de autenticação Bearer.
+- **Página de referência** pública em `/docs`: lista de endpoints (método, caminho, escopo, filtros) para consulta
+  rápida de quem for integrar.
+
+Com esta fatia o **RF-080 (API pública REST + webhooks de saída)** fica completo: chaves com escopos, leitura e
+escrita dos 4 recursos, webhooks de saída assinados e documentação.
+
 ## [6.60.0] — 2026-07-21
 
 API pública — webhooks de saída (RF-080, Fatia D).
