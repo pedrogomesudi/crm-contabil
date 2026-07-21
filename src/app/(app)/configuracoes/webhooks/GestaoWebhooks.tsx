@@ -3,10 +3,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { controleCls } from "@/components/ui/Campo";
 import { Botao } from "@/components/ui/Botao";
+import { formatarData } from "@/lib/format";
 import { EVENTOS_WEBHOOK } from "@/lib/webhooks/sinal";
-import { criarEndpoint, alternarEndpoint, removerEndpoint, type EndpointView } from "./actions";
+import {
+  criarEndpoint,
+  alternarEndpoint,
+  removerEndpoint,
+  enviarTeste,
+  reenviarEntrega,
+  type EndpointView,
+  type EntregaView,
+} from "./actions";
 
-export function GestaoWebhooks({ endpoints }: { endpoints: EndpointView[] }) {
+export function GestaoWebhooks({ endpoints, entregas }: { endpoints: EndpointView[]; entregas: EntregaView[] }) {
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [url, setUrl] = useState("");
@@ -98,6 +107,16 @@ export function GestaoWebhooks({ endpoints }: { endpoints: EndpointView[] }) {
                     <div className="flex justify-end gap-2">
                       <button
                         type="button"
+                        onClick={async () => {
+                          const r = await enviarTeste(e.id);
+                          alert(r.ok ? `Teste entregue (HTTP ${r.status}).` : `Falhou: ${r.erro}`);
+                        }}
+                        className="rounded-lg border border-linha bg-white px-3 py-1.5 text-sm text-texto hover:bg-creme"
+                      >
+                        Enviar teste
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => chamar(() => alternarEndpoint(e.id, !e.ativo))}
                         className="rounded-lg border border-linha bg-white px-3 py-1.5 text-sm text-texto hover:bg-creme"
                       >
@@ -119,6 +138,58 @@ export function GestaoWebhooks({ endpoints }: { endpoints: EndpointView[] }) {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div>
+        <h2 className="mb-2 font-display text-sm font-semibold text-texto">Entregas recentes</h2>
+        <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-linha text-xs text-cinza">
+                <th className="px-3 py-2 text-left font-medium">Evento</th>
+                <th className="px-3 py-2 text-left font-medium">URL</th>
+                <th className="px-3 py-2 text-left font-medium">Status</th>
+                <th className="px-3 py-2 text-right font-medium">Tent.</th>
+                <th className="px-3 py-2 text-right font-medium">Quando</th>
+                <th className="px-3 py-2 text-right font-medium">Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entregas.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-3 py-4 text-center text-cinza">
+                    Nenhuma entrega ainda.
+                  </td>
+                </tr>
+              ) : (
+                entregas.map((d) => (
+                  <tr key={d.id} className="border-b border-linha/60">
+                    <td className="px-3 py-2 text-texto">{d.evento}</td>
+                    <td className="px-3 py-2 break-all text-xs text-cinza">{d.url}</td>
+                    <td
+                      className={`px-3 py-2 ${d.status === "ok" ? "text-verde" : d.status === "falhou" ? "text-negativo" : "text-cinza"}`}
+                    >
+                      {d.status}
+                    </td>
+                    <td className="px-3 py-2 text-right tabular-nums text-cinza">{d.tentativas}</td>
+                    <td className="px-3 py-2 text-right text-cinza">{formatarData(d.criadoEm)}</td>
+                    <td className="px-3 py-2 text-right">
+                      {d.status !== "ok" && (
+                        <button
+                          type="button"
+                          onClick={() => chamar(() => reenviarEntrega(d.id))}
+                          className="rounded-lg border border-linha bg-white px-3 py-1.5 text-sm text-texto hover:bg-creme"
+                        >
+                          Reenviar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
