@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.50.0] — 2026-07-20
+
+Produtividade por colaborador (RF-073).
+
+### Adicionado
+
+- **Relatório "Produtividade por colaborador"** em Financeiro → hub (visível **só para administrador**): mostra,
+  por membro da equipe e num período, **horas apontadas**, **tarefas concluídas**, **obrigações entregues** e
+  **carteira atendida** (clientes distintos com hora no período). Toda a equipe ativa aparece — zero significa
+  nada apontado/concluído no período. Ordenado por horas, com export em XLSX/PDF/CSV.
+
 ## [6.49.0] — 2026-07-20
 
 Financeiro — rentabilidade por porte (RF-072, Fatia B).
