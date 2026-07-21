@@ -4,7 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
-import { validarCobrancaAvulsa, competenciaDoVencimento } from "@/lib/financeiro/cobranca-avulsa";
+import { criarTituloAvulsoNucleo } from "@/lib/financeiro/gravar-titulo";
 import { emitirBoleto } from "./boleto-actions";
 
 export type TituloView = {
@@ -89,31 +89,9 @@ export async function criarCobrancaAvulsa(
 ): Promise<ResultadoAvulsa> {
   const perfil = await gateGerir();
   if (!perfil) return { erro: "Sem permissão." };
-  const v = validarCobrancaAvulsa(input);
-  if (!v.ok) return { erro: v.erro };
-  const supabase = await createServerSupabase();
-  const { data, error } = await supabase
-    .from("titulo")
-    .insert({
-      tipo: "RECEBER",
-      origem: "RECEITA_AVULSA",
-      status: "ABERTO",
-      cliente_id: input.clienteId,
-      valor: input.valor,
-      vencimento: input.vencimento,
-      competencia: competenciaDoVencimento(input.vencimento),
-      categoria_id: input.categoriaId,
-      descricao: input.descricao.trim() || null,
-      criado_por: perfil.id,
-    })
-    .select("id")
-    .single();
-  if (error || !data) {
-    if (error?.code === "23505")
-      return { erro: "Já existe uma cobrança desse tipo para este cliente nesta competência." };
-    return { erro: error?.message ? `Falha ao criar a cobrança: ${error.message}` : "Falha ao criar a cobrança." };
-  }
-  const tituloId = data.id as string;
+  const r = await criarTituloAvulsoNucleo(input, { db: await createServerSupabase(), autorId: perfil.id });
+  if (!r.ok) return { erro: r.erro };
+  const tituloId = r.tituloId;
   revalidatePath(ROTA);
   if (emitirBoletoAgora) {
     const b = await emitirBoleto(tituloId);
