@@ -8,8 +8,29 @@ import { competenciaParaData } from "@/lib/documentos/taxonomia";
 import { carregarTiposAtivos } from "@/app/(app)/configuracoes/tipos-documento/actions";
 import { escapeLike } from "@/lib/clientes/busca";
 import { agruparVersoes } from "@/lib/documentos/versoes";
+import { extrairTextoPdf } from "@/lib/documentos/extrair-texto";
 import type { FiltroResolvido } from "@/lib/documentos/busca-metadados";
 import type { EstadoUpload, ResultadoDownload, ResultadoExcluir } from "./estados";
+
+// Indexa o conteúdo do PDF após o upload. Best-effort: o documento já foi gravado, então
+// qualquer falha aqui só afeta a busca por conteúdo, nunca o upload. Sem OCR: não-PDF = 'vazio'.
+async function indexarConteudo(admin: ReturnType<typeof createAdminSupabase>, id: string, file: File): Promise<void> {
+  try {
+    if (file.type !== "application/pdf") {
+      await admin.from("documentos").update({ texto_status: "vazio" }).eq("id", id);
+      return;
+    }
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const { texto, status } = await extrairTextoPdf(bytes);
+    await admin
+      .from("documentos")
+      .update({ texto_extraido: texto || null, texto_status: status })
+      .eq("id", id);
+  } catch (e) {
+    console.error("indexarConteudo:", e instanceof Error ? e.message : e);
+    await admin.from("documentos").update({ texto_status: "erro" }).eq("id", id);
+  }
+}
 
 export type DocBusca = {
   id: string;
@@ -162,23 +183,28 @@ export async function anexarDocumento(
       .trim()
       .slice(0, 60) ||
       null);
-  const { error: errInsert } = await admin.from("documentos").insert({
-    cliente_id: clienteId,
-    nome: file.name,
-    tipo: tipoLabel,
-    tipo_id: tipoId,
-    departamento,
-    competencia,
-    caminho_storage: caminho,
-    enviado_por: perfil.id,
-  });
-  if (errInsert) {
+  const { data: novo, error: errInsert } = await admin
+    .from("documentos")
+    .insert({
+      cliente_id: clienteId,
+      nome: file.name,
+      tipo: tipoLabel,
+      tipo_id: tipoId,
+      departamento,
+      competencia,
+      caminho_storage: caminho,
+      enviado_por: perfil.id,
+    })
+    .select("id")
+    .single();
+  if (errInsert || !novo) {
     // Evita arquivo órfão no Storage se o registro no banco falhar.
     await admin.storage.from("documentos").remove([caminho]);
-    console.error("anexarDocumento (insert):", errInsert.message);
+    console.error("anexarDocumento (insert):", errInsert?.message);
     return { erro: "Falha ao registrar o documento." };
   }
 
+  await indexarConteudo(admin, novo.id, file);
   revalidatePath(`/clientes/${clienteId}`);
   return { ok: true };
 }
@@ -217,22 +243,27 @@ export async function anexarNovaVersao(
     console.error("anexarNovaVersao (upload):", up.error.message);
     return { erro: "Falha no upload do arquivo." };
   }
-  const { error: errInsert } = await admin.from("documentos").insert({
-    cliente_id: clienteId,
-    nome: file.name,
-    tipo: antigo.tipo,
-    tipo_id: antigo.tipo_id,
-    departamento: antigo.departamento,
-    competencia: antigo.competencia,
-    caminho_storage: caminho,
-    enviado_por: perfil.id,
-    substitui_id: documentoAntigoId,
-  });
-  if (errInsert) {
+  const { data: novo, error: errInsert } = await admin
+    .from("documentos")
+    .insert({
+      cliente_id: clienteId,
+      nome: file.name,
+      tipo: antigo.tipo,
+      tipo_id: antigo.tipo_id,
+      departamento: antigo.departamento,
+      competencia: antigo.competencia,
+      caminho_storage: caminho,
+      enviado_por: perfil.id,
+      substitui_id: documentoAntigoId,
+    })
+    .select("id")
+    .single();
+  if (errInsert || !novo) {
     await admin.storage.from("documentos").remove([caminho]);
-    console.error("anexarNovaVersao (insert):", errInsert.message);
+    console.error("anexarNovaVersao (insert):", errInsert?.message);
     return { erro: "Falha ao registrar a nova versão." };
   }
+  await indexarConteudo(admin, novo.id, file);
   revalidatePath(`/clientes/${clienteId}`);
   return { ok: true };
 }
