@@ -18,7 +18,8 @@ describe("agruparRentabilidade", () => {
   });
   it("agrupa por porte; null vira 'Não classificado'", () => {
     const g = agruparRentabilidade(linhas, "porte");
-    expect(g.map((x) => x.grupo)).toEqual(["ME", "EPP", "Não classificado"]);
+    // ordenado por recebido desc: EPP (200) > ME (150) > Não classificado (0)
+    expect(g.map((x) => x.grupo)).toEqual(["EPP", "ME", "Não classificado"]);
     expect(g.find((x) => x.grupo === "ME")).toEqual({
       grupo: "ME",
       minutos: 90,
