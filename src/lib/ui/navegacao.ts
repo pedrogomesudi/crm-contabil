@@ -58,6 +58,7 @@ export function menuDoPapel(papel: Papel, badges: Badges): GrupoMenu[] {
         ...(podeAtender(papel) ? [{ href: "/atendimento", label: "Atendimento" }] : []),
         ...(podeAtenderSolicitacoes(papel) ? [{ href: "/solicitacoes", label: "Solicitações" }] : []),
         { href: "/comunicados", label: "Comunicados" },
+        ...(podeCriarCliente(papel) ? [{ href: "/nps", label: "NPS" }] : []),
       ],
     },
     {
