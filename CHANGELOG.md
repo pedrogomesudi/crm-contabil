@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.52.0] — 2026-07-21
+
+NPS — painel da equipe (RF-074, Fatia B).
+
+### Adicionado
+
+- **Painel NPS** em Relacionamento → NPS (equipe): score NPS em destaque (−100 a +100), distribuição
+  promotores/neutros/detratores com barra e percentuais, contagem de respostas e a lista de comentários
+  (nota + cliente + data), tudo filtrável por período. Com isso o RF-074 fica completo (coleta + painel).
+
 ## [6.51.0] — 2026-07-21
 
 NPS — coleta no portal (RF-074, Fatia A).
