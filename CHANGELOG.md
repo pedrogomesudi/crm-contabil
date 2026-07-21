@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.47.0] — 2026-07-20
+
+Financeiro — sincronização automática de boletos com o Inter (Fatia B: cron).
+
+### Adicionado
+
+- **Cron diário de sincronização de boletos:** um job automático roda a reconciliação com o Inter todo dia,
+  baixando os boletos que foram pagos mas cujo webhook se perdeu — sem depender do clique manual. Rota
+  `/api/cron/sincronizar-boletos` autenticada pelo `CRON_SECRET`, agendada no `pg_cron`.
+
 ## [6.46.3] — 2026-07-20
 
 ### Corrigido
