@@ -60,6 +60,11 @@ const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] 
     label: "API pública",
     desc: "Chaves de acesso e escopos para integrações externas via /api/v1.",
   },
+  {
+    href: "/configuracoes/webhooks",
+    label: "Webhooks de saída",
+    desc: "URLs que recebem eventos do CRM (título pago, obrigação entregue etc.).",
+  },
   { href: "/configuracoes/whatsapp", label: "WhatsApp (Z-API)", desc: "Credenciais do provedor e teste de conexão." },
   { href: "/configuracoes/email", label: "E-mail", desc: "Canal de envio (SMTP ou API), remetente e teste." },
   {
