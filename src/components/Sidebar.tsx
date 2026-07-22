@@ -106,7 +106,14 @@ export function Sidebar({ papel, nome, badges }: { papel: Papel; nome: string; b
             <LogoSaldo variante="escuro" tamanho={28} />
             <p className="truncate font-mono text-xs text-mono-muted">{nome}</p>
             {nav}
-            <form action={sair} className="mt-auto">
+            <Link
+              href="/conta/seguranca"
+              onClick={() => setAberto(false)}
+              className="mt-auto rounded-lg px-3 py-2 text-sm text-texto-claro hover:bg-tinta-2 hover:text-white"
+            >
+              Segurança (2FA)
+            </Link>
+            <form action={sair}>
               <button type="submit" className="rounded-lg px-3 py-2 text-sm text-texto-claro hover:bg-tinta-2">
                 Sair
               </button>
@@ -120,7 +127,13 @@ export function Sidebar({ papel, nome, badges }: { papel: Papel; nome: string; b
         <LogoSaldo variante="escuro" tamanho={28} />
         <p className="truncate font-mono text-xs text-mono-muted">{nome}</p>
         {nav}
-        <form action={sair} className="mt-auto">
+        <Link
+          href="/conta/seguranca"
+          className="mt-auto rounded-lg px-3 py-2 text-sm text-texto-claro hover:bg-tinta-2 hover:text-white"
+        >
+          Segurança (2FA)
+        </Link>
+        <form action={sair}>
           <button
             type="submit"
             className="rounded-lg px-3 py-2 text-sm text-texto-claro hover:bg-tinta-2 hover:text-white"
