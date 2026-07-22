@@ -5,7 +5,14 @@ import { ConviteForm } from "@/components/ConviteForm";
 import { BotaoAcao } from "@/components/usuarios/BotaoAcao";
 import { PAPEIS_EQUIPE } from "@/lib/tipos";
 import { DEPARTAMENTOS } from "@/lib/clientes/departamentos";
-import { alterarPapel, definirAtivo, reenviarAcesso, definirSuperior, definirDepartamento } from "./actions";
+import {
+  alterarPapel,
+  definirAtivo,
+  reenviarAcesso,
+  definirSuperior,
+  definirDepartamento,
+  resetarMfa,
+} from "./actions";
 import { controleCls } from "@/components/ui/Campo";
 
 export const metadata = { title: "Usuários" };
@@ -14,6 +21,7 @@ const MSG: Record<string, string> = {
   "ok:papel": "Papel atualizado.",
   "ok:status": "Status atualizado.",
   "ok:reenviado": "Acesso reenviado por e-mail.",
+  "ok:mfa": "2FA do usuário resetado — ele reconfigura no próximo acesso.",
   "erro:self": "Você não pode alterar o próprio papel ou status.",
   "erro:papel": "Papel inválido.",
   "erro:ultimo_admin": "Não é possível remover o último administrador ativo.",
@@ -184,15 +192,26 @@ export default async function UsuariosPage({
                       {ehProprio ? (
                         <span className="text-cinza-claro">—</span>
                       ) : (
-                        <form action={reenviarAcesso.bind(null, u.id)}>
-                          <BotaoAcao
-                            className="rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme"
-                            rotulo={`Reenviar acesso para ${u.nome}`}
-                            confirmar={`Reenviar o link de acesso para ${u.email}?`}
-                          >
-                            Reenviar acesso
-                          </BotaoAcao>
-                        </form>
+                        <div className="flex flex-col gap-1">
+                          <form action={reenviarAcesso.bind(null, u.id)}>
+                            <BotaoAcao
+                              className="w-full rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme"
+                              rotulo={`Reenviar acesso para ${u.nome}`}
+                              confirmar={`Reenviar o link de acesso para ${u.email}?`}
+                            >
+                              Reenviar acesso
+                            </BotaoAcao>
+                          </form>
+                          <form action={resetarMfa.bind(null, u.id)}>
+                            <BotaoAcao
+                              className="w-full rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme"
+                              rotulo={`Resetar 2FA de ${u.nome}`}
+                              confirmar={`Resetar o 2FA de ${u.nome}? Ele precisará reconfigurar no próximo acesso.`}
+                            >
+                              Resetar 2FA
+                            </BotaoAcao>
+                          </form>
+                        </div>
                       )}
                     </td>
                   </tr>

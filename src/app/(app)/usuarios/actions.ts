@@ -192,3 +192,28 @@ export async function definirDepartamento(usuarioId: string, formData: FormData)
   await admin.from("usuarios").update({ departamento }).eq("id", usuarioId);
   revalidatePath("/usuarios");
 }
+
+// Reset de 2FA pela admin: remove TODOS os fatores MFA do usuário (recuperação de "perdi o
+// autenticador"). Rebaixa a sessão dele para aal1; no próximo acesso ele reconfigura. Não há
+// códigos de backup no v1 — este é o caminho de recuperação.
+export async function resetarMfa(usuarioId: string) {
+  await exigirAdmin();
+  const admin = createAdminSupabase();
+
+  const { data, error } = await admin.auth.admin.mfa.listFactors({ userId: usuarioId });
+  if (error) {
+    console.error("resetarMfa (listar):", error.message);
+    redirect("/usuarios?erro=1");
+  }
+
+  for (const fator of data?.factors ?? []) {
+    const { error: errDel } = await admin.auth.admin.mfa.deleteFactor({ id: fator.id, userId: usuarioId });
+    if (errDel) {
+      console.error("resetarMfa (excluir):", errDel.message);
+      redirect("/usuarios?erro=1");
+    }
+  }
+
+  revalidatePath("/usuarios");
+  redirect("/usuarios?ok=mfa");
+}
