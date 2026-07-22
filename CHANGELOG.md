@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.71.0] — 2026-07-22
+
+### Interno
+
+- **Fundação do WhatsApp por provedor.** O envio de WhatsApp passou a usar uma abstração de provedor
+  (`ProvedorWhatsapp`) com a Z-API como adaptador, preparando a plataforma para a API oficial como
+  opção por escritório. Sem mudança de comportamento (provedor padrão: Z-API). (Migration `0130`
+  adiciona `whatsapp_config.provedor` e campos da API oficial, ainda sem uso.)
+
 ## [6.70.0] — 2026-07-22
 
 ### Adicionado
