@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { executarCronComPing } from "@/lib/observabilidade/healthcheck";
 import { timingSafeEqual } from "node:crypto";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { gerarInstancias } from "@/lib/obrigacoes/motor";
@@ -18,6 +19,8 @@ export async function POST(req: Request) {
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
   const ano = Number(hoje.slice(0, 4));
   const mes = Number(hoje.slice(5, 7));
-  const resumo = await gerarInstancias(createAdminSupabase(), ano, mes);
+  const resumo = await executarCronComPing("gerar-obrigacoes", () =>
+    gerarInstancias(createAdminSupabase(), ano, mes),
+  );
   return NextResponse.json(resumo);
 }

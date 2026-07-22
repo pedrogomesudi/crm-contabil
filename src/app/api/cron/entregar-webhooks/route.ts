@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { executarCronComPing } from "@/lib/observabilidade/healthcheck";
 import { timingSafeEqual } from "node:crypto";
 import { drenarWebhooks } from "@/lib/webhooks/drenar";
 
@@ -14,5 +15,5 @@ function autorizado(req: Request): boolean {
 
 export async function POST(req: Request) {
   if (!autorizado(req)) return NextResponse.json({ erro: "Não autorizado." }, { status: 401 });
-  return NextResponse.json(await drenarWebhooks());
+  return NextResponse.json(await executarCronComPing("entregar-webhooks", () => drenarWebhooks()));
 }

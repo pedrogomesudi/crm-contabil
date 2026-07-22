@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { executarCronComPing } from "@/lib/observabilidade/healthcheck";
 import { timingSafeEqual } from "node:crypto";
 import { sincronizarBoletosCore } from "@/app/(app)/financeiro/contas-a-receber/sincronizar";
 
@@ -14,6 +15,6 @@ function autorizado(req: Request): boolean {
 
 export async function POST(req: Request) {
   if (!autorizado(req)) return NextResponse.json({ erro: "Não autorizado." }, { status: 401 });
-  const resumo = await sincronizarBoletosCore();
+  const resumo = await executarCronComPing("sincronizar-boletos", () => sincronizarBoletosCore());
   return NextResponse.json(resumo);
 }

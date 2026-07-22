@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { executarCronComPing } from "@/lib/observabilidade/healthcheck";
 import { timingSafeEqual } from "node:crypto";
 import { processarRecorrencias } from "@/lib/tarefas/recorrencia-motor";
 
@@ -15,6 +16,6 @@ function autorizado(req: Request): boolean {
 export async function POST(req: Request) {
   if (!autorizado(req)) return NextResponse.json({ erro: "Não autorizado." }, { status: 401 });
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
-  const resumo = await processarRecorrencias(hoje);
+  const resumo = await executarCronComPing("tarefas-recorrentes", () => processarRecorrencias(hoje));
   return NextResponse.json(resumo);
 }
