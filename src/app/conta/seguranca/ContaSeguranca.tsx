@@ -17,7 +17,7 @@ type Estado =
   | { fase: "enrolando"; factorId: string; qr: string; secret: string }
   | { fase: "ativo"; factorId: string };
 
-export function ContaSeguranca() {
+export function ContaSeguranca({ obrigatorio, exigido }: { obrigatorio: boolean; exigido: boolean }) {
   const [supabase] = useState(() => createBrowserSupabase());
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [codigo, setCodigo] = useState("");
@@ -121,6 +121,13 @@ export function ContaSeguranca() {
         </p>
       )}
 
+      {exigido && (
+        <p role="status" className="rounded-lg bg-atencao-fundo px-3 py-2 text-sm text-atencao">
+          Seu escritório exige verificação em duas etapas. Configure o 2FA abaixo para continuar
+          usando o sistema.
+        </p>
+      )}
+
       {estado.fase === "carregando" && <p className="text-sm text-cinza">Carregando…</p>}
 
       {estado.fase === "inativo" && (
@@ -170,9 +177,22 @@ export function ContaSeguranca() {
       {estado.fase === "ativo" && (
         <Card className="flex flex-col gap-4">
           <p className="rounded-lg bg-verde/10 px-3 py-2 text-sm text-verde">2FA ativo nesta conta.</p>
-          <Botao type="button" variante="secundario" onClick={desativar} disabled={ocupado} className="self-start">
-            Desativar 2FA
-          </Botao>
+          {obrigatorio ? (
+            <p className="text-xs text-cinza">
+              O 2FA é obrigatório no seu escritório e não pode ser desativado enquanto a política
+              estiver ativa.
+            </p>
+          ) : (
+            <Botao
+              type="button"
+              variante="secundario"
+              onClick={desativar}
+              disabled={ocupado}
+              className="self-start"
+            >
+              Desativar 2FA
+            </Botao>
+          )}
         </Card>
       )}
     </main>
