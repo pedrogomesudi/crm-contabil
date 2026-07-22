@@ -44,11 +44,7 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
     erros: 0,
   };
 
-  const { data: cfg } = await admin
-    .from("whatsapp_config")
-    .select("regua_ativa")
-    .eq("id", 1)
-    .maybeSingle();
+  const { data: cfg } = await admin.from("whatsapp_config").select("regua_ativa").eq("id", 1).maybeSingle();
   const ativa = Boolean(cfg?.regua_ativa);
   if (!opts?.forcarManual && !ativa) return { ...base, ativa, motivo: "Régua desligada." };
 
