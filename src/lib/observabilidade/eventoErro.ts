@@ -29,14 +29,10 @@ function corta(v: unknown, max: number): string | null {
 // Normaliza o erro capturado pelo onRequestError do Next numa linha de evento_erro. Defensivo:
 // a origem é a borda do framework, então tudo é `unknown` e nada aqui pode lançar. Não inclui
 // criado_em — o default do banco cobre.
-export function montarEventoErro(
-  err: ErroEntrada | null | undefined,
-  request: RequestEntrada | null | undefined,
-  context: ContextEntrada | null | undefined,
-): EventoErroLinha {
-  const e = err ?? {};
-  const r = request ?? {};
-  const c = context ?? {};
+export function montarEventoErro(err: unknown, request: unknown, context: unknown): EventoErroLinha {
+  const e = (err ?? {}) as ErroEntrada;
+  const r = (request ?? {}) as RequestEntrada;
+  const c = (context ?? {}) as ContextEntrada;
   const contexto: Record<string, unknown> = {};
   for (const k of ["routerKind", "routePath", "renderSource", "revalidateReason", "renderType"] as const) {
     if (c[k] !== undefined && c[k] !== null) contexto[k] = c[k];
