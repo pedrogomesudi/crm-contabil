@@ -10,6 +10,7 @@ import { garantirPdfBoleto, assinarPdfBoleto } from "./boleto-pdf";
 import { sincronizarBoletosCore } from "./sincronizar";
 import { cancelarBoletoNoInter } from "@/lib/boleto/cancelar-exec";
 import { podeCancelarTitulo } from "@/lib/boleto/cancelamento";
+import { validarNovaVencimento } from "@/lib/boleto/vencimento";
 
 export type BoletoView = {
   id: string;
@@ -230,6 +231,71 @@ export async function cancelarTitulo(tituloId: string, motivo: string): Promise<
     }
   }
   await admin.from("titulo").update({ status: "CANCELADO" }).eq("id", tituloId);
+  revalidatePath("/financeiro/contas-a-receber");
+  return { ok: true };
+}
+
+// Altera o vencimento de um boleto emitido: cancela o atual no provedor e reemite com a nova data.
+// Só o boleto muda — o título fica intocado. Ordem cancelar→reemitir para nunca haver dois boletos
+// ativos. Se a reemissão falhar após o cancelamento, o título fica sem boleto ativo (retryável).
+export async function alterarVencimentoBoleto(
+  boletoId: string,
+  novaData: string,
+): Promise<{ ok?: boolean; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const admin = createAdminSupabase();
+
+  const { data: b } = await supabase
+    .from("boleto")
+    .select("id, titulo_id, provedor, provedor_boleto_id, vencimento, status")
+    .eq("id", boletoId)
+    .maybeSingle();
+  if (!b) return { erro: "Boleto não encontrado." };
+  if (b.status !== "emitido") return { erro: "Só é possível alterar o vencimento de boleto emitido." };
+
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const val = validarNovaVencimento(novaData, b.vencimento as string, hojeISO);
+  if ("erro" in val) return { erro: val.erro };
+
+  const { data: t } = await supabase
+    .from("titulo")
+    .select("id, valor, descricao, status, cliente_id")
+    .eq("id", b.titulo_id as string)
+    .maybeSingle();
+  if (!t) return { erro: "Título não encontrado." };
+  if (t.status !== "ABERTO" && t.status !== "VENCIDO") return { erro: "Título não está em aberto." };
+
+  // Cancela a antiga ANTES de reemitir. Motivo ≤ 50 chars (limite do Inter).
+  const motivo = `Alteração de vencimento para ${novaData.slice(8, 10)}/${novaData.slice(5, 7)}/${novaData.slice(0, 4)}`;
+  try {
+    await cancelarBoletoNoInter(
+      admin,
+      {
+        id: b.id as string,
+        provedor: b.provedor as string,
+        provedor_boleto_id: (b.provedor_boleto_id as string | null) ?? null,
+        status: b.status as string,
+      },
+      motivo,
+    );
+  } catch (e) {
+    return { erro: `Falha ao cancelar no provedor: ${(e as Error).message}` };
+  }
+
+  const r = await emitirBoletoNucleo(
+    supabase,
+    {
+      id: t.id as string,
+      valor: Number(t.valor),
+      descricao: (t.descricao as string | null) ?? null,
+      cliente_id: t.cliente_id as string,
+    },
+    novaData,
+  );
+  if (r.erro) {
+    return { erro: `Boleto cancelado, mas a reemissão falhou: ${r.erro} Use "Emitir boleto" para gerar novamente.` };
+  }
   revalidatePath("/financeiro/contas-a-receber");
   return { ok: true };
 }
