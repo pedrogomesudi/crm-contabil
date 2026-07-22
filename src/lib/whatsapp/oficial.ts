@@ -1,4 +1,4 @@
-import type { ProvedorWhatsapp } from "./tipos";
+import type { MidiaEnvio, ProvedorWhatsapp } from "./tipos";
 
 export type OficialConfig = { phoneNumberId: string; token: string; versao?: string };
 
@@ -25,7 +25,25 @@ export function montarEnvioTextoOficial(
   };
 }
 
-// Adaptador da API oficial (Cloud API). Texto + status; mídia entra na Fatia 1C.
+// Monta o envio de mídia da Cloud API referenciando um media id já enviado (puro, testável).
+export function montarEnvioMidiaOficial(
+  cfg: OficialConfig,
+  telefone: string,
+  mediaId: string,
+  midia: MidiaEnvio,
+): { url: string; headers: Record<string, string>; body: string } {
+  const conteudo =
+    midia.tipo === "image"
+      ? { image: { id: mediaId, caption: midia.caption } }
+      : { document: { id: mediaId, caption: midia.caption, filename: midia.nome } };
+  return {
+    url: `${baseUrl(cfg)}/${cfg.phoneNumberId}/messages`,
+    headers: { Authorization: `Bearer ${cfg.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ messaging_product: "whatsapp", to: telefone, type: midia.tipo, ...conteudo }),
+  };
+}
+
+// Adaptador da API oficial (Cloud API). Texto + mídia + status.
 export function criarAdaptadorOficial(cfg: OficialConfig): ProvedorWhatsapp {
   return {
     enviarTexto: async (telefone, texto) => {
@@ -47,10 +65,42 @@ export function criarAdaptadorOficial(cfg: OficialConfig): ProvedorWhatsapp {
         };
       }
     },
-    enviarMidia: async () => ({
-      ok: false,
-      erro: "Envio de mídia pela API oficial ainda não disponível (em breve).",
-    }),
+    enviarMidia: async (telefone, midia) => {
+      try {
+        // 1) Upload do arquivo → media id.
+        const bytes = new Uint8Array(Buffer.from(midia.base64, "base64"));
+        const form = new FormData();
+        form.append("messaging_product", "whatsapp");
+        form.append("type", midia.mime);
+        form.append("file", new Blob([bytes], { type: midia.mime }), midia.nome);
+        const up = await fetch(`${baseUrl(cfg)}/${cfg.phoneNumberId}/media`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${cfg.token}` },
+          body: form,
+          signal: AbortSignal.timeout(30000),
+        });
+        const upBody = (await up.json().catch(() => null)) as { id?: string } | null;
+        if (!up.ok || !upBody?.id) {
+          return { ok: false, erro: `WhatsApp oficial HTTP ${up.status} (upload)`, resposta: upBody };
+        }
+        // 2) Envio referenciando o media id.
+        const req = montarEnvioMidiaOficial(cfg, telefone, upBody.id, midia);
+        const res = await fetch(req.url, {
+          method: "POST",
+          headers: req.headers,
+          body: req.body,
+          signal: AbortSignal.timeout(15000),
+        });
+        const corpo = await res.json().catch(() => null);
+        if (!res.ok) return { ok: false, erro: `WhatsApp oficial HTTP ${res.status}`, resposta: corpo };
+        return { ok: true, resposta: corpo };
+      } catch (e) {
+        return {
+          ok: false,
+          erro: e instanceof Error && e.name === "TimeoutError" ? "Tempo esgotado." : "Erro de rede.",
+        };
+      }
+    },
     statusConexao: async () => {
       try {
         const res = await fetch(`${baseUrl(cfg)}/${cfg.phoneNumberId}`, {
