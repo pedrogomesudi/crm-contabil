@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.68.0] — 2026-07-22
+
+### Adicionado
+
+- **Alterar vencimento do título.** Conta a receber em aberto ganhou "Alterar vencimento" na própria
+  linha: reagenda a data e, se houver boleto ativo, cancela e reemite com a nova data — em um clique.
+  Resolve o caso do título vencido sem boleto, que o provedor não deixava emitir com data no passado.
+
+### Alterado
+
+- O "Alterar vencimento" saiu de dentro do boleto e passou para o nível do título (reagenda tudo de
+  uma vez, mantendo título e boleto coerentes).
+
 ## [6.67.0] — 2026-07-22
 
 ### Adicionado
