@@ -15,6 +15,11 @@ const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] 
     desc: "Exigir verificação em duas etapas de toda a equipe.",
   },
   {
+    href: "/configuracoes/observabilidade",
+    label: "Observabilidade",
+    desc: "Erros do sistema registrados, para diagnóstico. Só admin.",
+  },
+  {
     href: "/integracoes/dominio",
     label: "Integração Domínio",
     desc: "Importação e conciliação com o sistema Domínio.",
