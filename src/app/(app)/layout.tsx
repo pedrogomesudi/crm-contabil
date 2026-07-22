@@ -32,10 +32,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // de quem o habilitou — o login em si não muda. Sem fator, segue normal (opcional).
   const supabaseMfa = await createServerSupabase();
   const { data: aal } = await supabaseMfa.auth.mfa.getAuthenticatorAssuranceLevel();
-  const decisao = decidirGateAal(
-    { currentLevel: aal?.currentLevel ?? null, nextLevel: aal?.nextLevel ?? null },
-    false,
-  );
+  const decisao = decidirGateAal({ currentLevel: aal?.currentLevel ?? null, nextLevel: aal?.nextLevel ?? null }, false);
   if (decisao === "verificar") redirect("/login/verificar");
 
   const alertasOnboarding = podeCriarCliente(perfil.papel) ? await contarAlertas() : 0;

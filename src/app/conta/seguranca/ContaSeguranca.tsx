@@ -109,9 +109,7 @@ export function ContaSeguranca() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-lg font-semibold tracking-tight text-texto">
-          Verificação em duas etapas
-        </h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight text-texto">Verificação em duas etapas</h1>
         <Link href="/" className="text-sm text-verde hover:underline">
           Voltar
         </Link>
@@ -128,8 +126,8 @@ export function ContaSeguranca() {
       {estado.fase === "inativo" && (
         <Card className="flex flex-col gap-4">
           <p className="text-sm text-cinza">
-            Ative o 2FA para exigir, a cada login, um código do aplicativo autenticador (Google
-            Authenticator, Authy, 1Password) além da senha.
+            Ative o 2FA para exigir, a cada login, um código do aplicativo autenticador (Google Authenticator, Authy,
+            1Password) além da senha.
           </p>
           <Botao type="button" onClick={ativar} disabled={ocupado} className="self-start">
             Ativar 2FA
@@ -140,8 +138,8 @@ export function ContaSeguranca() {
       {estado.fase === "enrolando" && (
         <Card className="flex flex-col gap-4">
           <p className="text-sm text-cinza">
-            Escaneie o QR code no seu aplicativo autenticador ou digite o segredo manualmente. Depois,
-            informe o código de 6 dígitos para confirmar.
+            Escaneie o QR code no seu aplicativo autenticador ou digite o segredo manualmente. Depois, informe o código
+            de 6 dígitos para confirmar.
           </p>
           <div className="self-center rounded-lg bg-white p-3">
             <Image
