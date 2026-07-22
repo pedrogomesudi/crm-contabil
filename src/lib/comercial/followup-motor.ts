@@ -1,7 +1,7 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
-import { decifrarDominio } from "@/lib/cripto/envelope";
 import { enviarEmail } from "@/lib/email/enviar";
-import { enviarTexto, type ZapiConfig } from "@/lib/whatsapp/zapi";
+import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
+import type { ProvedorWhatsapp } from "@/lib/whatsapp/tipos";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { totaisProposta } from "@/lib/comercial/proposta";
 import { formatarMoeda, formatarData } from "@/lib/format";
@@ -25,22 +25,12 @@ export async function processarFollowup(hoje: string): Promise<Resumo> {
   if (!ativo) return { ...base, ativo, motivo: "Follow-up desligado." };
   const canal = (cfg?.canal as string) ?? "email";
 
-  // Canal WhatsApp exige a Z-API configurada.
-  let zapi: ZapiConfig | null = null;
+  // Canal WhatsApp exige o provedor configurado.
+  let adaptadorWa: ProvedorWhatsapp | null = null;
   if (canal === "whatsapp") {
-    const { data: w } = await admin
-      .from("whatsapp_config")
-      .select("instance, token_cifrado, client_token_cifrado")
-      .eq("id", 1)
-      .maybeSingle();
-    if (w?.instance && w.token_cifrado && w.client_token_cifrado) {
-      zapi = {
-        instance: w.instance as string,
-        token: (await decifrarDominio("whatsapp", w.token_cifrado as string)).toString("utf8"),
-        clientToken: (await decifrarDominio("whatsapp", w.client_token_cifrado as string)).toString("utf8"),
-      };
-    }
-    if (!zapi) return { ...base, ativo, motivo: "WhatsApp não configurado." };
+    const ativoWa = await adaptadorWhatsappAtivo();
+    if ("erro" in ativoWa) return { ...base, ativo, motivo: "WhatsApp não configurado." };
+    adaptadorWa = ativoWa.adaptador;
   }
 
   const { data: etapasRaw } = await admin
@@ -120,7 +110,7 @@ export async function processarFollowup(hoje: string): Promise<Resumo> {
           resumo.semDestino++;
           continue;
         }
-        const r = await enviarTexto(zapi!, tel, corpo);
+        const r = await adaptadorWa!.enviarTexto(tel, corpo);
         ok = r.ok;
       }
       await admin.from("followup_envio").insert({
