@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.72.0] — 2026-07-22
+
+### Adicionado
+
+- **WhatsApp: escolha do provedor por escritório.** Em **Configurações → WhatsApp**, o admin escolhe
+  entre **Z-API** (não-oficial) e a **API oficial (WhatsApp Cloud API)** e informa as credenciais do
+  provedor escolhido. O envio de texto e o "testar conexão" já funcionam na oficial. (A régua e os
+  avisos proativos na oficial dependem de templates aprovados — em breve; até lá, use a Z-API para
+  proativos.)
+
 ## [6.71.0] — 2026-07-22
 
 ### Interno
