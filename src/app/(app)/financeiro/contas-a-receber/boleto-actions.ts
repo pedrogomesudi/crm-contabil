@@ -237,66 +237,76 @@ export async function cancelarTitulo(tituloId: string, motivo: string): Promise<
   return { ok: true };
 }
 
-// Altera o vencimento de um boleto emitido: cancela o atual no provedor e reemite com a nova data.
-// Só o boleto muda — o título fica intocado. Ordem cancelar→reemitir para nunca haver dois boletos
-// ativos. Se a reemissão falhar após o cancelamento, o título fica sem boleto ativo (retryável).
-export async function alterarVencimentoBoleto(
-  boletoId: string,
+// Reagenda o vencimento de um título em aberto e, se houver boleto ativo, reemite-o com a nova
+// data (cancela → reemite). Só o título muda de data; o boleto acompanha. Se a reemissão falhar
+// após o título já ter sido reagendado, reporta e deixa retryável via "Emitir boleto".
+export async function alterarVencimentoTitulo(
+  tituloId: string,
   novaData: string,
 ): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
   const admin = createAdminSupabase();
 
-  const { data: b } = await supabase
-    .from("boleto")
-    .select("id, titulo_id, provedor, provedor_boleto_id, vencimento, status")
-    .eq("id", boletoId)
-    .maybeSingle();
-  if (!b) return { erro: "Boleto não encontrado." };
-  if (b.status !== "emitido") return { erro: "Só é possível alterar o vencimento de boleto emitido." };
-
-  const hojeISO = new Date().toISOString().slice(0, 10);
-  const val = validarNovaVencimento(novaData, b.vencimento as string, hojeISO);
-  if ("erro" in val) return { erro: val.erro };
-
-  const { data: t } = await supabase
+  const { data: t } = await admin
     .from("titulo")
-    .select("id, valor, descricao, status, cliente_id")
-    .eq("id", b.titulo_id as string)
+    .select("id, valor, descricao, status, cliente_id, vencimento, baixa(valor_recebido, estornada)")
+    .eq("id", tituloId)
     .maybeSingle();
   if (!t) return { erro: "Título não encontrado." };
-  if (t.status !== "ABERTO" && t.status !== "VENCIDO") return { erro: "Título não está em aberto." };
+  const somaBaixado = ((t.baixa ?? []) as { valor_recebido: number; estornada: boolean }[])
+    .filter((x) => !x.estornada)
+    .reduce((s, x) => s + Number(x.valor_recebido), 0);
+  if (!podeCancelarTitulo(t.status as string, somaBaixado))
+    return { erro: "Só é possível reagendar título em aberto (sem baixa)." };
 
-  // Cancela a antiga ANTES de reemitir. Motivo ≤ 50 chars (limite do Inter).
-  const motivo = `Alteração de vencimento para ${novaData.slice(8, 10)}/${novaData.slice(5, 7)}/${novaData.slice(0, 4)}`;
-  try {
-    await cancelarBoletoNoInter(
-      admin,
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const val = validarNovaVencimento(novaData, t.vencimento as string, hojeISO);
+  if ("erro" in val) return { erro: val.erro };
+
+  const { error: errUpd } = await admin.from("titulo").update({ vencimento: novaData }).eq("id", tituloId);
+  if (errUpd) return { erro: "Falha ao reagendar o título." };
+
+  // Se houver boleto ativo, reemite com a nova data (cancela → reemite).
+  const { data: bol } = await admin
+    .from("boleto")
+    .select("id, provedor, provedor_boleto_id, status")
+    .eq("titulo_id", tituloId)
+    .eq("status", "emitido")
+    .maybeSingle();
+  if (bol) {
+    const motivo = `Alteração de vencimento para ${novaData.slice(8, 10)}/${novaData.slice(5, 7)}/${novaData.slice(0, 4)}`;
+    try {
+      await cancelarBoletoNoInter(
+        admin,
+        {
+          id: bol.id as string,
+          provedor: bol.provedor as string,
+          provedor_boleto_id: (bol.provedor_boleto_id as string | null) ?? null,
+          status: bol.status as string,
+        },
+        motivo,
+      );
+    } catch (e) {
+      return {
+        erro: `Vencimento alterado, mas falhou ao cancelar o boleto: ${(e as Error).message} Use "Emitir boleto".`,
+      };
+    }
+    const r = await emitirBoletoNucleo(
+      supabase,
       {
-        id: b.id as string,
-        provedor: b.provedor as string,
-        provedor_boleto_id: (b.provedor_boleto_id as string | null) ?? null,
-        status: b.status as string,
+        id: t.id as string,
+        valor: Number(t.valor),
+        descricao: (t.descricao as string | null) ?? null,
+        cliente_id: t.cliente_id as string,
       },
-      motivo,
+      novaData,
     );
-  } catch (e) {
-    return { erro: `Falha ao cancelar no provedor: ${(e as Error).message}` };
-  }
-
-  const r = await emitirBoletoNucleo(
-    supabase,
-    {
-      id: t.id as string,
-      valor: Number(t.valor),
-      descricao: (t.descricao as string | null) ?? null,
-      cliente_id: t.cliente_id as string,
-    },
-    novaData,
-  );
-  if (r.erro) {
-    return { erro: `Boleto cancelado, mas a reemissão falhou: ${r.erro} Use "Emitir boleto" para gerar novamente.` };
+    if (r.erro) {
+      return {
+        erro: `Vencimento alterado, mas a reemissão do boleto falhou: ${r.erro} Use "Emitir boleto" para gerar novamente.`,
+      };
+    }
   }
   revalidatePath("/financeiro/contas-a-receber");
   return { ok: true };
