@@ -27,6 +27,57 @@ async function gate() {
   return p;
 }
 
+// Núcleo de emissão reutilizável: recebe o título já carregado + a data de vencimento a usar
+// (a do próprio título na emissão normal; a nova data na alteração de vencimento). Carrega o
+// cliente, pega o próximo número, emite no provedor ativo e grava a linha `boleto`. NÃO faz gate
+// nem checagem de duplicidade — isso é responsabilidade de quem chama.
+async function emitirBoletoNucleo(
+  supabase: Awaited<ReturnType<typeof createServerSupabase>>,
+  titulo: { id: string; valor: number; descricao: string | null; cliente_id: string },
+  vencimento: string,
+): Promise<{ ok?: true; erro?: string }> {
+  const { data: c } = await supabase
+    .from("clientes")
+    .select("razao_social, cpf_cnpj, email, endereco")
+    .eq("id", titulo.cliente_id)
+    .maybeSingle();
+  if (!c) return { erro: "Cliente não encontrado." };
+  const ativo = await adaptadorAtivo();
+  if ("erro" in ativo) return { erro: ativo.erro };
+  const { data: n } = await supabase.rpc("proximo_numero_boleto");
+  const numero = Number(n);
+  const dados = dadosEmissaoDeTitulo(
+    { valor: Number(titulo.valor), vencimento, descricao: titulo.descricao },
+    {
+      razaoSocial: c.razao_social as string,
+      cpfCnpj: (c.cpf_cnpj as string) ?? "",
+      email: (c.email as string | null) ?? null,
+      endereco: (c.endereco as Record<string, string> | null) ?? null,
+    },
+    numero,
+  );
+  let emitido;
+  try {
+    emitido = await ativo.adaptador.emitir(dados);
+  } catch (e) {
+    return { erro: `Falha na emissão: ${(e as Error).message}` };
+  }
+  const { error } = await supabase.from("boleto").insert({
+    titulo_id: titulo.id,
+    numero,
+    provedor: ativo.provedor,
+    provedor_boleto_id: emitido.provedorBoletoId,
+    nosso_numero: emitido.nossoNumero,
+    linha_digitavel: emitido.linhaDigitavel,
+    pix_copia_cola: emitido.pixCopiaCola,
+    url_pdf: emitido.urlPdf,
+    valor: titulo.valor,
+    vencimento,
+  });
+  if (error) return { erro: "Boleto emitido no provedor, mas falhou ao gravar. Verifique antes de reemitir." };
+  return { ok: true };
+}
+
 export async function emitirBoleto(tituloId: string): Promise<{ ok?: boolean; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
@@ -44,45 +95,17 @@ export async function emitirBoleto(tituloId: string): Promise<{ ok?: boolean; er
     .not("status", "in", "(cancelado,erro)")
     .maybeSingle();
   if (existente) return { erro: "Já existe boleto para este título." };
-  const { data: c } = await supabase
-    .from("clientes")
-    .select("razao_social, cpf_cnpj, email, endereco")
-    .eq("id", t.cliente_id as string)
-    .maybeSingle();
-  if (!c) return { erro: "Cliente não encontrado." };
-  const ativo = await adaptadorAtivo();
-  if ("erro" in ativo) return { erro: ativo.erro };
-  const { data: n } = await supabase.rpc("proximo_numero_boleto");
-  const numero = Number(n);
-  const dados = dadosEmissaoDeTitulo(
-    { valor: Number(t.valor), vencimento: t.vencimento as string, descricao: (t.descricao as string | null) ?? null },
+  const r = await emitirBoletoNucleo(
+    supabase,
     {
-      razaoSocial: c.razao_social as string,
-      cpfCnpj: (c.cpf_cnpj as string) ?? "",
-      email: (c.email as string | null) ?? null,
-      endereco: (c.endereco as Record<string, string> | null) ?? null,
+      id: t.id as string,
+      valor: Number(t.valor),
+      descricao: (t.descricao as string | null) ?? null,
+      cliente_id: t.cliente_id as string,
     },
-    numero,
+    t.vencimento as string,
   );
-  let emitido;
-  try {
-    emitido = await ativo.adaptador.emitir(dados);
-  } catch (e) {
-    return { erro: `Falha na emissão: ${(e as Error).message}` };
-  }
-  const { error } = await supabase.from("boleto").insert({
-    titulo_id: tituloId,
-    numero,
-    provedor: ativo.provedor,
-    provedor_boleto_id: emitido.provedorBoletoId,
-    nosso_numero: emitido.nossoNumero,
-    linha_digitavel: emitido.linhaDigitavel,
-    pix_copia_cola: emitido.pixCopiaCola,
-    url_pdf: emitido.urlPdf,
-    valor: t.valor,
-    vencimento: t.vencimento,
-  });
-  if (error) return { erro: "Boleto emitido no provedor, mas falhou ao gravar. Verifique antes de reemitir." };
+  if (r.erro) return r;
   revalidatePath("/financeiro/contas-a-receber");
   return { ok: true };
 }
