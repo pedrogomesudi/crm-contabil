@@ -102,7 +102,7 @@ export function Sidebar({ papel, nome, badges }: { papel: Papel; nome: string; b
             className="absolute inset-0 bg-black/40"
             onClick={() => setAberto(false)}
           />
-          <aside className="absolute left-0 top-0 flex h-full w-64 flex-col gap-4 bg-tinta p-4">
+          <aside className="absolute left-0 top-0 flex h-full w-64 flex-col gap-4 overflow-y-auto bg-tinta p-4">
             <LogoSaldo variante="escuro" tamanho={28} />
             <p className="truncate font-mono text-xs text-mono-muted">{nome}</p>
             {nav}
@@ -123,7 +123,7 @@ export function Sidebar({ papel, nome, badges }: { papel: Papel; nome: string; b
       )}
 
       {/* Sidebar desktop */}
-      <aside className="hidden flex-col gap-4 bg-tinta p-4 md:flex md:h-screen md:w-56 md:shrink-0 print:!hidden">
+      <aside className="hidden flex-col gap-4 bg-tinta p-4 md:sticky md:top-0 md:flex md:h-screen md:w-56 md:shrink-0 md:overflow-y-auto print:!hidden">
         <LogoSaldo variante="escuro" tamanho={28} />
         <p className="truncate font-mono text-xs text-mono-muted">{nome}</p>
         {nav}
