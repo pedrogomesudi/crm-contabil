@@ -13,6 +13,7 @@ describe("BoletoTitulo", () => {
     const b: BoletoView = {
       id: "b1",
       numero: 7,
+      vencimento: "2026-08-10",
       provedor: "asaas",
       linhaDigitavel: "34191790010104351004791020150008291070026000",
       pixCopiaCola: "pix",

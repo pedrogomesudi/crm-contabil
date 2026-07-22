@@ -5,24 +5,25 @@ import { BoletoTitulo } from "@/components/financeiro/BoletoTitulo";
 const base = {
   id: "b1",
   numero: 7,
-  provedor: "inter",
   vencimento: "2026-08-10",
+  provedor: "inter",
   linhaDigitavel: "0001",
   pixCopiaCola: null,
   urlPdf: null,
 };
 
-describe("BoletoTitulo — cancelar", () => {
-  it("boleto emitido mostra 'Cancelar boleto'", () => {
+describe("BoletoTitulo — alterar vencimento", () => {
+  it("boleto emitido mostra 'Alterar vencimento'", () => {
     const html = renderToStaticMarkup(
       <BoletoTitulo tituloId="t1" boleto={{ ...base, status: "emitido" }} onMudou={() => {}} />,
     );
-    expect(html).toContain("Cancelar boleto");
+    expect(html).toContain("Alterar vencimento");
   });
-  it("boleto pago não mostra 'Cancelar boleto'", () => {
+
+  it("boleto pago não mostra 'Alterar vencimento'", () => {
     const html = renderToStaticMarkup(
       <BoletoTitulo tituloId="t1" boleto={{ ...base, status: "pago" }} onMudou={() => {}} />,
     );
-    expect(html).not.toContain("Cancelar boleto");
+    expect(html).not.toContain("Alterar vencimento");
   });
 });

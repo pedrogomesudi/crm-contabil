@@ -8,6 +8,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.67.0] — 2026-07-22
+
+### Adicionado
+
+- **Alterar vencimento do boleto.** Boleto emitido ganhou a ação "Alterar vencimento": em um clique,
+  o sistema cancela o boleto atual no provedor e reemite com a nova data (nova linha digitável). Só o
+  boleto muda — o título e a régua de cobrança seguem a data original. O reenvio ao cliente continua
+  manual.
+
+### Corrigido
+
+- **Faixa da barra lateral.** Com o menu mais alto que a tela, "Configurações", "Segurança (2FA)" e
+  "Sair" ficavam fora da faixa escura. A barra passa a rolar internamente e a acompanhar a página.
+
 ## [6.66.0] — 2026-07-22
 
 Obrigatoriedade de 2FA por escritório — RNF-09 (parte), Fatia B.
