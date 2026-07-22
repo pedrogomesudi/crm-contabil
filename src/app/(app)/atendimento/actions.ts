@@ -3,8 +3,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeAtender, podeVerHonorario } from "@/lib/clientes/permissoes";
-import { decifrarDominio } from "@/lib/cripto/envelope";
-import { enviarTexto, enviarMidiaZapi } from "@/lib/whatsapp/zapi";
+import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
 import { chaveTelefone } from "@/lib/whatsapp/mensagem";
 import {
   agruparConversas,
@@ -142,18 +141,9 @@ export async function responder(telefone: string, texto: string): Promise<{ ok?:
   const t = texto.trim();
   if (!t) return { erro: "Mensagem vazia." };
   const admin = createAdminSupabase();
-  const { data: cfg } = await admin
-    .from("whatsapp_config")
-    .select("instance, token_cifrado, client_token_cifrado")
-    .eq("id", 1)
-    .maybeSingle();
-  if (!cfg?.instance || !cfg.token_cifrado || !cfg.client_token_cifrado) return { erro: "WhatsApp não configurado." };
-  const zapi = {
-    instance: cfg.instance,
-    token: (await decifrarDominio("whatsapp", cfg.token_cifrado)).toString("utf8"),
-    clientToken: (await decifrarDominio("whatsapp", cfg.client_token_cifrado)).toString("utf8"),
-  };
-  const r = await enviarTexto(zapi, telefone, t);
+  const ativo = await adaptadorWhatsappAtivo();
+  if ("erro" in ativo) return { erro: ativo.erro };
+  const r = await ativo.adaptador.enviarTexto(telefone, t);
   // resolve cliente para vincular a saída à mesma thread (best-effort; só se houver exatamente um)
   const { data: cli } = await admin.from("clientes").select("id, telefone, telefone_ddi");
   const casados = (cli ?? []).filter(
@@ -316,21 +306,12 @@ export async function enviarMidia(formData: FormData): Promise<{ ok?: boolean; e
   if (mime.startsWith("video/") || mime.startsWith("audio/")) return { erro: "Tipo não suportado no envio." };
   const tipo: "image" | "document" = mime.startsWith("image/") ? "image" : "document";
   const admin = createAdminSupabase();
-  const { data: cfg } = await admin
-    .from("whatsapp_config")
-    .select("instance, token_cifrado, client_token_cifrado")
-    .eq("id", 1)
-    .maybeSingle();
-  if (!cfg?.instance || !cfg.token_cifrado || !cfg.client_token_cifrado) return { erro: "WhatsApp não configurado." };
-  const zapi = {
-    instance: cfg.instance,
-    token: (await decifrarDominio("whatsapp", cfg.token_cifrado)).toString("utf8"),
-    clientToken: (await decifrarDominio("whatsapp", cfg.client_token_cifrado)).toString("utf8"),
-  };
+  const ativo = await adaptadorWhatsappAtivo();
+  if ("erro" in ativo) return { erro: ativo.erro };
 
   const buf = Buffer.from(await arquivo.arrayBuffer());
   const nome = arquivo.name || "arquivo";
-  const r = await enviarMidiaZapi(zapi, telefone, {
+  const r = await ativo.adaptador.enviarMidia(telefone, {
     tipo,
     base64: buf.toString("base64"),
     mime,

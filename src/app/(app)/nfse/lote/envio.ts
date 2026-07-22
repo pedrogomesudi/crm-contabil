@@ -2,8 +2,7 @@
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
-import { decifrarDominio } from "@/lib/cripto/envelope";
-import { enviarMidiaZapi } from "@/lib/whatsapp/zapi";
+import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { linhasPagamento, competenciaBR, montarMensagemNota, vencimentoBR, valorBR } from "@/lib/whatsapp/notas-envio";
 import { obterDanfsePdf, caminhoDanfse } from "@/lib/nfse/danfse-cache";
@@ -64,18 +63,8 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
 
   // Sem bloqueio de reenvio: a seleção do usuário é a intenção. O selo "já enviada" e a
   // pré-seleção (só pendentes) na UI evitam reenvio acidental.
-  const { data: cfg } = await admin
-    .from("whatsapp_config")
-    .select("instance, token_cifrado, client_token_cifrado")
-    .eq("id", 1)
-    .maybeSingle();
-  if (!cfg?.instance || !cfg.token_cifrado || !cfg.client_token_cifrado)
-    return { status: "erro", motivo: "WhatsApp não configurado.", razaoSocial };
-  const zapi = {
-    instance: cfg.instance,
-    token: (await decifrarDominio("whatsapp", cfg.token_cifrado)).toString("utf8"),
-    clientToken: (await decifrarDominio("whatsapp", cfg.client_token_cifrado)).toString("utf8"),
-  };
+  const ativo = await adaptadorWhatsappAtivo();
+  if ("erro" in ativo) return { status: "erro", motivo: ativo.erro, razaoSocial };
 
   const { data: dados } = await admin
     .from("dados_bancarios")
@@ -121,7 +110,7 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
   });
 
   const nomeArq = `NFS-e ${razaoSocial}.pdf`;
-  const r = await enviarMidiaZapi(zapi, tel, {
+  const r = await ativo.adaptador.enviarMidia(tel, {
     tipo: "document",
     base64: pdfR.pdfBase64,
     mime: "application/pdf",

@@ -17,8 +17,7 @@ import { converterPdfHtml } from "@/lib/contrato/gerar";
 import { deveAvisar } from "@/lib/legalizacao/aviso";
 import { aplicarVariaveis } from "@/lib/comercial/followup";
 import { enviarEmail } from "@/lib/email/enviar";
-import { enviarTexto, type ZapiConfig } from "@/lib/whatsapp/zapi";
-import { decifrarDominio } from "@/lib/cripto/envelope";
+import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { rotuloOrgao } from "@/lib/legalizacao/tipos";
 import { formatarData } from "@/lib/format";
@@ -151,21 +150,11 @@ async function avisarClienteEtapa(etapaId: string): Promise<string | null> {
     });
     ok = r.ok;
   } else {
-    const { data: w } = await admin
-      .from("whatsapp_config")
-      .select("instance, token_cifrado, client_token_cifrado")
-      .eq("id", 1)
-      .maybeSingle();
-    if (!(w?.instance && w.token_cifrado && w.client_token_cifrado))
-      return "Etapa concluída, mas o WhatsApp não está configurado.";
-    const zapi: ZapiConfig = {
-      instance: w.instance as string,
-      token: (await decifrarDominio("whatsapp", w.token_cifrado as string)).toString("utf8"),
-      clientToken: (await decifrarDominio("whatsapp", w.client_token_cifrado as string)).toString("utf8"),
-    };
+    const ativo = await adaptadorWhatsappAtivo();
+    if ("erro" in ativo) return "Etapa concluída, mas o WhatsApp não está configurado.";
     const tel = normalizarTelefone((cli.telefone as string | null) ?? "", (cli.telefone_ddi as string | null) ?? "55");
     if (!tel) return "Etapa concluída, mas o cliente não tem telefone válido para o aviso.";
-    const r = await enviarTexto(zapi, tel, corpo);
+    const r = await ativo.adaptador.enviarTexto(tel, corpo);
     ok = r.ok;
   }
   if (!ok) return "Etapa concluída, mas o aviso ao cliente falhou no envio.";
