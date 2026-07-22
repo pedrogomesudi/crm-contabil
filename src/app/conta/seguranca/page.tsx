@@ -6,11 +6,7 @@ import { ContaSeguranca } from "./ContaSeguranca";
 
 export const metadata = { title: "Segurança — 2FA" };
 
-export default async function ContaSegurancaPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ exigido?: string }>;
-}) {
+export default async function ContaSegurancaPage({ searchParams }: { searchParams: Promise<{ exigido?: string }> }) {
   // Só equipe (admin/contador/assistente/financeiro). Cliente do portal não tem 2FA no v1.
   const perfil = await getPerfilAtual();
   if (!perfil || !perfil.ativo || ehCliente(perfil.papel)) redirect("/");

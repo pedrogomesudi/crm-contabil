@@ -123,8 +123,7 @@ export function ContaSeguranca({ obrigatorio, exigido }: { obrigatorio: boolean;
 
       {exigido && (
         <p role="status" className="rounded-lg bg-atencao-fundo px-3 py-2 text-sm text-atencao">
-          Seu escritório exige verificação em duas etapas. Configure o 2FA abaixo para continuar
-          usando o sistema.
+          Seu escritório exige verificação em duas etapas. Configure o 2FA abaixo para continuar usando o sistema.
         </p>
       )}
 
@@ -179,17 +178,10 @@ export function ContaSeguranca({ obrigatorio, exigido }: { obrigatorio: boolean;
           <p className="rounded-lg bg-verde/10 px-3 py-2 text-sm text-verde">2FA ativo nesta conta.</p>
           {obrigatorio ? (
             <p className="text-xs text-cinza">
-              O 2FA é obrigatório no seu escritório e não pode ser desativado enquanto a política
-              estiver ativa.
+              O 2FA é obrigatório no seu escritório e não pode ser desativado enquanto a política estiver ativa.
             </p>
           ) : (
-            <Botao
-              type="button"
-              variante="secundario"
-              onClick={desativar}
-              disabled={ocupado}
-              className="self-start"
-            >
+            <Botao type="button" variante="secundario" onClick={desativar} disabled={ocupado} className="self-start">
               Desativar 2FA
             </Botao>
           )}

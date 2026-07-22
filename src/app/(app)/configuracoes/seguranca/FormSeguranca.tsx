@@ -21,18 +21,12 @@ export function FormSeguranca({ obrigatorio }: { obrigatorio: boolean }) {
   return (
     <section className="space-y-3 rounded-2xl border border-linha bg-white p-4">
       <label className="flex items-center gap-3 text-sm text-texto">
-        <input
-          type="checkbox"
-          checked={obrigatorio}
-          disabled={ocupado}
-          onChange={(e) => alternar(e.target.checked)}
-        />
+        <input type="checkbox" checked={obrigatorio} disabled={ocupado} onChange={(e) => alternar(e.target.checked)} />
         Exigir 2FA de toda a equipe
       </label>
       <p className="text-xs text-cinza">
-        Com a exigência ligada, quem ainda não configurou a verificação em duas etapas é levado à tela
-        de configuração no próximo acesso e não pode desativá-la enquanto a política estiver ativa. O
-        portal do cliente não é afetado.
+        Com a exigência ligada, quem ainda não configurou a verificação em duas etapas é levado à tela de configuração
+        no próximo acesso e não pode desativá-la enquanto a política estiver ativa. O portal do cliente não é afetado.
       </p>
     </section>
   );
