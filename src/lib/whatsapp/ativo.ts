@@ -1,6 +1,7 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { decifrarDominio } from "@/lib/cripto/envelope";
 import { criarAdaptadorZapi } from "./zapi";
+import { criarAdaptadorOficial } from "./oficial";
 import type { ProvedorWhatsapp } from "./tipos";
 
 // Resolve o adaptador de WhatsApp ativo a partir da config do escritório (whatsapp_config.provedor).
@@ -11,13 +12,22 @@ export async function adaptadorWhatsappAtivo(): Promise<
   const supabase = createAdminSupabase();
   const { data } = await supabase
     .from("whatsapp_config")
-    .select("provedor, instance, token_cifrado, client_token_cifrado")
+    .select("provedor, instance, token_cifrado, client_token_cifrado, oficial_phone_number_id, oficial_token_cifrado")
     .eq("id", 1)
     .maybeSingle();
   const provedor = (data?.provedor as string) ?? "zapi";
   try {
     if (provedor === "oficial") {
-      return { erro: "WhatsApp oficial ainda não disponível (em breve)." };
+      if (!data?.oficial_phone_number_id || !data.oficial_token_cifrado) {
+        return { erro: "WhatsApp oficial sem credenciais configuradas." };
+      }
+      return {
+        adaptador: criarAdaptadorOficial({
+          phoneNumberId: data.oficial_phone_number_id as string,
+          token: (await decifrarDominio("whatsapp", data.oficial_token_cifrado as string)).toString("utf8"),
+        }),
+        provedor: "oficial",
+      };
     }
     if (!data?.instance || !data.token_cifrado || !data.client_token_cifrado) {
       return { erro: "WhatsApp (Z-API) não configurado." };
