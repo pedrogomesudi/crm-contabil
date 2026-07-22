@@ -21,6 +21,7 @@ import {
 } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
 import { podeCancelarTitulo } from "@/lib/boleto/cancelamento";
 import { BoletoTitulo } from "./BoletoTitulo";
+import { AlterarVencimentoTitulo } from "./AlterarVencimentoTitulo";
 import { saldoTitulo, ehVencido, LABEL_STATUS } from "@/lib/financeiro/titulos";
 import { Badge } from "@/components/ui/Badge";
 import { badgeStatusTitulo } from "@/lib/ui/apresentacao";
@@ -237,6 +238,18 @@ export function ContasReceber({
                         >
                           Cancelar
                         </button>
+                      )}
+                      {podeCancelarTitulo(status, t.somaBaixado) && (
+                        <AlterarVencimentoTitulo
+                          tituloId={t.id}
+                          vencimento={t.vencimento}
+                          onMudou={() =>
+                            start(async () => {
+                              setTitulos(await listarTitulos(competencia));
+                              setBoletos(await listarBoletosDaCompetencia(competencia));
+                            })
+                          }
+                        />
                       )}
                       <div className="mt-1">
                         <BoletoTitulo
