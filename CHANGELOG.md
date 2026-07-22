@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.69.0] — 2026-07-22
+
+### Adicionado
+
+- **Registro de erros do sistema (observabilidade).** Erros server-side não tratados passam a ser
+  gravados e ficam visíveis em **Configurações → Observabilidade** (só admin), com rota, mensagem,
+  digest e stack — para diagnóstico sem depender do log do container. (Migration `0129`; captura via
+  `instrumentation`/`onRequestError`, best-effort.)
+
 ## [6.68.0] — 2026-07-22
 
 ### Adicionado
