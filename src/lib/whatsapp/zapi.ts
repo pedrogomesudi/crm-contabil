@@ -1,4 +1,6 @@
 import { extensaoPorMime } from "@/lib/whatsapp/inbox";
+import type { MidiaEnvio, ProvedorWhatsapp } from "./tipos";
+export type { MidiaEnvio } from "./tipos";
 
 export type ZapiConfig = { instance: string; token: string; clientToken: string };
 
@@ -48,8 +50,6 @@ export async function enviarTexto(
     return { ok: false, erro: e instanceof Error && e.name === "AbortError" ? "Tempo esgotado." : "Erro de rede." };
   }
 }
-
-export type MidiaEnvio = { tipo: "image" | "document"; base64: string; mime: string; nome: string; caption: string };
 
 // Monta a requisição de envio de mídia (puro, testável). image → /send-image; document → /send-document/{ext}.
 export function montarEnvioMidia(
@@ -106,4 +106,13 @@ export async function statusConexao(cfg: ZapiConfig): Promise<{ conectado: boole
   } catch {
     return { conectado: false, erro: "Erro de rede." };
   }
+}
+
+// Adaptador Z-API para a interface ProvedorWhatsapp — fecha sobre a config decifrada.
+export function criarAdaptadorZapi(cfg: ZapiConfig): ProvedorWhatsapp {
+  return {
+    enviarTexto: (telefone, texto) => enviarTexto(cfg, telefone, texto),
+    enviarMidia: (telefone, midia) => enviarMidiaZapi(cfg, telefone, midia),
+    statusConexao: () => statusConexao(cfg),
+  };
 }
