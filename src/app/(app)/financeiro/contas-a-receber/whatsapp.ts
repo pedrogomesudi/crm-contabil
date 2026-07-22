@@ -2,8 +2,7 @@
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
-import { carregarConfigZapi } from "@/app/(app)/configuracoes/whatsapp/actions";
-import { enviarTexto } from "@/lib/whatsapp/zapi";
+import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
 import { normalizarTelefone, aplicarTemplate, TEMPLATES } from "@/lib/whatsapp/mensagem";
 import { formatarMoeda, formatarData } from "@/lib/format";
 
@@ -44,14 +43,14 @@ export async function cobrarViaWhatsapp(tituloId: string): Promise<{ ok?: boolea
     if (extra.length) textoFinal = `${texto}\n\n${extra.join("\n\n")}`;
   }
 
-  const cfg = await carregarConfigZapi();
+  const ativo = await adaptadorWhatsappAtivo();
   let status: "ENVIADO" | "ERRO" = "ERRO";
   let resposta: unknown = null;
   let erro: string | undefined;
-  if (!cfg) {
-    erro = "WhatsApp não configurado.";
+  if ("erro" in ativo) {
+    erro = ativo.erro;
   } else {
-    const r = await enviarTexto(cfg, tel, textoFinal);
+    const r = await ativo.adaptador.enviarTexto(tel, textoFinal);
     status = r.ok ? "ENVIADO" : "ERRO";
     resposta = r.resposta ?? r.erro;
     if (!r.ok) erro = r.erro ?? "Falha no envio.";

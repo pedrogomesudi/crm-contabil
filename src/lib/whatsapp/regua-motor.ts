@@ -1,6 +1,5 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
-import { decifrarDominio } from "@/lib/cripto/envelope";
-import { enviarTexto, type ZapiConfig } from "@/lib/whatsapp/zapi";
+import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
 import { aplicarTemplate, normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { formatarMoeda, formatarData } from "@/lib/format";
 import { diffDias, etapaDoDia, type EtapaAtiva } from "@/lib/whatsapp/regua";
@@ -45,25 +44,15 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
     erros: 0,
   };
 
-  const { data: cfg } = await admin
-    .from("whatsapp_config")
-    .select("instance, token_cifrado, client_token_cifrado, regua_ativa")
-    .eq("id", 1)
-    .maybeSingle();
+  const { data: cfg } = await admin.from("whatsapp_config").select("regua_ativa").eq("id", 1).maybeSingle();
   const ativa = Boolean(cfg?.regua_ativa);
   if (!opts?.forcarManual && !ativa) return { ...base, ativa, motivo: "Régua desligada." };
 
   // O WhatsApp deixa de ser obrigatório: sem ele, a régua segue só por e-mail.
   // Abortar aqui paralisaria a cobrança justamente no cenário que o fallback existe para cobrir
   // (banimento do número pela Meta).
-  let zapi: ZapiConfig | null = null;
-  if (cfg?.instance && cfg.token_cifrado && cfg.client_token_cifrado) {
-    zapi = {
-      instance: cfg.instance as string,
-      token: (await decifrarDominio("whatsapp", cfg.token_cifrado as string)).toString("utf8"),
-      clientToken: (await decifrarDominio("whatsapp", cfg.client_token_cifrado as string)).toString("utf8"),
-    };
-  }
+  const ativoWa = await adaptadorWhatsappAtivo();
+  const adaptadorWa = "erro" in ativoWa ? null : ativoWa.adaptador;
 
   const { data: cfgEmail } = await admin
     .from("email_config")
@@ -73,7 +62,7 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
   const emailConfigurado = Boolean(cfgEmail?.provedor);
   const emailFallbackLigado = cfgEmail?.regua_email_fallback !== false;
 
-  if (!zapi && !(emailConfigurado && emailFallbackLigado)) {
+  if (!adaptadorWa && !(emailConfigurado && emailFallbackLigado)) {
     return { ...base, ativa, motivo: "Nenhum canal configurado." };
   }
 
@@ -127,7 +116,7 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
 
     const emailCliente = (cl?.email ?? "").trim();
     const estado: EstadoCanal = {
-      whatsappConfigurado: Boolean(zapi),
+      whatsappConfigurado: Boolean(adaptadorWa),
       telefone: normalizarTelefone(cl?.telefone ?? "", cl?.telefone_ddi ?? "55"),
       optOutWhatsapp: fin?.cobranca_whatsapp === false,
       emailFallbackLigado,
@@ -150,9 +139,9 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
     }
 
     // 1) WhatsApp, quando disponível.
-    if (canal === "whatsapp" && zapi && estado.telefone) {
+    if (canal === "whatsapp" && adaptadorWa && estado.telefone) {
       const texto = aplicarTemplate(etapa.template, vars);
-      const r = await enviarTexto(zapi, estado.telefone, texto);
+      const r = await adaptadorWa.enviarTexto(estado.telefone, texto);
       const { error: errIns } = await admin.from("whatsapp_mensagem").insert({
         cliente_id: (t.cliente_id as string | null) ?? null,
         titulo_id: t.id as string,
