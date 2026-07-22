@@ -301,3 +301,78 @@ export async function alterarVencimentoBoleto(
   revalidatePath("/financeiro/contas-a-receber");
   return { ok: true };
 }
+
+// Reagenda o vencimento de um título em aberto e, se houver boleto ativo, reemite-o com a nova
+// data (cancela → reemite). Só o título muda de data; o boleto acompanha. Se a reemissão falhar
+// após o título já ter sido reagendado, reporta e deixa retryável via "Emitir boleto".
+export async function alterarVencimentoTitulo(
+  tituloId: string,
+  novaData: string,
+): Promise<{ ok?: boolean; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const admin = createAdminSupabase();
+
+  const { data: t } = await admin
+    .from("titulo")
+    .select("id, valor, descricao, status, cliente_id, vencimento, baixa(valor_recebido, estornada)")
+    .eq("id", tituloId)
+    .maybeSingle();
+  if (!t) return { erro: "Título não encontrado." };
+  const somaBaixado = ((t.baixa ?? []) as { valor_recebido: number; estornada: boolean }[])
+    .filter((x) => !x.estornada)
+    .reduce((s, x) => s + Number(x.valor_recebido), 0);
+  if (!podeCancelarTitulo(t.status as string, somaBaixado))
+    return { erro: "Só é possível reagendar título em aberto (sem baixa)." };
+
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const val = validarNovaVencimento(novaData, t.vencimento as string, hojeISO);
+  if ("erro" in val) return { erro: val.erro };
+
+  const { error: errUpd } = await admin.from("titulo").update({ vencimento: novaData }).eq("id", tituloId);
+  if (errUpd) return { erro: "Falha ao reagendar o título." };
+
+  // Se houver boleto ativo, reemite com a nova data (cancela → reemite).
+  const { data: bol } = await admin
+    .from("boleto")
+    .select("id, provedor, provedor_boleto_id, status")
+    .eq("titulo_id", tituloId)
+    .eq("status", "emitido")
+    .maybeSingle();
+  if (bol) {
+    const motivo = `Alteração de vencimento para ${novaData.slice(8, 10)}/${novaData.slice(5, 7)}/${novaData.slice(0, 4)}`;
+    try {
+      await cancelarBoletoNoInter(
+        admin,
+        {
+          id: bol.id as string,
+          provedor: bol.provedor as string,
+          provedor_boleto_id: (bol.provedor_boleto_id as string | null) ?? null,
+          status: bol.status as string,
+        },
+        motivo,
+      );
+    } catch (e) {
+      return {
+        erro: `Vencimento alterado, mas falhou ao cancelar o boleto: ${(e as Error).message} Use "Emitir boleto".`,
+      };
+    }
+    const r = await emitirBoletoNucleo(
+      supabase,
+      {
+        id: t.id as string,
+        valor: Number(t.valor),
+        descricao: (t.descricao as string | null) ?? null,
+        cliente_id: t.cliente_id as string,
+      },
+      novaData,
+    );
+    if (r.erro) {
+      return {
+        erro: `Vencimento alterado, mas a reemissão do boleto falhou: ${r.erro} Use "Emitir boleto" para gerar novamente.`,
+      };
+    }
+  }
+  revalidatePath("/financeiro/contas-a-receber");
+  return { ok: true };
+}
