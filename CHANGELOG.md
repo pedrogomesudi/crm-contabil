@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.66.0] — 2026-07-22
+
+Obrigatoriedade de 2FA por escritório — RNF-09 (parte), Fatia B.
+
+### Segurança
+
+- **Exigir 2FA de toda a equipe.** Novo interruptor em **Configurações → Segurança (2FA)**: com a
+  exigência ligada, quem ainda não configurou a verificação em duas etapas é levado à tela de
+  configuração no próximo acesso e não pode desativá-la enquanto a política estiver ativa. O portal
+  do cliente não é afetado. (Migration `0128` — coluna `escritorio_config.mfa_obrigatorio`.)
+
 ## [6.65.0] — 2026-07-22
 
 Verificação em duas etapas (2FA/TOTP) para a equipe — RNF-09 (parte), Fatia A.
