@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.65.0] — 2026-07-22
+
+Verificação em duas etapas (2FA/TOTP) para a equipe — RNF-09 (parte), Fatia A.
+
+### Segurança
+
+- **2FA (TOTP) opcional para a equipe.** Cada pessoa ativa ou desativa a verificação em duas
+  etapas em **Segurança (2FA)** (`/conta/seguranca`) usando um app autenticador (Google
+  Authenticator, Authy, 1Password); quem habilita passa a ser desafiado no login
+  (`/login/verificar`). O admin reseta o 2FA de um usuário na tela de Usuários (recuperação de
+  "perdi o autenticador"). MFA nativo do Supabase — sem migration. A obrigatoriedade por
+  escritório vem na Fatia B.
+
 ## [6.64.0] — 2026-07-21
 
 Operação multi-tenant — status dos escritórios (RNF-01, modelo físico).
