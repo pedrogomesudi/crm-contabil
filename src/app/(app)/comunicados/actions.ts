@@ -7,9 +7,8 @@ import { podeCriarCliente, podeGerenciarTemplatesEmail } from "@/lib/clientes/pe
 import { registrarConsentimento } from "@/lib/lgpd/consentimento";
 import { enviarEmail } from "@/lib/email/enviar";
 import { aplicarEmail, variaveisDoCliente } from "@/lib/email/template";
-import { enviarTexto } from "@/lib/whatsapp/zapi";
 import { aplicarTemplate, normalizarTelefone } from "@/lib/whatsapp/mensagem";
-import { carregarConfigZapi } from "@/app/(app)/configuracoes/whatsapp/actions";
+import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
 import {
   TETO_WHATSAPP,
   aplicarFiltro,
@@ -167,8 +166,9 @@ export async function dispararComunicado(
     return { erro: `Acima do teto de ${TETO_WHATSAPP} destinatários no WhatsApp.` };
   }
 
-  const zapi = input.canal === "whatsapp" ? await carregarConfigZapi() : null;
-  if (input.canal === "whatsapp" && !zapi) return { erro: "WhatsApp não configurado." };
+  const ativoWa = input.canal === "whatsapp" ? await adaptadorWhatsappAtivo() : null;
+  if (input.canal === "whatsapp" && (!ativoWa || "erro" in ativoWa)) return { erro: "WhatsApp não configurado." };
+  const adaptadorWa = ativoWa && !("erro" in ativoWa) ? ativoWa.adaptador : null;
 
   const supabase = await createServerSupabase();
   const { data: com, error } = await supabase
@@ -201,10 +201,10 @@ export async function dispararComunicado(
     } else {
       const tel = normalizarTelefone(c.telefone ?? "", c.telefoneDdi ?? "55");
       para = tel ?? (c.telefone as string);
-      if (!tel || !zapi) {
+      if (!tel || !adaptadorWa) {
         msgErro = "Telefone inválido.";
       } else {
-        const r = await enviarTexto(zapi, tel, aplicarTemplate(corpo, vars));
+        const r = await adaptadorWa.enviarTexto(tel, aplicarTemplate(corpo, vars));
         ok = r.ok;
         if (!r.ok) msgErro = r.erro ?? "Falha no envio.";
       }
@@ -344,8 +344,9 @@ export async function reenviarFalhas(
   if (!falhas || falhas.length === 0) return { enviados: 0, erros: 0 };
 
   const canal = com.canal as Canal;
-  const zapi = canal === "whatsapp" ? await carregarConfigZapi() : null;
-  if (canal === "whatsapp" && !zapi) return { erro: "WhatsApp não configurado." };
+  const ativoWa = canal === "whatsapp" ? await adaptadorWhatsappAtivo() : null;
+  if (canal === "whatsapp" && (!ativoWa || "erro" in ativoWa)) return { erro: "WhatsApp não configurado." };
+  const adaptadorWa = ativoWa && !("erro" in ativoWa) ? ativoWa.adaptador : null;
 
   const admin = createAdminSupabase();
   const escritorio = await nomeEscritorio();
@@ -374,8 +375,8 @@ export async function reenviarFalhas(
       const r = await enviarEmail({ para: f.para as string, assunto: msg.assunto, corpo: msg.corpo });
       ok = r.ok;
       if (!r.ok) msgErro = r.erro;
-    } else if (zapi) {
-      const r = await enviarTexto(zapi, f.para as string, aplicarTemplate(com.corpo as string, vars));
+    } else if (adaptadorWa) {
+      const r = await adaptadorWa.enviarTexto(f.para as string, aplicarTemplate(com.corpo as string, vars));
       ok = r.ok;
       if (!r.ok) msgErro = r.erro ?? "Falha no envio.";
     }
