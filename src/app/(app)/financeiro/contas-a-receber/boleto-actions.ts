@@ -15,6 +15,7 @@ import { validarNovaVencimento } from "@/lib/boleto/vencimento";
 export type BoletoView = {
   id: string;
   numero: number;
+  vencimento: string;
   provedor: string;
   linhaDigitavel: string | null;
   pixCopiaCola: string | null;
@@ -132,7 +133,7 @@ export async function listarBoletosDaCompetencia(competencia: string): Promise<R
   if (ids.length === 0) return {};
   const { data: bs } = await supabase
     .from("boleto")
-    .select("id, titulo_id, numero, provedor, linha_digitavel, pix_copia_cola, url_pdf, status")
+    .select("id, titulo_id, numero, provedor, vencimento, linha_digitavel, pix_copia_cola, url_pdf, status")
     .in("titulo_id", ids)
     .neq("status", "cancelado")
     .order("criado_em", { ascending: false });
@@ -143,6 +144,7 @@ export async function listarBoletosDaCompetencia(competencia: string): Promise<R
     mapa[tid] = {
       id: b.id as string,
       numero: Number(b.numero),
+      vencimento: b.vencimento as string,
       provedor: b.provedor as string,
       linhaDigitavel: (b.linha_digitavel as string | null) ?? null,
       pixCopiaCola: (b.pix_copia_cola as string | null) ?? null,
