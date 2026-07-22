@@ -10,6 +10,11 @@ import { PageHeader } from "@/components/ui/PageHeader";
 const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] = [
   { href: "/usuarios", label: "Usuários", desc: "Convite, papel, departamento, superior e status da equipe." },
   {
+    href: "/configuracoes/seguranca",
+    label: "Segurança (2FA)",
+    desc: "Exigir verificação em duas etapas de toda a equipe.",
+  },
+  {
     href: "/integracoes/dominio",
     label: "Integração Domínio",
     desc: "Importação e conciliação com o sistema Domínio.",
