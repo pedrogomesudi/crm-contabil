@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.70.0] — 2026-07-22
+
+### Adicionado
+
+- **Monitor de crons (dead-man switch).** Cada rotina automática (gerar obrigações, régua de
+  cobrança, sincronizar boletos, webhooks, follow-up, tarefas recorrentes, monitorar Receita) pinga
+  um monitor externo (healthchecks.io) ao concluir — e sinaliza falha se estourar. Configurável pelo
+  env `HEALTHCHECK_URLS` (sem ele, é no-op). O monitor avisa por e-mail quando um cron para de rodar.
+
 ## [6.69.0] — 2026-07-22
 
 ### Adicionado
