@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.73.0] — 2026-07-22
+
+### Adicionado
+
+- **WhatsApp oficial: envio de mídia.** O provedor oficial (WhatsApp Cloud API) passou a enviar
+  imagens e documentos (ex.: NFS-e em PDF), completando texto + mídia + status. Com isto, o provedor
+  oficial cobre os mesmos envios da Z-API dentro da janela de 24h (proativos ainda dependem de
+  templates — em breve).
+
 ## [6.72.0] — 2026-07-22
 
 ### Adicionado
