@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getPerfilAtual } from "@/lib/auth/perfil";
+import { decidirGateAal } from "@/lib/auth/mfa";
 import { podeCriarCliente, podeGerenciarVencimentos } from "@/lib/clientes/permissoes";
 import { ehCliente } from "@/lib/portal/permissoes";
 import { contarVencimentos } from "@/app/(app)/vencimentos/actions";
@@ -25,6 +26,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // layout do grupo (portal)). Vem antes das contagens: o cliente não dispara
   // nenhuma query de equipe.
   if (ehCliente(perfil.papel)) redirect("/portal");
+
+  // Gate MFA (Fatia A, obrigatorio=false): quem TEM fator verificado (nextLevel aal2) mas ainda
+  // está numa sessão aal1 precisa passar pela verificação. É isto que efetivamente exige o 2FA
+  // de quem o habilitou — o login em si não muda. Sem fator, segue normal (opcional).
+  const supabaseMfa = await createServerSupabase();
+  const { data: aal } = await supabaseMfa.auth.mfa.getAuthenticatorAssuranceLevel();
+  const decisao = decidirGateAal({ currentLevel: aal?.currentLevel ?? null, nextLevel: aal?.nextLevel ?? null }, false);
+  if (decisao === "verificar") redirect("/login/verificar");
 
   const alertasOnboarding = podeCriarCliente(perfil.papel) ? await contarAlertas() : 0;
   const riscosObrigacoes = podeCriarCliente(perfil.papel) ? await contarRiscos() : 0;
