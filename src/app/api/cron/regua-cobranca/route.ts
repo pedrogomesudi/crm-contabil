@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { executarCronComPing } from "@/lib/observabilidade/healthcheck";
 import { timingSafeEqual } from "node:crypto";
 import { processarRegua } from "@/lib/whatsapp/regua-motor";
 
@@ -15,6 +16,6 @@ function autorizado(req: Request): boolean {
 export async function POST(req: Request) {
   if (!autorizado(req)) return NextResponse.json({ erro: "Não autorizado." }, { status: 401 });
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
-  const resumo = await processarRegua(hoje);
+  const resumo = await executarCronComPing("regua-cobranca", () => processarRegua(hoje));
   return NextResponse.json(resumo);
 }
