@@ -23,7 +23,13 @@ describe("criarAdaptadorOficial", () => {
     const a = criarAdaptadorOficial(CFG);
     expect(typeof a.enviarTexto).toBe("function");
     expect(typeof a.statusConexao).toBe("function");
-    const m = await a.enviarMidia("5511", { tipo: "document", base64: "", mime: "application/pdf", nome: "x", caption: "" });
+    const m = await a.enviarMidia("5511", {
+      tipo: "document",
+      base64: "",
+      mime: "application/pdf",
+      nome: "x",
+      caption: "",
+    });
     expect(m.ok).toBe(false);
   });
 
