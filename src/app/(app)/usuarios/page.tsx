@@ -7,6 +7,7 @@ import { PAPEIS_EQUIPE } from "@/lib/tipos";
 import { DEPARTAMENTOS } from "@/lib/clientes/departamentos";
 import {
   alterarPapel,
+  alterarEmail,
   definirAtivo,
   reenviarAcesso,
   definirSuperior,
@@ -22,6 +23,11 @@ const MSG: Record<string, string> = {
   "ok:status": "Status atualizado.",
   "ok:reenviado": "Acesso reenviado por e-mail.",
   "ok:mfa": "2FA do usuário resetado — ele reconfigura no próximo acesso.",
+  "ok:email": "E-mail alterado. O acesso passa a ser pelo endereço novo, com a mesma senha.",
+  "erro:email_invalido": "E-mail inválido.",
+  "erro:email_em_uso": "Esse e-mail já pertence a outro usuário.",
+  "erro:email_parcial":
+    "O login já mudou, mas a ficha do usuário não. Repita a alteração para concluir — nada se perde.",
   "erro:self": "Você não pode alterar o próprio papel ou status.",
   "erro:papel": "Papel inválido.",
   "erro:ultimo_admin": "Não é possível remover o último administrador ativo.",
@@ -189,30 +195,49 @@ export default async function UsuariosPage({
                       )}
                     </td>
                     <td className="p-2">
-                      {ehProprio ? (
-                        <span className="text-cinza-claro">—</span>
-                      ) : (
-                        <div className="flex flex-col gap-1">
-                          <form action={reenviarAcesso.bind(null, u.id)}>
-                            <BotaoAcao
-                              className="w-full rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme"
-                              rotulo={`Reenviar acesso para ${u.nome}`}
-                              confirmar={`Reenviar o link de acesso para ${u.email}?`}
-                            >
-                              Reenviar acesso
-                            </BotaoAcao>
-                          </form>
-                          <form action={resetarMfa.bind(null, u.id)}>
-                            <BotaoAcao
-                              className="w-full rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme"
-                              rotulo={`Resetar 2FA de ${u.nome}`}
-                              confirmar={`Resetar o 2FA de ${u.nome}? Ele precisará reconfigurar no próximo acesso.`}
-                            >
-                              Resetar 2FA
-                            </BotaoAcao>
-                          </form>
-                        </div>
-                      )}
+                      <div className="flex flex-col gap-1">
+                        {/* Trocar o próprio e-mail é permitido — é o caso comum (mudança de
+                            domínio) e a senha não muda, então ninguém se tranca para fora. */}
+                        <form action={alterarEmail.bind(null, u.id)} className="flex gap-1">
+                          <input
+                            type="email"
+                            name="email"
+                            required
+                            defaultValue={u.email}
+                            aria-label={`Novo e-mail de ${u.nome}`}
+                            className={controleCls("compacto")}
+                          />
+                          <BotaoAcao
+                            className="rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme"
+                            rotulo={`Alterar e-mail de ${u.nome}`}
+                            confirmar={`Alterar o e-mail de ${u.nome}? Ele passa a entrar com o endereço novo — a senha continua a mesma.`}
+                          >
+                            Alterar
+                          </BotaoAcao>
+                        </form>
+                        {ehProprio ? null : (
+                          <>
+                            <form action={reenviarAcesso.bind(null, u.id)}>
+                              <BotaoAcao
+                                className="w-full rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme"
+                                rotulo={`Reenviar acesso para ${u.nome}`}
+                                confirmar={`Reenviar o link de acesso para ${u.email}?`}
+                              >
+                                Reenviar acesso
+                              </BotaoAcao>
+                            </form>
+                            <form action={resetarMfa.bind(null, u.id)}>
+                              <BotaoAcao
+                                className="w-full rounded-lg border border-linha px-3 py-2 text-sm text-cinza hover:bg-creme"
+                                rotulo={`Resetar 2FA de ${u.nome}`}
+                                confirmar={`Resetar o 2FA de ${u.nome}? Ele precisará reconfigurar no próximo acesso.`}
+                              >
+                                Resetar 2FA
+                              </BotaoAcao>
+                            </form>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

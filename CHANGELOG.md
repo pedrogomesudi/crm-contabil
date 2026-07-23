@@ -8,6 +8,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.83.0] — 2026-07-23
+
+### Adicionado
+
+- **Alterar o e-mail de um usuário**, em Usuários. Até aqui a tela convidava, mudava papel,
+  reenviava acesso e desativava — mas não trocava endereço, e quem mudava de e-mail ficava sem saída
+  dentro do produto. A troca **preserva a pessoa**: o identificador interno é o mesmo, e ele aparece
+  em cerca de 90 pontos do banco (quem cadastrou o cliente, quem é o contador responsável, quem
+  revisou a obrigação). Criar um usuário novo e desativar o antigo teria custado todo esse histórico.
+- Funciona também para o **próprio usuário** — diferente de papel e status, trocar o próprio e-mail é
+  o caso comum (mudança de domínio) e não tranca ninguém para fora: **a senha continua a mesma**.
+- Se a gravação da ficha falhar depois de o login já ter mudado, a mensagem diz exatamente isso e
+  orienta a repetir — a operação é idempotente e nada se perde.
+
 ## [6.82.0] — 2026-07-23
 
 Matriz de obrigações — vigência (curadoria, Fatia C1).
