@@ -27,8 +27,8 @@ function primeiroValue(payload: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
 }
 
-// Extrai a primeira mensagem RECEBIDA do payload da Cloud API. Na Fatia 2A, mídia vira marcador
-// "[mídia]" (midia:null) — a Fatia 2B preenche `midia`.
+// Extrai a primeira mensagem RECEBIDA do payload da Cloud API. Mídia vem como `media id` (não URL):
+// o download é do webhook, via baixarEStorearMidiaOficial. Sem id (payload torto) cai no marcador.
 export function extrairMensagemOficial(
   payload: unknown,
 ): { telefone: string; texto: string; wamId: string; midia: MidiaOficialRecebida | null } | null {
@@ -44,7 +44,24 @@ export function extrairMensagemOficial(
     return { telefone, texto: body, wamId, midia: null };
   }
   if (m.type === "image" || m.type === "document" || m.type === "audio") {
-    return { telefone, texto: "[mídia]", wamId, midia: null };
+    const bloco = (m[m.type] ?? {}) as { id?: string; mime_type?: string; filename?: string; caption?: string };
+    const caption = typeof bloco.caption === "string" ? bloco.caption : "";
+    // Sem id não há como baixar: cai no marcador (comportamento da 2A).
+    if (typeof bloco.id !== "string" || !bloco.id) {
+      return { telefone, texto: caption || "[mídia]", wamId, midia: null };
+    }
+    return {
+      telefone,
+      texto: caption || "[mídia]",
+      wamId,
+      midia: {
+        tipo: m.type,
+        id: bloco.id,
+        mime: typeof bloco.mime_type === "string" ? bloco.mime_type : "application/octet-stream",
+        nome: typeof bloco.filename === "string" ? bloco.filename : null,
+        caption,
+      },
+    };
   }
   return { telefone, texto: "[mensagem não suportada]", wamId, midia: null };
 }
