@@ -1,0 +1,70 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
+import type { StatusEntrega } from "./inbox";
+
+export type MidiaOficialRecebida = {
+  tipo: "image" | "audio" | "document";
+  id: string;
+  mime: string;
+  nome: string | null;
+  caption: string;
+};
+
+// Valida a assinatura X-Hub-Signature-256 (HMAC-SHA256 do corpo cru com o app secret). Timing-safe.
+export function assinaturaOficialOk(rawBody: string, header: string | null, appSecret: string): boolean {
+  if (!header || !header.startsWith("sha256=")) return false;
+  const esperado = "sha256=" + createHmac("sha256", appSecret).update(rawBody).digest("hex");
+  const a = Buffer.from(header);
+  const b = Buffer.from(esperado);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+function primeiroValue(payload: unknown): Record<string, unknown> | null {
+  const p = (payload ?? {}) as Record<string, unknown>;
+  const entry = Array.isArray(p.entry) ? (p.entry[0] as Record<string, unknown> | undefined) : undefined;
+  const changes =
+    entry && Array.isArray(entry.changes) ? (entry.changes[0] as Record<string, unknown> | undefined) : undefined;
+  const value = changes?.value;
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+}
+
+// Extrai a primeira mensagem RECEBIDA do payload da Cloud API. Na Fatia 2A, mídia vira marcador
+// "[mídia]" (midia:null) — a Fatia 2B preenche `midia`.
+export function extrairMensagemOficial(
+  payload: unknown,
+): { telefone: string; texto: string; wamId: string; midia: MidiaOficialRecebida | null } | null {
+  const value = primeiroValue(payload);
+  const msgs = value && Array.isArray(value.messages) ? value.messages : null;
+  const m = msgs?.[0] as Record<string, unknown> | undefined;
+  if (!m) return null;
+  const telefone = typeof m.from === "string" ? m.from : "";
+  const wamId = typeof m.id === "string" ? m.id : "";
+  if (!telefone || !wamId) return null;
+  if (m.type === "text") {
+    const body = (m.text as { body?: string } | undefined)?.body ?? "";
+    return { telefone, texto: body, wamId, midia: null };
+  }
+  if (m.type === "image" || m.type === "document" || m.type === "audio") {
+    return { telefone, texto: "[mídia]", wamId, midia: null };
+  }
+  return { telefone, texto: "[mensagem não suportada]", wamId, midia: null };
+}
+
+// Extrai o status de entrega (o primeiro tipo mapeável) e os ids afetados.
+export function extrairStatusOficial(payload: unknown): { status: StatusEntrega; ids: string[] } | null {
+  const value = primeiroValue(payload);
+  const statuses = value && Array.isArray(value.statuses) ? value.statuses : null;
+  if (!statuses || statuses.length === 0) return null;
+  const MAPA: Record<"sent" | "delivered" | "read", StatusEntrega> = {
+    sent: "ENVIADO",
+    delivered: "ENTREGUE",
+    read: "LIDO",
+  };
+  for (const kind of ["read", "delivered", "sent"] as const) {
+    const ids = statuses
+      .filter((s) => (s as Record<string, unknown>).status === kind)
+      .map((s) => (s as Record<string, unknown>).id)
+      .filter((id): id is string => typeof id === "string");
+    if (ids.length) return { status: MAPA[kind], ids };
+  }
+  return null;
+}
