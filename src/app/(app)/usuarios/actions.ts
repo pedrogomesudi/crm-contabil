@@ -155,6 +155,54 @@ export async function reenviarAcesso(usuarioId: string) {
   redirect("/usuarios?ok=reenviado");
 }
 
+// Troca o e-mail de login PRESERVANDO o usuário. Criar outro e desativar o antigo seria
+// o caminho fácil e errado: o id do usuário é referenciado em ~90 pontos do schema (quem
+// cadastrou o cliente, quem é o contador responsável, quem revisou a obrigação), e o
+// histórico ficaria preso a alguém inativo.
+//
+// Vale para o PRÓPRIO usuário — diferente de papel e status, trocar o próprio e-mail é o
+// caso de uso comum (mudança de domínio) e não permite se trancar para fora: a senha não
+// muda, e quem faz a troca está vendo o endereço novo na tela.
+export async function alterarEmail(usuarioId: string, formData: FormData) {
+  await exigirAdmin();
+  const bruto = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+  const email = emailSchema.safeParse(bruto);
+  if (!email.success) redirect("/usuarios?erro=email_invalido");
+
+  const admin = createAdminSupabase();
+
+  const { data: atual } = await admin.from("usuarios").select("email").eq("id", usuarioId).maybeSingle();
+  if (atual?.email?.toLowerCase() === email.data) redirect("/usuarios?ok=email"); // nada a fazer
+
+  // Outro usuário já usa esse endereço: o Auth recusaria adiante, mas com mensagem crua.
+  const { data: ocupado } = await admin.from("usuarios").select("id").ilike("email", email.data).maybeSingle();
+  if (ocupado && ocupado.id !== usuarioId) redirect("/usuarios?erro=email_em_uso");
+
+  // 1) Auth primeiro: é ele que decide com o que se entra. `email_confirm` evita mandar
+  //    o usuário confirmar um endereço que um admin já confirmou deliberadamente.
+  const { error: errAuth } = await admin.auth.admin.updateUserById(usuarioId, {
+    email: email.data,
+    email_confirm: true,
+  });
+  if (errAuth) {
+    console.error("alterarEmail (auth):", errAuth.message);
+    redirect(/already|exist|registered/i.test(errAuth.message) ? "/usuarios?erro=email_em_uso" : "/usuarios?erro=1");
+  }
+
+  // 2) Espelho na tabela. Se ESTE passo falhar, o login já é o novo e a tela mostra o
+  //    antigo — repetir a operação conserta (o passo 1 é idempotente).
+  const { error } = await admin.from("usuarios").update({ email: email.data }).eq("id", usuarioId);
+  if (error) {
+    console.error("alterarEmail (perfil):", error.message);
+    redirect("/usuarios?erro=email_parcial");
+  }
+
+  revalidatePath("/usuarios");
+  redirect("/usuarios?ok=email");
+}
+
 export async function definirSuperior(usuarioId: string, formData: FormData) {
   await exigirAdmin();
   const bruto = String(formData.get("superior_id") ?? "");
