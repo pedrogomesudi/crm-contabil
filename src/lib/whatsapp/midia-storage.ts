@@ -110,10 +110,7 @@ export async function baixarEStorearMidiaOficial(
 ): Promise<{ path: string; mime: string } | null> {
   const auth = { Authorization: `Bearer ${token}` };
   // 1) media id → { url, mime_type }
-  const metaBuf = await baixarComHeaders(
-    `https://graph.facebook.com/v21.0/${encodeURIComponent(mediaId)}`,
-    auth,
-  );
+  const metaBuf = await baixarComHeaders(`https://graph.facebook.com/v21.0/${encodeURIComponent(mediaId)}`, auth);
   if (!metaBuf) return null;
   let url: string;
   let mime: string;
