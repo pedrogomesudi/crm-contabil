@@ -104,7 +104,9 @@ describe("enviador proativo — provedor oficial", () => {
 
   it("fluxo de janela, com cliente falando agora → texto livre (sem template)", async () => {
     db.ultimaEntradaIn = new Date().toISOString();
-    const r = await (await enviador()).enviar("5511", {
+    const r = await (
+      await enviador()
+    ).enviar("5511", {
       fluxo: "legalizacao",
       texto: "Etapa concluída",
       params: ["A", "B", "C", "D"],
@@ -130,7 +132,9 @@ describe("Z-API não regride", () => {
   });
 
   it("manda o texto livre, ignora params e nunca exige template", async () => {
-    const r = await (await enviador()).enviar("5511", {
+    const r = await (
+      await enviador()
+    ).enviar("5511", {
       fluxo: "regua",
       texto: "Texto exato de hoje",
       params: ["ignorado"],

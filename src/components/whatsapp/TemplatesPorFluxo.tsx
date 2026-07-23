@@ -26,8 +26,7 @@ const COR: Record<StatusTemplate | "nao_configurado", string> = {
 
 // O contrato de parâmetros: a ORDEM é o que o escritório precisa respeitar ao escrever
 // o template na Meta. Ex.: "{{1}} cliente · {{2}} valor · {{3}} vencimento".
-const contrato = (fluxo: FluxoProativo) =>
-  PARAMS_FLUXO[fluxo].map((p, i) => `{{${i + 1}}} ${p}`).join(" · ");
+const contrato = (fluxo: FluxoProativo) => PARAMS_FLUXO[fluxo].map((p, i) => `{{${i + 1}}} ${p}`).join(" · ");
 
 type Configurado = { nome: string; idioma: string };
 
@@ -46,9 +45,9 @@ export function TemplatesPorFluxo({
       <div className="space-y-1">
         <h3 className="text-sm font-semibold text-grafite">Templates por fluxo</h3>
         <p className="text-sm text-cinza">
-          Fora da janela de 24h, a API oficial só envia por <strong>template aprovado</strong> pela Meta.
-          Escreva o texto do template no Business Manager seguindo a ordem de parâmetros indicada em cada
-          fluxo. A Z-API não usa templates — esta seção não a afeta.
+          Fora da janela de 24h, a API oficial só envia por <strong>template aprovado</strong> pela Meta. Escreva o
+          texto do template no Business Manager seguindo a ordem de parâmetros indicada em cada fluxo. A Z-API não usa
+          templates — esta seção não a afeta.
         </p>
       </div>
 

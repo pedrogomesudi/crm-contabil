@@ -25,14 +25,14 @@ describe("decidirEnvio", () => {
     ).toEqual({ modo: "texto" });
   });
   it("oficial + política janela + dentro da janela → texto", () => {
-    expect(
-      decidirEnvio({ politica: "janela", exigeTemplate: true, dentroDaJanela: true, temTemplate: false }),
-    ).toEqual({ modo: "texto" });
+    expect(decidirEnvio({ politica: "janela", exigeTemplate: true, dentroDaJanela: true, temTemplate: false })).toEqual(
+      { modo: "texto" },
+    );
   });
   it("oficial + política janela + fora da janela + template → template", () => {
-    expect(
-      decidirEnvio({ politica: "janela", exigeTemplate: true, dentroDaJanela: false, temTemplate: true }),
-    ).toEqual({ modo: "template" });
+    expect(decidirEnvio({ politica: "janela", exigeTemplate: true, dentroDaJanela: false, temTemplate: true })).toEqual(
+      { modo: "template" },
+    );
   });
   it("oficial + sempre_template ignora a janela", () => {
     expect(

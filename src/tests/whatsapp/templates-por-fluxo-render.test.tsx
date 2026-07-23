@@ -23,9 +23,7 @@ describe("TemplatesPorFluxo", () => {
   });
 
   it("fluxo sem template configurado aparece como não configurado", () => {
-    const html = renderToStaticMarkup(
-      <TemplatesPorFluxo configurados={{}} disponiveis={[]} erroListagem={null} />,
-    );
+    const html = renderToStaticMarkup(<TemplatesPorFluxo configurados={{}} disponiveis={[]} erroListagem={null} />);
     expect(html).toContain("não configurado");
   });
 

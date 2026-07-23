@@ -78,11 +78,7 @@ export async function listarTemplatesDisponiveis(): Promise<{ templates: Templat
 }
 
 // Vincula (ou desvincula, com nome vazio) um template aprovado a um fluxo proativo.
-export async function salvarTemplateFluxo(
-  fluxo: string,
-  nome: string,
-  idioma: string,
-): Promise<{ erro?: string }> {
+export async function salvarTemplateFluxo(fluxo: string, nome: string, idioma: string): Promise<{ erro?: string }> {
   const perfil = await exigirAdmin();
   if (!perfil) return { erro: "Apenas admin." };
   if (!FLUXOS_VALIDOS.has(fluxo)) return { erro: "Fluxo inválido." };
