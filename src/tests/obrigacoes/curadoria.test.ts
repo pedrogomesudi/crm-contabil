@@ -118,15 +118,42 @@ describe("MATRIZ_PADRAO curada", () => {
     }
   });
 
-  it("DCTFWeb vence no dia 15, como manda a IN RFB 2.005/2021", () => {
+  // O prazo foi 15, virou 25 (IN 2.237/2024) e hoje é o ÚLTIMO DIA ÚTIL (IN 2.248/2025).
+  // Citar a IN instituidora não basta — é o alerta que este teste guarda.
+  it("DCTFWeb vence no último dia útil do mês seguinte (IN RFB 2.248/2025)", () => {
     const d = MATRIZ_PADRAO.find((o) => o.codigo === "DCTFWEB");
-    expect(d?.vencDia).toBe(15);
-    expect(d?.baseLegal).toContain("2.005/2021");
+    expect(d?.vencDia).toBe(31); // com clamp + antecipa = último dia útil
+    expect(d?.antecipa).toBe(true);
+    expect(d?.baseLegal).toContain("2.248/2025");
   });
 
   it("onde a norma não cabe no modelo de vencimento, há observação registrada", () => {
     // EFD-Contribuições vence no 10º DIA ÚTIL; o modelo só sabe dia fixo.
     const efd = MATRIZ_PADRAO.find((o) => o.codigo === "EFD-CONTRIB");
     expect(efd?.observacaoCuradoria).toMatch(/dia útil/i);
+  });
+
+  it("obrigação que depende de análise caso a caso nasce DESLIGADA, não ausente", () => {
+    // DIRBI só é devida por quem usa benefício fiscal; DeSTDA, por parte do Simples com ICMS.
+    // Entram documentadas — ligá-las sem análise encheria o calendário de quem não deve nada.
+    for (const codigo of ["DIRBI", "DESTDA"]) {
+      const o = MATRIZ_PADRAO.find((x) => x.codigo === codigo);
+      expect(o, codigo).toBeDefined();
+      expect(o?.ativa, codigo).toBe(false);
+      expect(o?.observacaoCuradoria, codigo).toMatch(/desligada/i);
+    }
+  });
+
+  it("as obrigações extintas não voltam para a matriz", () => {
+    // DIRF acabou para fatos geradores a partir de 2025 (eSocial + EFD-Reinf assumiram);
+    // RAIS e CAGED foram absorvidos pelo eSocial. Incluí-las seria criar prazo inexistente.
+    const codigos = MATRIZ_PADRAO.map((o) => o.codigo);
+    for (const extinta of ["DIRF", "RAIS", "CAGED"]) expect(codigos).not.toContain(extinta);
+  });
+
+  it("toda obrigação filtrada por CNAE diz isso na observação", () => {
+    for (const o of MATRIZ_PADRAO.filter((x) => x.cnaePrefixos.length > 0)) {
+      expect(o.observacaoCuradoria, o.codigo).toMatch(/cnae/i);
+    }
   });
 });

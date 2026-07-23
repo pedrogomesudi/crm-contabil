@@ -16,6 +16,11 @@ export type ObrigacaoSeed = {
   prazoInternoDiasUteis: number;
   antecipa: boolean;
   ordem: number;
+  // Omitido = ligada. Vem `false` na obrigação que depende de análise caso a caso (uso de
+  // benefício fiscal, substituição tributária): entra documentada, com base legal, mas sem
+  // gerar instância até o escritório decidir que se aplica. Melhor uma linha desligada na
+  // matriz do que uma cobrança no calendário de quem não deve nada.
+  ativa?: boolean;
   // Curadoria: a norma que fixa o prazo. É o que permite auditar se a regra ainda vale —
   // e o que a tela mostra ao lado do vencimento.
   baseLegal: string;
@@ -110,9 +115,9 @@ export const MATRIZ_PADRAO: ObrigacaoSeed[] = [
     condicaoModo: "any",
     ufs: [],
     cnaePrefixos: [],
-    // Estava 20 e a norma diz 15. O erro viveu no repositório sem nada que o apontasse —
-    // é o caso que motivou esta fatia.
-    vencDia: 15,
+    // ÚLTIMO DIA ÚTIL do mês seguinte: dia 31 sofre clamp para o fim do mês e `antecipa`
+    // recua para o dia útil anterior — o mesmo par que ECD e ECF usam.
+    vencDia: 31,
     vencMesOffset: 1,
     vencMes: null,
     vencAnoOffset: 1,
@@ -120,9 +125,10 @@ export const MATRIZ_PADRAO: ObrigacaoSeed[] = [
     antecipa: true,
     ordem: 40,
     baseLegal:
-      "IN RFB nº 2.005/2021 (alterada até a IN RFB nº 2.237/2024) — até o dia 15 do mês seguinte ao dos fatos geradores.",
+      "IN RFB nº 2.005/2021, com o prazo alterado pela IN RFB nº 2.248/2025 — até o último dia útil do mês seguinte ao dos fatos geradores.",
     fonteUrl: "https://www.gov.br/receitafederal/",
-    observacaoCuradoria: null,
+    observacaoCuradoria:
+      "O prazo mudou duas vezes em pouco tempo: era dia 15, foi para o dia 25 (IN RFB nº 2.237/2024) e hoje é o último dia útil do mês seguinte (IN RFB nº 2.248/2025). Citar só a IN instituidora não basta para saber o prazo vigente.",
   },
   {
     codigo: "FGTS-DIGITAL",
@@ -237,5 +243,172 @@ export const MATRIZ_PADRAO: ObrigacaoSeed[] = [
     fonteUrl: URL_SPED,
     observacaoCuradoria:
       "A norma diz ÚLTIMO DIA ÚTIL de julho; aqui é dia 31 com antecipação para dia útil, o que dá o mesmo resultado.",
+  },
+
+  // ─── Fatia B: cobertura ────────────────────────────────────────────────────────────────
+  {
+    codigo: "ESOCIAL-FOLHA",
+    nome: "eSocial — fechamento da folha",
+    descricao: "Eventos periódicos de remuneração e fechamento da competência.",
+    esfera: "trabalhista",
+    periodicidade: "mensal",
+    aplicavelA: ["*"],
+    condicaoFlags: ["tem_folha"],
+    condicaoModo: "any",
+    ufs: [],
+    cnaePrefixos: [],
+    vencDia: 15,
+    vencMesOffset: 1,
+    vencMes: null,
+    vencAnoOffset: 1,
+    prazoInternoDiasUteis: 0,
+    antecipa: true,
+    ordem: 45,
+    baseLegal: "Manual de Orientação do eSocial (MOS) — eventos periódicos até o dia 15 do mês seguinte.",
+    fonteUrl: "https://www.gov.br/esocial/",
+    observacaoCuradoria:
+      "Esta linha cobre SÓ o fechamento mensal. Os eventos NÃO periódicos têm prazos próprios e mais curtos (admissão até o dia anterior ao início do trabalho; alteração cadastral até o dia 7), que um calendário por competência não representa.",
+  },
+  {
+    codigo: "DIRBI",
+    nome: "DIRBI",
+    descricao: "Declaração de Incentivos, Renúncias, Benefícios e Imunidades de Natureza Tributária.",
+    esfera: "federal",
+    periodicidade: "mensal",
+    aplicavelA: ["presumido_real"],
+    condicaoFlags: [],
+    condicaoModo: "any",
+    ufs: [],
+    cnaePrefixos: [],
+    vencDia: 20,
+    vencMesOffset: 2,
+    vencMes: null,
+    vencAnoOffset: 1,
+    prazoInternoDiasUteis: 0,
+    antecipa: true,
+    ordem: 65,
+    baseLegal: "IN RFB nº 2.198/2024 — até o dia 20 do segundo mês subsequente ao período de apuração.",
+    fonteUrl: "https://www.gov.br/receitafederal/",
+    observacaoCuradoria:
+      "DESLIGADA de fábrica: só é devida por quem usufrui de benefício fiscal listado no Anexo Único da IN. Ligar apenas para os clientes nessa situação. Optantes do Simples não entregam.",
+    ativa: false,
+  },
+  {
+    codigo: "EFD-ICMS-IPI",
+    nome: "EFD ICMS/IPI (SPED Fiscal)",
+    descricao: "Escrituração fiscal digital de ICMS e IPI.",
+    esfera: "estadual",
+    periodicidade: "mensal",
+    aplicavelA: ["presumido_real"],
+    condicaoFlags: ["contribui_icms"],
+    condicaoModo: "any",
+    ufs: [],
+    cnaePrefixos: [],
+    vencDia: 20,
+    vencMesOffset: 1,
+    vencMes: null,
+    vencAnoOffset: 1,
+    prazoInternoDiasUteis: 0,
+    antecipa: true,
+    ordem: 75,
+    baseLegal: "Convênio ICMS 143/2006 e Ajuste SINIEF 02/2009 — prazo fixado por cada estado.",
+    fonteUrl: URL_SPED,
+    observacaoCuradoria:
+      "ATENÇÃO: o prazo VARIA POR ESTADO. O dia 20 é o mais comum, mas há UFs no dia 25, no dia 28 ou no primeiro dia útil seguinte. Para escritório com clientes em mais de uma UF, o certo é duplicar esta linha por estado (campo UFs) com o prazo de cada um.",
+  },
+  {
+    codigo: "DESTDA",
+    nome: "DeSTDA",
+    descricao: "Declaração de Substituição Tributária, Diferencial de Alíquota e Antecipação.",
+    esfera: "estadual",
+    periodicidade: "mensal",
+    aplicavelA: SIMPLES,
+    condicaoFlags: ["contribui_icms"],
+    condicaoModo: "any",
+    ufs: [],
+    cnaePrefixos: [],
+    vencDia: 28,
+    vencMesOffset: 1,
+    vencMes: null,
+    vencAnoOffset: 1,
+    prazoInternoDiasUteis: 0,
+    antecipa: true,
+    ordem: 78,
+    baseLegal: "Ajuste SINIEF 12/2015 — até o dia 28 do mês subsequente.",
+    fonteUrl: "https://www.confaz.fazenda.gov.br/",
+    observacaoCuradoria:
+      "DESLIGADA de fábrica: devida pelo optante do Simples que tem ICMS-ST, diferencial de alíquota ou antecipação, e que não entrega EFD. Nem todo Simples com inscrição estadual se enquadra. Alguns estados dispensaram.",
+    ativa: false,
+  },
+  {
+    codigo: "IRPJ-CSLL-TRIM",
+    nome: "IRPJ/CSLL trimestral",
+    descricao: "Apuração trimestral do IRPJ e da CSLL no Lucro Presumido.",
+    esfera: "federal",
+    periodicidade: "trimestral",
+    aplicavelA: ["presumido_real"],
+    condicaoFlags: [],
+    condicaoModo: "any",
+    ufs: [],
+    cnaePrefixos: [],
+    vencDia: 31,
+    vencMesOffset: 1,
+    vencMes: null,
+    vencAnoOffset: 1,
+    prazoInternoDiasUteis: 0,
+    antecipa: true,
+    ordem: 85,
+    baseLegal: "Lei nº 9.430/1996 — quota única ou 1ª quota até o último dia útil do mês seguinte ao trimestre.",
+    fonteUrl: "https://www.gov.br/receitafederal/",
+    observacaoCuradoria:
+      "Cobre o vencimento da quota única (ou da 1ª quota). O parcelamento em até 3 quotas mensais, com juros Selic, não é representado — o calendário marca uma data por trimestre.",
+  },
+  {
+    codigo: "DIMOB",
+    nome: "DIMOB",
+    descricao: "Declaração de Informações sobre Atividades Imobiliárias.",
+    esfera: "federal",
+    periodicidade: "anual",
+    aplicavelA: ["*"],
+    condicaoFlags: [],
+    condicaoModo: "any",
+    ufs: [],
+    // Atividades imobiliárias: incorporação (41), compra e venda e locação (68).
+    cnaePrefixos: ["41", "68"],
+    vencDia: 31,
+    vencMesOffset: 1,
+    vencMes: 2,
+    vencAnoOffset: 1,
+    prazoInternoDiasUteis: 0,
+    antecipa: true,
+    ordem: 95,
+    baseLegal: "IN RFB nº 1.115/2010 — até o último dia útil de fevereiro do ano seguinte.",
+    fonteUrl: "https://www.gov.br/receitafederal/",
+    observacaoCuradoria:
+      "Filtrada por CNAE (41 e 68). Confira se cobre a carteira do escritório — quem intermedeia imóvel sob outro CNAE não seria pego por este filtro.",
+  },
+  {
+    codigo: "DMED",
+    nome: "DMED",
+    descricao: "Declaração de Serviços Médicos e de Saúde.",
+    esfera: "federal",
+    periodicidade: "anual",
+    aplicavelA: ["*"],
+    condicaoFlags: [],
+    condicaoModo: "any",
+    ufs: [],
+    // Atividades de atenção à saúde humana.
+    cnaePrefixos: ["86"],
+    vencDia: 31,
+    vencMesOffset: 1,
+    vencMes: 2,
+    vencAnoOffset: 1,
+    prazoInternoDiasUteis: 0,
+    antecipa: true,
+    ordem: 96,
+    baseLegal: "IN RFB nº 985/2009 — até o último dia útil de fevereiro do ano seguinte.",
+    fonteUrl: "https://www.gov.br/receitafederal/",
+    observacaoCuradoria:
+      "Filtrada por CNAE 86 (atenção à saúde humana). Operadoras de plano de saúde e clínicas sob outro CNAE precisam ser incluídas à mão.",
   },
 ];

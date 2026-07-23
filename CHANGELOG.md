@@ -8,6 +8,37 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.81.0] — 2026-07-23
+
+Matriz de obrigações — cobertura (Fatia B), com uma correção importante da fatia anterior.
+
+### Corrigido
+
+- **DCTFWeb: o prazo é o ÚLTIMO DIA ÚTIL do mês seguinte, não o dia 15.** A 6.80.0 trocou o dia 20
+  por 15 citando a IN RFB nº 2.005/2021 — mas o prazo foi alterado duas vezes depois dela: para o dia
+  25 (IN RFB nº 2.237/2024) e então para o último dia útil (IN RFB nº 2.248/2025). **Se você aplicou a
+  divergência do DCTFWeb pelo painel na 6.80.0, aplique de novo agora** — o painel volta a apontar a
+  diferença, com o valor correto. A observação da obrigação passa a registrar as três mudanças de
+  prazo, porque citar a norma instituidora não basta para saber o prazo vigente.
+
+### Adicionado
+
+Sete obrigações na matriz padrão, todas com base legal e nascendo como **nunca revisadas**:
+
+- **eSocial — fechamento da folha** (mensal, dia 15). A observação avisa que a linha cobre só o
+  fechamento mensal: eventos não periódicos, como admissão, têm prazos próprios e mais curtos.
+- **DIRBI** (mensal, dia 20 do 2º mês — IN RFB nº 2.198/2024) e **DeSTDA** (mensal, dia 28 — Ajuste
+  SINIEF 12/2015) entram **desligadas**: dependem de análise caso a caso (uso de benefício fiscal;
+  ICMS-ST no Simples). Ficam documentadas na matriz sem encher o calendário de quem não deve nada.
+- **EFD ICMS/IPI** (mensal, dia 20) — com aviso de que **o prazo varia por estado**; escritório com
+  clientes em várias UFs deve duplicar a linha por estado.
+- **IRPJ/CSLL trimestral** (Lucro Presumido, último dia útil após o trimestre — Lei nº 9.430/1996).
+- **DIMOB** e **DMED** (anuais, último dia útil de fevereiro), filtradas por CNAE — imobiliárias (41 e
+  68) e saúde (86).
+
+**DIRF, RAIS e CAGED não entraram** e há teste impedindo que voltem: a DIRF acabou para fatos
+geradores a partir de 2025, e RAIS e CAGED foram absorvidos pelo eSocial.
+
 ## [6.80.0] — 2026-07-23
 
 Matriz de obrigações — curadoria (Fatia A). A matriz é de onde sai o calendário de todo cliente, e
