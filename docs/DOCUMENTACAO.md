@@ -1,18 +1,25 @@
 # SALDO — Documentação de funcionalidades e módulos
 
 > **Documento vivo.** Reflete o estado atual do sistema em produção (`app.seusaldo.ai`).
-> Atualizar conforme os módulos evoluem. Última revisão: 2026-07-09.
+> Atualizar conforme os módulos evoluem. Última revisão: **2026-07-23**, versão **6.83.0**.
 
 ---
 
 ## 1. Visão geral
 
-**SALDO** é um CRM para escritórios de contabilidade. Reúne, num só lugar: funil comercial (captação
-de clientes), cadastro de clientes, onboarding com cofre de credenciais, **calendário de obrigações
-fiscais com escalonamento e conformidade**, emissão e gestão de NFS-e, atendimento por WhatsApp,
-financeiro completo (contas a pagar/receber, orçamento, orçado × realizado, **conciliação bancária**,
-relatórios gerenciais e indicadores de carteira), cobrança automatizada (WhatsApp + boletos) e
-integração com o sistema Domínio.
+**SALDO** é um CRM/ERP para escritórios de contabilidade. Reúne, num só lugar: funil comercial
+(captação de clientes) com precificação e proposta→contrato assinado, cadastro de clientes com
+**vínculos entre empresas e campos customizáveis**, onboarding com cofre de credenciais, legalização
+por órgão, **calendário de obrigações fiscais curado (base legal e vigência) com escalonamento e
+conformidade**, emissão e gestão de NFS-e, **GED com versionamento e busca no conteúdo dos PDFs**,
+atendimento por WhatsApp (**dois provedores, à escolha do escritório**), financeiro completo (contas a
+pagar/receber, orçamento, orçado × realizado, **conciliação bancária**, **boletos com baixa automática
+pelo banco**, inadimplência, rentabilidade e indicadores de carteira), cobrança automatizada,
+**portal do cliente instalável (PWA)**, **API pública REST com webhooks de saída** e integração com o
+sistema Domínio.
+
+**O que o número diz do produto** (v6.83.0): 14 módulos em produção · 106 telas · 134 migrações de
+banco · 1.130 testes automatizados · 113 versões entregues.
 
 - **Stack:** Next.js 16 (App Router, Server Actions) · TypeScript · Tailwind 4 · Supabase
   (Auth/Postgres/RLS/Storage) · deploy em EasyPanel.
@@ -114,9 +121,25 @@ Módulo de captação e acompanhamento de novos clientes antes de virarem cadast
 Cadastro completo de PJ/PF/MEI e a ficha do cliente, que concentra todas as áreas ligadas a ele.
 
 - **Cadastro:** razão social, CNPJ/CPF, tipo de pessoa, regime tributário, inscrições estadual/municipal,
-  endereço, e-mail, telefone, responsável, representante, contador responsável, status, observações,
-  **competência inicial** (definida no onboarding).
-- **Consulta à Receita Federal:** para PJ, botão que preenche/atualiza os dados a partir do CNPJ.
+  endereço, e-mail, telefone (com **DDI**, para clientes fora do Brasil), responsável, representante,
+  contador responsável, **porte**, status, observações, **competência inicial** (definida no onboarding).
+- **Duplicidade (RF-026):** o CPF/CNPJ é único no banco. Ao cadastrar um documento já existente, a
+  mensagem **cita o nome** do cliente existente e oferece link para abri-lo — inclusive quando ele está
+  inativo.
+- **Vínculos entre empresas (RF-026):** na aba cadastro, a seção **Vínculos** liga o cliente a um
+  **grupo econômico** (escolhendo um existente ou criando na hora), marca a relação **matriz/filial**
+  entre clientes e registra os **sócios** (nome + CPF). Como o sócio é reusado pelo CPF, o sistema mostra
+  em que **outras empresas** aquele sócio aparece — é assim que "sócios em comum" emerge. A seção lista
+  as **empresas relacionadas** com o motivo de cada vínculo (mesmo grupo, matriz, filial, mesmo sócio).
+- **Campos customizáveis (RF-027):** cada escritório define campos extras do cadastro (com tipo de dado
+  e obrigatoriedade). Campo obrigatório **bloqueia o salvar**. Configuração em Configurações → Campos do
+  cadastro.
+- **Flags fiscais:** sobrescrita tri-state (Auto / Sim / Não) de **tem folha**, **contribui ICMS** e
+  **contribui ISS**. Existe porque a derivação automática (nº de funcionários e inscrições) erra em casos
+  reais, e o erro se propaga para a incidência de obrigações.
+- **Consulta à Receita Federal:** para PJ, botão que preenche/atualiza os dados a partir do CNPJ. Além
+  disso, o sistema **monitora** a situação cadastral e a opção pelo Simples/MEI, com reconsulta diária e
+  alerta na mudança (tela `/clientes/alertas-receita`).
 - **Empresa em constituição:** para abertura de empresa nova (que ainda não tem CNPJ), o botão **"Nova
   empresa (em constituição)"** cria um cliente com status **`em_constituicao`** e **CNPJ opcional** (permitido
   só nesse status; uma constraint barra cliente ativo sem CNPJ). O cadastro é enxuto (razão social pretendida,
@@ -274,8 +297,15 @@ cliente — e ele paga por isso?**
 - **Acesso por convite:** na ficha do cliente, admin/assistente convidam pelo e-mail (seção "Portal do
   cliente"). O convidado recebe o e-mail do Supabase, define a senha e entra em `/portal`. O acesso pode ser
   **revogado** (desativa o usuário, cortando o acesso na hora).
-- **O que o cliente vê (somente leitura):** **Documentos**, **Notas fiscais** (baixa a DANFSe), **Guias e
-  comprovantes** das obrigações e **Boletos** (2ª via, linha digitável e PIX).
+- **O que o cliente vê (somente leitura):** **Documentos** (apenas a versão atual de cada um), **Notas
+  fiscais** (baixa a DANFSe), **Guias e comprovantes** das obrigações e **Boletos** (2ª via em PDF, linha
+  digitável e PIX). Também abre **solicitações** ao escritório (RF-054) e responde à **pesquisa de
+  satisfação** (NPS).
+- **Aplicativo instalável (PWA — RF-056):** o portal tem manifest, ícones, *service worker* e página
+  offline; o cliente instala no celular como um app, sem loja.
+- **Trava por inadimplência:** cliente suspenso perde documentos, notas e guias e não abre solicitação
+  nem faz upload — mas **mantém boletos e a situação financeira**, para poder se regularizar. A trava é
+  imposta por RLS (`auth_cliente_suspenso()`), com banner e tela de bloqueio na interface.
 - **Modelo de segurança:**
   - o papel **`cliente`** é **negado por padrão** em todas as policies (que listam só papéis de equipe);
     concedemos apenas **SELECT estreito** nas linhas do próprio cadastro, via `auth_cliente_id()`;
@@ -345,7 +375,27 @@ O mesmo motor das solicitações do portal, virado **para dentro**: um departame
   a origem ao abrir.
 
 ### 3.7 Atendimento (WhatsApp)
-Central de atendimento integrada ao WhatsApp via **Z-API** (número dedicado do escritório).
+Central de atendimento integrada ao WhatsApp. O escritório escolhe **um de dois provedores**, em
+Configurações → WhatsApp:
+
+| | **Z-API** (não-oficial) | **API oficial (Meta Cloud API)** |
+|---|---|---|
+| Natureza | Usa o WhatsApp Web; exige **número dedicado** (há risco de banimento) | Canal oficial da Meta |
+| Envio | Texto e mídia, livre | Texto e mídia livres **dentro da janela de 24h**; fora dela, só **template aprovado** |
+| Recebimento | Texto, mídia e status | Texto, mídia e status (webhook com assinatura verificada) |
+| Envios proativos | Livres | Dependem de **templates aprovados** pela Meta, vinculados por fluxo |
+| Custo | Assinatura do provedor | Cobrança por conversa (tabela da Meta) |
+
+**Os dois convivem permanentemente** — a oficial não substitui a Z-API, e a escolha pode mudar depois.
+Internamente há uma abstração de provedor (`ProvedorWhatsapp`), e o envio proativo passa por uma camada
+de política que decide entre texto livre e template consultando a **capacidade do provedor**, nunca o
+nome dele.
+
+**Templates por fluxo (API oficial):** em Configurações → WhatsApp, com o **WABA ID** informado, o
+sistema lista os templates da conta **com o status vindo da Meta** (aprovado / pendente / reprovado) e o
+admin vincula um a cada fluxo. Cada fluxo exibe a **ordem dos parâmetros** que o template deve seguir.
+Sem template configurado, o envio proativo **não acontece** e o motivo é registrado em Observabilidade.
+Hoje a **régua de cobrança** é o fluxo ligado; os demais entram nas próximas fatias.
 
 - **Inbox** em colunas com abas (Abertas / Pendentes / Finalizadas / Favoritos).
 - **Envio e recepção** de mensagens em tempo (polling); **mídia** (imagem, documento, áudio) enviada e
@@ -483,18 +533,38 @@ Envio da cobrança ao cliente por dois caminhos, com respeito ao opt-out do clie
     completo** — passa a significar apenas "não me cobre por WhatsApp", e o e-mail assume. A ficha do
     cliente agora traz **dois** interruptores ("Cobrar por WhatsApp" / "Cobrar por e-mail"); para não
     cobrar de jeito nenhum, desligue os dois.
-- **Boletos (construído; ativação pendente de conta no provedor):** emissão de boleto por título, com
-  **seletor de provedor** (Configurações → Boletos, admin): **nenhum / Banco Inter / Asaas**. Inter via
-  OAuth2 + mTLS; Asaas via API key; credenciais cifradas (AES-256-GCM, `BOLETO_CRIPTO_KEY`). Emissão,
-  **baixa por webhook** de pagamento e envio do boleto ao cliente. Exige uma conta ativa no provedor
-  para operar em produção.
+- **Boletos (em produção pelo Banco Inter):** emissão de boleto por título, com **seletor de provedor**
+  (Configurações → Boletos, admin): **nenhum / Banco Inter / Asaas**. Inter via OAuth2 + mTLS; Asaas via
+  API key; credenciais cifradas (AES-256-GCM, `BOLETO_CRIPTO_KEY`). Cobre o ciclo inteiro: emissão,
+  **baixa automática por webhook**, sincronização diária dos pagos, 2ª via em PDF, alteração de
+  vencimento, cancelamento e envio do boleto ao cliente. Ver 3.12 para o detalhe.
 
 ### 3.12 Financeiro
-Módulo completo de gestão financeira do escritório (admin/financeiro).
+Módulo completo de gestão financeira do escritório (admin/financeiro). É o módulo mais extenso do
+sistema.
 
 - **Contas a receber** e **contas a pagar:** títulos (RECEBER/PAGAR) com competência, vencimento,
   categoria, centro de custo, fornecedor; **baixas** (recebimentos/pagamentos), parcelamento, despesas
   recorrentes, **estorno auditado** (justificativa, não deleta).
+- **Boletos (Banco Inter — em produção):** emissão a partir do título, **2ª via em PDF** para a equipe e
+  no portal do cliente, **baixa automática por webhook**, cadastro do webhook no Inter pela própria
+  tela, **sincronização diária** dos pagos (cobre webhook perdido), **cancelamento** de boleto e de
+  título, e **alteração de vencimento** — no boleto (cancela e reemite com a nova data) ou no **título**
+  (reagenda tudo de uma vez, mantendo título e boleto coerentes). O Asaas existe como provedor
+  alternativo.
+- **Cobrança avulsa:** lança um recebível para um cliente existente sem depender de honorário
+  recorrente, com opção de emitir o boleto no mesmo passo. O interruptor **"tem honorários
+  recorrentes"** no cliente exclui-o da geração automática de mensalidade — permitindo clientes
+  cobrados só por avulso.
+- **Inadimplência e suspensão:** tela `/financeiro/inadimplencia` com sugeridos, suspensos e
+  reativáveis. A **alçada é segregada** — o financeiro suspende, **só o admin reativa**, com motivo.
+  Suspender cessa o faturamento (contratos ATIVO → SUSPENSO) e **trava o portal do cliente**: ele perde
+  documentos, notas e guias e não abre solicitação, mas **mantém boletos e a situação financeira** (a
+  trava é imposta por RLS, não só pela tela).
+- **Aprovação por alçada:** despesa acima do limite exige aprovação de **outro** admin antes da baixa —
+  segregação de funções.
+- **Rentabilidade:** por cliente (honorário × horas apontadas no timesheet) e agregada por **regime
+  tributário** e por **porte**, somando a margem por faixa.
 - **Regime vencido:** a **competência** de um título é o **mês do serviço**; o **vencimento** cai no
   **mês seguinte**. A geração roda no dia 1 (pg_cron) para a competência do mês anterior, e o seletor
   de competência nas telas já vem no mês anterior. O **13º honorário** equivale a um honorário,
@@ -583,7 +653,37 @@ Central de integrações e credenciais:
 ### 3.15 Usuários (admin)
 Gestão da equipe: convite de usuários, definição de papel e status (ativo/inativo). O papel real é
 definido server-side (não confiável a partir do token). Cada usuário pode ter um **superior**
-(`superior_id`), formando a cadeia hierárquica usada pelo escalonamento de obrigações.
+(`superior_id`), formando a cadeia hierárquica usada pelo escalonamento de obrigações. É possível
+**alterar o e-mail** de um usuário preservando o histórico e o vínculo com o que ele já fez.
+
+### 3.16 Documentos — GED (RF-060 a RF-064)
+O acervo do cliente com organização de verdade, não uma pasta compartilhada.
+
+- **Taxonomia:** catálogo de tipos de documento (configurável), departamento e **competência**, com
+  filtros por qualquer um deles.
+- **Versionamento:** subir uma nova versão não sobrescreve nem duplica — o histórico fica ("N versões")
+  e o portal do cliente mostra **apenas a versão atual**.
+- **Busca:** por metadados (nome, tipo, departamento, competência, cliente) **e pelo conteúdo dos PDFs**
+  — full-text em português, com extração no upload e *backfill* do acervo antigo. PDFs escaneados
+  aparecem marcados como "sem texto pesquisável" (o OCR é a pendência conhecida).
+- **Retenção:** prazo por tipo de documento, com painel de vencidos e expurgo manual — o descarte nunca
+  é automático.
+- **Devolução de acervo:** na rescisão, um pacote ZIP com o **Termo (NBC PG 01)** e os documentos do
+  cliente, gerado a partir da ficha.
+- **Auditoria:** quem subiu, quem baixou e quando.
+
+### 3.17 Pesquisa de satisfação — NPS (RF-074)
+Coleta no **portal do cliente** (card com nota 0–10 e comentário, sem depender de e-mail ou cron) e
+**painel da equipe** com o score (−100 a +100), a distribuição entre promotores, neutros e detratores e
+os comentários. Periodicidade e pergunta são configuráveis em Configurações → Pesquisa de satisfação.
+
+### 3.18 Observabilidade (admin)
+Duas coisas que evitam "descobrir a falha pelo cliente reclamando":
+
+- **Registro de erros:** erros de servidor não tratados são gravados e ficam visíveis em Configurações →
+  Observabilidade, com rota, mensagem, digest e stack — sem depender do log do container.
+- **Monitor de rotinas (*dead-man switch*):** cada cron pinga um monitor externo ao concluir; se uma
+  rotina deixar de rodar, o monitor avisa. Configurável por `HEALTHCHECK_URLS`; sem ele, é no-op.
 
 ---
 
@@ -591,14 +691,20 @@ definido server-side (não confiável a partir do token). Cada usuário pode ter
 
 | Integração | Uso |
 |---|---|
-| **Z-API** | WhatsApp não-oficial (envio/recepção de texto e mídia, status de entrega/leitura). Webhook em `/api/webhooks/zapi/[secret]`. |
-| **Receita Federal** | Consulta de CNPJ para preencher/atualizar cadastro. |
+| **WhatsApp — Z-API** | Provedor **não-oficial** (envio/recepção de texto e mídia, status de entrega/leitura). Webhook em `/api/webhooks/zapi/[secret]`. |
+| **WhatsApp — API oficial (Meta Cloud API)** | Provedor **oficial**: envio de texto e mídia, recebimento de texto, mídia e status, e envio por **template aprovado** fora da janela de 24h. Webhook em `/api/webhooks/whatsapp-oficial`. |
+| **Receita Federal** | Consulta de CNPJ para preencher/atualizar cadastro **e monitoramento contínuo** de situação cadastral e opção pelo Simples/MEI, com alerta na mudança. |
 | **BACEN (SGS)** | Séries de índices (salário mínimo, IPCA, IGP-M, INPC) para o reajuste anual de honorários. |
-| **Sefin Nacional / provedor NFS-e** | Emissão e download de NFS-e (DANFSe/XML), com certificado digital A1. |
+| **Sefin Nacional / provedor NFS-e** | Emissão, cancelamento e download de NFS-e (DANFSe/XML), com certificado digital A1 cifrado. |
 | **Clicksign** | Assinatura eletrônica de documentos. Webhook em `/api/webhooks/clicksign`. |
-| **Banco Inter / Asaas** | Emissão e baixa de **boletos** (construído; ativação pendente de conta). Webhook em `/api/webhooks/boleto/[secret]`. |
+| **Banco Inter** | Emissão, 2ª via em PDF, **baixa automática por webhook**, sincronização de pagos e cancelamento de **boletos** — em produção. Webhook em `/api/webhooks/boleto/[secret]`. |
+| **Asaas** | Provedor alternativo de boletos (adaptador implementado). |
 | **Domínio** | Importação de contratos/dados contábeis (via relatórios `.xls`). |
 | **Gotenberg** | Conversão Word → PDF (contratos) via LibreOffice headless. |
+| **healthchecks.io** | Monitor externo das rotinas automáticas (*dead-man switch*): avisa quando um cron deixa de rodar. Opcional (`HEALTHCHECK_URLS`). |
+
+> **Os dois provedores de WhatsApp convivem.** A API oficial **não substitui** a Z-API: cada escritório
+> escolhe o seu em Configurações → WhatsApp (`whatsapp_config.provedor`), e a escolha pode mudar depois.
 
 ---
 
@@ -659,17 +765,36 @@ clientes.
   cifradas; chaves em variáveis de ambiente (`WHATSAPP_CRIPTO_KEY`, `ONBOARDING_CRIPTO_KEY`,
   `BOLETO_CRIPTO_KEY`, `EMAIL_CRIPTO_KEY`) — definidas uma vez e **nunca alteradas** (mudar torna os
   dados cifrados irrecuperáveis).
+- **Envelope encryption:** as chaves de domínio são **DEKs rotacionáveis** protegidas por uma
+  chave-mestra (`cripto:migrar`, `cripto:rotacionar`), de modo que trocar chave não exige reprocessar
+  todos os segredos à mão.
+- **Verificação em duas etapas (2FA/TOTP):** cada pessoa pode ativar o 2FA por aplicativo autenticador
+  em Configurações → Segurança, e o admin pode **exigir 2FA de toda a equipe** — com a exigência ligada,
+  quem ainda não configurou é levado à tela de configuração antes de seguir.
 - **Auditoria:** acesso a documentos, revelação de senhas do cofre e estornos financeiros são
   registrados (quem/quando), de forma não-forjável.
-- **Agendamentos (pg_cron, em produção):** cinco jobs ativos no banco —
-  1. `gerar-mensalidades-mensal` (`0 6 1 * *`) — chama a função SQL `gerar_mensalidades_automatico()`.
-  2. `regua-cobranca-diaria` (`0 12 * * *`) — via `pg_net`, faz `POST` em `/api/cron/regua-cobranca`.
-  3. `gerar-obrigacoes-mensal` (`0 12 1 * *`) — via `pg_net`, faz `POST` em `/api/cron/gerar-obrigacoes`.
-  4. `tarefas-recorrentes-diaria` (`0 9 * * *`) — via `pg_net`, faz `POST` em `/api/cron/tarefas-recorrentes`.
-  5. `followup-proposta-diaria` (`0 12 * * *`) — via `pg_net`, faz `POST` em `/api/cron/followup-proposta` (RF-007).
+- **Isolamento entre escritórios (multi-tenant físico):** cada escritório tem **seu próprio banco e sua
+  própria aplicação** — não é um banco compartilhado com coluna de tenant. O multi-tenant lógico foi
+  avaliado e **descartado por risco** de vazamento. O ferramental de operação é
+  `tenant:novo` (provisiona), `tenant:adotar`, `tenant:doctor` (diagnostica), `tenant:status` (mostra a
+  versão no ar de cada escritório e sinaliza quem não implantou um release) e os laços `*:all`.
+- **Backups:** rotina diária com destino externo e **teste de restauração** (`backup:dump`,
+  `restore:verificar`, `backup:agendar`).
+- **Agendamentos (pg_cron, em produção):** oito jobs no banco —
 
-  As rotas HTTP são protegidas por Bearer `CRON_SECRET` (comparação em tempo constante). Como os jobs 2
-  e 3 carregam o segredo no header, eles **não vivem numa migration** (seria commitá-lo). São recriados
+  | Job | Agenda | O que faz |
+  |---|---|---|
+  | `gerar-mensalidades-mensal` | `0 6 1 * *` | Chama a função SQL `gerar_mensalidades_automatico()`. |
+  | `gerar-obrigacoes-mensal` | `0 12 1 * *` | `POST /api/cron/gerar-obrigacoes`. |
+  | `monitorar-receita-diaria` | `0 8 * * *` | `POST /api/cron/monitorar-receita` (RF-084). |
+  | `tarefas-recorrentes-diaria` | `0 9 * * *` | `POST /api/cron/tarefas-recorrentes`. |
+  | `regua-cobranca-diaria` | `0 12 * * *` | `POST /api/cron/regua-cobranca`. |
+  | `followup-proposta-diaria` | `0 12 * * *` | `POST /api/cron/followup-proposta` (RF-007). |
+  | `sincronizar-boletos-diaria` | `0 14 * * *` | `POST /api/cron/sincronizar-boletos` (cobre webhook perdido). |
+  | `entregar-webhooks` | `*/5 * * * *` | `POST /api/cron/entregar-webhooks` (outbox de webhooks de saída). |
+
+  As rotas HTTP são protegidas por Bearer `CRON_SECRET` (comparação em tempo constante). Como os jobs
+  carregam o segredo no header, eles **não vivem numa migration** (seria commitá-lo). São recriados
   pelo script idempotente **`npm run cron:bootstrap`** (lê `CRON_SECRET` e `APP_URL` do ambiente,
   preserva o `jobid`, aceita `--dry-run`). **Rodar após todo restore de banco** — sem os jobs, a régua e
   a geração de obrigações param em silêncio. Ver [`DEPLOY.md`](DEPLOY.md#41-jobs-agendados-pg_cron--rodar-após-qualquer-restore-de-banco).
@@ -682,14 +807,50 @@ clientes.
 
 | Rota | Função |
 |---|---|
-| `GET /api/health` | Healthcheck. |
-| `POST /api/webhooks/zapi/[secret]` | Recebe eventos do WhatsApp (mensagens, status). |
+### 6.1 Rotas internas
+
+| Rota | Função |
+|---|---|
+| `GET /api/health` | Healthcheck — devolve a **versão no ar** (é como se confere o que foi publicado). |
+| `POST /api/webhooks/zapi/[secret]` | Recebe eventos do WhatsApp pela Z-API (mensagens, status). |
+| `POST /api/webhooks/whatsapp-oficial` | Recebe eventos da API oficial. `GET` faz a verificação do webhook na Meta; `POST` valida a assinatura `X-Hub-Signature-256`. |
 | `POST /api/webhooks/clicksign` | Recebe eventos de assinatura de documentos. |
 | `POST /api/webhooks/boleto/[secret]` | Recebe eventos de pagamento de boleto (baixa automática). |
-| `POST /api/cron/regua-cobranca` | Execução agendada da régua de cobrança (Bearer `CRON_SECRET`). |
-| `POST /api/cron/gerar-obrigacoes` | Geração mensal das instâncias de obrigações (Bearer `CRON_SECRET`). |
-| `POST /api/cron/followup-proposta` | Disparo diário do follow-up de propostas — RF-007 (Bearer `CRON_SECRET`). |
 | `GET /api/atendimento/midia/[id]` | Serve a mídia de atendimento (com controle de acesso). |
+
+### 6.2 Rotinas agendadas (pg_cron → Bearer `CRON_SECRET`)
+
+| Rota | Função |
+|---|---|
+| `POST /api/cron/gerar-obrigacoes` | Geração mensal das instâncias de obrigações. |
+| `POST /api/cron/regua-cobranca` | Execução diária da régua de cobrança. |
+| `POST /api/cron/followup-proposta` | Follow-up diário de propostas (RF-007). |
+| `POST /api/cron/tarefas-recorrentes` | Materializa as tarefas recorrentes do dia. |
+| `POST /api/cron/sincronizar-boletos` | Reconciliação diária dos boletos pagos (cobre webhook perdido). |
+| `POST /api/cron/monitorar-receita` | Reconsulta a situação cadastral/Simples dos clientes (RF-084). |
+| `POST /api/cron/entregar-webhooks` | Entrega/retenta os webhooks de saída da fila (outbox). |
+
+> A fonte de verdade dos jobs é `scripts/bootstrap-cron.mjs`. Rodar com `--dry-run` **antes** do
+> comando real: é o que impede subir um segredo errado e derrubar todas as rotinas com 401.
+
+### 6.3 API pública `/api/v1` (RF-080)
+
+Autenticada por **chave de API com escopos** (a chave é guardada como *hash*), com paginação, filtros
+e *rate limit*. Documentação viva em `/api/v1/openapi.json` e página de referência em `/docs`.
+
+| Rota | Função |
+|---|---|
+| `GET /api/v1/ping` | Verificação da chave e dos escopos. |
+| `GET · POST /api/v1/clientes` · `GET · PATCH /api/v1/clientes/[id]` | Leitura e escrita de cadastro. |
+| `GET · POST /api/v1/titulos` · `GET · PATCH /api/v1/titulos/[id]` · `POST …/baixa` | Financeiro: títulos e baixa. |
+| `GET · POST /api/v1/boletos` | Emissão e consulta de boletos. |
+| `GET · POST /api/v1/obrigacoes` · `GET · PATCH /api/v1/obrigacoes/[id]` | Obrigações e sua entrega. |
+| `GET · POST /api/v1/documentos` | Documentos do cliente. |
+| `GET /api/v1/eventos` | Catálogo dos eventos disponíveis para webhook. |
+
+**Webhooks de saída (RF-083):** assinados por **HMAC**, com *outbox* e retentativa, log de entregas com
+reenvio pela tela, deduplicação por `id`/`timestamp`, evento de teste e proteção anti-SSRF. Configuração
+em Configurações → Webhooks de saída.
 
 ---
 
@@ -719,22 +880,55 @@ clientes.
   teste de restauração *(v6.3.0)*.
 - **Exportação de relatórios (RF-075)** — XLSX/PDF/CSV em todo relatório tabular. *(v6.4.0)*
 
-**Construído, ativação pendente:**
-- **Boletos** (Inter/Asaas) — código completo; aguarda conta ativa no provedor para operar em produção.
-  É o único item do ROADMAP ainda em andamento (V7.4), e o bloqueio é externo — não há o que implementar.
+**Entregue depois da revisão anterior (v6.22 → v6.83):**
+- **Cadastro do cliente completo** — vínculos entre empresas (grupo econômico, matriz/filial e sócios
+  em comum por CPF), campos customizáveis por escritório com validação e obrigatoriedade, flags fiscais
+  tri-state (folha/ICMS/ISS), campo Porte e aviso de CPF/CNPJ duplicado com link para o cliente
+  existente. *(RF-026, RF-027)*
+- **Legalização/societário** — processos por órgão com protocolo e prazo, templates societários, Termo
+  de acervo (NBC PG 01) e **comunicação automática de status ao cliente** com opt-out. *(RF-011 a RF-014)*
+- **GED completo** — taxonomia, versionamento, busca por metadados **e no conteúdo dos PDFs**
+  (full-text em português), retenção por tipo com alerta de expurgo e pacote de devolução de acervo na
+  rescisão. Falta apenas o **OCR** de digitalizações. *(RF-060 a RF-064)*
+- **Financeiro — boletos em produção** pelo Banco Inter: emissão, 2ª via em PDF (equipe e portal), baixa
+  automática por webhook, cadastro do webhook pela própria tela, sincronização diária, cancelamento de
+  boleto e de título e alteração de vencimento. Mais **conciliação parcial** com tolerância configurável,
+  **suspensão por inadimplência** com alçada e trava do portal, **cobrança avulsa**, **aprovação de
+  despesa por alçada** e **rentabilidade por cliente, regime e porte**. *(RF-081, RF-072)*
+- **Produtividade e satisfação** — relatório de produtividade por colaborador e **NPS** (coleta no
+  portal + painel da equipe). *(RF-073, RF-074)*
+- **Portal do cliente instalável (PWA)** — manifest, ícones, service worker e página offline. *(RF-056)*
+- **API pública e automação** — API REST `/api/v1` com chaves por escopo, webhooks de saída assinados
+  com outbox/retry, OpenAPI e guia de integração. *(RF-080, RF-083)*
+- **Monitoramento da Receita** — situação cadastral e opção pelo Simples/MEI persistidas, com reconsulta
+  diária e alerta na mudança. *(RF-084)*
+- **Segurança** — **2FA (TOTP)** opcional por pessoa e **exigível de toda a equipe** por escritório. *(RNF-09, parcial)*
+- **Observabilidade** — registro de erros server-side (Configurações → Observabilidade) e **monitor de
+  crons** (*dead-man switch*), que avisa quando uma rotina para de rodar. *(RNF-07, parcial)*
+- **Matriz de obrigações curada** — base legal, fonte e observação por obrigação, e **vigência** (começo
+  e fim), para a matriz não gerar obrigação fora da janela da norma.
+- **WhatsApp com dois provedores** — Z-API e API oficial da Meta convivem, à escolha do escritório;
+  na oficial, envio e recebimento de texto, mídia e status, e **templates aprovados por fluxo**.
 
 **Em aberto / próximos:**
-- **Onboarding — Legalização/societário (F2):** processos por órgão e protocolos; templates por tipo de
-  serviço societário; comunicação automática de status; transferência de contabilidade (NBC PG 01).
-- **Financeiro:** aprovação de pagamento; na conciliação, casamento parcial (1 título ↔ vários
-  movimentos), tolerância de valor e conferência de saldo extrato × sistema.
-- **Obrigações:** curadoria da matriz e flags fiscais explícitas no cadastro do cliente (hoje derivadas
-  de nº de funcionários e inscrições).
+- **WhatsApp — paridade nos proativos (Sub-projeto 3, fatias 3B e 3C):** ligar à camada de template os
+  fluxos de cobrança manual, legalização, comunicados, follow-up e NFS-e em lote. Sem isso, quem escolhe
+  a API oficial só tem a **régua de cobrança** entre os envios proativos.
+- **GED:** OCR de digitalizações (imagens e PDF escaneado) — exige serviço externo de OCR.
+- **Integrações:** CNDs (federal/estadual/trabalhista/FGTS) e camada de IA (RF-085); Domínio no sentido
+  inverso (SALDO → Domínio) e captura de guias.
+- **RNF-07:** métrica de latência/uptime (APM, percentis, alerta de p95) — erro e liveness de rotinas já
+  estão cobertos.
+- **RNF-09:** SSO corporativo (Google Workspace / Microsoft 365) — o MFA já está entregue.
+- **RF-053:** rastrear "pagou" no portal, não só "visualizou/baixou".
 
 **Para comercializar — não é código:**
-- **Pentest**, **termos de uso**, **contrato SaaS** e **SLA formal**. Os 10 marcos do
-  [ROADMAP](../ROADMAP.md) estão concluídos; estes são o que falta para vender a plataforma a outros
-  escritórios, e dependem de trabalho jurídico e de auditoria externa.
+- **Pentest**, **termos de uso**, **contrato SaaS** e **SLA formal**. Dependem de trabalho jurídico e de
+  auditoria externa.
+- **Templates de WhatsApp aprovados pela Meta**, para o escritório que optar pela API oficial usar os
+  envios proativos. A aprovação acontece no Business Manager, com prazo e possibilidade de reprovação.
+- **Apps de marca** nos portais Zapier/Make/n8n — a integração já funciona via OpenAPI e webhooks; o que
+  falta é a publicação nas plataformas.
 
 ---
 
