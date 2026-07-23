@@ -1,7 +1,56 @@
 import { describe, it, expect, vi } from "vitest";
-import { montarEnvioTextoOficial, montarEnvioMidiaOficial, criarAdaptadorOficial } from "@/lib/whatsapp/oficial";
+import {
+  montarEnvioTextoOficial,
+  montarEnvioMidiaOficial,
+  montarEnvioTemplateOficial,
+  criarAdaptadorOficial,
+} from "@/lib/whatsapp/oficial";
 
 const CFG = { phoneNumberId: "123456", token: "TKN" };
+
+describe("montarEnvioTemplateOficial", () => {
+  it("monta o envio de template com parâmetros posicionais", () => {
+    const req = montarEnvioTemplateOficial(CFG, "5511999999999", {
+      nome: "cobranca_vencida",
+      idioma: "pt_BR",
+      params: ["Padaria X", "R$ 1.200,00", "10/08"],
+    });
+    expect(req.url).toBe("https://graph.facebook.com/v21.0/123456/messages");
+    expect(req.headers.Authorization).toBe("Bearer TKN");
+    expect(JSON.parse(req.body)).toEqual({
+      messaging_product: "whatsapp",
+      to: "5511999999999",
+      type: "template",
+      template: {
+        name: "cobranca_vencida",
+        language: { code: "pt_BR" },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              { type: "text", text: "Padaria X" },
+              { type: "text", text: "R$ 1.200,00" },
+              { type: "text", text: "10/08" },
+            ],
+          },
+        ],
+      },
+    });
+  });
+
+  it("sem parâmetros não manda components (template estático)", () => {
+    const req = montarEnvioTemplateOficial(CFG, "55", { nome: "aviso", idioma: "pt_BR", params: [] });
+    expect(JSON.parse(req.body).template.components).toBeUndefined();
+  });
+});
+
+describe("capacidade do provedor", () => {
+  it("a oficial exige template fora da janela e implementa enviarTemplate", () => {
+    const a = criarAdaptadorOficial(CFG);
+    expect(a.exigeTemplateForaDaJanela).toBe(true);
+    expect(typeof a.enviarTemplate).toBe("function");
+  });
+});
 
 describe("montarEnvioTextoOficial", () => {
   it("monta URL, Bearer e corpo de texto (Cloud API)", () => {
