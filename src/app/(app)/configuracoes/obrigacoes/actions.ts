@@ -234,6 +234,9 @@ export async function semearMatrizPadrao(): Promise<{ ok?: boolean; erro?: strin
     base_legal: o.baseLegal,
     fonte_url: o.fonteUrl,
     observacao_curadoria: o.observacaoCuradoria,
+    // Omitido na seed = ligada. Desligada é a que exige análise caso a caso (DIRBI, DeSTDA):
+    // entra documentada, mas sem gerar instância antes de o escritório decidir.
+    ativa: o.ativa ?? true,
     // revisada_em fica nulo: semear não é conferir.
   }));
   if (novas.length > 0) {
