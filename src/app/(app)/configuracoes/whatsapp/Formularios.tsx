@@ -11,6 +11,7 @@ export function FormWhatsapp({
   oficialConfigurado,
   oficialAppSecretConfigurado,
   oficialVerifyToken,
+  oficialWabaId,
 }: {
   provedor: string;
   instance: string;
@@ -19,6 +20,7 @@ export function FormWhatsapp({
   oficialConfigurado: boolean;
   oficialAppSecretConfigurado: boolean;
   oficialVerifyToken: string;
+  oficialWabaId: string;
 }) {
   const [estado, action, pend] = useActionState<EstadoWa, FormData>(salvarConfigWhatsapp, {});
   const [prov, setProv] = useState(provedor === "oficial" ? "oficial" : "zapi");
@@ -62,8 +64,8 @@ export function FormWhatsapp({
         ) : (
           <>
             <p className="rounded border border-atencao-borda bg-atencao-fundo px-3 py-2 text-xs text-atencao">
-              A API oficial exige <strong>templates aprovados</strong> para mensagens fora da janela de 24h — por ora,
-              cobre respostas de atendimento; régua/avisos ainda dependem dos templates (em breve).
+              A API oficial exige <strong>templates aprovados</strong> para mensagens fora da janela de 24h. Vincule um
+              template a cada fluxo na seção <strong>Templates por fluxo</strong>, abaixo.
             </p>
             <label className="block text-sm">
               <span className="text-cinza">Phone Number ID</span>
@@ -72,6 +74,10 @@ export function FormWhatsapp({
                 defaultValue={oficialPhoneNumberId}
                 className={`${controleCls()} mt-1 w-full`}
               />
+            </label>
+            <label className="block text-sm">
+              <span className="text-cinza">WABA ID (conta do WhatsApp Business — para listar os templates)</span>
+              <input name="oficial_waba_id" defaultValue={oficialWabaId} className={`${controleCls()} mt-1 w-full`} />
             </label>
             <label className="block text-sm">
               <span className="text-cinza">

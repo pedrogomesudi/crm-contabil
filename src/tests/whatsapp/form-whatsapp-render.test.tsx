@@ -12,7 +12,7 @@ describe("FormWhatsapp", () => {
         oficialPhoneNumberId=""
         oficialConfigurado={false}
         oficialAppSecretConfigurado={false}
-        oficialVerifyToken=""
+        oficialVerifyToken="" oficialWabaId=""
       />,
     );
     expect(html).toContain("Z-API");
@@ -29,7 +29,7 @@ describe("FormWhatsapp", () => {
         oficialPhoneNumberId=""
         oficialConfigurado={false}
         oficialAppSecretConfigurado={false}
-        oficialVerifyToken=""
+        oficialVerifyToken="" oficialWabaId=""
       />,
     );
     expect(html).toContain("Verify Token");
