@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Voltar } from "@/components/ui/Voltar";
 import { controleCls } from "@/components/ui/Campo";
 import { FormDadosPagamento } from "@/components/nfse/FormDadosPagamento";
 import { salvarAlcada, salvarConfigSuspensao } from "./actions";
@@ -22,6 +23,7 @@ export default async function ConfigPagamentoPage() {
   const piso = (cfg?.suspensao_valor_minimo as number | null) ?? null;
   return (
     <Container largura="estreita" className="space-y-5 p-4">
+      <Voltar href="/configuracoes" label="Configurações" />
       <PageHeader titulo="Dados de pagamento" subtitulo="PIX e dados bancários enviados ao cliente com a NFS-e" />
       <FormDadosPagamento inicial={data ?? null} />
       <form action={salvarAlcada} className="max-w-md space-y-2 rounded-lg border border-linha bg-white p-4">

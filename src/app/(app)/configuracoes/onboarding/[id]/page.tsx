@@ -2,6 +2,7 @@ import { Container } from "@/components/ui/Container";
 import { notFound, redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Voltar } from "@/components/ui/Voltar";
 import { EditorTemplate } from "../EditorTemplate";
 import { obterTemplate } from "@/app/(app)/onboarding/template-actions";
 
@@ -13,6 +14,7 @@ export default async function EditorTemplatePage({ params }: { params: Promise<{
   if (!template) notFound();
   return (
     <Container largura="padrao" className="space-y-5 p-4">
+      <Voltar href="/configuracoes/onboarding" label="Template de onboarding" />
       <PageHeader titulo={template.nome} subtitulo="Blocos e itens do template" />
       <EditorTemplate template={template} />
     </Container>

@@ -1,4 +1,5 @@
 import { Container } from "@/components/ui/Container";
+import { Voltar } from "@/components/ui/Voltar";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { podeConfigurarWhatsapp } from "@/lib/clientes/permissoes";
@@ -18,6 +19,7 @@ export default async function ConfigWhatsappPage() {
 
   return (
     <Container largura="estreita" className="space-y-4 p-4">
+      <Voltar href="/configuracoes" label="Configurações" />
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">WhatsApp</h1>
       <FormWhatsapp {...cfg} />
       {cfg.provedor === "oficial" && (
