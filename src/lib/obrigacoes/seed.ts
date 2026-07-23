@@ -21,6 +21,9 @@ export type ObrigacaoSeed = {
   // gerar instância até o escritório decidir que se aplica. Melhor uma linha desligada na
   // matriz do que uma cobrança no calendário de quem não deve nada.
   ativa?: boolean;
+  // Janela de existência, em competência. Omitido = sem limite.
+  vigenteDe?: string | null;
+  vigenteAte?: string | null;
   // Curadoria: a norma que fixa o prazo. É o que permite auditar se a regra ainda vale —
   // e o que a tela mostra ao lado do vencimento.
   baseLegal: string;

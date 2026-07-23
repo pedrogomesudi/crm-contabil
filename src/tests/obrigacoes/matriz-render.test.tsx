@@ -34,6 +34,8 @@ const linhas: ObrigacaoRow[] = [
     baseLegal: "Resolução CGSN nº 140/2018",
     fonteUrl: "",
     observacaoCuradoria: "",
+    vigenteDe: "",
+    vigenteAte: "",
     revisadaEm: null,
     revisadaPorNome: null,
     estadoRevisao: "nunca",

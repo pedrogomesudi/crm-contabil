@@ -46,6 +46,8 @@ const ROTULO_CAMPO: Record<string, string> = {
   vencAnoOffset: "anos após a competência",
   antecipa: "antecipa para dia útil",
   baseLegal: "base legal",
+  vigenteDe: "vigente a partir de",
+  vigenteAte: "vigente até",
 };
 
 const mostrar = (v: unknown): string => {

@@ -8,6 +8,31 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.82.0] — 2026-07-23
+
+Matriz de obrigações — vigência (curadoria, Fatia C1).
+
+### Adicionado
+
+- **Obrigação passa a ter começo e fim.** Cada linha da matriz ganha **vigente de** e **vigente até**,
+  e o calendário deixa de gerar a obrigação fora dessa janela. Até aqui a matriz gerava para sempre: a
+  EFD-Contribuições continuaria nascendo depois de 2027, quando PIS e COFINS deixam de existir, e uma
+  obrigação nova não tinha como esperar a data em que passa a valer.
+- A vigência é comparada por **competência**, não por vencimento — a obrigação da competência 12/2026
+  é devida mesmo vencendo em 2027, porque o que conta é o período do fato gerador.
+- Vazio dos dois lados significa "sem limite": as 16 obrigações atuais continuam exatamente como
+  estavam. Os dois campos entram no **painel de divergências** (quem define que uma obrigação acaba é
+  a lei, não a preferência do escritório).
+
+(Migration `0134`.)
+
+### Nota sobre a Reforma Tributária
+
+A fatia que estava prevista para adicionar CBS/IBS à matriz **não existe**: pelo Ato Conjunto
+RFB/CGIBS nº 1/2025, a obrigação de 2026 é destacar os tributos **no documento fiscal**, não uma
+declaração com vencimento. O diagnóstico completo — incluindo as datas de transição e o estado do
+emissor de NFS-e — está em `docs/superpowers/specs/2026-07-23-reforma-tributaria-diagnostico-design.md`.
+
 ## [6.81.0] — 2026-07-23
 
 Matriz de obrigações — cobertura (Fatia B), com uma correção importante da fatia anterior.
