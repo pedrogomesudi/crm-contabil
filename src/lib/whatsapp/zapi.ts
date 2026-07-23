@@ -111,6 +111,9 @@ export async function statusConexao(cfg: ZapiConfig): Promise<{ conectado: boole
 // Adaptador Z-API para a interface ProvedorWhatsapp — fecha sobre a config decifrada.
 export function criarAdaptadorZapi(cfg: ZapiConfig): ProvedorWhatsapp {
   return {
+    // A Z-API não tem janela nem template: texto livre sempre. É opção permanente,
+    // não legado — a camada proativa preserva exatamente este comportamento.
+    exigeTemplateForaDaJanela: false,
     enviarTexto: (telefone, texto) => enviarTexto(cfg, telefone, texto),
     enviarMidia: (telefone, midia) => enviarMidiaZapi(cfg, telefone, midia),
     statusConexao: () => statusConexao(cfg),

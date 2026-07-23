@@ -8,6 +8,33 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.76.0] — 2026-07-23
+
+WhatsApp — templates aprovados na API oficial (Sub-projeto 3, Fatia 3A). **Paridade entre provedores:**
+Z-API e API oficial seguem como opções permanentes, e cada escritório escolhe a sua.
+
+### Adicionado
+
+- **Templates por fluxo (API oficial).** Fora da janela de 24h, a API oficial só aceita mensagens por
+  **template aprovado** pela Meta — o que deixava a régua de cobrança e os avisos indisponíveis para
+  quem escolhe a oficial. Agora, em **Configurações → WhatsApp** (provedor oficial), o admin informa o
+  **WABA ID** e vincula um template a cada fluxo, escolhendo numa lista que vem **da própria Meta com o
+  status** (aprovado, pendente, reprovado). Cada fluxo mostra a **ordem dos parâmetros** que o template
+  deve seguir. Sem WABA ID ou sem permissão de listagem, dá para informar o nome do template à mão.
+  (Migration `0132`.)
+- **Régua de cobrança na API oficial.** A régua é o primeiro fluxo ligado: envia por template quando o
+  provedor é o oficial e segue com **texto livre, idêntico ao de hoje, na Z-API**. Os demais fluxos
+  (cobrança manual, legalização, comunicados, follow-up e NFS-e) entram nas próximas fatias.
+
+### Interno
+
+- O envio proativo passou a ter uma **camada de política** própria: os fluxos entregam o texto livre e os
+  parâmetros, e ela decide entre texto e template consultando a **capacidade** do provedor — nunca o nome
+  dele. Fluxos que costumam ocorrer com conversa viva (cobrança manual, legalização, follow-up) usam o
+  texto livre quando o cliente falou nas últimas 24h; os de disparo em lote usam sempre template.
+- Quando falta template configurado, o envio **não acontece** e o motivo fica registrado em
+  Configurações → Observabilidade, sem derrubar o restante do lote.
+
 ## [6.75.0] — 2026-07-22
 
 WhatsApp oficial — recebimento de mídia (Fatia 2B). **Fecha o Sub-projeto 2 (inbound).**

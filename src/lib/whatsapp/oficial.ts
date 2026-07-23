@@ -1,4 +1,4 @@
-import type { MidiaEnvio, ProvedorWhatsapp } from "./tipos";
+import type { MidiaEnvio, ProvedorWhatsapp, TemplateEnvio } from "./tipos";
 
 export type OficialConfig = { phoneNumberId: string; token: string; versao?: string };
 
@@ -43,9 +43,47 @@ export function montarEnvioMidiaOficial(
   };
 }
 
-// Adaptador da API oficial (Cloud API). Texto + mídia + status.
+// Monta o envio de template da Cloud API (puro, testável). Fora da janela de 24h a Meta só
+// aceita template aprovado: o corpo é fixo pela aprovação e nós só preenchemos os parâmetros.
+export function montarEnvioTemplateOficial(
+  cfg: OficialConfig,
+  telefone: string,
+  t: TemplateEnvio,
+): { url: string; headers: Record<string, string>; body: string } {
+  const template: Record<string, unknown> = { name: t.nome, language: { code: t.idioma } };
+  if (t.params.length > 0) {
+    template.components = [{ type: "body", parameters: t.params.map((p) => ({ type: "text", text: p })) }];
+  }
+  return {
+    url: `${baseUrl(cfg)}/${cfg.phoneNumberId}/messages`,
+    headers: { Authorization: `Bearer ${cfg.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ messaging_product: "whatsapp", to: telefone, type: "template", template }),
+  };
+}
+
+// Adaptador da API oficial (Cloud API). Texto + mídia + template + status.
 export function criarAdaptadorOficial(cfg: OficialConfig): ProvedorWhatsapp {
   return {
+    exigeTemplateForaDaJanela: true,
+    enviarTemplate: async (telefone, t) => {
+      const req = montarEnvioTemplateOficial(cfg, telefone, t);
+      try {
+        const res = await fetch(req.url, {
+          method: "POST",
+          headers: req.headers,
+          body: req.body,
+          signal: AbortSignal.timeout(15000),
+        });
+        const corpo = await res.json().catch(() => null);
+        if (!res.ok) return { ok: false, erro: `WhatsApp oficial HTTP ${res.status}`, resposta: corpo };
+        return { ok: true, resposta: corpo };
+      } catch (e) {
+        return {
+          ok: false,
+          erro: e instanceof Error && e.name === "TimeoutError" ? "Tempo esgotado." : "Erro de rede.",
+        };
+      }
+    },
     enviarTexto: async (telefone, texto) => {
       const req = montarEnvioTextoOficial(cfg, telefone, texto);
       try {
