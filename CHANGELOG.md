@@ -8,6 +8,23 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.79.0] — 2026-07-23
+
+Configurações — o hub deixa de ser uma lista plana.
+
+### Alterado
+
+- **As 27 telas de Configurações agora vêm agrupadas por tema**, em oito seções com uma linha
+  dizendo o que cada uma reúne: escritório e equipe, clientes e cadastro, comercial, financeiro e
+  fiscal, comunicação, processos e prazos, integrações, e segurança e conformidade. Antes era uma
+  lista de duas colunas na ordem em que as telas foram criadas — achar "Boletos" ou "SLA" era
+  varredura visual. No topo há um **índice** que leva direto a cada seção.
+- **Toda tela de configuração tem botão de volta.** Dezessete já tinham; as outras nove (WhatsApp,
+  NFS-e, boletos, dados de pagamento, marca, matriz de obrigações, onboarding, legalização) exigiam o
+  botão do navegador. Telas de detalhe voltam para a lista de onde vieram, não para o hub.
+- O cartão do WhatsApp deixa de dizer "(Z-API)" — desde a 6.72.0 o provedor é escolhido por
+  escritório, e desde a 6.78.0 os dois têm os mesmos recursos.
+
 ## [6.78.0] — 2026-07-23
 
 WhatsApp — NFS-e em lote com documento anexo (Sub-projeto 3, Fatia 3C). **Fecha o sub-projeto:** os
