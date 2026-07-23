@@ -29,6 +29,8 @@ export type ObrigacaoRow = {
   baseLegal: string;
   fonteUrl: string;
   observacaoCuradoria: string;
+  vigenteDe: string;
+  vigenteAte: string;
   revisadaEm: string | null;
   revisadaPorNome: string | null;
   // Derivado no servidor: o cliente não conhece "hoje" sem arriscar divergir da hidratação.
@@ -82,6 +84,8 @@ export async function listarMatriz(): Promise<ObrigacaoRow[]> {
     baseLegal: (r.base_legal as string | null) ?? "",
     fonteUrl: (r.fonte_url as string | null) ?? "",
     observacaoCuradoria: (r.observacao_curadoria as string | null) ?? "",
+    vigenteDe: ((r.vigente_de as string | null) ?? "").slice(0, 10),
+    vigenteAte: ((r.vigente_ate as string | null) ?? "").slice(0, 10),
     revisadaEm: (r.revisada_em as string | null) ?? null,
     revisadaPorNome: nomePorId.get((r.revisada_por as string | null) ?? "") ?? null,
     estadoRevisao: estadoRevisao((r.revisada_em as string | null) ?? null, hoje),
@@ -115,6 +119,8 @@ export async function salvarObrigacao(
     base_legal: input.baseLegal.trim() || null,
     fonte_url: input.fonteUrl.trim() || null,
     observacao_curadoria: input.observacaoCuradoria.trim() || null,
+    vigente_de: input.vigenteDe.trim() || null,
+    vigente_ate: input.vigenteAte.trim() || null,
   };
   const { error } = input.id
     ? await supabase.from("obrigacao").update(row).eq("id", input.id)
@@ -169,6 +175,8 @@ export async function divergenciasDoPadrao(): Promise<ResultadoDiff> {
       vencAnoOffset: l.vencAnoOffset,
       antecipa: l.antecipa,
       baseLegal: l.baseLegal || null,
+      vigenteDe: l.vigenteDe || null,
+      vigenteAte: l.vigenteAte || null,
     })),
     MATRIZ_PADRAO,
   );
@@ -188,6 +196,8 @@ const COLUNA_DE: Record<string, string> = {
   vencAnoOffset: "venc_ano_offset",
   antecipa: "antecipa",
   baseLegal: "base_legal",
+  vigenteDe: "vigente_de",
+  vigenteAte: "vigente_ate",
 };
 
 // Aplica UMA divergência — item a item, nunca em massa: sobrescrever tudo apagaria ajuste
@@ -237,6 +247,8 @@ export async function semearMatrizPadrao(): Promise<{ ok?: boolean; erro?: strin
     // Omitido na seed = ligada. Desligada é a que exige análise caso a caso (DIRBI, DeSTDA):
     // entra documentada, mas sem gerar instância antes de o escritório decidir.
     ativa: o.ativa ?? true,
+    vigente_de: o.vigenteDe ?? null,
+    vigente_ate: o.vigenteAte ?? null,
     // revisada_em fica nulo: semear não é conferir.
   }));
   if (novas.length > 0) {

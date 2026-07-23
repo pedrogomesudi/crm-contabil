@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   obrigacaoAplica,
   instanciasDaCompetencia,
+  vigenteNaCompetencia,
   type ObrigacaoMatriz,
   type ClienteFiscal,
 } from "@/lib/obrigacoes/geracao";
@@ -85,5 +86,40 @@ describe("instanciasDaCompetencia", () => {
     expect(instanciasDaCompetencia([trimestral], cli("simples_sem_func"), 2026, 7)).toEqual([]);
     const set = instanciasDaCompetencia([trimestral], cli("simples_sem_func"), 2026, 9);
     expect(set[0]!.competencia).toBe("2026-07-01"); // início do 3º trimestre
+  });
+});
+
+// Vigência: a obrigação tem começo e fim. Sem isso, a matriz geraria a EFD-Contribuições
+// para sempre — inclusive depois de 2027, quando PIS/COFINS deixam de existir.
+describe("vigência da obrigação", () => {
+  it("sem vigência declarada, gera como sempre (as 16 linhas de hoje não mudam)", () => {
+    expect(vigenteNaCompetencia({}, "2030-01-01")).toBe(true);
+    expect(instanciasDaCompetencia([base], cli("simples_sem_func"), 2030, 5)).toHaveLength(1);
+  });
+
+  it("competência posterior ao fim não gera — obrigação extinta some do calendário", () => {
+    const extinta = { ...base, vigenteAte: "2026-12-31" };
+    expect(instanciasDaCompetencia([extinta], cli("simples_sem_func"), 2027, 1)).toEqual([]);
+  });
+
+  it("competência anterior ao início não gera — obrigação futura não aparece antes da hora", () => {
+    const futura = { ...base, vigenteDe: "2027-01-01" };
+    expect(instanciasDaCompetencia([futura], cli("simples_sem_func"), 2026, 12)).toEqual([]);
+  });
+
+  it("no mês exato do limite, ainda gera dos dois lados", () => {
+    const janela = { ...base, vigenteDe: "2026-01-01", vigenteAte: "2026-12-31" };
+    expect(instanciasDaCompetencia([janela], cli("simples_sem_func"), 2026, 1)).toHaveLength(1);
+    expect(instanciasDaCompetencia([janela], cli("simples_sem_func"), 2026, 12)).toHaveLength(1);
+  });
+
+  it("compara COMPETÊNCIA, não vencimento", () => {
+    // Competência 12/2026 vence em 01/2027; a obrigação vigente até 12/2026 ainda é devida,
+    // porque o que conta é o período do fato gerador.
+    const ate2026 = { ...base, vigenteAte: "2026-12-31" };
+    const dez = instanciasDaCompetencia([ate2026], cli("simples_sem_func"), 2026, 12);
+    expect(dez).toHaveLength(1);
+    expect(dez[0]!.competencia).toBe("2026-12-01");
+    expect(dez[0]!.vencimentoLegal.startsWith("2027")).toBe(true);
   });
 });

@@ -9,8 +9,24 @@ export type ObrigacaoMatriz = {
   condicaoModo: "any" | "all";
   ufs: string[];
   cnaePrefixos: string[];
+  // Janela de existência da obrigação, em COMPETÊNCIA. Nulo = sem limite.
+  vigenteDe?: string | null;
+  vigenteAte?: string | null;
   regra: RegraPrazo;
 };
+
+// A obrigação existia no período do fato gerador? Compara COMPETÊNCIA, não vencimento: a
+// EFD-Contribuições da competência 12/2026 é devida mesmo vencendo em 2027, e a de 01/2027
+// não é — o que decide é o período apurado, não a data de entrega.
+export function vigenteNaCompetencia(
+  o: Pick<ObrigacaoMatriz, "vigenteDe" | "vigenteAte">,
+  competencia: string,
+): boolean {
+  const c = competencia.slice(0, 7);
+  if (o.vigenteDe && c < o.vigenteDe.slice(0, 7)) return false;
+  if (o.vigenteAte && c > o.vigenteAte.slice(0, 7)) return false;
+  return true;
+}
 export type ClienteFiscal = {
   perfil: PerfilCliente;
   uf: string | null;
@@ -58,6 +74,9 @@ export function instanciasDaCompetencia(
       if ([3, 6, 9, 12].includes(mes)) competencia = `${ano}-${String(mes - 2).padStart(2, "0")}-01`;
     } else if (mes === 1) competencia = `${ano - 1}-01-01`;
     if (!competencia) continue;
+    // Fora da vigência não se gera: obrigação extinta não pode continuar aparecendo no
+    // calendário do cliente, nem obrigação futura aparecer antes da hora.
+    if (!vigenteNaCompetencia(o, competencia)) continue;
     const v = calcularVencimento(o.regra, competencia);
     out.push({ obrigacaoId: o.id, competencia, vencimentoLegal: v.legal, vencimentoInterno: v.interno });
   }

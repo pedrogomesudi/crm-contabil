@@ -38,6 +38,9 @@ export const CAMPOS_NORMATIVOS = [
   "vencAnoOffset",
   "antecipa",
   "baseLegal",
+  // Vigência é lei, não preferência: quem define que a obrigação acaba é a norma.
+  "vigenteDe",
+  "vigenteAte",
 ] as const;
 
 export type CampoNormativo = (typeof CAMPOS_NORMATIVOS)[number];

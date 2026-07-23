@@ -27,6 +27,8 @@ const vazio: Omit<ObrigacaoRow, "id"> & { id?: string } = {
   baseLegal: "",
   fonteUrl: "",
   observacaoCuradoria: "",
+  vigenteDe: "",
+  vigenteAte: "",
   revisadaEm: null,
   revisadaPorNome: null,
   estadoRevisao: "nunca",
@@ -288,6 +290,29 @@ export function EditorMatriz({ linhas }: { linhas: ObrigacaoRow[] }) {
               rows={2}
               className={`${inp} w-full`}
             />
+            {/* Vigência por COMPETÊNCIA: obrigação que a lei extinguiu para de ser gerada a
+                partir da competência informada, sem apagar o que já existe no histórico. */}
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-xs text-cinza">
+                Vigente de
+                <input
+                  type="date"
+                  value={form.vigenteDe}
+                  onChange={(e) => setForm({ ...form, vigenteDe: e.target.value })}
+                  className={`${inp} ml-1`}
+                />
+              </label>
+              <label className="text-xs text-cinza">
+                até
+                <input
+                  type="date"
+                  value={form.vigenteAte}
+                  onChange={(e) => setForm({ ...form, vigenteAte: e.target.value })}
+                  className={`${inp} ml-1`}
+                />
+              </label>
+              <span className="text-xs text-cinza-claro">vazio = sem limite</span>
+            </div>
           </div>
 
           <div className="flex gap-2">

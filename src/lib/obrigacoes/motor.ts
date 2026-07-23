@@ -15,6 +15,8 @@ function matrizDaLinha(r: Row): ObrigacaoMatriz {
     condicaoModo: (r.condicao_modo as "any" | "all") ?? "any",
     ufs: (r.ufs as string[] | null) ?? [],
     cnaePrefixos: (r.cnae_prefixos as string[] | null) ?? [],
+    vigenteDe: (r.vigente_de as string | null) ?? null,
+    vigenteAte: (r.vigente_ate as string | null) ?? null,
     regra: {
       periodicidade: r.periodicidade as ObrigacaoMatriz["periodicidade"],
       vencDia: r.venc_dia as number,
