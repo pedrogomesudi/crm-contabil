@@ -3,161 +3,81 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { gruposDoPapel } from "@/lib/ui/configuracoes";
 
-// `papeis` restringe o item. Sem a chave, o item é só de admin.
-// O assistente entra aqui apenas pela Integração Domínio — que saiu do menu lateral e
-// passou a viver nesta seção; sem isso ele perderia o acesso.
-const ITENS: { href: string; label: string; desc: string; papeis?: string[] }[] = [
-  { href: "/usuarios", label: "Usuários", desc: "Convite, papel, departamento, superior e status da equipe." },
-  {
-    href: "/configuracoes/seguranca",
-    label: "Segurança (2FA)",
-    desc: "Exigir verificação em duas etapas de toda a equipe.",
-  },
-  {
-    href: "/configuracoes/observabilidade",
-    label: "Observabilidade",
-    desc: "Erros do sistema registrados, para diagnóstico. Só admin.",
-  },
-  {
-    href: "/integracoes/dominio",
-    label: "Integração Domínio",
-    desc: "Importação e conciliação com o sistema Domínio.",
-    papeis: ["admin", "assistente"],
-  },
-  {
-    href: "/configuracoes/marca",
-    label: "Marca do escritório",
-    desc: "Nome, CNPJ, endereço e logo usados na proposta.",
-  },
-  {
-    href: "/configuracoes/funil",
-    label: "Funil comercial",
-    desc: "Etapas do pipeline — rótulo, cor, probabilidade e ordem.",
-  },
-  {
-    href: "/configuracoes/campos-custom",
-    label: "Campos do cadastro",
-    desc: "Campos extras do cliente — texto, número, data, sim/não e lista.",
-  },
-  {
-    href: "/configuracoes/tipos-documento",
-    label: "Tipos de documento",
-    desc: "Catálogo do GED — tipos e departamento, para classificar os arquivos do cliente.",
-  },
-  {
-    href: "/configuracoes/precificacao",
-    label: "Precificação de honorários",
-    desc: "Base por regime, acréscimos, complexidade, serviços, piso e desconto.",
-  },
-  {
-    href: "/configuracoes/followup",
-    label: "Follow-up de propostas",
-    desc: "Sequência automática (e-mail ou WhatsApp) após o envio da proposta.",
-  },
-  {
-    href: "/configuracoes/nps",
-    label: "Pesquisa de satisfação (NPS)",
-    desc: "Coleta de NPS no portal: liga/desliga, periodicidade e texto da pergunta.",
-  },
-  {
-    href: "/configuracoes/receita",
-    label: "Monitoramento da Receita",
-    desc: "Reconsulta automática de situação cadastral e Simples: liga/desliga, frequência e badge.",
-  },
-  {
-    href: "/configuracoes/api",
-    label: "API pública",
-    desc: "Chaves de acesso e escopos para integrações externas via /api/v1.",
-  },
-  {
-    href: "/configuracoes/webhooks",
-    label: "Webhooks de saída",
-    desc: "URLs que recebem eventos do CRM (título pago, obrigação entregue etc.).",
-  },
-  { href: "/configuracoes/whatsapp", label: "WhatsApp (Z-API)", desc: "Credenciais do provedor e teste de conexão." },
-  { href: "/configuracoes/email", label: "E-mail", desc: "Canal de envio (SMTP ou API), remetente e teste." },
-  {
-    href: "/configuracoes/email/templates",
-    label: "Templates de e-mail",
-    desc: "Modelos com variáveis de personalização.",
-  },
-  { href: "/configuracoes/nfse", label: "NFS-e (emitente)", desc: "Dados do emitente e certificado digital." },
-  {
-    href: "/configuracoes/pagamento",
-    label: "Dados de pagamento (PIX/TED)",
-    desc: "Conta e PIX enviados ao cliente com a NFS-e.",
-  },
-  { href: "/configuracoes/boletos", label: "Boletos", desc: "Provedor de emissão (Inter ou Asaas) e credenciais." },
-  {
-    href: "/configuracoes/onboarding",
-    label: "Template de onboarding",
-    desc: "Blocos e itens do processo de entrada.",
-  },
-  {
-    href: "/configuracoes/sop",
-    label: "Modelos de processo (SOPs)",
-    desc: "Etapas que viram tarefas, em ondas paralelas e sequenciais.",
-  },
-  {
-    href: "/configuracoes/custos",
-    label: "Custo por colaborador",
-    desc: "Custo/hora com vigência — base da rentabilidade. Só admin.",
-  },
-  {
-    href: "/configuracoes/sla",
-    label: "SLA por departamento",
-    desc: "Prazo-alvo das solicitações internas, por departamento de destino.",
-  },
-  { href: "/lgpd", label: "LGPD", desc: "Tratamentos (ROPA), consentimento, retenção e direitos do titular." },
-  {
-    href: "/configuracoes/legalizacao",
-    label: "Modelos de legalização",
-    desc: "Processos societários e de legalização (etapas por órgão).",
-  },
-  {
-    href: "/configuracoes/obrigacoes",
-    label: "Matriz de obrigações",
-    desc: "Obrigações e critérios de incidência do calendário.",
-  },
-];
+export const metadata = { title: "Configurações" };
 
 export default async function ConfiguracoesHubPage() {
   const perfil = await getPerfilAtual();
   if (!perfil || !["admin", "assistente"].includes(perfil.papel)) redirect("/");
-  // Cada página de destino mantém o próprio gate: o filtro aqui é de navegação, não de segurança.
-  const itens = ITENS.filter((i) => (i.papeis ?? ["admin"]).includes(perfil.papel));
+  const grupos = gruposDoPapel(perfil.papel);
+  const total = grupos.reduce((n, g) => n + g.itens.length, 0);
+
   return (
-    <Container largura="estreita" className="space-y-5 p-4">
-      <PageHeader titulo="Configurações" subtitulo="Integrações e credenciais do sistema" />
-      {/* auto-rows-fr + h-full: todos os cards com a mesma altura, mesmo quando a descrição
-          ocupa mais linhas em um deles. Sem isso o grid vira uma escada. */}
-      <ul className="grid auto-rows-fr gap-3 sm:grid-cols-2">
-        {itens.map((i) => (
-          <li key={i.href}>
-            <Link
-              href={i.href}
-              className="flex h-full items-start justify-between gap-3 rounded-2xl border border-linha bg-white p-4 transition hover:border-cinza-claro hover:shadow-sm"
+    <Container largura="padrao" className="space-y-6 p-4">
+      <PageHeader
+        titulo="Configurações"
+        subtitulo={`${total} telas de ajuste, agrupadas por tema — do cadastro do cliente aos canais de envio`}
+      />
+
+      {/* Índice: com oito seções, rolar até o fim para saber o que existe é o que se quer evitar.
+          Âncoras puras — sem JS, e o scroll-mt das seções impede o título de encostar no topo. */}
+      {grupos.length > 1 && (
+        <nav aria-label="Ir para uma seção" className="flex flex-wrap gap-1.5 text-sm">
+          {grupos.map((g) => (
+            <a
+              key={g.id}
+              href={`#${g.id}`}
+              className="rounded-lg border border-linha bg-white px-3 py-1.5 text-cinza transition hover:bg-creme hover:text-texto"
             >
-              <span>
-                <span className="block font-medium text-texto">{i.label}</span>
-                <span className="mt-0.5 block text-xs text-cinza">{i.desc}</span>
-              </span>
-              <svg
-                className="mt-1 shrink-0 text-cinza-claro"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="m9 6 6 6-6 6" />
-              </svg>
-            </Link>
-          </li>
+              {g.titulo}
+            </a>
+          ))}
+        </nav>
+      )}
+
+      <div className="space-y-8">
+        {grupos.map((g) => (
+          <section key={g.id} id={g.id} className="scroll-mt-4 space-y-3">
+            <div className="border-b border-linha pb-2">
+              <h2 className="font-display text-base font-semibold tracking-tight text-texto">
+                {g.titulo}
+                <span className="ml-2 align-middle text-xs font-normal text-cinza-claro">{g.itens.length}</span>
+              </h2>
+              <p className="mt-0.5 text-xs text-cinza">{g.resumo}</p>
+            </div>
+            {/* auto-rows-fr + h-full: todos os cards com a mesma altura, mesmo quando a descrição
+                ocupa mais linhas em um deles. Sem isso o grid vira uma escada. */}
+            <ul className="grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {g.itens.map((i) => (
+                <li key={i.href}>
+                  <Link
+                    href={i.href}
+                    className="flex h-full items-start justify-between gap-3 rounded-2xl border border-linha bg-white p-4 transition hover:border-cinza-claro hover:shadow-sm"
+                  >
+                    <span>
+                      <span className="block font-medium text-texto">{i.label}</span>
+                      <span className="mt-0.5 block text-xs text-cinza">{i.desc}</span>
+                    </span>
+                    <svg
+                      className="mt-1 shrink-0 text-cinza-claro"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      aria-hidden="true"
+                    >
+                      <path d="m9 6 6 6-6 6" />
+                    </svg>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
         ))}
-      </ul>
+      </div>
     </Container>
   );
 }
