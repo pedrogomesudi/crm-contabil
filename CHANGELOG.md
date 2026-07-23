@@ -8,6 +8,33 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.80.0] — 2026-07-23
+
+Matriz de obrigações — curadoria (Fatia A). A matriz é de onde sai o calendário de todo cliente, e
+até aqui não havia como saber se uma regra ainda valia.
+
+### Corrigido
+
+- **DCTFWeb vencia no dia 20 na matriz padrão; a IN RFB nº 2.005/2021 fixa o dia 15.** O erro estava
+  no sistema sem nada que pudesse apontá-lo. Quem já semeou a matriz **não é corrigido
+  automaticamente** — a correção aparece no painel de divergências, para conferir e aplicar.
+
+### Adicionado
+
+- **Base legal, fonte e observação por obrigação.** Cada regra passa a carregar a norma que a
+  fundamenta, ao lado do prazo. A observação existe para o caso em que a norma não cabe no modelo —
+  a EFD-Contribuições, por exemplo, vence no *10º dia útil* do 2º mês, e o sistema só sabe dia fixo.
+- **Selo de revisão.** Cada obrigação mostra se foi conferida por alguém: *revisada*, *conferir*
+  (mais de 12 meses) ou *nunca revisada*. Um clique em **Marcar revisada** grava a data e quem
+  conferiu. As nove obrigações padrão nascem como **nunca revisadas** — a base legal que veio de
+  fábrica é ponto de partida, não conferência.
+- **Painel de divergências.** Quando o padrão do sistema muda (correção de prazo, base legal nova) e
+  a sua matriz não reflete, a diferença aparece no topo da tela com o valor de cada lado, e é
+  aplicada **item a item**. Campos que são preferência do escritório — obrigação inativa, ordem,
+  folga interna — não entram: divergir neles é o sistema funcionando.
+
+(Migration `0133`.)
+
 ## [6.79.0] — 2026-07-23
 
 Configurações — o hub deixa de ser uma lista plana.
