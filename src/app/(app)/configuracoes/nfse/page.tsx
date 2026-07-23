@@ -1,4 +1,5 @@
 import { Container } from "@/components/ui/Container";
+import { Voltar } from "@/components/ui/Voltar";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -33,6 +34,7 @@ export default async function ConfigNfsePage() {
 
   return (
     <Container largura="estreita" className="space-y-6 p-4">
+      <Voltar href="/configuracoes" label="Configurações" />
       <h1 className="font-display text-2xl font-bold tracking-tight text-texto">Configuração da NFS-e</h1>
 
       <section className="space-y-3 rounded-lg border border-linha bg-white p-4">

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Voltar } from "@/components/ui/Voltar";
 import { urlLogoAtual } from "./actions";
 import { FormMarca } from "./FormMarca";
 import { FormProposta } from "./FormProposta";
@@ -25,6 +26,7 @@ export default async function MarcaPage() {
 
   return (
     <Container largura="estreita" className="space-y-5 p-4">
+      <Voltar href="/configuracoes" label="Configurações" />
       <PageHeader titulo="Marca do escritório" subtitulo="Identidade usada na proposta comercial e no whitelabel" />
       {!marca?.nome && (
         <p className="rounded-lg bg-atencao-fundo px-3 py-2 text-sm text-atencao">

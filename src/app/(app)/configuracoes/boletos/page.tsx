@@ -4,6 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Voltar } from "@/components/ui/Voltar";
 import { FormBoletos } from "./FormBoletos";
 import { PainelProntidao } from "./PainelProntidao";
 import { obterConfigBoleto, statusWebhookInter } from "./actions";
@@ -19,6 +20,7 @@ export default async function BoletosConfigPage() {
   const statusWebhook = await statusWebhookInter();
   return (
     <Container largura="estreita" className="space-y-5 p-4">
+      <Voltar href="/configuracoes" label="Configurações" />
       <PageHeader titulo="Boletos" subtitulo="Provedor de emissão (Inter ou Asaas)" />
       <PainelProntidao
         config={config}

@@ -2,6 +2,7 @@ import { Container } from "@/components/ui/Container";
 import { redirect } from "next/navigation";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Voltar } from "@/components/ui/Voltar";
 import { GerenciadorTemplates } from "./GerenciadorTemplates";
 import { ToggleAlertas } from "./ToggleAlertas";
 import { listarTemplates } from "@/app/(app)/onboarding/template-actions";
@@ -14,6 +15,7 @@ export default async function ConfigOnboardingPage() {
   const alertasAtivos = await obterAlertasAtivos();
   return (
     <Container largura="padrao" className="space-y-5 p-4">
+      <Voltar href="/configuracoes" label="Configurações" />
       <PageHeader titulo="Template de onboarding" subtitulo="Modelos de processo de entrada de clientes" />
       <section className="rounded-2xl border border-linha bg-white p-4">
         <h3 className="font-display text-sm font-semibold text-texto">Notificações de prazo</h3>
