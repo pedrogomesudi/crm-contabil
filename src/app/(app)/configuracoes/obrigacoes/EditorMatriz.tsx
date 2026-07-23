@@ -1,7 +1,8 @@
 "use client";
 import { controleCls } from "@/components/ui/Campo";
 import { useState } from "react";
-import { salvarObrigacao, excluirObrigacao, semearMatrizPadrao, type ObrigacaoRow } from "./actions";
+import { salvarObrigacao, excluirObrigacao, semearMatrizPadrao, marcarRevisada, type ObrigacaoRow } from "./actions";
+import { SeloRevisao } from "@/components/obrigacoes/CuradoriaMatriz";
 
 const PERFIS = ["mei", "simples_sem_func", "simples_com_func", "presumido_real", "pf", "*"];
 const vazio: Omit<ObrigacaoRow, "id"> & { id?: string } = {
@@ -23,6 +24,12 @@ const vazio: Omit<ObrigacaoRow, "id"> & { id?: string } = {
   comprovanteObrigatorio: true,
   ativa: true,
   ordem: 0,
+  baseLegal: "",
+  fonteUrl: "",
+  observacaoCuradoria: "",
+  revisadaEm: null,
+  revisadaPorNome: null,
+  estadoRevisao: "nunca",
 };
 
 export function EditorMatriz({ linhas }: { linhas: ObrigacaoRow[] }) {
@@ -48,6 +55,11 @@ export function EditorMatriz({ linhas }: { linhas: ObrigacaoRow[] }) {
     const r = await semearMatrizPadrao();
     setMsg(r.ok ? `Semeadas ${r.inseridas ?? 0} obrigação(ões).` : (r.erro ?? "Erro"));
     if (r.ok) location.reload();
+  }
+  async function revisar(id: string) {
+    const r = await marcarRevisada(id);
+    if (r.ok) location.reload();
+    else setMsg(r.erro ?? "Erro");
   }
   async function excluir(id: string) {
     const r = await excluirObrigacao(id);
@@ -81,13 +93,14 @@ export function EditorMatriz({ linhas }: { linhas: ObrigacaoRow[] }) {
               <th className="px-3 py-2 font-medium">Periodicidade</th>
               <th className="px-3 py-2 font-medium">Incidência</th>
               <th className="px-3 py-2 font-medium">Ativa</th>
+              <th className="px-3 py-2 font-medium">Revisão</th>
               <th className="px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
             {linhas.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-3 text-cinza">
+                <td colSpan={7} className="px-3 py-3 text-cinza">
                   Nenhuma obrigação. Use “Semear matriz padrão”.
                 </td>
               </tr>
@@ -99,8 +112,14 @@ export function EditorMatriz({ linhas }: { linhas: ObrigacaoRow[] }) {
                 <td className="px-3 py-1.5">{o.periodicidade}</td>
                 <td className="px-3 py-1.5 text-cinza">{[...o.aplicavelA, ...o.condicaoFlags].join(", ") || "—"}</td>
                 <td className="px-3 py-1.5">{o.ativa ? "Sim" : "Não"}</td>
+                <td className="px-3 py-1.5">
+                  <SeloRevisao estado={o.estadoRevisao} revisadaEm={o.revisadaEm} revisadaPorNome={o.revisadaPorNome} />
+                </td>
                 <td className="px-3 py-1.5 text-right">
-                  <button type="button" onClick={() => setForm({ ...o })} className="text-verde underline">
+                  <button type="button" onClick={() => revisar(o.id)} className="text-cinza underline">
+                    Marcar revisada
+                  </button>
+                  <button type="button" onClick={() => setForm({ ...o })} className="ml-3 text-verde underline">
                     Editar
                   </button>
                   <button type="button" onClick={() => excluir(o.id)} className="ml-3 text-negativo underline">
@@ -246,6 +265,31 @@ export function EditorMatriz({ linhas }: { linhas: ObrigacaoRow[] }) {
               ativa
             </label>
           </div>
+
+          {/* Curadoria: a norma ao lado da regra. Sem isso não há como auditar se o prazo
+              acima ainda vale — e a matriz é de onde sai o calendário de todo cliente. */}
+          <div className="space-y-2 border-t border-linha pt-2">
+            <input
+              placeholder="Base legal (ex.: IN RFB nº 2.005/2021 — dia 15 do mês seguinte)"
+              value={form.baseLegal}
+              onChange={(e) => setForm({ ...form, baseLegal: e.target.value })}
+              className={`${inp} w-full`}
+            />
+            <input
+              placeholder="Fonte (URL da norma)"
+              value={form.fonteUrl}
+              onChange={(e) => setForm({ ...form, fonteUrl: e.target.value })}
+              className={`${inp} w-full`}
+            />
+            <textarea
+              placeholder="Observação — use quando a norma não couber exatamente no vencimento acima (ex.: 10º dia útil)"
+              value={form.observacaoCuradoria}
+              onChange={(e) => setForm({ ...form, observacaoCuradoria: e.target.value })}
+              rows={2}
+              className={`${inp} w-full`}
+            />
+          </div>
+
           <div className="flex gap-2">
             <button
               type="button"

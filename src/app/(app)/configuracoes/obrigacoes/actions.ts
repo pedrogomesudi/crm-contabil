@@ -4,6 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarMatriz } from "@/lib/obrigacoes/permissoes";
 import { MATRIZ_PADRAO } from "@/lib/obrigacoes/seed";
+import { diffMatriz, estadoRevisao, type EstadoRevisao, type ResultadoDiff } from "@/lib/obrigacoes/curadoria";
 
 export type ObrigacaoRow = {
   id: string;
@@ -25,6 +26,13 @@ export type ObrigacaoRow = {
   comprovanteObrigatorio: boolean;
   ativa: boolean;
   ordem: number;
+  baseLegal: string;
+  fonteUrl: string;
+  observacaoCuradoria: string;
+  revisadaEm: string | null;
+  revisadaPorNome: string | null;
+  // Derivado no servidor: o cliente não conhece "hoje" sem arriscar divergir da hidratação.
+  estadoRevisao: EstadoRevisao;
 };
 
 async function gate() {
@@ -37,6 +45,20 @@ export async function listarMatriz(): Promise<ObrigacaoRow[]> {
   if (!(await gate())) return [];
   const supabase = await createServerSupabase();
   const { data } = await supabase.from("obrigacao").select("*").order("ordem");
+
+  // Nome do revisor em consulta à parte, e não por embed: o embed do PostgREST depende do
+  // nome da constraint e falharia inteiro (derrubando a matriz) se ela mudasse de nome.
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const idsRevisores = [...new Set((data ?? []).map((r) => r.revisada_por as string | null).filter(Boolean))];
+  const nomePorId = new Map<string, string>();
+  if (idsRevisores.length > 0) {
+    const { data: us } = await supabase
+      .from("usuarios")
+      .select("id, nome")
+      .in("id", idsRevisores as string[]);
+    for (const u of us ?? []) nomePorId.set(u.id as string, u.nome as string);
+  }
+
   return (data ?? []).map((r) => ({
     id: r.id as string,
     codigo: r.codigo as string,
@@ -57,6 +79,12 @@ export async function listarMatriz(): Promise<ObrigacaoRow[]> {
     comprovanteObrigatorio: (r.comprovante_obrigatorio as boolean) ?? true,
     ativa: r.ativa as boolean,
     ordem: r.ordem as number,
+    baseLegal: (r.base_legal as string | null) ?? "",
+    fonteUrl: (r.fonte_url as string | null) ?? "",
+    observacaoCuradoria: (r.observacao_curadoria as string | null) ?? "",
+    revisadaEm: (r.revisada_em as string | null) ?? null,
+    revisadaPorNome: nomePorId.get((r.revisada_por as string | null) ?? "") ?? null,
+    estadoRevisao: estadoRevisao((r.revisada_em as string | null) ?? null, hoje),
   }));
 }
 
@@ -84,6 +112,9 @@ export async function salvarObrigacao(
     comprovante_obrigatorio: input.comprovanteObrigatorio,
     ativa: input.ativa,
     ordem: input.ordem,
+    base_legal: input.baseLegal.trim() || null,
+    fonte_url: input.fonteUrl.trim() || null,
+    observacao_curadoria: input.observacaoCuradoria.trim() || null,
   };
   const { error } = input.id
     ? await supabase.from("obrigacao").update(row).eq("id", input.id)
@@ -97,6 +128,81 @@ export async function excluirObrigacao(id: string): Promise<{ ok?: boolean; erro
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();
   const { error } = await supabase.from("obrigacao").delete().eq("id", id);
+  if (error) return { erro: error.message };
+  revalidatePath("/configuracoes/obrigacoes");
+  return { ok: true };
+}
+
+// Curadoria é ato humano: grava QUEM conferiu e QUANDO. O sistema não se autodeclara correto.
+export async function marcarRevisada(id: string): Promise<{ ok?: boolean; erro?: string }> {
+  const perfil = await gate();
+  if (!perfil) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const { error } = await supabase
+    .from("obrigacao")
+    .update({ revisada_em: hoje, revisada_por: perfil.id })
+    .eq("id", id);
+  if (error) return { erro: error.message };
+  revalidatePath("/configuracoes/obrigacoes");
+  return { ok: true };
+}
+
+// O que o padrão do sistema diz e o banco não reflete. Só campos normativos — preferência do
+// escritório (ativa, ordem, folga interna) não entra.
+export async function divergenciasDoPadrao(): Promise<ResultadoDiff> {
+  if (!(await gate())) return { ausentes: [], divergentes: [] };
+  const linhas = await listarMatriz();
+  return diffMatriz(
+    linhas.map((l) => ({
+      codigo: l.codigo,
+      esfera: l.esfera,
+      periodicidade: l.periodicidade,
+      aplicavelA: l.aplicavelA,
+      condicaoFlags: l.condicaoFlags,
+      condicaoModo: l.condicaoModo,
+      ufs: l.ufs,
+      cnaePrefixos: l.cnaePrefixos,
+      vencDia: l.vencDia,
+      vencMesOffset: l.vencMesOffset,
+      vencMes: l.vencMes,
+      vencAnoOffset: l.vencAnoOffset,
+      antecipa: l.antecipa,
+      baseLegal: l.baseLegal || null,
+    })),
+    MATRIZ_PADRAO,
+  );
+}
+
+const COLUNA_DE: Record<string, string> = {
+  esfera: "esfera",
+  periodicidade: "periodicidade",
+  aplicavelA: "aplicavel_a",
+  condicaoFlags: "condicao_flags",
+  condicaoModo: "condicao_modo",
+  ufs: "ufs",
+  cnaePrefixos: "cnae_prefixos",
+  vencDia: "venc_dia",
+  vencMesOffset: "venc_mes_offset",
+  vencMes: "venc_mes",
+  vencAnoOffset: "venc_ano_offset",
+  antecipa: "antecipa",
+  baseLegal: "base_legal",
+};
+
+// Aplica UMA divergência — item a item, nunca em massa: sobrescrever tudo apagaria ajuste
+// deliberado do escritório, e é por medo disso que a correção nunca chegava.
+export async function aplicarDoPadrao(codigo: string, campo: string): Promise<{ ok?: boolean; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  const coluna = COLUNA_DE[campo];
+  const padrao = MATRIZ_PADRAO.find((o) => o.codigo === codigo);
+  if (!coluna || !padrao) return { erro: "Campo ou obrigação fora do padrão do sistema." };
+  const valor = (padrao as unknown as Record<string, unknown>)[campo] ?? null;
+  const supabase = await createServerSupabase();
+  const { error } = await supabase
+    .from("obrigacao")
+    .update({ [coluna]: valor })
+    .eq("codigo", codigo);
   if (error) return { erro: error.message };
   revalidatePath("/configuracoes/obrigacoes");
   return { ok: true };
@@ -125,6 +231,10 @@ export async function semearMatrizPadrao(): Promise<{ ok?: boolean; erro?: strin
     prazo_interno_dias_uteis: o.prazoInternoDiasUteis,
     antecipa: o.antecipa,
     ordem: o.ordem,
+    base_legal: o.baseLegal,
+    fonte_url: o.fonteUrl,
+    observacao_curadoria: o.observacaoCuradoria,
+    // revisada_em fica nulo: semear não é conferir.
   }));
   if (novas.length > 0) {
     const { error } = await supabase.from("obrigacao").insert(novas);
