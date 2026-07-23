@@ -42,6 +42,46 @@ describe("montarEnvioTemplateOficial", () => {
     const req = montarEnvioTemplateOficial(CFG, "55", { nome: "aviso", idioma: "pt_BR", params: [] });
     expect(JSON.parse(req.body).template.components).toBeUndefined();
   });
+
+  // NFS-e em lote: o PDF da DANFSe vai no CABEÇALHO do template (a Cloud API não aceita
+  // binário no /messages — só a referência ao media id já enviado).
+  it("com documento e media id, põe o header ANTES do body", () => {
+    const req = montarEnvioTemplateOficial(
+      CFG,
+      "5511999999999",
+      {
+        nome: "nota_fiscal",
+        idioma: "pt_BR",
+        params: ["Padaria X", "07/2026", "R$ 350,00", "10/08/2026"],
+        documento: { base64: "JVBERi0=", mime: "application/pdf", nome: "NFS-e Padaria X.pdf" },
+      },
+      "MEDIA-1",
+    );
+    const componentes = JSON.parse(req.body).template.components as { type: string; parameters: unknown[] }[];
+    // A ordem é exigência da Meta: body antes de header é recusado.
+    expect(componentes.map((c) => c.type)).toEqual(["header", "body"]);
+    expect(componentes[0]!.parameters).toEqual([
+      { type: "document", document: { id: "MEDIA-1", filename: "NFS-e Padaria X.pdf" } },
+    ]);
+    expect(componentes[1]!.parameters).toHaveLength(4);
+  });
+
+  it("sem documento não emite header (os outros cinco fluxos não regridem)", () => {
+    const req = montarEnvioTemplateOficial(CFG, "55", { nome: "aviso", idioma: "pt_BR", params: ["A"] });
+    const componentes = JSON.parse(req.body).template.components as { type: string }[];
+    expect(componentes.map((c) => c.type)).toEqual(["body"]);
+  });
+
+  it("com documento mas sem media id, não emite header (referência vazia não vai)", () => {
+    const req = montarEnvioTemplateOficial(CFG, "55", {
+      nome: "nota_fiscal",
+      idioma: "pt_BR",
+      params: ["A"],
+      documento: { base64: "x", mime: "application/pdf", nome: "n.pdf" },
+    });
+    const componentes = JSON.parse(req.body).template.components as { type: string }[];
+    expect(componentes.map((c) => c.type)).toEqual(["body"]);
+  });
 });
 
 describe("capacidade do provedor", () => {
