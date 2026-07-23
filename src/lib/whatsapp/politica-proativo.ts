@@ -23,7 +23,9 @@ export const PARAMS_FLUXO: Record<FluxoProativo, string[]> = {
   legalizacao: ["cliente", "etapa", "processo", "data"],
   comunicado: ["cliente", "titulo"],
   followup: ["cliente", "proposta"],
-  nfse: ["cliente", "competencia"],
+  // Quatro posições: sem valor e vencimento a mensagem da NFS-e sairia sem dizer quanto nem
+  // até quando. PIX/banco não entram — são fixos por escritório e cabem no corpo aprovado.
+  nfse: ["cliente", "competencia", "valor", "vencimento"],
 };
 
 const JANELA_MS = 24 * 60 * 60 * 1000;
