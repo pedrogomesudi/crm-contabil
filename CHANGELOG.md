@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.74.0] — 2026-07-22
+
+### Adicionado
+
+- **WhatsApp oficial: recebimento de mensagens (texto) e status.** Novo webhook para a API oficial
+  (WhatsApp Cloud API) com verificação e validação de assinatura; mensagens de texto do cliente e os
+  status de entrega (enviado/entregue/lido) passam a alimentar o atendimento. Configuração do App
+  Secret e do Verify Token em **Configurações → WhatsApp** (provedor oficial). Recebimento de mídia
+  vem em seguida. (Migration `0131`.)
+
 ## [6.73.0] — 2026-07-22
 
 ### Adicionado
