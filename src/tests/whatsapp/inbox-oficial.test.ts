@@ -32,16 +32,77 @@ describe("extrairMensagemOficial", () => {
     );
     expect(m).toMatchObject({ telefone: "5511999999999", texto: "oi", wamId: "wamid.X", midia: null });
   });
-  it("mídia vira marcador na 2A (midia null)", () => {
+  it("mídia sem caption mantém o marcador como texto, mas traz a mídia (2B)", () => {
     const m = extrairMensagemOficial(
       payloadMsg({ from: "5511", id: "wamid.Y", type: "image", image: { id: "MID", mime_type: "image/png" } }),
     );
-    expect(m?.midia).toBeNull();
     expect(m?.texto).toBe("[mídia]");
+    expect(m?.midia).toEqual({ tipo: "image", id: "MID", mime: "image/png", nome: null, caption: "" });
   });
   it("sem mensagem → null", () => {
     expect(extrairMensagemOficial(payloadStatus([{ id: "x", status: "sent" }]))).toBeNull();
     expect(extrairMensagemOficial({})).toBeNull();
+  });
+
+  it("extrai imagem com caption (a caption vira o texto)", () => {
+    const p = payloadMsg({
+      from: "5511999999999",
+      id: "wamid.1",
+      type: "image",
+      image: { id: "MID-1", mime_type: "image/jpeg", caption: "olha a nota" },
+    });
+    expect(extrairMensagemOficial(p)).toEqual({
+      telefone: "5511999999999",
+      texto: "olha a nota",
+      wamId: "wamid.1",
+      midia: { tipo: "image", id: "MID-1", mime: "image/jpeg", nome: null, caption: "olha a nota" },
+    });
+  });
+
+  it("extrai documento com filename e sem caption", () => {
+    const p = payloadMsg({
+      from: "5511999999999",
+      id: "wamid.2",
+      type: "document",
+      document: { id: "MID-2", mime_type: "application/pdf", filename: "nota.pdf" },
+    });
+    expect(extrairMensagemOficial(p)).toEqual({
+      telefone: "5511999999999",
+      texto: "[mídia]",
+      wamId: "wamid.2",
+      midia: { tipo: "document", id: "MID-2", mime: "application/pdf", nome: "nota.pdf", caption: "" },
+    });
+  });
+
+  it("extrai áudio", () => {
+    const p = payloadMsg({
+      from: "5511999999999",
+      id: "wamid.3",
+      type: "audio",
+      audio: { id: "MID-3", mime_type: "audio/ogg" },
+    });
+    expect(extrairMensagemOficial(p)?.midia).toEqual({
+      tipo: "audio",
+      id: "MID-3",
+      mime: "audio/ogg",
+      nome: null,
+      caption: "",
+    });
+  });
+
+  it("mídia sem id continua como marcador, sem mídia", () => {
+    const p = payloadMsg({
+      from: "5511999999999",
+      id: "wamid.4",
+      type: "image",
+      image: { mime_type: "image/jpeg" },
+    });
+    expect(extrairMensagemOficial(p)).toEqual({
+      telefone: "5511999999999",
+      texto: "[mídia]",
+      wamId: "wamid.4",
+      midia: null,
+    });
   });
 });
 

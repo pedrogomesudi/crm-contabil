@@ -8,6 +8,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.75.0] — 2026-07-22
+
+WhatsApp oficial — recebimento de mídia (Fatia 2B). **Fecha o Sub-projeto 2 (inbound).**
+
+### Adicionado
+
+- **WhatsApp oficial: recebimento de mídia.** Imagens, documentos e áudios enviados pelo cliente na
+  API oficial (WhatsApp Cloud API) passam a ser **baixados e anexados** à conversa, como já acontece
+  na Z-API — antes chegavam apenas como o marcador "[mídia]". A legenda da mídia, quando existe,
+  vira o texto da mensagem. O download resolve o `media id` na Graph API e guarda o arquivo no mesmo
+  destino do atendimento; falha no download não perde a mensagem (ela entra sem o anexo). Sem
+  migration.
+
+### Segurança
+
+- O token do provedor oficial só é enviado a **hosts oficiais da Meta** (`graph.facebook.com`,
+  `*.fbsbx.com`, `*.fbcdn.net`) — mesma regra que já restringia o Client-Token aos hosts da Z-API.
+  As proteções do download (só HTTPS, bloqueio de rede interna, teto de 20 MB em streaming, timeout
+  e recusa de redirect) valem igualmente para o canal oficial.
+
 ## [6.74.0] — 2026-07-22
 
 ### Adicionado
