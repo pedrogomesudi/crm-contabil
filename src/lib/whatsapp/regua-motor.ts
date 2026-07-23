@@ -1,5 +1,5 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
-import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
+import { criarEnviadorProativo } from "@/lib/whatsapp/proativo";
 import { aplicarTemplate, normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { formatarMoeda, formatarData } from "@/lib/format";
 import { diffDias, etapaDoDia, type EtapaAtiva } from "@/lib/whatsapp/regua";
@@ -51,8 +51,10 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
   // O WhatsApp deixa de ser obrigatório: sem ele, a régua segue só por e-mail.
   // Abortar aqui paralisaria a cobrança justamente no cenário que o fallback existe para cobrir
   // (banimento do número pela Meta).
-  const ativoWa = await adaptadorWhatsappAtivo();
-  const adaptadorWa = "erro" in ativoWa ? null : ativoWa.adaptador;
+  // O enviador resolve provedor + templates UMA vez: reler config e decifrar segredos por
+  // mensagem custaria N leituras e N decifragens por execução do cron.
+  const resolvido = await criarEnviadorProativo();
+  const envioWa = "erro" in resolvido ? null : resolvido;
 
   const { data: cfgEmail } = await admin
     .from("email_config")
@@ -62,7 +64,7 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
   const emailConfigurado = Boolean(cfgEmail?.provedor);
   const emailFallbackLigado = cfgEmail?.regua_email_fallback !== false;
 
-  if (!adaptadorWa && !(emailConfigurado && emailFallbackLigado)) {
+  if (!envioWa && !(emailConfigurado && emailFallbackLigado)) {
     return { ...base, ativa, motivo: "Nenhum canal configurado." };
   }
 
@@ -116,7 +118,7 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
 
     const emailCliente = (cl?.email ?? "").trim();
     const estado: EstadoCanal = {
-      whatsappConfigurado: Boolean(adaptadorWa),
+      whatsappConfigurado: Boolean(envioWa),
       telefone: normalizarTelefone(cl?.telefone ?? "", cl?.telefone_ddi ?? "55"),
       optOutWhatsapp: fin?.cobranca_whatsapp === false,
       emailFallbackLigado,
@@ -139,9 +141,15 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
     }
 
     // 1) WhatsApp, quando disponível.
-    if (canal === "whatsapp" && adaptadorWa && estado.telefone) {
+    if (canal === "whatsapp" && envioWa && estado.telefone) {
       const texto = aplicarTemplate(etapa.template, vars);
-      const r = await adaptadorWa.enviarTexto(estado.telefone, texto);
+      // Entrega as DUAS formas: o texto livre (o que a Z-API envia, inalterado) e os
+      // parâmetros na ORDEM de PARAMS_FLUXO.regua — cliente, valor, vencimento.
+      const r = await envioWa.enviar(estado.telefone, {
+        fluxo: "regua",
+        texto,
+        params: [vars.nome, vars.valor, vars.vencimento],
+      });
       const { error: errIns } = await admin.from("whatsapp_mensagem").insert({
         cliente_id: (t.cliente_id as string | null) ?? null,
         titulo_id: t.id as string,
