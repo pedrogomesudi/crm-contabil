@@ -8,6 +8,28 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.78.0] — 2026-07-23
+
+WhatsApp — NFS-e em lote com documento anexo (Sub-projeto 3, Fatia 3C). **Fecha o sub-projeto:** os
+seis fluxos proativos funcionam nos dois provedores, e a escolha entre Z-API e API oficial não custa
+mais nenhum recurso.
+
+### Adicionado
+
+- **Envio da NFS-e em lote pela API oficial.** É o único fluxo que manda arquivo, e fora da janela de
+  24h a Meta exige que o PDF vá como **cabeçalho de documento de um template aprovado** — formato
+  diferente do usado pelos outros cinco. Agora o DANFSe segue por esse caminho na oficial e continua
+  indo como mídia com legenda na Z-API, exatamente como sempre foi.
+
+### Alterado
+
+- **O template da NFS-e passa a ter quatro parâmetros:** `{{1}}` cliente · `{{2}}` competência ·
+  `{{3}}` valor · `{{4}}` vencimento. Com os dois anteriores a mensagem sairia sem dizer quanto nem
+  até quando — numa mensagem que é, na prática, uma cobrança. PIX e dados bancários continuam fora:
+  são fixos do escritório e cabem no corpo aprovado do template. A ordem aparece na tela de
+  **Configurações → WhatsApp**. Quem já cadastrou um template de NFS-e na Meta precisa ajustá-lo — o
+  fluxo ainda não enviava por template, então nenhum envio real usou a ordem antiga.
+
 ## [6.77.0] — 2026-07-23
 
 WhatsApp — os quatro fluxos de texto na API oficial (Sub-projeto 3, Fatia 3B). **Paridade entre

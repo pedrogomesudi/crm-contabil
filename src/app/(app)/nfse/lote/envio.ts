@@ -2,7 +2,7 @@
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
-import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
+import { criarEnviadorProativo } from "@/lib/whatsapp/proativo";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { linhasPagamento, competenciaBR, montarMensagemNota, vencimentoBR, valorBR } from "@/lib/whatsapp/notas-envio";
 import { obterDanfsePdf, caminhoDanfse } from "@/lib/nfse/danfse-cache";
@@ -63,8 +63,10 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
 
   // Sem bloqueio de reenvio: a seleção do usuário é a intenção. O selo "já enviada" e a
   // pré-seleção (só pendentes) na UI evitam reenvio acidental.
-  const ativo = await adaptadorWhatsappAtivo();
-  if ("erro" in ativo) return { status: "erro", motivo: ativo.erro, razaoSocial };
+  // O enviador é resolvido ANTES de gerar a DANFSe: sem provedor configurado, não vale
+  // pagar o custo do PDF para descobrir isso depois.
+  const enviador = await criarEnviadorProativo();
+  if ("erro" in enviador) return { status: "erro", motivo: enviador.erro, razaoSocial };
 
   const { data: dados } = await admin
     .from("dados_bancarios")
@@ -110,12 +112,18 @@ export async function enviarNotaWhatsapp(nfseId: string): Promise<ResultadoEnvio
   });
 
   const nomeArq = `NFS-e ${razaoSocial}.pdf`;
-  const r = await ativo.adaptador.enviarMidia(tel, {
-    tipo: "document",
-    base64: pdfR.pdfBase64,
-    mime: "application/pdf",
-    nome: nomeArq,
-    caption: texto,
+  const r = await enviador.enviar(tel, {
+    fluxo: "nfse",
+    texto,
+    // A ORDEM é o contrato de PARAMS_FLUXO.nfse: cliente, competência, valor, vencimento.
+    params: [
+      (cl?.responsavel_nome as string | null) || razaoSocial,
+      competenciaBR(String(nota.competencia)),
+      valorBR(Number(nota.valor)),
+      vencimento,
+    ],
+    // Na Z-API vira mídia com caption (o envio de sempre); na oficial, o cabeçalho do template.
+    midia: { tipo: "document", base64: pdfR.pdfBase64, mime: "application/pdf", nome: nomeArq, caption: texto },
   });
   const resp = (r.resposta ?? {}) as { messageId?: string; id?: string };
   await admin.from("whatsapp_mensagem").insert({

@@ -1,9 +1,16 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { adaptadorWhatsappAtivo } from "./ativo";
 import { POLITICA, decidirEnvio, dentroDaJanela, type FluxoProativo } from "./politica-proativo";
-import type { ResultadoEnvio } from "./tipos";
+import type { MidiaEnvio, ResultadoEnvio } from "./tipos";
 
-export type MensagemProativa = { fluxo: FluxoProativo; texto: string; params: string[] };
+export type MensagemProativa = {
+  fluxo: FluxoProativo;
+  texto: string;
+  params: string[];
+  // Opcional: só a NFS-e envia arquivo. No modo texto vira mídia com caption (o envio de
+  // sempre); no modo template vira o cabeçalho de documento.
+  midia?: MidiaEnvio;
+};
 export type Enviador = { enviar(telefone: string, msg: MensagemProativa): Promise<ResultadoEnvio> };
 
 // Camada de política do envio PROATIVO. Os fluxos entregam as DUAS formas da mensagem — o texto
@@ -54,9 +61,16 @@ export async function criarEnviadorProativo(): Promise<Enviador | { erro: string
         temTemplate: Boolean(tpl),
       });
 
-      if (decisao.modo === "texto") return adaptador.enviarTexto(telefone, msg.texto);
+      if (decisao.modo === "texto") {
+        return msg.midia ? adaptador.enviarMidia(telefone, msg.midia) : adaptador.enviarTexto(telefone, msg.texto);
+      }
       if (decisao.modo === "template" && tpl && adaptador.enviarTemplate) {
-        return adaptador.enviarTemplate(telefone, { nome: tpl.nome, idioma: tpl.idioma, params: msg.params });
+        return adaptador.enviarTemplate(telefone, {
+          nome: tpl.nome,
+          idioma: tpl.idioma,
+          params: msg.params,
+          documento: msg.midia ? { base64: msg.midia.base64, mime: msg.midia.mime, nome: msg.midia.nome } : undefined,
+        });
       }
       const motivo = decisao.modo === "falha" ? decisao.motivo : "Provedor sem suporte a template.";
       await registrarFalha(admin, msg.fluxo, telefone, motivo);
