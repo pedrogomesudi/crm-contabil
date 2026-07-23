@@ -3,6 +3,7 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { decifrarDominio } from "@/lib/cripto/envelope";
 import { assinaturaOficialOk, extrairMensagemOficial, extrairStatusOficial } from "@/lib/whatsapp/inbox-oficial";
 import { chaveTelefone, chaveDeNumeroCompleto } from "@/lib/whatsapp/mensagem";
+import { baixarEStorearMidiaOficial } from "@/lib/whatsapp/midia-storage";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
   const admin = createAdminSupabase();
   const { data: cfg } = await admin
     .from("whatsapp_config")
-    .select("oficial_app_secret_cifrado")
+    .select("oficial_app_secret_cifrado, oficial_token_cifrado")
     .eq("id", 1)
     .maybeSingle();
   if (!cfg?.oficial_app_secret_cifrado) return NextResponse.json({ erro: "não configurado" }, { status: 401 });
@@ -76,6 +77,23 @@ export async function POST(req: Request) {
   );
   const clienteId = casados.length === 1 ? (casados[0]!.id as string) : null;
 
+  // Mídia (Fatia 2B): baixa pelo media id com o token oficial. Best-effort — se falhar, a
+  // mensagem entra sem anexo (o texto/caption preserva o contexto).
+  let midiaPath: string | null = null;
+  let midiaMime: string | null = null;
+  if (msg.midia && cfg.oficial_token_cifrado) {
+    try {
+      const token = (await decifrarDominio("whatsapp", cfg.oficial_token_cifrado as string)).toString("utf8");
+      const salvo = await baixarEStorearMidiaOficial(admin, msg.midia.id, token);
+      if (salvo) {
+        midiaPath = salvo.path;
+        midiaMime = salvo.mime;
+      }
+    } catch {
+      // cripto indisponível: segue sem anexo
+    }
+  }
+
   const { error } = await admin.from("whatsapp_mensagem").insert({
     cliente_id: clienteId,
     telefone: tel,
@@ -84,6 +102,10 @@ export async function POST(req: Request) {
     direcao: "IN",
     lida: false,
     z_message_id: msg.wamId,
+    midia_tipo: midiaPath ? msg.midia?.tipo : null,
+    midia_path: midiaPath,
+    midia_nome: msg.midia?.nome ?? null,
+    midia_mime: midiaPath ? (midiaMime ?? msg.midia?.mime ?? null) : null,
   });
   if (error && !String(error.message).includes("duplicate")) console.error("webhook oficial:", error.message);
   await admin.from("conversa").update({ status: "aberta" }).eq("telefone", tel).eq("status", "finalizada");
