@@ -17,7 +17,7 @@ import { converterPdfHtml } from "@/lib/contrato/gerar";
 import { deveAvisar } from "@/lib/legalizacao/aviso";
 import { aplicarVariaveis } from "@/lib/comercial/followup";
 import { enviarEmail } from "@/lib/email/enviar";
-import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
+import { enviarProativo } from "@/lib/whatsapp/proativo";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { rotuloOrgao } from "@/lib/legalizacao/tipos";
 import { formatarData } from "@/lib/format";
@@ -128,7 +128,9 @@ async function avisarClienteEtapa(etapaId: string): Promise<string | null> {
   );
   if (!gateAviso) return null;
 
-  const vars: Record<string, string> = {
+  // Sem anotar `Record<string, string>`: as chaves inferidas dão acesso não-opcional,
+  // e a ordem dos params do template (abaixo) depende disso.
+  const vars = {
     cliente: (cli.razao_social as string) ?? "",
     processo: (proc.titulo as string) ?? "",
     etapa: (et.titulo as string) ?? "",
@@ -150,12 +152,18 @@ async function avisarClienteEtapa(etapaId: string): Promise<string | null> {
     });
     ok = r.ok;
   } else {
-    const ativo = await adaptadorWhatsappAtivo();
-    if ("erro" in ativo) return "Etapa concluída, mas o WhatsApp não está configurado.";
     const tel = normalizarTelefone((cli.telefone as string | null) ?? "", (cli.telefone_ddi as string | null) ?? "55");
     if (!tel) return "Etapa concluída, mas o cliente não tem telefone válido para o aviso.";
-    const r = await ativo.adaptador.enviarTexto(tel, corpo);
-    ok = r.ok;
+    const r = await enviarProativo(tel, {
+      fluxo: "legalizacao",
+      texto: corpo,
+      // A ORDEM é o contrato de PARAMS_FLUXO.legalizacao: cliente, etapa, processo, data.
+      params: [vars.cliente, vars.etapa, vars.processo, vars.data],
+    });
+    // O motivo vem da camada proativa (sem provedor, sem template aprovado, falha da API) —
+    // repassar é o que distingue "configure o WhatsApp" de "a Meta recusou".
+    if (!r.ok) return `Etapa concluída, mas o aviso ao cliente não saiu: ${r.erro ?? "falha no envio"}`;
+    ok = true;
   }
   if (!ok) return "Etapa concluída, mas o aviso ao cliente falhou no envio.";
   await admin.from("legalizacao_etapa").update({ cliente_avisado_em: new Date().toISOString() }).eq("id", etapaId);

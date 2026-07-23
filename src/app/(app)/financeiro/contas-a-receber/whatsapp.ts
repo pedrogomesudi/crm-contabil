@@ -2,7 +2,7 @@
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
-import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
+import { enviarProativo } from "@/lib/whatsapp/proativo";
 import { normalizarTelefone, aplicarTemplate, TEMPLATES } from "@/lib/whatsapp/mensagem";
 import { formatarMoeda, formatarData } from "@/lib/format";
 
@@ -43,18 +43,17 @@ export async function cobrarViaWhatsapp(tituloId: string): Promise<{ ok?: boolea
     if (extra.length) textoFinal = `${texto}\n\n${extra.join("\n\n")}`;
   }
 
-  const ativo = await adaptadorWhatsappAtivo();
-  let status: "ENVIADO" | "ERRO" = "ERRO";
-  let resposta: unknown = null;
-  let erro: string | undefined;
-  if ("erro" in ativo) {
-    erro = ativo.erro;
-  } else {
-    const r = await ativo.adaptador.enviarTexto(tel, textoFinal);
-    status = r.ok ? "ENVIADO" : "ERRO";
-    resposta = r.resposta ?? r.erro;
-    if (!r.ok) erro = r.erro ?? "Falha no envio.";
-  }
+  const r = await enviarProativo(tel, {
+    fluxo: "cobranca_manual",
+    texto: textoFinal,
+    // A ORDEM é o contrato de PARAMS_FLUXO.cobranca_manual: cliente, valor, vencimento.
+    // Fora da janela de 24h na oficial a mensagem sai como template — e o template não
+    // carrega linha digitável nem PIX, que só existem no texto livre.
+    params: [cliente?.razao_social ?? "", formatarMoeda(Number(t.valor)), formatarData(t.vencimento as string)],
+  });
+  const status: "ENVIADO" | "ERRO" = r.ok ? "ENVIADO" : "ERRO";
+  const resposta: unknown = r.resposta ?? r.erro;
+  const erro = r.ok ? undefined : (r.erro ?? "Falha no envio.");
   // grava histórico (mesmo em erro, para diagnóstico)
   await supabase.from("whatsapp_mensagem").insert({
     cliente_id: (t.cliente_id as string | null) ?? null,

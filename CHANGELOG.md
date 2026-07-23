@@ -8,6 +8,30 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.77.0] — 2026-07-23
+
+WhatsApp — os quatro fluxos de texto na API oficial (Sub-projeto 3, Fatia 3B). **Paridade entre
+provedores:** Z-API e API oficial seguem como opções permanentes, e nada muda no comportamento da Z-API.
+
+### Adicionado
+
+- **Cobrança manual, avisos de legalização, follow-up de proposta e comunicados em massa na API
+  oficial.** Os quatro fluxos passam a decidir entre **texto livre** e **template aprovado** pela mesma
+  camada que a régua já usa desde a 6.76.0: na Z-API sai texto livre, igual a hoje; na oficial sai texto
+  livre enquanto o cliente tiver falado nas últimas 24h e template fora dessa janela. Comunicados em
+  massa sempre usam template na oficial — disparo sem conversa em curso.
+- **Falha visível antes do cliente.** Fluxo sem template configurado não é enviado silenciosamente:
+  o envio manual devolve o motivo ao operador na hora, e os automáticos registram em
+  **Configurações → Observabilidade** identificando fluxo e destinatário. O lote continua nos demais.
+
+### Nota
+
+- A cobrança manual anexa linha digitável e PIX ao texto livre; o template tem três posições fixas
+  (cliente, valor, vencimento) e não os carrega. Fora da janela de 24h na oficial, esses dados não vão —
+  dentro dela, que é o caso comum, a mensagem sai completa como sempre.
+- Falta a **NFS-e em lote**, que precisa de template com documento anexo (cabeçalho de mídia) e vem na
+  próxima fatia.
+
 ## [6.76.0] — 2026-07-23
 
 WhatsApp — templates aprovados na API oficial (Sub-projeto 3, Fatia 3A). **Paridade entre provedores:**

@@ -8,7 +8,7 @@ import { registrarConsentimento } from "@/lib/lgpd/consentimento";
 import { enviarEmail } from "@/lib/email/enviar";
 import { aplicarEmail, variaveisDoCliente } from "@/lib/email/template";
 import { aplicarTemplate, normalizarTelefone } from "@/lib/whatsapp/mensagem";
-import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
+import { criarEnviadorProativo } from "@/lib/whatsapp/proativo";
 import {
   TETO_WHATSAPP,
   aplicarFiltro,
@@ -166,9 +166,10 @@ export async function dispararComunicado(
     return { erro: `Acima do teto de ${TETO_WHATSAPP} destinatários no WhatsApp.` };
   }
 
-  const ativoWa = input.canal === "whatsapp" ? await adaptadorWhatsappAtivo() : null;
-  if (input.canal === "whatsapp" && (!ativoWa || "erro" in ativoWa)) return { erro: "WhatsApp não configurado." };
-  const adaptadorWa = ativoWa && !("erro" in ativoWa) ? ativoWa.adaptador : null;
+  // Enviador resolvido UMA vez para o lote inteiro (config + decifragem de segredo).
+  const enviadorWa = input.canal === "whatsapp" ? await criarEnviadorProativo() : null;
+  if (input.canal === "whatsapp" && (!enviadorWa || "erro" in enviadorWa)) return { erro: "WhatsApp não configurado." };
+  const enviarWa = enviadorWa && !("erro" in enviadorWa) ? enviadorWa : null;
 
   const supabase = await createServerSupabase();
   const { data: com, error } = await supabase
@@ -201,10 +202,15 @@ export async function dispararComunicado(
     } else {
       const tel = normalizarTelefone(c.telefone ?? "", c.telefoneDdi ?? "55");
       para = tel ?? (c.telefone as string);
-      if (!tel || !adaptadorWa) {
+      if (!tel || !enviarWa) {
         msgErro = "Telefone inválido.";
       } else {
-        const r = await adaptadorWa.enviarTexto(tel, aplicarTemplate(corpo, vars));
+        const r = await enviarWa.enviar(tel, {
+          fluxo: "comunicado",
+          texto: aplicarTemplate(corpo, vars),
+          // A ORDEM é o contrato de PARAMS_FLUXO.comunicado: cliente, titulo.
+          params: [vars.nome ?? "", titulo],
+        });
         ok = r.ok;
         if (!r.ok) msgErro = r.erro ?? "Falha no envio.";
       }
@@ -331,7 +337,7 @@ export async function reenviarFalhas(
   const supabase = await createServerSupabase();
   const { data: com } = await supabase
     .from("comunicado")
-    .select("assunto, corpo, canal")
+    .select("titulo, assunto, corpo, canal")
     .eq("id", comunicadoId)
     .maybeSingle();
   if (!com) return { erro: "Comunicado não encontrado." };
@@ -344,9 +350,9 @@ export async function reenviarFalhas(
   if (!falhas || falhas.length === 0) return { enviados: 0, erros: 0 };
 
   const canal = com.canal as Canal;
-  const ativoWa = canal === "whatsapp" ? await adaptadorWhatsappAtivo() : null;
-  if (canal === "whatsapp" && (!ativoWa || "erro" in ativoWa)) return { erro: "WhatsApp não configurado." };
-  const adaptadorWa = ativoWa && !("erro" in ativoWa) ? ativoWa.adaptador : null;
+  const enviadorWa = canal === "whatsapp" ? await criarEnviadorProativo() : null;
+  if (canal === "whatsapp" && (!enviadorWa || "erro" in enviadorWa)) return { erro: "WhatsApp não configurado." };
+  const enviarWa = enviadorWa && !("erro" in enviadorWa) ? enviadorWa : null;
 
   const admin = createAdminSupabase();
   const escritorio = await nomeEscritorio();
@@ -375,8 +381,13 @@ export async function reenviarFalhas(
       const r = await enviarEmail({ para: f.para as string, assunto: msg.assunto, corpo: msg.corpo });
       ok = r.ok;
       if (!r.ok) msgErro = r.erro;
-    } else if (adaptadorWa) {
-      const r = await adaptadorWa.enviarTexto(f.para as string, aplicarTemplate(com.corpo as string, vars));
+    } else if (enviarWa) {
+      const r = await enviarWa.enviar(f.para as string, {
+        fluxo: "comunicado",
+        texto: aplicarTemplate(com.corpo as string, vars),
+        // A ORDEM é o contrato de PARAMS_FLUXO.comunicado: cliente, titulo.
+        params: [vars.nome ?? "", com.titulo as string],
+      });
       ok = r.ok;
       if (!r.ok) msgErro = r.erro ?? "Falha no envio.";
     }

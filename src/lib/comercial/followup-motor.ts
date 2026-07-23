@@ -1,7 +1,6 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { enviarEmail } from "@/lib/email/enviar";
-import { adaptadorWhatsappAtivo } from "@/lib/whatsapp/ativo";
-import type { ProvedorWhatsapp } from "@/lib/whatsapp/tipos";
+import { criarEnviadorProativo, type Enviador } from "@/lib/whatsapp/proativo";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { totaisProposta } from "@/lib/comercial/proposta";
 import { formatarMoeda, formatarData } from "@/lib/format";
@@ -25,12 +24,13 @@ export async function processarFollowup(hoje: string): Promise<Resumo> {
   if (!ativo) return { ...base, ativo, motivo: "Follow-up desligado." };
   const canal = (cfg?.canal as string) ?? "email";
 
-  // Canal WhatsApp exige o provedor configurado.
-  let adaptadorWa: ProvedorWhatsapp | null = null;
+  // Canal WhatsApp exige o provedor configurado. O enviador é resolvido UMA vez: o motor
+  // roda em lote e reler config + decifrar segredos por proposta custaria N de cada.
+  let enviadorWa: Enviador | null = null;
   if (canal === "whatsapp") {
-    const ativoWa = await adaptadorWhatsappAtivo();
-    if ("erro" in ativoWa) return { ...base, ativo, motivo: "WhatsApp não configurado." };
-    adaptadorWa = ativoWa.adaptador;
+    const e = await criarEnviadorProativo();
+    if ("erro" in e) return { ...base, ativo, motivo: "WhatsApp não configurado." };
+    enviadorWa = e;
   }
 
   const { data: etapasRaw } = await admin
@@ -83,7 +83,8 @@ export async function processarFollowup(hoje: string): Promise<Resumo> {
     const totalMensal = totaisProposta(
       (itens ?? []).map((i) => ({ valor: Number(i.valor), recorrencia: i.recorrencia as "mensal" | "unico" })),
     ).mensal;
-    const vars: Record<string, string> = {
+    // Sem anotar `Record<string, string>`: as chaves inferidas dão acesso não-opcional.
+    const vars = {
       prospect: op.prospect_nome ?? "",
       numero: String(p.numero ?? ""),
       valor: formatarMoeda(totalMensal),
@@ -110,7 +111,12 @@ export async function processarFollowup(hoje: string): Promise<Resumo> {
           resumo.semDestino++;
           continue;
         }
-        const r = await adaptadorWa!.enviarTexto(tel, corpo);
+        const r = await enviadorWa!.enviar(tel, {
+          fluxo: "followup",
+          texto: corpo,
+          // A ORDEM é o contrato de PARAMS_FLUXO.followup: cliente, proposta.
+          params: [vars.prospect, vars.numero],
+        });
         ok = r.ok;
       }
       await admin.from("followup_envio").insert({
