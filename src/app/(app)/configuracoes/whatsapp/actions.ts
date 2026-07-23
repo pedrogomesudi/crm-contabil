@@ -19,11 +19,15 @@ export async function carregarConfigWhatsapp(): Promise<{
   zapiConfigurado: boolean;
   oficialPhoneNumberId: string;
   oficialConfigurado: boolean;
+  oficialAppSecretConfigurado: boolean;
+  oficialVerifyToken: string;
 }> {
   const supabase = await createServerSupabase();
   const { data } = await supabase
     .from("whatsapp_config")
-    .select("provedor, instance, token_cifrado, oficial_phone_number_id, oficial_token_cifrado")
+    .select(
+      "provedor, instance, token_cifrado, oficial_phone_number_id, oficial_token_cifrado, oficial_app_secret_cifrado, oficial_verify_token",
+    )
     .eq("id", 1)
     .maybeSingle();
   return {
@@ -32,6 +36,8 @@ export async function carregarConfigWhatsapp(): Promise<{
     zapiConfigurado: Boolean(data?.token_cifrado),
     oficialPhoneNumberId: (data?.oficial_phone_number_id as string) ?? "",
     oficialConfigurado: Boolean(data?.oficial_token_cifrado),
+    oficialAppSecretConfigurado: Boolean(data?.oficial_app_secret_cifrado),
+    oficialVerifyToken: (data?.oficial_verify_token as string) ?? "",
   };
 }
 
@@ -61,6 +67,10 @@ export async function salvarConfigWhatsapp(_prev: EstadoWa, fd: FormData): Promi
       if (!phoneNumberId) return { erro: "Preencha o Phone Number ID." };
       patch.oficial_phone_number_id = phoneNumberId;
       if (token) patch.oficial_token_cifrado = await cifrarDominio("whatsapp", Buffer.from(token, "utf8"));
+      const appSecret = String(fd.get("oficial_app_secret") ?? "").trim();
+      const verifyToken = String(fd.get("oficial_verify_token") ?? "").trim();
+      patch.oficial_verify_token = verifyToken || null;
+      if (appSecret) patch.oficial_app_secret_cifrado = await cifrarDominio("whatsapp", Buffer.from(appSecret, "utf8"));
     }
   } catch {
     return { erro: "Criptografia não configurada no servidor." };

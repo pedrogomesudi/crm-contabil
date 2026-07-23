@@ -9,12 +9,16 @@ export function FormWhatsapp({
   zapiConfigurado,
   oficialPhoneNumberId,
   oficialConfigurado,
+  oficialAppSecretConfigurado,
+  oficialVerifyToken,
 }: {
   provedor: string;
   instance: string;
   zapiConfigurado: boolean;
   oficialPhoneNumberId: string;
   oficialConfigurado: boolean;
+  oficialAppSecretConfigurado: boolean;
+  oficialVerifyToken: string;
 }) {
   const [estado, action, pend] = useActionState<EstadoWa, FormData>(salvarConfigWhatsapp, {});
   const [prov, setProv] = useState(provedor === "oficial" ? "oficial" : "zapi");
@@ -75,6 +79,26 @@ export function FormWhatsapp({
               </span>
               <input name="oficial_token" type="password" className={`${controleCls()} mt-1 w-full`} />
             </label>
+            <label className="block text-sm">
+              <span className="text-cinza">Verify Token (defina um segredo e cole no App da Meta)</span>
+              <input
+                name="oficial_verify_token"
+                defaultValue={oficialVerifyToken}
+                className={`${controleCls()} mt-1 w-full`}
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="text-cinza">
+                App Secret {oficialAppSecretConfigurado && "(configurado — deixe em branco para manter)"}
+              </span>
+              <input name="oficial_app_secret" type="password" className={`${controleCls()} mt-1 w-full`} />
+            </label>
+            <p className="rounded border border-linha bg-creme px-3 py-2 text-xs text-cinza">
+              URL do webhook (cole no App da Meta):{" "}
+              <code className="break-all">
+                {(process.env.NEXT_PUBLIC_SITE_URL ?? "") + "/api/webhooks/whatsapp-oficial"}
+              </code>
+            </p>
           </>
         )}
 
