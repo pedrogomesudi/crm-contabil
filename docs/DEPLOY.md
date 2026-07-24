@@ -205,6 +205,23 @@ migrations, **gera as chaves de cripto do escritório**, cria o admin, registra 
 `tenants/<slug>.env` (fora do git, `chmod 600`). Depois, à mão: criar o app no EasyPanel, colar o env,
 apontar o subdomínio e configurar as Auth URLs no Supabase.
 
+#### Os dois remetentes de e-mail (são configurações separadas)
+
+Um escritório novo precisa de **duas** configurações de e-mail, em lugares diferentes. Confundi-las é o
+erro clássico: o remetente que aparece no convite não é o que está na tela do app.
+
+| Caminho | Manda | Onde se configura |
+|---|---|---|
+| **Supabase Auth** | convite de usuário, recuperação de senha, convite do portal | Painel do Supabase → Auth → SMTP Settings |
+| **Módulo do app** | cobrança, comunicados, follow-up, NFS-e, avisos | App → Configurações → E-mail |
+
+> **Sem o SMTP do passo do Supabase, o convite de usuário não chega.** O SMTP padrão do Supabase entrega
+> apenas para membros do projeto e limita a poucos e-mails por hora — o suficiente para o admin não
+> perceber o problema e descobrir só quando tentar convidar a equipe do cliente.
+
+Em ambos, o domínio do remetente precisa estar **verificado no provedor** (SPF/DKIM). Remetente de
+domínio não verificado é recusado ou cai em spam — e e-mail em spam parece "sistema que não funciona".
+
 > **Não existe `tenant:remover` — por decisão de segurança.** O `SUPABASE_ACCESS_TOKEN` destrói projetos
 > inteiros; um script com esse poder e um argumento errado apagam o banco de um cliente real. Quem apaga é
 > o humano, no painel, olhando para o nome do projeto.

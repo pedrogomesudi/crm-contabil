@@ -322,8 +322,14 @@ try {
   console.log(`  2. Colar as variáveis de ${caminhoEnv} em Environment (as NEXT_PUBLIC_* como build args).`);
   console.log(`  3. Apontar o domínio ${slug}.${dominio} para o app.`);
   console.log(`  4. No Supabase (Auth → URL Configuration): Site URL = ${appUrl} e Redirect URLs = ${appUrl}/**`);
-  console.log(`  5. Implantar e entrar com ${email} (a senha está no arquivo de env — troque no primeiro acesso).`);
-  console.log(`  6. Guardar ${caminhoEnv} num cofre de senhas: as chaves de cripto NÃO têm backup em`);
+  console.log(`  5. No Supabase (Auth → SMTP Settings): ligar SMTP próprio e definir o remetente.`);
+  console.log(`     SEM ISTO O CONVITE DE USUÁRIO NÃO CHEGA: o SMTP padrão do Supabase só entrega`);
+  console.log(`     para membros do projeto e limita a poucos e-mails por hora. É por aqui que saem`);
+  console.log(`     convite, recuperação de senha e convite do portal — não pela tela de E-mail do app.`);
+  console.log(`  6. Implantar e entrar com ${email} (a senha está no arquivo de env — troque no primeiro acesso).`);
+  console.log(`  7. No app, Configurações → E-mail: provedor e remetente dos e-mails do produto`);
+  console.log(`     (cobrança, comunicados, NFS-e). É configuração SEPARADA da do passo 5.`);
+  console.log(`  8. Guardar ${caminhoEnv} num cofre de senhas: as chaves de cripto NÃO têm backup em`);
   console.log(`     lugar nenhum — o backup do banco guarda só o texto cifrado, não a chave.`);
   console.log(`\n  As credenciais NÃO foram impressas aqui de propósito. Abra o arquivo localmente e`);
   console.log(`  cole no EasyPanel — nunca por chat, e-mail ou captura de tela.`);
