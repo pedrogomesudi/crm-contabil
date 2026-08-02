@@ -253,3 +253,29 @@ Endurecimento de **segurança** e **conformidade legal/técnica** para comercial
   **redundância do negócio** — auth/storage seguem cobertos pelo backup do Supabase.
 
 > **Fora do marco, ainda a definir:** pentest, termos de uso e contrato SaaS, SLA formal.
+
+---
+
+## Depois da V10 — evolução por requisito ✅ *(v6.4.0 → v6.83.0)*
+
+Com os dez marcos fechados, a evolução deixou de ser por "versão de produto" e passou a ser **por
+requisito (RF/RNF)**, entregue em fatias pequenas. O que entrou:
+
+| Área | Entregas | Versões |
+|---|---|---|
+| **Comercial** | Funil configurável (RF-002), precificação (RF-003), proposta→contrato assinado (RF-005), follow-up automático (RF-007), receita por origem (RF-008) | 6.12 → 6.21 |
+| **Onboarding/legalização** | Processos por órgão, templates societários, Termo de acervo e **comunicação automática de status** (RF-011 a RF-014) | 6.22 |
+| **Cadastro** | Vínculos entre empresas (RF-026), campos customizáveis (RF-027), flags fiscais | 6.23 → 6.30 |
+| **Tarefas** | Anexos, fechando RF-040 a RF-045 | 6.27 |
+| **GED** | Taxonomia e versionamento (RF-060), busca por metadados e **no conteúdo dos PDFs** (RF-061), retenção e expurgo (RF-062), devolução de acervo (RF-064) | 6.28 → 6.53 |
+| **Portal** | PWA instalável (RF-056) | 6.31 |
+| **Financeiro** | Alçada de pagamento, conciliação parcial, inadimplência com trava do portal, cobrança avulsa, **boletos do Inter ponta a ponta** (RF-081), rentabilidade por segmento e porte (RF-072) | 6.35 → 6.49 |
+| **Relatórios** | Produtividade por colaborador (RF-073), **NPS** (RF-074) | 6.50 → 6.52 |
+| **Integrações** | Monitoramento da Receita (RF-084), **API pública REST** (RF-080), maturidade de webhooks (RF-083) | 6.54 → 6.63 |
+| **Operação** | `tenant:status` (RNF-01), **2FA com exigência por escritório** (RNF-09, parte), observabilidade de erros e **monitor de crons** (RNF-07, parte) | 6.64 → 6.70 |
+| **WhatsApp** | **Dois provedores** — Z-API e API oficial da Meta, à escolha do escritório: envio de texto e mídia, recebimento de texto, mídia e status, e **templates aprovados por fluxo** | 6.71 → 6.76 |
+| **Obrigações** | Curadoria da matriz — base legal, fonte e **vigência** (começo e fim) por obrigação | 6.80 → 6.83 |
+
+**Em aberto** (detalhe em [`docs/DOCUMENTACAO.md`](docs/DOCUMENTACAO.md), seção 7): paridade dos demais
+fluxos proativos no WhatsApp oficial; OCR de digitalizações; CNDs e camada de IA (RF-085); Domínio no
+sentido inverso; métrica de latência (RNF-07); SSO corporativo (RNF-09).
