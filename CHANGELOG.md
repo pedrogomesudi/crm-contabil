@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.84.0] — 2026-08-02
+
+### Adicionado
+
+- **Campo "Responder para" no e-mail** (Configurações → E-mail). Permite enviar de um domínio já
+  verificado — mostrando o **nome** do escritório no remetente — e ainda receber as respostas do
+  cliente na caixa real do escritório. Resolve o atrito de ter que verificar o domínio de cada
+  cliente novo antes de conseguir mandar e-mail: envia-se de `contato@seusaldo.ai` com o nome
+  "Assessoria Elevare", e a resposta vai para `contato@assessoriaelevare.com.br`.
+- Funciona nos três canais de envio (SMTP, Resend, SendGrid). Vazio ou igual ao remetente = nada
+  muda (a resposta vai para o próprio remetente, como antes). (Migration `0135`.)
+
 ## [6.83.0] — 2026-07-23
 
 ### Adicionado

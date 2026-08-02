@@ -33,9 +33,11 @@ async function viaSmtp(cfg: ConfigEmail, smtp: NonNullable<ConfigEmail["smtp"]>,
     auth: smtp.usuario ? { user: smtp.usuario, pass: smtp.senha } : undefined,
   });
   try {
+    const replyTo = cfg.responderPara?.trim();
     await transport.sendMail({
       from: `${cfg.remetenteNome} <${cfg.remetenteEmail}>`,
       to: msg.para,
+      ...(replyTo && replyTo.toLowerCase() !== cfg.remetenteEmail.toLowerCase() ? { replyTo } : {}),
       subject: msg.assunto,
       text: msg.corpo,
       html: htmlDoTexto(msg.corpo),

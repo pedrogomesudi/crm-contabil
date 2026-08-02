@@ -34,3 +34,28 @@ describe("payload dos provedores", () => {
     });
   });
 });
+
+// "Responder para": envia de um domínio verificado (contato@seusaldo.ai) mostrando o nome do
+// escritório, e aponta a resposta para a caixa real dele — sem verificar o domínio do cliente.
+describe("responder para (reply-to)", () => {
+  const comReply = { ...cfg, responderPara: "contato@assessoriaelevare.com.br" };
+
+  it("Resend inclui reply_to quando difere do remetente", () => {
+    expect(payloadResend(comReply, msg).reply_to).toBe("contato@assessoriaelevare.com.br");
+  });
+
+  it("SendGrid inclui reply_to como objeto {email}", () => {
+    expect(payloadSendgrid(comReply, msg).reply_to).toEqual({ email: "contato@assessoriaelevare.com.br" });
+  });
+
+  it("sem responderPara, nenhum reply_to é emitido", () => {
+    expect("reply_to" in payloadResend(cfg, msg)).toBe(false);
+    expect("reply_to" in payloadSendgrid(cfg, msg)).toBe(false);
+  });
+
+  it("reply-to igual ao remetente (ignorando caixa) é redundante e não vai", () => {
+    const igual = { ...cfg, responderPara: "CONTATO@saldo.ai" };
+    expect("reply_to" in payloadResend(igual, msg)).toBe(false);
+    expect("reply_to" in payloadSendgrid(igual, msg)).toBe(false);
+  });
+});

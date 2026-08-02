@@ -53,7 +53,21 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
               className={`mt-0.5 block w-64 ${cls}`}
             />
           </label>
+          <label className="text-xs text-cinza">
+            Responder para <span className="text-cinza-claro">(opcional)</span>
+            <input
+              name="responder_para"
+              type="email"
+              defaultValue={status.responderPara}
+              placeholder="mesmo do remetente"
+              className={`mt-0.5 block w-64 ${cls}`}
+            />
+          </label>
         </div>
+        <p className="text-xs text-cinza-claro">
+          Deixe o remetente num domínio já verificado e use “Responder para” com o e-mail real do escritório: o envio
+          sai verificado e as respostas do cliente chegam na caixa certa.
+        </p>
 
         {provedor === "smtp" ? (
           <div className="flex flex-wrap gap-2">

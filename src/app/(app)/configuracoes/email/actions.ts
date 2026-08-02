@@ -13,6 +13,7 @@ export type StatusEmail = {
   provedor: "smtp" | "api" | null;
   remetenteNome: string;
   remetenteEmail: string;
+  responderPara: string;
   smtpHost: string;
   smtpPorta: number;
   smtpSeguro: boolean;
@@ -34,7 +35,7 @@ export async function statusConfig(): Promise<StatusEmail | null> {
   const { data: c } = await supabase
     .from("email_config")
     .select(
-      "provedor, remetente_nome, remetente_email, smtp_host, smtp_porta, smtp_seguro, smtp_usuario, smtp_senha_cifrada, api_provedor, api_chave_cifrada, regua_email_fallback",
+      "provedor, remetente_nome, remetente_email, responder_para, smtp_host, smtp_porta, smtp_seguro, smtp_usuario, smtp_senha_cifrada, api_provedor, api_chave_cifrada, regua_email_fallback",
     )
     .eq("id", 1)
     .maybeSingle();
@@ -42,6 +43,7 @@ export async function statusConfig(): Promise<StatusEmail | null> {
     provedor: (c?.provedor as "smtp" | "api" | null) ?? null,
     remetenteNome: (c?.remetente_nome as string | null) ?? "",
     remetenteEmail: (c?.remetente_email as string | null) ?? "",
+    responderPara: (c?.responder_para as string | null) ?? "",
     smtpHost: (c?.smtp_host as string | null) ?? "",
     smtpPorta: (c?.smtp_porta as number | null) ?? 587,
     smtpSeguro: c?.smtp_seguro !== false,
@@ -66,10 +68,14 @@ export async function salvarConfigEmail(_prev: EstadoEmail, fd: FormData): Promi
     .trim()
     .slice(0, 120);
 
+  const responderPara = String(fd.get("responder_para") ?? "").trim();
+  if (responderPara && !emailValido(responderPara)) return { erro: "E-mail de resposta inválido." };
+
   const dados: Record<string, unknown> = {
     provedor,
     remetente_nome: remetenteNome || null,
     remetente_email: remetenteEmail,
+    responder_para: responderPara || null,
     atualizado_em: new Date().toISOString(),
     atualizado_por: perfil.id,
   };
