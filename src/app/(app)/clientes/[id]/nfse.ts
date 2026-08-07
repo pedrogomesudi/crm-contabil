@@ -166,8 +166,11 @@ export async function emitirNfseCliente(
   let resultado;
   try {
     resultado = await enviarDps(assinado, { pfx: cert.pfx, senha: cert.senha }, ambiente);
-    // Retenta erros transitórios da Sefin (ex.: E0082) antes de gravar.
-    for (let tent = 0; tent < 2 && !resultado.autorizada && ehErroTransitorio(resultado.mensagens); tent++) {
+    // Retenta erros transitórios da Sefin (E0082/E0190 — instabilidade do cadastro
+    // CNPJ) antes de gravar. Reenviar a MESMA DPS é seguro: a Sefin deduplica pelo
+    // idDps. Até 4 novas tentativas (5 no total) porque o CNPJ de empresa recém-aberta
+    // pode levar algumas tentativas para responder de forma consistente.
+    for (let tent = 0; tent < 4 && !resultado.autorizada && ehErroTransitorio(resultado.mensagens); tent++) {
       await new Promise((r) => setTimeout(r, 1500));
       resultado = await enviarDps(assinado, { pfx: cert.pfx, senha: cert.senha }, ambiente);
     }

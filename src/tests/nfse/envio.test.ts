@@ -35,8 +35,14 @@ describe("parseResposta", () => {
 });
 
 describe("ehErroTransitorio", () => {
-  it("reconhece E0082 (instabilidade do cadastro CNPJ) como transitório", () => {
+  it("reconhece E0082 (CNPJ do prestador) como transitório", () => {
     expect(ehErroTransitorio(["E0082 CNPJ do prestador não encontrado"])).toBe(true);
+  });
+  // E0190: CNPJ do tomador não encontrado. Para empresa recém-aberta é intermitente
+  // (o CNPJ ainda propaga ao cadastro consultado pela Sefin) — precisa valer retry,
+  // senão a nota do cliente novo é rejeitada por instabilidade, não por erro real.
+  it("reconhece E0190 (CNPJ do tomador) como transitório", () => {
+    expect(ehErroTransitorio(["E0190 CNPJ do tomador não encontrado no cadastro CNPJ."])).toBe(true);
   });
   it("não trata erro de schema como transitório", () => {
     expect(ehErroTransitorio(["E1235 Falha no esquema XML"])).toBe(false);

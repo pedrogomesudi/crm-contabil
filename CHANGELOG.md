@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.85.0] — 2026-08-08
+
+### Corrigido
+
+- **NFS-e: o erro E0190 (CNPJ do tomador não encontrado) agora vale nova tentativa
+  automática.** Para empresa recém-aberta, esse erro é **intermitente** — o CNPJ ainda está
+  propagando ao cadastro que a Sefin consulta, e falha numa tentativa mas passa na seguinte (o mesmo
+  CNPJ é aceito pelo portal nacional). A lista de erros transitórios tinha só o E0082 (CNPJ do
+  prestador); o E0190 ficava de fora e a nota do cliente novo era **rejeitada de vez, na primeira
+  tentativa**. Agora o E0190 entra no retry, e o número de tentativas subiu de 3 para 5 (reenviar a
+  mesma DPS é seguro: a Sefin deduplica pelo `idDps`). Notas de clientes recém-abertos passam a sair
+  sem intervenção manual.
+
 ## [6.84.0] — 2026-08-02
 
 ### Adicionado
