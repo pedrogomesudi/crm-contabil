@@ -9,7 +9,11 @@ export function montarCorpoDps(xmlAssinado: string): string {
 
 // Erros da Sefin conhecidos por serem intermitentes (instabilidade da consulta
 // ao cadastro CNPJ da Receita) — valem uma nova tentativa automática.
-const CODIGOS_TRANSITORIOS = ["E0082"];
+//   E0082: CNPJ do prestador não encontrado.
+//   E0190: CNPJ do tomador não encontrado — típico de empresa recém-aberta cujo
+//          CNPJ ainda não propagou de forma consistente ao cadastro consultado
+//          pela Sefin. Falha numa tentativa e passa na seguinte (retry resolve).
+const CODIGOS_TRANSITORIOS = ["E0082", "E0190"];
 export function ehErroTransitorio(mensagens?: string[]): boolean {
   return (mensagens ?? []).some((m) => CODIGOS_TRANSITORIOS.some((c) => m.includes(c)));
 }
