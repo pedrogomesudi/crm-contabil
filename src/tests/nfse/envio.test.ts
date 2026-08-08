@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { gunzipSync } from "node:zlib";
-import { montarCorpoDps, parseResposta, ehErroTransitorio } from "@/lib/nfse/envio";
+import { montarCorpoDps, parseResposta, ehErroTransitorio, orientacaoErro } from "@/lib/nfse/envio";
 
 describe("montarCorpoDps", () => {
   it("comprime (gzip) e codifica (base64) o XML", () => {
@@ -47,5 +47,17 @@ describe("ehErroTransitorio", () => {
   it("não trata erro de schema como transitório", () => {
     expect(ehErroTransitorio(["E1235 Falha no esquema XML"])).toBe(false);
     expect(ehErroTransitorio(undefined)).toBe(false);
+  });
+});
+
+describe("orientacaoErro", () => {
+  it("dá orientação de portal/aguardar para E0190 (CNPJ recém-aberto)", () => {
+    const dica = orientacaoErro(["E0190 CNPJ do tomador não encontrado no cadastro CNPJ."]);
+    expect(dica).toMatch(/portal/i);
+    expect(dica).toMatch(/alguns dias|sincroniz/i);
+  });
+  it("sem dica conhecida, retorna vazio", () => {
+    expect(orientacaoErro(["E1235 Falha no esquema XML"])).toBe("");
+    expect(orientacaoErro(undefined)).toBe("");
   });
 });

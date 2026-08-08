@@ -1,6 +1,7 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeVerHonorario, podeConfigurarNfse } from "@/lib/clientes/permissoes";
 import { certificadoValido } from "@/lib/nfse/emitente";
+import { orientacaoErro } from "@/lib/nfse/envio";
 import { formatarData } from "@/lib/format";
 import type { Papel } from "@/lib/tipos";
 import { EmitenteConfig } from "./EmitenteConfig";
@@ -98,11 +99,18 @@ export async function EmissaoClienteSection({ clienteId, papel }: { clienteId: s
                         homologação
                       </span>
                     )}
-                    {n.status === "rejeitada" && Array.isArray(n.mensagens) && (
-                      <span className="block text-xs text-negativo">
-                        {(n.mensagens as { descricao?: string }[]).map((m) => m.descricao).join("; ")}
-                      </span>
-                    )}
+                    {n.status === "rejeitada" &&
+                      Array.isArray(n.mensagens) &&
+                      (() => {
+                        const descrs = (n.mensagens as { descricao?: string }[]).map((m) => m.descricao ?? "");
+                        const dica = orientacaoErro(descrs);
+                        return (
+                          <>
+                            <span className="block text-xs text-negativo">{descrs.join("; ")}</span>
+                            {dica && <span className="mt-0.5 block text-xs text-atencao">{dica}</span>}
+                          </>
+                        );
+                      })()}
                   </td>
                   <td className="p-2">
                     {n.status === "autorizada" && n.chave_acesso && (
