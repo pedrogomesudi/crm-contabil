@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.87.0] — 2026-08-08
+
+### Corrigido
+
+- **Contas a receber: o botão "Baixar" parecia não funcionar.** O formulário de baixa era renderizado
+  no rodapé da página, **abaixo da tabela inteira** — com uma competência de ~150 clientes, clicar em
+  "Baixar" numa linha do topo abria o formulário lá embaixo, fora da tela, dando a impressão de que o
+  botão estava desativado. Agora o formulário abre como **modal centralizado**, visível de imediato
+  independentemente da rolagem.
+
 ## [6.86.0] — 2026-08-08
 
 ### Adicionado
