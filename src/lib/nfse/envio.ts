@@ -18,6 +18,19 @@ export function ehErroTransitorio(mensagens?: string[]): boolean {
   return (mensagens ?? []).some((m) => CODIGOS_TRANSITORIOS.some((c) => m.includes(c)));
 }
 
+// Traduz códigos de rejeição da Sefin em uma ORIENTAÇÃO do que fazer — o código cru
+// ("E0190 CNPJ do tomador não encontrado") não diz ao operador qual é a saída. Retorna
+// "" quando não há dica conhecida. Pura e testável.
+export function orientacaoErro(mensagens?: string[]): string {
+  const txt = (mensagens ?? []).join(" ");
+  if (txt.includes("E0190")) {
+    // Persistente para CNPJ recém-aberto: o cadastro nacional que o webservice consulta
+    // ainda não sincronizou a empresa (o portal já a tem — daí funcionar por lá).
+    return "CNPJ recém-aberto que ainda não consta no cadastro nacional consultado pela prefeitura. Emita esta nota pelo portal nacional da NFS-e (nfse.gov.br) ou tente de novo em alguns dias, quando o cadastro sincronizar.";
+  }
+  return "";
+}
+
 export function parseResposta(status: number, corpo: Record<string, unknown>): ResultadoEmissao {
   if (status >= 200 && status < 300 && corpo.chaveAcesso) {
     return {

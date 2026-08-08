@@ -9,7 +9,7 @@ import { carregarCertificado } from "@/lib/nfse/certificado";
 import { montarDps } from "@/lib/nfse/dps";
 import { municipioIbgePorCep } from "@/lib/nfse/municipio";
 import { assinarDps } from "@/lib/nfse/assinatura";
-import { enviarDps, ehErroTransitorio } from "@/lib/nfse/envio";
+import { enviarDps, ehErroTransitorio, orientacaoErro } from "@/lib/nfse/envio";
 import { baixarDanfsePdf } from "@/lib/nfse/danfse";
 import { obterDanfsePdf, guardarDanfseStorage, carregarCertRowDaNota } from "@/lib/nfse/danfse-cache";
 import { montarEventoCancelamento, assinarEvento, enviarCancelamento } from "@/lib/nfse/cancelamento";
@@ -210,9 +210,13 @@ export async function emitirNfseCliente(
   if (resultado.autorizada && resultado.chaveAcesso) {
     await prefetchDanfse(createAdminSupabase(), resultado.chaveAcesso, { pfx: cert.pfx, senha: cert.senha }, ambiente);
   }
-  return resultado.autorizada
-    ? { status: "autorizada", chave: resultado.chaveAcesso, numero: resultado.numero }
-    : { status: "rejeitada", motivo: resultado.mensagens?.join("; ") };
+  if (resultado.autorizada) {
+    return { status: "autorizada", chave: resultado.chaveAcesso, numero: resultado.numero };
+  }
+  // Anexa a orientação (ex.: E0190 → emita pelo portal) ao motivo cru da Sefin.
+  const bruto = resultado.mensagens?.join("; ") ?? "";
+  const dica = orientacaoErro(resultado.mensagens);
+  return { status: "rejeitada", motivo: dica ? `${bruto} — ${dica}` : bruto };
 }
 
 // Lista os clientes ativos com honorário para o preview do lote, marcando a

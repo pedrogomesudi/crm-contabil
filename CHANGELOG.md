@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.86.0] — 2026-08-08
+
+### Adicionado
+
+- **NFS-e: mensagem clara quando o E0190 persiste.** Quando a rejeição por "CNPJ do tomador não
+  encontrado" não se resolve com o retry automático (empresa recém-aberta cujo CNPJ ainda não
+  sincronizou no cadastro nacional que a prefeitura consulta), a tela passa a mostrar, além do código
+  cru, **o que fazer**: *"CNPJ recém-aberto que ainda não consta no cadastro nacional… emita pela
+  portal nacional da NFS-e ou tente de novo em alguns dias"*. Aparece tanto na emissão em lote quanto
+  no histórico de NFS-e da ficha do cliente. Assim o operador sabe a saída sem precisar investigar.
+
 ## [6.85.0] — 2026-08-08
 
 ### Corrigido
