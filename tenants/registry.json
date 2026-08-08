@@ -1,6 +1,13 @@
 {
   "escritorios": [
     {
+      "slug": "demo",
+      "nome": "Escritório Demo (teste interno)",
+      "appUrl": "https://demo.seusaldo.ai",
+      "projectRef": "yeesnqiycdwdoydtbbvj",
+      "criadoEm": "2026-08-08"
+    },
+    {
       "slug": "gomes",
       "nome": "Gomes Contabilidade",
       "appUrl": "https://app.seusaldo.ai",

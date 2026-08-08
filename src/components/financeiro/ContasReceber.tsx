@@ -268,57 +268,61 @@ export function ContasReceber({
       )}
 
       {baixando && (
-        <form
-          action={async (fd) => {
-            fd.set("titulo_id", baixando);
-            const r = await registrarBaixa(fd);
-            setMsg(r.erro ?? "Baixa registrada.");
-            if (!r.erro) {
-              setBaixando(null);
-              start(async () => setTitulos(await listarTitulos(competencia)));
-            }
-          }}
-          className="max-w-xl space-y-2 rounded border border-linha p-3"
-        >
-          <p className="text-sm font-medium">Registrar baixa</p>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              name="valor_recebido"
-              type="number"
-              step="0.01"
-              placeholder="Valor recebido"
-              required
-              className={controleCls()}
-            />
-            <input name="data_recebimento" type="date" required className={controleCls()} />
-            <select name="conta_bancaria_id" required className={controleCls()}>
-              <option value="">Conta bancária…</option>
-              {contas.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome}
-                </option>
-              ))}
-            </select>
-            <select name="forma_pagamento" required className={controleCls()}>
-              {["PIX", "BOLETO", "CARTAO", "TRANSFERENCIA", "DINHEIRO"].map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              className="rounded-lg bg-verde px-3 py-2 text-sm font-medium text-white hover:brightness-105"
-            >
-              Confirmar baixa
-            </button>
-            <button type="button" onClick={() => setBaixando(null)} className="rounded border border-linha px-3 py-2">
-              Cancelar
-            </button>
-          </div>
-        </form>
+        // Modal: aparece no centro da tela em vez de no rodapé (a lista tem ~150 linhas;
+        // renderizar o form embaixo dela fazia o clique em "Baixar" parecer sem efeito).
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-16">
+          <form
+            action={async (fd) => {
+              fd.set("titulo_id", baixando);
+              const r = await registrarBaixa(fd);
+              setMsg(r.erro ?? "Baixa registrada.");
+              if (!r.erro) {
+                setBaixando(null);
+                start(async () => setTitulos(await listarTitulos(competencia)));
+              }
+            }}
+            className="w-full max-w-xl space-y-2 rounded-lg border border-linha bg-white p-4 shadow-flutuante"
+          >
+            <p className="text-sm font-medium">Registrar baixa</p>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                name="valor_recebido"
+                type="number"
+                step="0.01"
+                placeholder="Valor recebido"
+                required
+                className={controleCls()}
+              />
+              <input name="data_recebimento" type="date" required className={controleCls()} />
+              <select name="conta_bancaria_id" required className={controleCls()}>
+                <option value="">Conta bancária…</option>
+                {contas.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
+              </select>
+              <select name="forma_pagamento" required className={controleCls()}>
+                {["PIX", "BOLETO", "CARTAO", "TRANSFERENCIA", "DINHEIRO"].map((f) => (
+                  <option key={f} value={f}>
+                    {f}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="rounded-lg bg-verde px-3 py-2 text-sm font-medium text-white hover:brightness-105"
+              >
+                Confirmar baixa
+              </button>
+              <button type="button" onClick={() => setBaixando(null)} className="rounded border border-linha px-3 py-2">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
       )}
     </div>
   );
