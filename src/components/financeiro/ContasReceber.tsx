@@ -17,6 +17,7 @@ import {
   listarBoletosDaCompetencia,
   sincronizarBoletosInter,
   cancelarTitulo,
+  emitirBoleto,
   type BoletoView,
 } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
 import { podeCancelarTitulo } from "@/lib/boleto/cancelamento";
@@ -63,6 +64,31 @@ export function ContasReceber({
         setTitulos(await listarTitulos(competencia));
         setBoletos(await listarBoletosDaCompetencia(competencia));
       }
+    });
+
+  // Emite boleto para todos os títulos em aberto que ainda não têm boleto, um a um
+  // (cada um é uma chamada ao Inter). Pula os que já têm e reporta os que falham, sem
+  // travar o lote. Mesmo padrão da emissão de NFS-e em lote.
+  const gerarBoletosLote = () =>
+    start(async () => {
+      const alvos = titulos.filter((t) => t.status !== "BAIXADO" && t.status !== "CANCELADO" && !boletos[t.id]);
+      if (alvos.length === 0) {
+        setMsg("Nenhum título em aberto sem boleto nesta competência.");
+        return;
+      }
+      let ok = 0;
+      const erros: string[] = [];
+      for (let i = 0; i < alvos.length; i++) {
+        setMsg(`Emitindo boletos… ${i + 1}/${alvos.length}`);
+        const r = await emitirBoleto(alvos[i]!.id);
+        if (r.erro) erros.push(`${alvos[i]!.cliente}: ${r.erro}`);
+        else ok++;
+      }
+      setBoletos(await listarBoletosDaCompetencia(competencia));
+      const resumoErros = erros.length
+        ? ` · ${erros.length} com erro (${erros.slice(0, 3).join("; ")}${erros.length > 3 ? "…" : ""})`
+        : "";
+      setMsg(`${ok} boleto(s) emitido(s)${resumoErros}.`);
     });
 
   const aposCriarAvulsa = (competenciaNova: string) => {
@@ -143,6 +169,13 @@ export function ContasReceber({
           className="rounded border border-linha px-3 py-1 disabled:opacity-60"
         >
           Sincronizar boletos pagos (Inter)
+        </button>
+        <button
+          onClick={gerarBoletosLote}
+          disabled={pend || titulos.length === 0}
+          className="rounded-lg bg-verde px-3 py-1 font-medium text-white hover:brightness-105 disabled:opacity-60"
+        >
+          Gerar boletos em lote
         </button>
       </div>
       {avulsaAberta && (

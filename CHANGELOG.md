@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.88.0] — 2026-08-08
+
+### Adicionado
+
+- **Gerar boletos em lote** (Contas a receber). Antes o boleto era emitido um por um, título a
+  título — inviável para uma carteira grande. Agora um botão **"Gerar boletos em lote"** percorre
+  todos os títulos em aberto **sem boleto** da competência carregada e emite cada um no Inter, com
+  progresso ao vivo ("Emitindo boletos… 5/50"). Pula os que já têm boleto e reporta os que falham,
+  sem travar o lote. Mesmo padrão da emissão de NFS-e em lote.
+
 ## [6.87.0] — 2026-08-08
 
 ### Corrigido
