@@ -28,6 +28,9 @@ export const clienteSchema = z
     contador_id: z.union([z.uuid("Selecione um contador"), z.literal("")]).optional(),
     data_inicio: z.union([z.string().refine(ehDataValida, "Data inválida"), z.literal("")]).optional(),
     status: z.enum(STATUS_CLIENTE).optional(),
+    // Canal de recebimento dos honorários. Persistido em clientes_financeiro (não em
+    // clientes) — a gravação o remove do payload de clientes e faz upsert dos flags.
+    canal_cobranca: z.enum(["whatsapp", "email", "ambos"]).default("ambos"),
     // endereco (jsonb) é montado à parte na action a partir de campos planos do form.
   })
   .refine((d) => validarDocumento(d.tipo_pessoa, d.cpf_cnpj), {
