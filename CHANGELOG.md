@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.90.0] — 2026-08-09
+
+### Adicionado
+
+- **Relatório "Clientes e honorários"** (Financeiro → Relatórios). Uma página única com todos os
+  clientes ativos em três colunas — **razão social, CPF/CNPJ e honorário mensal recorrente** — com
+  total (MRR) ao pé e busca por nome ou documento. O honorário é o **valor vigente** hoje, resolvido
+  da tabela de vigências (mesma lógica dos indicadores); clientes sem honorário cadastrado aparecem
+  com R$ 0,00. Exporta em **PDF, Excel e CSV** pela camada de exportação já existente.
+
 ## [6.89.0] — 2026-08-08
 
 ### Adicionado
