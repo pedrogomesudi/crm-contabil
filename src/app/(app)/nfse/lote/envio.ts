@@ -6,8 +6,8 @@ import { criarEnviadorProativo } from "@/lib/whatsapp/proativo";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { linhasPagamento, competenciaBR, montarMensagemNota, vencimentoBR, valorBR } from "@/lib/whatsapp/notas-envio";
 import { obterDanfsePdf, caminhoDanfse } from "@/lib/nfse/danfse-cache";
-import { listarNotasAutorizadasPorCompetencia } from "@/app/(app)/clientes/[id]/nfse";
 import { canaisParaEnvio, agregarResultado, type ResultadoCanal } from "@/lib/nfse/envio-canais";
+import { flagsParaCanal, type CanalCobranca } from "@/lib/clientes/canal-cobranca";
 import { enviarEmail, type Anexo } from "@/lib/email/enviar";
 import { garantirPdfBoleto } from "@/app/(app)/financeiro/contas-a-receber/boleto-pdf";
 
@@ -16,33 +16,99 @@ async function gate() {
   return p?.ativo && podeVerHonorario(p.papel) ? p : null;
 }
 
-export async function listarNotasParaEnvio(
-  competencia: string,
-): Promise<{ nfseId: string; razaoSocial: string; jaEnviada: boolean }[]> {
+export type NotaParaEnvio = {
+  nfseId: string;
+  razaoSocial: string;
+  jaEnviada: boolean;
+  canal: CanalCobranca;
+  semContato: boolean;
+};
+
+export async function listarNotasParaEnvio(competencia: string): Promise<NotaParaEnvio[]> {
   if (!(await gate())) return [];
-  const notas = await listarNotasAutorizadasPorCompetencia(competencia);
-  if (notas.length === 0) return [];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(competencia)) return [];
   const admin = createAdminSupabase();
-  const ids = notas.map((n) => n.nfseId);
-  const { data: enviadasRows } = await admin
+  const { data } = await admin
+    .from("nfse")
+    .select(
+      "id, cliente_id, tomador_razao_social, numero, clientes(razao_social, telefone, telefone_ddi, email, clientes_financeiro(cobranca_whatsapp, cobranca_email))",
+    )
+    .eq("status", "autorizada")
+    .eq("competencia", competencia)
+    .order("numero");
+  const notas = (data ?? []).map((n) => {
+    const cl = (Array.isArray(n.clientes) ? n.clientes[0] : n.clientes) as {
+      razao_social?: string;
+      telefone?: string;
+      telefone_ddi?: string;
+      email?: string | null;
+      clientes_financeiro?:
+        | { cobranca_whatsapp?: boolean; cobranca_email?: boolean }
+        | { cobranca_whatsapp?: boolean; cobranca_email?: boolean }[];
+    } | null;
+    const fin = Array.isArray(cl?.clientes_financeiro) ? cl?.clientes_financeiro[0] : cl?.clientes_financeiro;
+    return {
+      nfseId: n.id as string,
+      clienteId: (n.cliente_id as string | null) ?? null,
+      razaoSocial: cl?.razao_social ?? (n.tomador_razao_social as string | null) ?? "SEM RAZAO SOCIAL",
+      telefone: normalizarTelefone(cl?.telefone ?? "", cl?.telefone_ddi ?? "55"),
+      email: (cl?.email ?? "").trim(),
+      flags: { whatsapp: fin?.cobranca_whatsapp ?? true, email: fin?.cobranca_email ?? true },
+    };
+  });
+  if (notas.length === 0) return [];
+
+  // "Já enviada" olha os dois históricos: WhatsApp por nfse_id, e-mail por titulo_id do
+  // honorário (MENSALIDADE do cliente na competência).
+  const nfseIds = notas.map((n) => n.nfseId);
+  const clienteIds = [...new Set(notas.map((n) => n.clienteId).filter((v): v is string => Boolean(v)))];
+  const { data: waRows } = await admin
     .from("whatsapp_mensagem")
     .select("nfse_id")
     .eq("status", "ENVIADO")
-    .in("nfse_id", ids);
-  const enviadas = new Set((enviadasRows ?? []).map((r) => r.nfse_id as string));
-  return notas.map((n) => ({ nfseId: n.nfseId, razaoSocial: n.razaoSocial, jaEnviada: enviadas.has(n.nfseId) }));
+    .in("nfse_id", nfseIds);
+  const enviadasWa = new Set((waRows ?? []).map((r) => r.nfse_id as string));
+
+  const clientesComEmail = new Set<string>();
+  if (clienteIds.length) {
+    const { data: titRows } = await admin
+      .from("titulo")
+      .select("id, cliente_id")
+      .eq("origem", "MENSALIDADE")
+      .eq("competencia", competencia)
+      .in("cliente_id", clienteIds);
+    const tituloPorCliente = new Map<string, string>();
+    for (const t of titRows ?? []) tituloPorCliente.set(t.cliente_id as string, t.id as string);
+    const tituloIds = [...tituloPorCliente.values()];
+    if (tituloIds.length) {
+      const { data: emRows } = await admin
+        .from("email_mensagem")
+        .select("titulo_id")
+        .eq("status", "ENVIADO")
+        .in("titulo_id", tituloIds);
+      const titEnviados = new Set((emRows ?? []).map((r) => r.titulo_id as string));
+      for (const [cliente, tit] of tituloPorCliente) if (titEnviados.has(tit)) clientesComEmail.add(cliente);
+    }
+  }
+
+  return notas.map((n) => {
+    const canal = flagsParaCanal(n.flags);
+    const semContato = canaisParaEnvio(n.flags, { temTelefone: Boolean(n.telefone), temEmail: Boolean(n.email) }).enviar.length === 0;
+    const jaEnviada = enviadasWa.has(n.nfseId) || (n.clienteId ? clientesComEmail.has(n.clienteId) : false);
+    return { nfseId: n.nfseId, razaoSocial: n.razaoSocial, jaEnviada, canal, semContato };
+  });
 }
 
 export type ResultadoEnvioNota = { status: "ok" | "pulado" | "erro"; motivo?: string; razaoSocial: string };
 
-// Boleto do honorário = boleto ativo do título MENSALIDADE do cliente naquela competência.
-// Opcional: sem boleto, envia só a nota (sem os dados de pagamento do boleto).
-async function boletoDoHonorario(
+// Título MENSALIDADE do cliente na competência — a âncora do honorário (liga nota, boleto e o
+// histórico de e-mail). Null se o cliente não tem mensalidade nessa competência.
+async function tituloMensalidadeId(
   admin: ReturnType<typeof createAdminSupabase>,
   clienteId: string,
   competencia: string,
-): Promise<{ id: string; linhaDigitavel: string | null; pixCopiaCola: string | null } | null> {
-  const { data: titulo } = await admin
+): Promise<string | null> {
+  const { data } = await admin
     .from("titulo")
     .select("id")
     .eq("cliente_id", clienteId)
@@ -50,11 +116,18 @@ async function boletoDoHonorario(
     .eq("origem", "MENSALIDADE")
     .limit(1)
     .maybeSingle();
-  if (!titulo) return null;
+  return (data?.id as string | null) ?? null;
+}
+
+// Boleto ativo do título do honorário. Opcional: sem boleto, envia só a nota.
+async function boletoDoHonorario(
+  admin: ReturnType<typeof createAdminSupabase>,
+  tituloId: string,
+): Promise<{ id: string; linhaDigitavel: string | null; pixCopiaCola: string | null } | null> {
   const { data: bol } = await admin
     .from("boleto")
     .select("id, linha_digitavel, pix_copia_cola")
-    .eq("titulo_id", titulo.id as string)
+    .eq("titulo_id", tituloId)
     .not("status", "in", "(cancelado,erro)")
     .order("criado_em", { ascending: false })
     .limit(1)
@@ -120,7 +193,8 @@ export async function enviarHonorarioLote(nfseId: string): Promise<ResultadoEnvi
     .select("pix_chave, banco, agencia, conta, titular, documento, mensagem_template")
     .eq("id", 1)
     .maybeSingle();
-  const boleto = await boletoDoHonorario(admin, nota.cliente_id as string, String(nota.competencia));
+  const tituloId = await tituloMensalidadeId(admin, nota.cliente_id as string, String(nota.competencia));
+  const boleto = tituloId ? await boletoDoHonorario(admin, tituloId) : null;
   const vencimento = vencimentoBR(String(nota.competencia), (fin?.dia_vencimento as number | null) ?? null);
   const pagamento = linhasPagamento({
     pixChave: dados?.pix_chave,
@@ -213,6 +287,7 @@ export async function enviarHonorarioLote(nfseId: string): Promise<ResultadoEnvi
       resultados.push(r.ok ? { canal: "email", status: "ok" } : { canal: "email", status: "erro", motivo: r.erro });
       await admin.from("email_mensagem").insert({
         cliente_id: nota.cliente_id,
+        titulo_id: tituloId,
         para: email,
         assunto,
         corpo: texto,

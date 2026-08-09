@@ -11,6 +11,6 @@ import { EnviarNotasWhatsapp } from "@/components/nfse/EnviarNotasWhatsapp";
 describe("EnviarNotasWhatsapp", () => {
   it("renderiza sem lançar", () => {
     const html = renderToStaticMarkup(<EnviarNotasWhatsapp />);
-    expect(html).toContain("Enviar notas");
+    expect(html).toContain("Enviar honorários");
   });
 });

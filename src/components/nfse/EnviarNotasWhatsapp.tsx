@@ -6,7 +6,9 @@ import { preSelecionadas } from "@/lib/whatsapp/notas-envio";
 import { Botao } from "@/components/ui/Botao";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-type Nota = { nfseId: string; razaoSocial: string; jaEnviada: boolean };
+type Canal = "whatsapp" | "email" | "ambos";
+type Nota = { nfseId: string; razaoSocial: string; jaEnviada: boolean; canal: Canal; semContato: boolean };
+const ROTULO_CANAL: Record<Canal, string> = { whatsapp: "WhatsApp", email: "E-mail", ambos: "WhatsApp + e-mail" };
 
 export function EnviarNotasWhatsapp() {
   const [mes, setMes] = useState("");
@@ -55,7 +57,7 @@ export function EnviarNotasWhatsapp() {
 
   async function enviar(alvo: Nota[]) {
     if (alvo.length === 0) return;
-    if (!confirm(`Enviar a NFS-e + cobrança para ${alvo.length} cliente(s) por WhatsApp?`)) return;
+    if (!confirm(`Enviar a NFS-e + boleto para ${alvo.length} cliente(s) pelo canal de cada um?`)) return;
     setEnviando(true);
     pararRef.current = false;
     setFalhas([]);
@@ -83,10 +85,11 @@ export function EnviarNotasWhatsapp() {
   return (
     <div className="space-y-3 rounded-2xl border border-linha bg-white p-5 text-sm">
       <div>
-        <h2 className="font-display text-sm font-semibold text-texto">Enviar notas + cobrança do mês (WhatsApp)</h2>
+        <h2 className="font-display text-sm font-semibold text-texto">Enviar honorários do mês (nota + boleto)</h2>
         <p className="text-xs text-cinza">
-          Escolha as notas e envie a cada cliente a NFS-e (PDF) + os dados de pagamento (PIX/TED). Configure em{" "}
-          <strong>Configurações → Dados de pagamento</strong>.
+          Escolha as notas e envie a cada cliente a NFS-e e o boleto pelo canal que ele escolheu (WhatsApp, e-mail
+          ou ambos). Dados de pagamento em <strong>Configurações → Dados de pagamento</strong>; o canal de cada
+          cliente, no cadastro dele.
         </p>
       </div>
 
@@ -157,6 +160,14 @@ export function EnviarNotasWhatsapp() {
                       className="accent-verde"
                     />
                     <span className="flex-1 truncate text-texto">{n.razaoSocial}</span>
+                    <span className="shrink-0 rounded bg-cinza/10 px-2 py-0.5 text-[10px] font-medium text-cinza">
+                      {ROTULO_CANAL[n.canal]}
+                    </span>
+                    {n.semContato && (
+                      <span className="shrink-0 rounded bg-atencao-fundo px-2 py-0.5 text-[10px] font-medium text-atencao">
+                        sem contato do canal
+                      </span>
+                    )}
                     {n.jaEnviada && (
                       <span className="shrink-0 rounded bg-verde/10 px-2 py-0.5 text-[10px] font-medium text-verde">
                         já enviada
