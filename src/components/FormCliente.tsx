@@ -5,6 +5,8 @@ import { TIPOS_PESSOA, REGIMES, PORTES } from "@/lib/tipos";
 import { controleCls } from "@/components/ui/Campo";
 import { Secao } from "@/components/ui/Secao";
 import { CamposComplementares } from "@/components/clientes/CamposComplementares";
+import { SeletorCanalCobranca } from "@/components/clientes/SeletorCanalCobranca";
+import type { CanalCobranca } from "@/lib/clientes/canal-cobranca";
 import type { CampoDef } from "@/lib/clientes/campos-custom";
 import { FormGrid, FormCampo } from "@/components/ui/FormGrid";
 import { Botao } from "@/components/ui/Botao";
@@ -31,6 +33,7 @@ export type ClienteDefaults = {
   data_inicio?: string | null;
   observacoes?: string;
   atualizado_em?: string | null;
+  canal_cobranca?: string;
 };
 
 type Props = {
@@ -288,6 +291,9 @@ export function FormCliente({
             <input name="cep" value={f.cep} onChange={set("cep")} className={`${controleCls()} w-full`} />
           </FormCampo>
         </FormGrid>
+        <div className="mt-3 max-w-xs">
+          <SeletorCanalCobranca name="canal_cobranca" inicial={(c.canal_cobranca as CanalCobranca) ?? "ambos"} />
+        </div>
       </Secao>
 
       <Secao titulo="Representante legal" descricao="Usado na geração do contrato">

@@ -25,6 +25,7 @@ import { podeGerenciarLegalizacao } from "@/lib/clientes/permissoes";
 import { progressoProcesso } from "@/lib/legalizacao/processo";
 import { rotuloTipo, type LegTipo, type LegEtapaStatus } from "@/lib/legalizacao/tipos";
 import { FormCliente, type ClienteDefaults } from "@/components/FormCliente";
+import { flagsParaCanal } from "@/lib/clientes/canal-cobranca";
 import { HonorarioForm } from "@/components/HonorarioForm";
 import { LinhaTempoVigencias } from "@/components/clientes/LinhaTempoVigencias";
 import { DocumentosSection } from "@/components/documentos/DocumentosSection";
@@ -160,9 +161,13 @@ export default async function FichaClientePage({
   // Flags fiscais: valor explícito (tri-state) + o que a derivação daria hoje.
   const { data: finFiscal } = await supabase
     .from("clientes_financeiro")
-    .select("qtd_funcionarios")
+    .select("qtd_funcionarios, cobranca_whatsapp, cobranca_email")
     .eq("cliente_id", id)
     .maybeSingle();
+  const canalInicial = flagsParaCanal({
+    whatsapp: finFiscal?.cobranca_whatsapp as boolean | null | undefined,
+    email: finFiscal?.cobranca_email as boolean | null | undefined,
+  });
   const cf = cliente as {
     inscricao_estadual: string | null;
     inscricao_municipal: string | null;
@@ -374,7 +379,7 @@ export default async function FichaClientePage({
               key={cliente.atualizado_em}
               action={atualizarCliente.bind(null, id)}
               contadores={contadores}
-              cliente={cliente as ClienteDefaults}
+              cliente={{ ...(cliente as ClienteDefaults), canal_cobranca: canalInicial }}
               modo="editar"
               contadorEditavel={contadorEditavel}
               camposCustom={camposCustom}
