@@ -12,6 +12,11 @@ const RELATORIOS = [
     label: "Contas a receber e a pagar",
     desc: "Títulos em aberto por período de vencimento, em PDF, Excel ou CSV.",
   },
+  {
+    href: "/financeiro/relatorios/clientes",
+    label: "Clientes e honorários",
+    desc: "Razão social, CPF/CNPJ e honorário mensal de cada cliente ativo.",
+  },
   { href: "/financeiro/relatorios/dre", label: "DRE", desc: "Demonstração de Resultado por período." },
   {
     href: "/financeiro/relatorios/extrato",
