@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.91.0] — 2026-08-09
+
+### Adicionado
+
+- **Canal de envio de honorários por cliente.** Cada cliente agora escolhe como recebe a
+  NFS-e e o boleto — **WhatsApp, e-mail ou ambos** — no cadastro e na aba Financeiro da
+  ficha (o seletor substitui os dois checkboxes antigos de cobrança). O **envio de
+  honorários em lote** (NFS-e → Envio em lote) passou a mandar **nota + boleto juntos**
+  pelo(s) canal(is) escolhido(s): por WhatsApp a nota vai em PDF com a linha digitável e o
+  Pix no texto; por e-mail vão a nota e o boleto como anexos. Clientes sem o contato do
+  canal aparecem marcados e são pulados com aviso, e o selo "já enviada" passa a considerar
+  os dois canais. A régua de cobrança automática não mudou.
+
 ## [6.90.0] — 2026-08-09
 
 ### Adicionado

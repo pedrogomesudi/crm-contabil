@@ -24,7 +24,14 @@ export function canaisParaEnvio(
 export function agregarResultado(resultados: ResultadoCanal[]): { status: StatusCanal; motivo?: string } {
   if (resultados.length === 0) return { status: "pulado", motivo: "Cliente sem canal com contato." };
   const erros = resultados.filter((r) => r.status === "erro");
-  if (erros.length) return { status: "erro", motivo: erros.map((e) => `${e.canal}: ${e.motivo ?? "falha"}`).join(" · ") };
+  if (erros.length)
+    return { status: "erro", motivo: erros.map((e) => `${e.canal}: ${e.motivo ?? "falha"}`).join(" · ") };
   if (resultados.some((r) => r.status === "ok")) return { status: "ok" };
-  return { status: "pulado", motivo: resultados.map((r) => r.motivo).filter(Boolean).join(" · ") };
+  return {
+    status: "pulado",
+    motivo: resultados
+      .map((r) => r.motivo)
+      .filter(Boolean)
+      .join(" · "),
+  };
 }

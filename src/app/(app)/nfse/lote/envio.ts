@@ -93,7 +93,8 @@ export async function listarNotasParaEnvio(competencia: string): Promise<NotaPar
 
   return notas.map((n) => {
     const canal = flagsParaCanal(n.flags);
-    const semContato = canaisParaEnvio(n.flags, { temTelefone: Boolean(n.telefone), temEmail: Boolean(n.email) }).enviar.length === 0;
+    const semContato =
+      canaisParaEnvio(n.flags, { temTelefone: Boolean(n.telefone), temEmail: Boolean(n.email) }).enviar.length === 0;
     const jaEnviada = enviadasWa.has(n.nfseId) || (n.clienteId ? clientesComEmail.has(n.clienteId) : false);
     return { nfseId: n.nfseId, razaoSocial: n.razaoSocial, jaEnviada, canal, semContato };
   });
@@ -259,7 +260,9 @@ export async function enviarHonorarioLote(nfseId: string): Promise<ResultadoEnvi
       });
       const resp = (r.resposta ?? {}) as { messageId?: string; id?: string };
       resultados.push(
-        r.ok ? { canal: "whatsapp", status: "ok" } : { canal: "whatsapp", status: "erro", motivo: r.erro ?? "Falha no envio." },
+        r.ok
+          ? { canal: "whatsapp", status: "ok" }
+          : { canal: "whatsapp", status: "erro", motivo: r.erro ?? "Falha no envio." },
       );
       await admin.from("whatsapp_mensagem").insert({
         cliente_id: nota.cliente_id,

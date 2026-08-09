@@ -87,9 +87,9 @@ export function EnviarNotasWhatsapp() {
       <div>
         <h2 className="font-display text-sm font-semibold text-texto">Enviar honorários do mês (nota + boleto)</h2>
         <p className="text-xs text-cinza">
-          Escolha as notas e envie a cada cliente a NFS-e e o boleto pelo canal que ele escolheu (WhatsApp, e-mail
-          ou ambos). Dados de pagamento em <strong>Configurações → Dados de pagamento</strong>; o canal de cada
-          cliente, no cadastro dele.
+          Escolha as notas e envie a cada cliente a NFS-e e o boleto pelo canal que ele escolheu (WhatsApp, e-mail ou
+          ambos). Dados de pagamento em <strong>Configurações → Dados de pagamento</strong>; o canal de cada cliente, no
+          cadastro dele.
         </p>
       </div>
 
