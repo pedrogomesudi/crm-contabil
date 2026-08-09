@@ -7,6 +7,11 @@ import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 const RELATORIOS = [
+  {
+    href: "/financeiro/relatorios/vencimentos",
+    label: "Contas a receber e a pagar",
+    desc: "Títulos em aberto por período de vencimento, em PDF, Excel ou CSV.",
+  },
   { href: "/financeiro/relatorios/dre", label: "DRE", desc: "Demonstração de Resultado por período." },
   {
     href: "/financeiro/relatorios/extrato",

@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.89.0] — 2026-08-08
+
+### Adicionado
+
+- **Relatório "Contas a receber e a pagar"** (Financeiro → Relatórios). Lista os títulos **em
+  aberto** com vencimento dentro de um período escolhido (ex.: 01/08/2026 a 31/08/2026), em três
+  colunas — **cliente/credor, valor e vencimento** — com total ao pé. Um seletor alterna entre
+  **A receber** (nome do cliente) e **A pagar** (nome do fornecedor/credor), algo que o extrato não
+  fazia por só juntar clientes. Exporta em **PDF, Excel e CSV** pela mesma camada de exportação já
+  usada nos demais relatórios. Quitados e cancelados ficam de fora — são o que já não se recebe/paga.
+
 ## [6.88.0] — 2026-08-08
 
 ### Adicionado
