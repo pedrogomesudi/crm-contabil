@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ClienteInput } from "@/lib/validation/cliente";
 import { ehContadorValido } from "@/lib/clientes/contadores";
+import { canalParaFlags, type CanalCobranca } from "@/lib/clientes/canal-cobranca";
 import { emitir } from "@/lib/webhooks/emitir";
 
 export type CtxEscrita = { db: SupabaseClient; autorId: string | null };
@@ -25,12 +26,26 @@ const limparVazios = (d: Record<string, unknown>) => {
   return out;
 };
 
+// canal_cobranca vem no schema mas mora em clientes_financeiro, não em clientes. Removemos do
+// payload de clientes e gravamos os flags separadamente (upsert: a linha pode não existir).
+async function gravarCanalCobranca(db: SupabaseClient, clienteId: string, canal: CanalCobranca): Promise<void> {
+  const flags = canalParaFlags(canal);
+  await db
+    .from("clientes_financeiro")
+    .upsert(
+      { cliente_id: clienteId, cobranca_whatsapp: flags.whatsapp, cobranca_email: flags.email },
+      { onConflict: "cliente_id" },
+    );
+}
+
 export async function criarClienteNucleo(input: ClienteEscrita, ctx: CtxEscrita): Promise<ResultadoCriar> {
   if (input.dados.contador_id && !(await ehContadorValido(input.dados.contador_id))) {
     return { ok: false, codigo: "contador_invalido", erro: "Contador selecionado é inválido." };
   }
   const payload = limparVazios({ ...input.dados });
   delete payload.status; // DB default 'ativo'
+  const canal = (input.dados.canal_cobranca ?? "ambos") as CanalCobranca;
+  delete payload.canal_cobranca; // não é coluna de clientes
   const { data, error } = await ctx.db
     .from("clientes")
     .insert({
@@ -64,6 +79,7 @@ export async function criarClienteNucleo(input: ClienteEscrita, ctx: CtxEscrita)
   }
   if (!data || data.length === 0) return { ok: false, codigo: "erro", erro: "Não foi possível salvar o cliente." };
   const id = data[0]!.id as string;
+  await gravarCanalCobranca(ctx.db, id, canal);
   await emitir("cliente.criado", id);
   return { ok: true, id };
 }
@@ -77,10 +93,13 @@ export async function atualizarClienteNucleo(
   if (input.dados.contador_id && !(await ehContadorValido(input.dados.contador_id))) {
     return { ok: false, codigo: "contador_invalido", erro: "Contador selecionado é inválido." };
   }
+  const payloadUpd = limparVazios({ ...input.dados });
+  const canal = (input.dados.canal_cobranca ?? "ambos") as CanalCobranca;
+  delete payloadUpd.canal_cobranca; // não é coluna de clientes
   const { data, error } = await ctx.db
     .from("clientes")
     .update({
-      ...limparVazios({ ...input.dados }),
+      ...payloadUpd,
       endereco: input.endereco,
       representante: input.representante,
       campos_custom: input.camposCustom,
@@ -95,6 +114,7 @@ export async function atualizarClienteNucleo(
   }
   if (!data || data.length === 0)
     return { ok: false, codigo: "conflito", erro: "Sem permissão ou alterado por outra pessoa. Recarregue." };
+  await gravarCanalCobranca(ctx.db, clienteId, canal);
   await emitir("cliente.atualizado", clienteId);
   return { ok: true };
 }
