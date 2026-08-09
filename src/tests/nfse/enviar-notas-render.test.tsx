@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 
 vi.mock("@/app/(app)/nfse/lote/envio", () => ({
   listarNotasParaEnvio: vi.fn(),
-  enviarNotaWhatsapp: vi.fn(),
+  enviarHonorarioLote: vi.fn(),
 }));
 
 import { renderToStaticMarkup } from "react-dom/server";

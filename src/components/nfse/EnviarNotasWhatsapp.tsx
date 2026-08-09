@@ -1,7 +1,7 @@
 "use client";
 import { controleCls } from "@/components/ui/Campo";
 import { useRef, useState } from "react";
-import { listarNotasParaEnvio, enviarNotaWhatsapp } from "@/app/(app)/nfse/lote/envio";
+import { listarNotasParaEnvio, enviarHonorarioLote } from "@/app/(app)/nfse/lote/envio";
 import { preSelecionadas } from "@/lib/whatsapp/notas-envio";
 import { Botao } from "@/components/ui/Botao";
 
@@ -63,7 +63,7 @@ export function EnviarNotasWhatsapp() {
     const falhou: Nota[] = [];
     for (const n of alvo) {
       if (pararRef.current) break;
-      const r = await enviarNotaWhatsapp(n.nfseId);
+      const r = await enviarHonorarioLote(n.nfseId);
       if (r.status === "erro") falhou.push(n);
       setProg((p) => ({
         feitas: p.feitas + 1,
