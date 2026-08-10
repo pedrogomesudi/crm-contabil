@@ -31,7 +31,7 @@ export async function listarNotasParaEnvio(competencia: string): Promise<NotaPar
   const { data } = await admin
     .from("nfse")
     .select(
-      "id, cliente_id, tomador_razao_social, numero, clientes(razao_social, telefone, telefone_ddi, email, clientes_financeiro(cobranca_whatsapp, cobranca_email))",
+      "id, cliente_id, valor, tomador_razao_social, numero, clientes(razao_social, telefone, telefone_ddi, email, clientes_financeiro(cobranca_whatsapp, cobranca_email))",
     )
     .eq("status", "autorizada")
     .eq("competencia", competencia)
@@ -50,6 +50,7 @@ export async function listarNotasParaEnvio(competencia: string): Promise<NotaPar
     return {
       nfseId: n.id as string,
       clienteId: (n.cliente_id as string | null) ?? null,
+      valor: Number(n.valor),
       razaoSocial: cl?.razao_social ?? (n.tomador_razao_social as string | null) ?? "SEM RAZAO SOCIAL",
       telefone: normalizarTelefone(cl?.telefone ?? "", cl?.telefone_ddi ?? "55"),
       email: (cl?.email ?? "").trim(),
@@ -68,22 +69,34 @@ export async function listarNotasParaEnvio(competencia: string): Promise<NotaPar
   const enviadasWa = new Set((waRows ?? []).map((r) => r.nfse_id as string));
 
   // Situação da fatura (título MENSALIDADE do cliente na competência): serve para (a) não
-  // listar quem já pagou — BAIXADO — nem quem teve a fatura cancelada — CANCELADO; e (b) o
-  // "já enviada" por e-mail (histórico por titulo_id).
+  // listar quem já pagou — BAIXADO — nem quem teve a fatura cancelada — CANCELADO; (b) casar a
+  // nota de HONORÁRIOS pelo valor (um cliente pode ter notas de outros serviços na mesma
+  // competência — essas não devem ser enviadas como honorário); e (c) o "já enviada" por
+  // e-mail (histórico por titulo_id).
   const tituloPorCliente = new Map<string, string>();
+  const valorTituloPorCliente = new Map<string, number>();
   const faturaEncerrada = new Set<string>();
   if (clienteIds.length) {
     const { data: titRows } = await admin
       .from("titulo")
-      .select("id, cliente_id, status")
+      .select("id, cliente_id, status, valor")
       .eq("origem", "MENSALIDADE")
       .eq("competencia", competencia)
       .in("cliente_id", clienteIds);
     for (const t of titRows ?? []) {
       tituloPorCliente.set(t.cliente_id as string, t.id as string);
+      valorTituloPorCliente.set(t.cliente_id as string, Number(t.valor));
       if (t.status === "BAIXADO" || t.status === "CANCELADO") faturaEncerrada.add(t.cliente_id as string);
     }
   }
+
+  // A nota de honorários é a que casa em valor com o boleto/título do cliente. Sem título ou
+  // com valor divergente, a nota não é enviada (evita mandar nota de outro serviço, como um
+  // pedido avulso, ou nota com valor inconsistente com a cobrança). Compara em centavos.
+  const ehNotaHonorario = (n: { clienteId: string | null; valor: number }): boolean => {
+    if (!n.clienteId || !valorTituloPorCliente.has(n.clienteId)) return false;
+    return Math.round(n.valor * 100) === Math.round(valorTituloPorCliente.get(n.clienteId)! * 100);
+  };
 
   const clientesComEmail = new Set<string>();
   const tituloIds = [...tituloPorCliente.values()];
@@ -97,9 +110,10 @@ export async function listarNotasParaEnvio(competencia: string): Promise<NotaPar
     for (const [cliente, tit] of tituloPorCliente) if (titEnviados.has(tit)) clientesComEmail.add(cliente);
   }
 
-  // Fatura já recebida (BAIXADO) ou cancelada sai da lista — não há o que cobrar.
+  // Só entram: notas de honorários (valor casa com o boleto) cuja fatura não foi recebida
+  // (BAIXADO) nem cancelada.
   return notas
-    .filter((n) => !(n.clienteId && faturaEncerrada.has(n.clienteId)))
+    .filter((n) => ehNotaHonorario(n) && !(n.clienteId && faturaEncerrada.has(n.clienteId)))
     .map((n) => {
       const canal = flagsParaCanal(n.flags);
       const semContato =
@@ -112,21 +126,22 @@ export async function listarNotasParaEnvio(competencia: string): Promise<NotaPar
 export type ResultadoEnvioNota = { status: "ok" | "pulado" | "erro"; motivo?: string; razaoSocial: string };
 
 // Título MENSALIDADE do cliente na competência — a âncora do honorário (liga nota, boleto e o
-// histórico de e-mail). Null se o cliente não tem mensalidade nessa competência.
-async function tituloMensalidadeId(
+// histórico de e-mail, e define o valor esperado da nota). Null se não há mensalidade.
+async function tituloMensalidade(
   admin: ReturnType<typeof createAdminSupabase>,
   clienteId: string,
   competencia: string,
-): Promise<string | null> {
+): Promise<{ id: string; valor: number } | null> {
   const { data } = await admin
     .from("titulo")
-    .select("id")
+    .select("id, valor")
     .eq("cliente_id", clienteId)
     .eq("competencia", competencia)
     .eq("origem", "MENSALIDADE")
     .limit(1)
     .maybeSingle();
-  return (data?.id as string | null) ?? null;
+  if (!data) return null;
+  return { id: data.id as string, valor: Number(data.valor) };
 }
 
 // Boleto ativo do título do honorário. Opcional: sem boleto, envia só a nota.
@@ -181,6 +196,18 @@ export async function enviarHonorarioLote(nfseId: string): Promise<ResultadoEnvi
   if (!nota) return { status: "erro", motivo: "Nota não encontrada.", razaoSocial };
   const fin = Array.isArray(cl?.clientes_financeiro) ? cl?.clientes_financeiro[0] : cl?.clientes_financeiro;
 
+  // Defesa: a nota tem de casar em valor com o honorário (título de mensalidade). Sem título
+  // ou com valor divergente, é nota de outro serviço ou inconsistente — não enviar como
+  // honorário. A tela já filtra; o envio também recusa (dupla proteção).
+  const titulo = await tituloMensalidade(admin, nota.cliente_id as string, String(nota.competencia));
+  if (!titulo || Math.round(Number(nota.valor) * 100) !== Math.round(titulo.valor * 100)) {
+    return {
+      status: "erro",
+      motivo: "Nota não corresponde ao honorário do cliente (possível nota de outro serviço) — não enviada.",
+      razaoSocial,
+    };
+  }
+
   // Canais alvo a partir dos flags do cliente + contatos disponíveis.
   const tel = normalizarTelefone(cl?.telefone ?? "", cl?.telefone_ddi ?? "55");
   const email = (cl?.email ?? "").trim();
@@ -203,8 +230,7 @@ export async function enviarHonorarioLote(nfseId: string): Promise<ResultadoEnvi
     .select("pix_chave, banco, agencia, conta, titular, documento, mensagem_template")
     .eq("id", 1)
     .maybeSingle();
-  const tituloId = await tituloMensalidadeId(admin, nota.cliente_id as string, String(nota.competencia));
-  const boleto = tituloId ? await boletoDoHonorario(admin, tituloId) : null;
+  const boleto = await boletoDoHonorario(admin, titulo.id);
   const vencimento = vencimentoBR(String(nota.competencia), (fin?.dia_vencimento as number | null) ?? null);
   const pagamento = linhasPagamento({
     pixChave: dados?.pix_chave,
@@ -299,7 +325,7 @@ export async function enviarHonorarioLote(nfseId: string): Promise<ResultadoEnvi
       resultados.push(r.ok ? { canal: "email", status: "ok" } : { canal: "email", status: "erro", motivo: r.erro });
       await admin.from("email_mensagem").insert({
         cliente_id: nota.cliente_id,
-        titulo_id: tituloId,
+        titulo_id: titulo.id,
         para: email,
         assunto,
         corpo: texto,
