@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.92.0] — 2026-08-10
+
+### Corrigido
+
+- **Envio de honorários em lote** deixa de listar clientes cuja fatura já foi **recebida
+  (baixada)** ou **cancelada** — não há o que cobrar. Antes a tela mostrava todas as notas
+  autorizadas da competência, mesmo as já pagas. Notas canceladas já não apareciam (a lista
+  só considera NFS-e autorizadas); agora o mesmo vale para o título/boleto.
+
 ## [6.91.0] — 2026-08-09
 
 ### Adicionado
