@@ -7,6 +7,7 @@ import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 const ITENS = [
+  { href: "/financeiro/fechamento", label: "Conferência do fechamento" },
   { href: "/financeiro/dashboard", label: "Dashboard financeiro" },
   { href: "/financeiro/indicadores", label: "Indicadores" },
   { href: "/financeiro/orcamento", label: "Orçamento" },
