@@ -18,7 +18,7 @@ export function EnviarNotasWhatsapp() {
   const [carregando, setCarregando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [prog, setProg] = useState({ feitas: 0, total: 0, ok: 0, pulados: 0, erros: 0 });
-  const [falhas, setFalhas] = useState<Nota[]>([]);
+  const [falhas, setFalhas] = useState<{ nota: Nota; motivo?: string }[]>([]);
   const pararRef = useRef(false);
   const competencia = mes ? `${mes}-01` : "";
 
@@ -62,11 +62,11 @@ export function EnviarNotasWhatsapp() {
     pararRef.current = false;
     setFalhas([]);
     setProg({ feitas: 0, total: alvo.length, ok: 0, pulados: 0, erros: 0 });
-    const falhou: Nota[] = [];
+    const falhou: { nota: Nota; motivo?: string }[] = [];
     for (const n of alvo) {
       if (pararRef.current) break;
       const r = await enviarHonorarioLote(n.nfseId);
-      if (r.status === "erro") falhou.push(n);
+      if (r.status === "erro") falhou.push({ nota: n, motivo: r.motivo });
       setProg((p) => ({
         feitas: p.feitas + 1,
         total: p.total,
@@ -185,12 +185,15 @@ export function EnviarNotasWhatsapp() {
       {falhas.length > 0 && !enviando && (
         <div className="space-y-2 rounded-lg border border-negativo/30 bg-negativo/10 px-3 py-2 text-xs text-negativo">
           <p className="font-medium">{falhas.length} não enviada(s) (erro). Reenvie para tentar de novo:</p>
-          <ul className="list-disc pl-4">
-            {falhas.map((n) => (
-              <li key={n.nfseId}>{n.razaoSocial}</li>
+          <ul className="list-disc space-y-0.5 pl-4">
+            {falhas.map((f) => (
+              <li key={f.nota.nfseId}>
+                {f.nota.razaoSocial}
+                {f.motivo && <span className="text-cinza"> — {f.motivo}</span>}
+              </li>
             ))}
           </ul>
-          <Botao variante="primario" onClick={() => enviar(falhas)}>
+          <Botao variante="primario" onClick={() => enviar(falhas.map((f) => f.nota))}>
             Reenviar as {falhas.length} que falharam
           </Botao>
         </div>

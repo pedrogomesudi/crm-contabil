@@ -62,8 +62,8 @@ export async function obterDanfsePdf(
     return { erro: "Falha ao abrir o certificado.", chave };
   }
   const ambiente: "homologacao" | "producao" = nota.ambiente === "producao" ? "producao" : "homologacao";
-  const pdf = await baixarDanfsePdf(chave, { pfx: cert.pfx, senha: cert.senha }, ambiente);
-  if (!pdf) return { erro: "DANFSe indisponível no momento.", chave };
-  await guardarDanfseStorage(admin, chave, pdf);
-  return { pdfBase64: pdf.toString("base64"), chave };
+  const r = await baixarDanfsePdf(chave, { pfx: cert.pfx, senha: cert.senha }, ambiente);
+  if ("erro" in r) return { erro: `DANFSe indisponível — ${r.erro}`, chave };
+  await guardarDanfseStorage(admin, chave, r.pdf);
+  return { pdfBase64: r.pdf.toString("base64"), chave };
 }

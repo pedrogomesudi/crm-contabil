@@ -8,7 +8,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-## [6.92.0] — 2026-08-10
+## [6.93.0] — 2026-08-10
+
+### Corrigido
+
+- **Envio de honorários — diagnóstico de erro visível.** Quando o envio falhava, a tela só
+  dizia "não enviada (erro)" sem o motivo. Agora cada falha mostra a causa real ao lado do
+  cliente. A obtenção da DANFSe passou a propagar o **motivo do ADN** (status HTTP, timeout
+  ou erro de rede/TLS) em vez de um "indisponível" genérico, o que torna possível
+  identificar por que uma nota não é baixada (ex.: `ADN respondeu HTTP 404`).
+
+### Alterado
+
+- `baixarDanfsePdf` passa a retornar `{ pdf } | { erro }` com o motivo, em vez de
+  `Buffer | null`.
 
 ### Corrigido
 

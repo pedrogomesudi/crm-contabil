@@ -41,8 +41,8 @@ async function prefetchDanfse(
   ambiente: "homologacao" | "producao",
 ): Promise<void> {
   try {
-    const pdf = await baixarDanfsePdf(chave, cert, ambiente);
-    if (pdf) await guardarDanfseStorage(admin, chave, pdf);
+    const r = await baixarDanfsePdf(chave, cert, ambiente);
+    if ("pdf" in r) await guardarDanfseStorage(admin, chave, r.pdf);
   } catch {
     /* best-effort */
   }
