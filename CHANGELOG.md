@@ -8,7 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-## [6.94.0] — 2026-08-10
+## [6.95.0] — 2026-08-10
+
+### Adicionado
+
+- **Conferência do fechamento** (Financeiro → Conferência do fechamento). Uma tela por
+  competência que mostra, para cada cliente ativo, as quatro peças do ciclo lado a lado —
+  **honorário × título × nota fiscal × boleto** — com um status claro: **Pronto** (as quatro
+  existem e batem em valor), **Falta peça** (falta nota ou boleto, mas nada errado) ou
+  **Bloqueado** (valores divergem ou a nota é de outro serviço). Traz cards de resumo
+  (prontos, sem boleto, nota diverge, sem nota), filtros e busca. O objetivo é fechar o mês
+  olhando um lugar só e enviar apenas o que está Pronto — em vez de descobrir o erro pelo
+  cliente. Primeira entrega da frente de confiabilidade do fechamento.
 
 ### Corrigido
 
