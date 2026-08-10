@@ -58,8 +58,6 @@ export async function listarNotasParaEnvio(competencia: string): Promise<NotaPar
   });
   if (notas.length === 0) return [];
 
-  // "Já enviada" olha os dois históricos: WhatsApp por nfse_id, e-mail por titulo_id do
-  // honorário (MENSALIDADE do cliente na competência).
   const nfseIds = notas.map((n) => n.nfseId);
   const clienteIds = [...new Set(notas.map((n) => n.clienteId).filter((v): v is string => Boolean(v)))];
   const { data: waRows } = await admin
@@ -69,35 +67,46 @@ export async function listarNotasParaEnvio(competencia: string): Promise<NotaPar
     .in("nfse_id", nfseIds);
   const enviadasWa = new Set((waRows ?? []).map((r) => r.nfse_id as string));
 
-  const clientesComEmail = new Set<string>();
+  // Situação da fatura (título MENSALIDADE do cliente na competência): serve para (a) não
+  // listar quem já pagou — BAIXADO — nem quem teve a fatura cancelada — CANCELADO; e (b) o
+  // "já enviada" por e-mail (histórico por titulo_id).
+  const tituloPorCliente = new Map<string, string>();
+  const faturaEncerrada = new Set<string>();
   if (clienteIds.length) {
     const { data: titRows } = await admin
       .from("titulo")
-      .select("id, cliente_id")
+      .select("id, cliente_id, status")
       .eq("origem", "MENSALIDADE")
       .eq("competencia", competencia)
       .in("cliente_id", clienteIds);
-    const tituloPorCliente = new Map<string, string>();
-    for (const t of titRows ?? []) tituloPorCliente.set(t.cliente_id as string, t.id as string);
-    const tituloIds = [...tituloPorCliente.values()];
-    if (tituloIds.length) {
-      const { data: emRows } = await admin
-        .from("email_mensagem")
-        .select("titulo_id")
-        .eq("status", "ENVIADO")
-        .in("titulo_id", tituloIds);
-      const titEnviados = new Set((emRows ?? []).map((r) => r.titulo_id as string));
-      for (const [cliente, tit] of tituloPorCliente) if (titEnviados.has(tit)) clientesComEmail.add(cliente);
+    for (const t of titRows ?? []) {
+      tituloPorCliente.set(t.cliente_id as string, t.id as string);
+      if (t.status === "BAIXADO" || t.status === "CANCELADO") faturaEncerrada.add(t.cliente_id as string);
     }
   }
 
-  return notas.map((n) => {
-    const canal = flagsParaCanal(n.flags);
-    const semContato =
-      canaisParaEnvio(n.flags, { temTelefone: Boolean(n.telefone), temEmail: Boolean(n.email) }).enviar.length === 0;
-    const jaEnviada = enviadasWa.has(n.nfseId) || (n.clienteId ? clientesComEmail.has(n.clienteId) : false);
-    return { nfseId: n.nfseId, razaoSocial: n.razaoSocial, jaEnviada, canal, semContato };
-  });
+  const clientesComEmail = new Set<string>();
+  const tituloIds = [...tituloPorCliente.values()];
+  if (tituloIds.length) {
+    const { data: emRows } = await admin
+      .from("email_mensagem")
+      .select("titulo_id")
+      .eq("status", "ENVIADO")
+      .in("titulo_id", tituloIds);
+    const titEnviados = new Set((emRows ?? []).map((r) => r.titulo_id as string));
+    for (const [cliente, tit] of tituloPorCliente) if (titEnviados.has(tit)) clientesComEmail.add(cliente);
+  }
+
+  // Fatura já recebida (BAIXADO) ou cancelada sai da lista — não há o que cobrar.
+  return notas
+    .filter((n) => !(n.clienteId && faturaEncerrada.has(n.clienteId)))
+    .map((n) => {
+      const canal = flagsParaCanal(n.flags);
+      const semContato =
+        canaisParaEnvio(n.flags, { temTelefone: Boolean(n.telefone), temEmail: Boolean(n.email) }).enviar.length === 0;
+      const jaEnviada = enviadasWa.has(n.nfseId) || (n.clienteId ? clientesComEmail.has(n.clienteId) : false);
+      return { nfseId: n.nfseId, razaoSocial: n.razaoSocial, jaEnviada, canal, semContato };
+    });
 }
 
 export type ResultadoEnvioNota = { status: "ok" | "pulado" | "erro"; motivo?: string; razaoSocial: string };
