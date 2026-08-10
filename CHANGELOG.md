@@ -8,7 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-## [6.93.0] — 2026-08-10
+## [6.94.0] — 2026-08-10
+
+### Corrigido
+
+- **Envio de honorários só manda a nota de honorários.** Um cliente pode ter, na mesma
+  competência, notas de **outros serviços** (ex.: um pedido avulso) além da nota de
+  honorários. O envio listava e mandava qualquer NFS-e autorizada — chegou a enviar a um
+  cliente uma nota de outro serviço, sem relação com os honorários. Agora só entra a nota
+  cujo **valor casa com o boleto/honorário** do cliente (comparado em centavos); notas de
+  outros serviços e notas com valor inconsistente com a cobrança ficam de fora. Além do
+  filtro na tela, o próprio envio recusa uma nota que não corresponda ao honorário (dupla
+  proteção), garantindo que o cliente sempre receba nota e boleto com o mesmo valor.
 
 ### Corrigido
 
