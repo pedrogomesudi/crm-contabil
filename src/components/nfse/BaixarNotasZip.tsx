@@ -63,9 +63,11 @@ export function BaixarNotasZip() {
     const falhou: NotaParaDownload[] = [];
     let adicionadas = 0;
 
-    // Pool de concorrência: rápido quando vem do cache; o retry cobre eventual ADN.
+    // Pool de concorrência baixo: baixar do ADN em paralelo satura o serviço nacional (429)
+    // e piora a própria taxa de falha. Uma requisição por vez é mais lenta, porém confiável;
+    // o cache (populado pelo "Preparar notas") já resolve a maioria.
     let proximo = 0;
-    const CONCORRENCIA = 4;
+    const CONCORRENCIA = 1;
     async function worker() {
       while (!pararRef.current) {
         const i = proximo++;

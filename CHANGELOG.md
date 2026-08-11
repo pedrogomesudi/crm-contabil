@@ -8,7 +8,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-## [6.95.0] — 2026-08-10
+## [6.96.0] — 2026-08-10
+
+### Adicionado
+
+- **Preparar notas para envio (baixar PDFs)** na tela de NFS-e em lote. Baixa os PDFs
+  (DANFSe) da competência para o cache do sistema, **um a um, com pausa entre eles**, para
+  que o envio não dependa do servidor nacional (ADN) na hora — a causa do envio travar. Se
+  o ADN recusar, a tela mostra o **motivo agrupado** (ex.: "12× ADN HTTP 404"), tornando a
+  falha diagnosticável em vez de invisível. Primeira parte da correção da DANFSe (Onda 0).
+
+### Alterado
+
+- O **download de notas em ZIP** deixa de baixar 4 em paralelo e passa a baixar **uma por
+  vez**: o paralelismo saturava o ADN (erro 429) e piorava a própria taxa de falha.
 
 ### Adicionado
 
