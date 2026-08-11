@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.2] — 2026-08-11
+
+### Alterado
+
+- **DANFSe gerado localmente segue o layout oficial nacional.** O gerador foi reescrito para
+  reproduzir a estrutura do DANFSe da SEFIN Nacional: cabeçalho com a prefeitura, chave de
+  acesso, seções **Emitente/Prestador**, **Tomador**, **Intermediário**, **Serviço
+  Prestado**, **Tributação Municipal**, **Valor Total** e **Totais Aproximados dos
+  Tributos**, com os mesmos rótulos e o QR Code de consulta. O nome do município (que o XML
+  traz só como código) é resolvido — prestador pelo XML, tomador pelo cadastro do cliente.
+
 ## [6.99.1] — 2026-08-10
 
 ### Alterado

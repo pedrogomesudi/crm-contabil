@@ -11,9 +11,17 @@ import { gerarDanfsePdf } from "@/lib/nfse/danfse-gerar";
 // cacheado — quando o ADN voltar, o próximo acesso busca o oficial. null se não há XML.
 async function danfseLocalDoXml(admin: Admin, chave: string): Promise<Buffer | null> {
   try {
-    const { data } = await admin.from("nfse").select("nfse_xml").eq("chave_acesso", chave).maybeSingle();
+    const { data } = await admin.from("nfse").select("nfse_xml, cliente_id").eq("chave_acesso", chave).maybeSingle();
     if (!data?.nfse_xml) return null;
-    return await gerarDanfsePdf(parsearNfseXml(descomprimirXmlNfse(data.nfse_xml as string)));
+    const dados = parsearNfseXml(descomprimirXmlNfse(data.nfse_xml as string));
+    // O XML só traz o CÓDIGO IBGE do município do tomador; resolve o NOME pelo cadastro do cliente.
+    if (data.cliente_id) {
+      const { data: cli } = await admin.from("clientes").select("endereco").eq("id", data.cliente_id).maybeSingle();
+      const end = (cli?.endereco ?? {}) as { cidade?: string; uf?: string };
+      if (end.cidade) dados.tomador.endereco.municipio = end.cidade;
+      if (end.uf) dados.tomador.endereco.uf = end.uf;
+    }
+    return await gerarDanfsePdf(dados);
   } catch {
     return null;
   }
