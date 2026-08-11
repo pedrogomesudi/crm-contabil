@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.3] — 2026-08-11
+
+### Alterado
+
+- **Envio de honorários usa exclusivamente o DANFSe oficial do ADN.** A pedido, o gerador de
+  DANFSe local foi removido — o documento enviado é sempre o oficial da SEFIN Nacional. Se o
+  ADN estiver instável (HTTP 503), a nota não é enviada até o serviço normalizar (o motivo
+  aparece no envio e no "Preparar notas"). Removidas as dependências de geração de PDF.
+
 ## [6.99.2] — 2026-08-11
 
 ### Alterado

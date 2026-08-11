@@ -2,7 +2,7 @@
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
-import { lerDanfseStorage, baixarDanfseOficial } from "@/lib/nfse/danfse-cache";
+import { lerDanfseStorage, obterDanfsePdf } from "@/lib/nfse/danfse-cache";
 
 async function gate() {
   const p = await getPerfilAtual();
@@ -66,7 +66,7 @@ export async function prepararDanfse(competencia: string, limite = 8): Promise<R
       jaTinha++;
       continue;
     }
-    const r = await baixarDanfseOficial(admin, {
+    const r = await obterDanfsePdf(admin, {
       chave_acesso: n.chave_acesso,
       ambiente: n.ambiente,
       emitente: n.emitente,
