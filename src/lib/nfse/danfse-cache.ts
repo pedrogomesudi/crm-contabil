@@ -62,8 +62,19 @@ export async function obterDanfsePdf(
     return { erro: "Falha ao abrir o certificado.", chave };
   }
   const ambiente: "homologacao" | "producao" = nota.ambiente === "producao" ? "producao" : "homologacao";
-  const r = await baixarDanfsePdf(chave, { pfx: cert.pfx, senha: cert.senha }, ambiente);
-  if ("erro" in r) return { erro: `DANFSe indisponível — ${r.erro}`, chave };
-  await guardarDanfseStorage(admin, chave, r.pdf);
-  return { pdfBase64: r.pdf.toString("base64"), chave };
+  // Retry paciente para instabilidade do ADN (503/502, rate limit 429, timeout, rede): espera
+  // e tenta de novo. Erro permanente (404 sem nota, certificado) não insiste.
+  const esperas = [0, 3000];
+  let ultimoErro = "indisponível";
+  for (const espera of esperas) {
+    if (espera) await new Promise((r) => setTimeout(r, espera));
+    const r = await baixarDanfsePdf(chave, { pfx: cert.pfx, senha: cert.senha }, ambiente);
+    if ("pdf" in r) {
+      await guardarDanfseStorage(admin, chave, r.pdf);
+      return { pdfBase64: r.pdf.toString("base64"), chave };
+    }
+    ultimoErro = r.erro;
+    if (!/HTTP 5\d\d|HTTP 429|tempo esgotado|rede|TLS/i.test(r.erro)) break;
+  }
+  return { erro: `DANFSe indisponível — ${ultimoErro}`, chave };
 }

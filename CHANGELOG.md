@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.98.0] — 2026-08-10
+
+### Alterado
+
+- **Preparar notas / download de DANFSe: retry paciente para instabilidade do ADN.** O
+  diagnóstico do "Preparar notas" mostrou que o servidor nacional (ADN) estava devolvendo
+  **HTTP 503** (indisponível) e **429** (limite de taxa) — falhas transitórias do serviço, não
+  do sistema. Agora a obtenção do PDF espera e **tenta de novo** nesses casos (e em timeout /
+  erro de rede), sem insistir em erros permanentes (404, certificado). O preparo processa
+  lotes menores, com mais folga entre downloads, para não disparar o 429. Quando o ADN
+  normaliza, o cache popula e o envio destrava.
+
 ## [6.97.0] — 2026-08-10
 
 ### Corrigido
