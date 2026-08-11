@@ -8,7 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-## [6.96.0] — 2026-08-10
+## [6.97.0] — 2026-08-10
+
+### Corrigido
+
+- **Download de XML das notas (lote e individual) entregava arquivo ilegível.** O XML
+  autorizado é guardado comprimido (gzip+base64); o download servia esse conteúdo cru num
+  arquivo `.xml`, que não abria em nenhum leitor. Agora o XML é **descomprimido** antes de
+  ser baixado, voltando a ser um XML válido para escrituração. Correção com _fallback_ para
+  eventuais registros legados gravados sem compressão.
 
 ### Adicionado
 
