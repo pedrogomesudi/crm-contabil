@@ -63,7 +63,7 @@ export function PrepararDanfse() {
       </div>
       {erros.length > 0 && (
         <div className="space-y-1 rounded-lg border border-atencao/30 bg-atencao-fundo px-3 py-2 text-xs text-atencao">
-          <p className="font-medium">Algumas notas não baixaram. Motivos:</p>
+          <p className="font-medium">O oficial de algumas notas não baixou (o ADN está instável). Motivos:</p>
           <ul className="list-disc pl-4">
             {erros.map((e) => (
               <li key={e.motivo}>
@@ -71,6 +71,10 @@ export function PrepararDanfse() {
               </li>
             ))}
           </ul>
+          <p className="mt-1 border-t border-atencao/20 pt-1 text-atencao/90">
+            Isto <strong>não impede o envio</strong>: as notas sem o oficial em cache saem com o DANFSe que o próprio
+            SALDO gera a partir do XML. Tente aqui de novo mais tarde para guardar o oficial.
+          </p>
         </div>
       )}
     </div>
