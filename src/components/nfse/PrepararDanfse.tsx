@@ -41,9 +41,9 @@ export function PrepararDanfse() {
       <div>
         <h2 className="font-display text-sm font-semibold text-texto">Preparar notas para envio (baixar PDFs)</h2>
         <p className="text-xs text-cinza">
-          Baixa o DANFSe <strong>oficial</strong> do servidor nacional (ADN) para o cache. É opcional: se o ADN estiver
-          instável, o envio já funciona com o DANFSe que o próprio SALDO gera a partir do XML autorizado. Use isto para
-          guardar o oficial quando o ADN estiver no ar. Pode repetir sem problema.
+          Baixa o DANFSe <strong>oficial</strong> do servidor nacional (ADN) e guarda no sistema. Rode antes de enviar.
+          Enquanto o ADN estiver instável (HTTP 503), algumas notas não baixam — tente novamente mais tarde; o envio usa
+          sempre o DANFSe oficial. Pode repetir sem problema.
         </p>
       </div>
       <div className="flex flex-wrap items-end gap-2">
@@ -72,8 +72,8 @@ export function PrepararDanfse() {
             ))}
           </ul>
           <p className="mt-1 border-t border-atencao/20 pt-1 text-atencao/90">
-            Isto <strong>não impede o envio</strong>: as notas sem o oficial em cache saem com o DANFSe que o próprio
-            SALDO gera a partir do XML. Tente aqui de novo mais tarde para guardar o oficial.
+            É uma instabilidade do servidor nacional, não do SALDO. Tente novamente mais tarde — quando o ADN
+            normalizar, as notas baixam e o envio destrava.
           </p>
         </div>
       )}
