@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.0] — 2026-08-10
+
+### Adicionado
+
+- **Geração local do DANFSe (independência do ADN).** Quando o servidor nacional (ADN) não
+  entrega o PDF da nota — instabilidade recorrente (HTTP 503/429) —, o SALDO agora **gera o
+  DANFSe a partir do XML autorizado**: layout padrão com prestador, tomador, serviço,
+  valores, número e **QR Code** de consulta pública pela chave. Assim o **envio de honorários
+  não trava mais** por causa do ADN. Quando o ADN normaliza, o DANFSe **oficial** volta a ser
+  usado automaticamente (o "Preparar notas" busca o oficial para o cache). A emissão da nota
+  no portal nacional não muda — o documento fiscal continua sendo a NFS-e (XML); o DANFSe é a
+  representação para envio/impressão.
+
 ## [6.98.0] — 2026-08-10
 
 ### Alterado
