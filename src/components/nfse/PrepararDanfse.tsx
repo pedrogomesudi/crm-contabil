@@ -41,8 +41,9 @@ export function PrepararDanfse() {
       <div>
         <h2 className="font-display text-sm font-semibold text-texto">Preparar notas para envio (baixar PDFs)</h2>
         <p className="text-xs text-cinza">
-          Baixa os PDFs (DANFSe) da competência para o sistema, um a um, para que o envio não dependa do servidor
-          nacional na hora. Rode antes de enviar; pode repetir sem problema.
+          Baixa o DANFSe <strong>oficial</strong> do servidor nacional (ADN) para o cache. É opcional: se o ADN estiver
+          instável, o envio já funciona com o DANFSe que o próprio SALDO gera a partir do XML autorizado. Use isto para
+          guardar o oficial quando o ADN estiver no ar. Pode repetir sem problema.
         </p>
       </div>
       <div className="flex flex-wrap items-end gap-2">

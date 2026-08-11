@@ -3,6 +3,21 @@ import type { createAdminSupabase } from "@/lib/supabase/admin";
 import { decifrarDominio } from "@/lib/cripto/envelope";
 import { carregarCertificado } from "@/lib/nfse/certificado";
 import { baixarDanfsePdf } from "@/lib/nfse/danfse";
+import { descomprimirXmlNfse } from "@/lib/nfse/xml";
+import { parsearNfseXml } from "@/lib/nfse/danfse-parse";
+import { gerarDanfsePdf } from "@/lib/nfse/danfse-gerar";
+
+// Fallback: gera o DANFSe localmente a partir do XML autorizado (independe do ADN). Não é
+// cacheado — quando o ADN voltar, o próximo acesso busca o oficial. null se não há XML.
+async function danfseLocalDoXml(admin: Admin, chave: string): Promise<Buffer | null> {
+  try {
+    const { data } = await admin.from("nfse").select("nfse_xml").eq("chave_acesso", chave).maybeSingle();
+    if (!data?.nfse_xml) return null;
+    return await gerarDanfsePdf(parsearNfseXml(descomprimirXmlNfse(data.nfse_xml as string)));
+  } catch {
+    return null;
+  }
+}
 
 type Admin = ReturnType<typeof createAdminSupabase>;
 
@@ -42,8 +57,9 @@ export async function carregarCertRowDaNota(
 
 export type NotaDanfse = { chave_acesso: string; ambiente: string | null; emitente: string; cliente_id: string };
 
-// Cache-first + ADN. O caller fornece a nota (respeitando o próprio gate/RLS).
-export async function obterDanfsePdf(
+// Só o DANFSe OFICIAL: cache-first + ADN (com retry). Sem fallback local — usado pelo
+// "Preparar notas", que quer popular o cache com o oficial e reportar o erro real do ADN.
+export async function baixarDanfseOficial(
   admin: Admin,
   nota: NotaDanfse,
 ): Promise<{ pdfBase64?: string; chave?: string; erro?: string }> {
@@ -77,4 +93,19 @@ export async function obterDanfsePdf(
     if (!/HTTP 5\d\d|HTTP 429|tempo esgotado|rede|TLS/i.test(r.erro)) break;
   }
   return { erro: `DANFSe indisponível — ${ultimoErro}`, chave };
+}
+
+// DANFSe para USO (envio/download): tenta o oficial e, se o ADN não entrega, gera o local do
+// XML autorizado — assim o envio nunca trava. Quando o ADN normaliza, volta ao oficial.
+export async function obterDanfsePdf(
+  admin: Admin,
+  nota: NotaDanfse,
+): Promise<{ pdfBase64?: string; chave?: string; erro?: string }> {
+  const r = await baixarDanfseOficial(admin, nota);
+  if (r.pdfBase64) return r;
+  if (r.chave) {
+    const local = await danfseLocalDoXml(admin, r.chave);
+    if (local) return { pdfBase64: local.toString("base64"), chave: r.chave };
+  }
+  return r;
 }
