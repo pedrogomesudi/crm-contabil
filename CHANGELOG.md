@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.4] — 2026-08-11
+
+### Adicionado
+
+- **DANFSe fiel via Gotenberg (independência do ADN).** Quando o servidor nacional (ADN)
+  não entrega o PDF oficial (instabilidade 503/429), o SALDO agora monta o DANFSe em **HTML
+  reproduzindo o layout oficial** (cabeçalho/prefeitura, chave, QR Code e as seções
+  Emitente, Tomador, Intermediário, Serviço, Tributação Municipal/Federal, Valor Total e
+  Totais dos Tributos) e o converte em PDF pelo **Gotenberg** — resultado muito mais próximo
+  do oficial que a versão anterior. O DANFSe **oficial** continua sendo preferido sempre que
+  o ADN responde; este entra só na falta dele, e o envio não trava mais.
+
 ## [6.99.3] — 2026-08-11
 
 ### Alterado
