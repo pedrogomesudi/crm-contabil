@@ -8,6 +8,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.1] — 2026-08-10
+
+### Alterado
+
+- **"Preparar notas": mensagem mais clara quando o ADN está fora.** O 503/429 ali é só a
+  busca do DANFSe **oficial** e **não impede o envio** — a tela agora deixa isso explícito:
+  as notas sem o oficial em cache saem com o DANFSe que o próprio SALDO gera do XML.
+
 ## [6.99.0] — 2026-08-10
 
 ### Adicionado
