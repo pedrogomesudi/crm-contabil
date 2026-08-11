@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { descomprimirXmlNfse } from "@/lib/nfse/xml";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
 import { decifrarDominio } from "@/lib/cripto/envelope";
@@ -26,9 +27,11 @@ export async function baixarXmlNfse(nfseId: string): Promise<{ erro?: string; co
   const supabase = await createServerSupabase();
   const { data } = await supabase.from("nfse").select("nfse_xml, dps_xml").eq("id", nfseId).maybeSingle();
   if (!data) return { erro: "Nota não encontrada." };
-  const conteudo = data.nfse_xml ?? data.dps_xml;
-  if (!conteudo) return { erro: "XML indisponível." };
-  return { conteudo };
+  // nfse_xml é gzip+base64 (formato de armazenamento) — descomprime para XML legível.
+  // dps_xml já é XML puro (fallback quando ainda não há o XML autorizado).
+  if (data.nfse_xml) return { conteudo: descomprimirXmlNfse(data.nfse_xml as string) };
+  if (data.dps_xml) return { conteudo: data.dps_xml as string };
+  return { erro: "XML indisponível." };
 }
 
 // Baixa o DANFSe (PDF) da Sefin (ADN) usando a chave + o certificado (mTLS).
