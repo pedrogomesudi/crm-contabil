@@ -1,27 +1,25 @@
 import "server-only";
-import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import QRCode from "qrcode";
 import type { DadosDanfse, EnderecoDanfse } from "./danfse-parse";
 
-// Desenha o DANFSe (documento auxiliar da NFS-e) em PDF a partir dos dados do XML autorizado.
-// Não substitui a nota (o XML é o documento fiscal) — é a representação para envio/impressão,
-// com os mesmos dados e o QR Code de consulta pública pela chave.
+// Desenha o DANFSe (documento auxiliar da NFS-e) em PDF seguindo o layout oficial nacional,
+// a partir dos dados do XML autorizado. Não substitui a nota (o XML é o documento fiscal) —
+// é a representação para envio/impressão, com o QR Code de consulta pública pela chave.
 
-// Consulta pública nacional pela chave de acesso (conteúdo do QR Code).
 const urlConsulta = (chave: string) => `https://www.nfse.gov.br/consultapublica?tpc=1&chNFSe=${chave}`;
+const D = "-"; // campo não informado
 
-// Helvetica (WinAnsi) cobre o pt-BR; troca o que estiver fora para não quebrar o encode.
 const limpar = (t: string) =>
   t
-    .replace(/[^\x20-\x7E -ÿ]/g, "?")
+    .replace(/[^\x20-\x7E -ÿ]/g, "?")
     .replace(/\s+/g, " ")
     .trim();
-
 const fmtDoc = (d: string) => {
   const x = d.replace(/\D/g, "");
   if (x.length === 14) return x.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
   if (x.length === 11) return x.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
-  return d;
+  return d || D;
 };
 const fmtCep = (c: string) => {
   const x = c.replace(/\D/g, "");
@@ -29,161 +27,191 @@ const fmtCep = (c: string) => {
 };
 const fmtMoeda = (v: number) =>
   `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmtDataHora = (iso: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso);
+  return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : fmtData(iso);
+};
 const fmtData = (iso: string) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : iso;
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : iso || D;
 };
-const fmtChave = (c: string) => c.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
 const linhaEndereco = (e: EnderecoDanfse) =>
-  limpar(
-    [
-      [e.logradouro, e.numero].filter(Boolean).join(", "),
-      e.bairro,
-      e.municipio && e.uf ? `${e.municipio}/${e.uf}` : e.municipio,
-      e.cep ? `CEP ${fmtCep(e.cep)}` : "",
-    ]
-      .filter(Boolean)
-      .join(" · "),
-  );
+  [[e.logradouro, e.numero].filter(Boolean).join(", "), e.bairro].filter(Boolean).join(", ") || D;
 
-const CINZA = rgb(0.42, 0.46, 0.51);
 const TINTA = rgb(0.1, 0.13, 0.16);
-const LINHA = rgb(0.85, 0.87, 0.9);
-const VERDE = rgb(0.06, 0.5, 0.34);
+const CINZA = rgb(0.42, 0.46, 0.51);
+const LINHA = rgb(0.8, 0.82, 0.85);
+const BARRA = rgb(0.2, 0.24, 0.29);
 
 export async function gerarDanfsePdf(d: DadosDanfse): Promise<Buffer> {
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([595.28, 841.89]); // A4
+  const page: PDFPage = pdf.addPage([595.28, 841.89]);
   const reg = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const M = 40; // margem
+  const M = 28;
   const W = 595.28 - M * 2;
-  let y = 800;
+  let y = 812;
 
   const txt = (t: string, x: number, yy: number, size: number, font: PDFFont = reg, color = TINTA) =>
     page.drawText(limpar(t), { x, y: yy, size, font, color });
-  const rotulo = (t: string, x: number, yy: number) => txt(t.toUpperCase(), x, yy, 6.5, bold, CINZA);
 
-  // Cabeçalho
-  txt("DANFSe", M, y, 20, bold);
-  txt("Documento Auxiliar da NFS-e", M + 92, y + 2, 10, reg, CINZA);
-  txt("Nota Fiscal de Serviço eletrônica — Padrão Nacional", M + 92, y - 9, 8, reg, CINZA);
-  if (!d.producao) txt("AMBIENTE DE HOMOLOGAÇÃO — SEM VALOR FISCAL", M, y - 24, 9, bold, rgb(0.7, 0.4, 0));
-  y -= 40;
-
-  // Faixa: número + competência + emissão + DFe
-  const faixa = (rot: string, val: string, x: number) => {
-    rotulo(rot, x, y);
-    txt(val, x, y - 13, 11, bold);
+  // Barra de seção (fundo escuro, texto branco).
+  const secao = (titulo: string): void => {
+    page.drawRectangle({ x: M, y: y - 15, width: W, height: 15, color: BARRA });
+    txt(titulo, M + 5, y - 11, 7.5, bold, rgb(1, 1, 1));
+    y -= 15;
   };
-  page.drawRectangle({ x: M, y: y - 20, width: W, height: 34, borderColor: LINHA, borderWidth: 1 });
-  faixa("Número da NFS-e", d.numero || "—", M + 8);
-  faixa("Competência", d.competencia ? fmtData(d.competencia) : "—", M + 150);
-  faixa("Emissão", d.dataEmissao ? fmtData(d.dataEmissao) : "—", M + 270);
-  faixa("DFe nº", d.dfe || "—", M + 380);
-  y -= 34;
+  // Uma linha de campos (rótulo em cima, valor embaixo), em colunas de larguras proporcionais.
+  const linha = (campos: { r: string; v: string; flex?: number }[], h = 26): void => {
+    const total = campos.reduce((s, c) => s + (c.flex ?? 1), 0);
+    let x = M;
+    page.drawRectangle({ x: M, y: y - h, width: W, height: h, borderColor: LINHA, borderWidth: 0.5 });
+    for (const c of campos) {
+      const w = (W * (c.flex ?? 1)) / total;
+      txt(c.r.toUpperCase(), x + 5, y - 9, 5.5, reg, CINZA);
+      txt(c.v || D, x + 5, y - 20, 8, bold);
+      x += w;
+      if (x < M + W - 1) page.drawLine({ start: { x, y: y - h }, end: { x, y }, thickness: 0.5, color: LINHA });
+    }
+    y -= h;
+  };
 
-  // QR Code (canto superior direito, dentro da faixa de chave)
+  // ===== Cabeçalho =====
+  page.drawRectangle({ x: M, y: y - 62, width: W, height: 62, borderColor: LINHA, borderWidth: 0.8 });
+  txt("DANFSe", M + 8, y - 20, 17, bold);
+  txt("v1.0", M + 78, y - 20, 9, reg, CINZA);
+  txt("Documento Auxiliar da NFS-e", M + 8, y - 33, 9, reg, CINZA);
+  txt(`Prefeitura Municipal de ${limpar(d.localEmissao) || D}`, M + 8, y - 48, 8.5, bold);
+  if (!d.producao) txt("AMBIENTE DE HOMOLOGAÇÃO — SEM VALOR FISCAL", M + 8, y - 58, 7.5, bold, rgb(0.7, 0.35, 0));
+
+  // QR + chave (à direita)
   let qrImg = null;
   try {
-    const png = await QRCode.toBuffer(urlConsulta(d.chave), { margin: 0, width: 220, errorCorrectionLevel: "M" });
+    const png = await QRCode.toBuffer(urlConsulta(d.chave), { margin: 0, width: 200, errorCorrectionLevel: "M" });
     qrImg = await pdf.embedPng(png);
   } catch {
     qrImg = null;
   }
+  if (qrImg) page.drawImage(qrImg, { x: M + W - 58, y: y - 58, width: 50, height: 50 });
+  txt("CHAVE DE ACESSO DA NFS-e", M + 200, y - 12, 5.5, reg, CINZA);
+  txt(d.chave, M + 200, y - 23, 7.7, bold);
+  txt("Verifique a autenticidade pela leitura do QR Code", M + 200, y - 35, 6.5, reg, CINZA);
+  txt("ou pela chave no portal nacional da NFS-e.", M + 200, y - 44, 6.5, reg, CINZA);
+  y -= 62;
 
-  // Chave de acesso
-  page.drawRectangle({
-    x: M,
-    y: y - 30,
-    width: W,
-    height: 26,
-    color: rgb(0.97, 0.98, 0.99),
-    borderColor: LINHA,
-    borderWidth: 1,
-  });
-  rotulo("Chave de acesso da NFS-e", M + 8, y - 8);
-  txt(fmtChave(d.chave), M + 8, y - 22, 10, bold);
-  y -= 46;
+  // ===== Faixa de identificação =====
+  linha([
+    { r: "Número da NFS-e", v: d.numero },
+    { r: "Competência", v: fmtData(d.competencia) },
+    { r: "Emissão da NFS-e", v: fmtDataHora(d.dataEmissaoNfse), flex: 1.3 },
+    { r: "Número da DPS", v: d.numeroDps },
+    { r: "Série", v: d.serieDps, flex: 0.6 },
+    { r: "Emissão da DPS", v: fmtDataHora(d.dataEmissaoDps), flex: 1.3 },
+  ]);
 
-  // Blocos Prestador / Tomador
-  const bloco = (titulo: string, nome: string, docc: string, end: EnderecoDanfse, extra: string, yTopo: number) => {
-    const h = 74;
-    page.drawRectangle({ x: M, y: yTopo - h, width: W, height: h, borderColor: LINHA, borderWidth: 1 });
-    txt(titulo, M + 8, yTopo - 14, 8, bold, VERDE);
-    txt(nome || "—", M + 8, yTopo - 30, 11, bold);
-    rotulo("CNPJ/CPF", M + 8, yTopo - 44);
-    txt(fmtDoc(docc) || "—", M + 60, yTopo - 44, 9);
-    txt(linhaEndereco(end) || "—", M + 8, yTopo - 58, 8, reg, CINZA);
-    if (extra) txt(extra, M + 8, yTopo - 68, 8, reg, CINZA);
-    return yTopo - h - 10;
-  };
-  y = bloco(
-    "PRESTADOR DE SERVIÇOS",
-    d.prestador.nome,
-    d.prestador.cnpj,
-    d.prestador.endereco,
-    `Local da prestação: ${limpar(d.localPrestacao) || "—"}`,
-    y,
+  // ===== Prestador =====
+  secao("EMITENTE DA NFS-e — PRESTADOR DO SERVIÇO");
+  linha([
+    { r: "CNPJ / CPF / NIF", v: fmtDoc(d.prestador.documento), flex: 1.3 },
+    { r: "Inscrição Municipal", v: D },
+    { r: "Telefone", v: D },
+  ]);
+  linha([
+    { r: "Nome / Nome Empresarial", v: d.prestador.nome, flex: 2 },
+    { r: "E-mail", v: d.prestador.email || D, flex: 1.3 },
+  ]);
+  linha([
+    { r: "Endereço", v: linhaEndereco(d.prestador.endereco), flex: 2 },
+    { r: "Município", v: `${d.prestador.endereco.municipio} - ${d.prestador.endereco.uf}` },
+    { r: "CEP", v: fmtCep(d.prestador.endereco.cep), flex: 0.7 },
+  ]);
+  linha([
+    { r: "Optante Simples Nacional (na competência)", v: d.prestador.optanteSN, flex: 1.4 },
+    { r: "Regime de Apuração", v: d.prestador.regimeApuracaoSN, flex: 2 },
+  ]);
+
+  // ===== Tomador =====
+  secao("TOMADOR DO SERVIÇO");
+  linha([
+    { r: "CNPJ / CPF / NIF", v: fmtDoc(d.tomador.documento), flex: 1.3 },
+    { r: "Inscrição Municipal", v: D },
+    { r: "Telefone", v: D },
+  ]);
+  linha([
+    { r: "Nome / Nome Empresarial", v: d.tomador.nome, flex: 2 },
+    { r: "E-mail", v: d.tomador.email || D, flex: 1.3 },
+  ]);
+  linha([
+    { r: "Endereço", v: linhaEndereco(d.tomador.endereco), flex: 2 },
+    { r: "Município", v: `${d.tomador.endereco.municipio} - ${d.tomador.endereco.uf}` },
+    { r: "CEP", v: fmtCep(d.tomador.endereco.cep), flex: 0.7 },
+  ]);
+
+  // ===== Intermediário =====
+  secao("INTERMEDIÁRIO DO SERVIÇO");
+  linha([{ r: " ", v: "NÃO IDENTIFICADO NA NFS-e" }], 18);
+
+  // ===== Serviço =====
+  secao("SERVIÇO PRESTADO");
+  linha([
+    {
+      r: "Código de Tributação Nacional",
+      v: `${d.servico.codigoNac} — ${limpar(d.servico.descricaoNacional)}`,
+      flex: 2.4,
+    },
+    { r: "Cód. Trib. Municipal", v: d.servico.codigoMun || D },
+    { r: "Local da Prestação", v: `${d.localPrestacao || D}`, flex: 1.2 },
+  ]);
+  linha([{ r: "Descrição do Serviço", v: d.servico.descricao }], 26);
+
+  // ===== Tributação municipal =====
+  secao("TRIBUTAÇÃO MUNICIPAL");
+  linha([
+    { r: "Tributação do ISSQN", v: d.issqn.tributacao, flex: 1.2 },
+    { r: "Município de Incidência", v: `${d.municipioIncidencia || D}`, flex: 1.2 },
+    { r: "Regime Especial", v: d.issqn.regimeEspecial },
+    { r: "Retenção do ISSQN", v: d.issqn.retencao },
+  ]);
+
+  // ===== Valor total =====
+  secao("VALOR TOTAL DA NFS-e");
+  linha(
+    [
+      { r: "Valor do Serviço", v: fmtMoeda(d.valores.servico) },
+      { r: "Descontos", v: D },
+      { r: "ISSQN Retido", v: D },
+      { r: "Retenções Federais", v: D },
+      { r: "Valor Líquido da NFS-e", v: fmtMoeda(d.valores.liquido), flex: 1.2 },
+    ],
+    30,
   );
-  y = bloco(
-    "TOMADOR DE SERVIÇOS",
-    d.tomador.nome,
-    d.tomador.documento,
-    d.tomador.endereco,
-    d.tomador.email ? `E-mail: ${limpar(d.tomador.email)}` : "",
-    y,
-  );
 
-  // Serviço
-  const hs = 62;
-  page.drawRectangle({ x: M, y: y - hs, width: W, height: hs, borderColor: LINHA, borderWidth: 1 });
-  txt("DISCRIMINAÇÃO DOS SERVIÇOS", M + 8, y - 14, 8, bold, VERDE);
-  rotulo("Código de tributação nacional", M + 8, y - 28);
-  txt(d.servico.codigo || "—", M + 8, y - 39, 9);
-  txt(limpar(d.servico.descricaoNacional || d.servico.descricao), M + 150, y - 39, 8, reg, CINZA);
-  rotulo("Descrição", M + 8, y - 51);
-  txt(d.servico.descricao || "—", M + 60, y - 51, 9);
-  y -= hs + 10;
+  // ===== Totais aproximados dos tributos =====
+  secao("TOTAIS APROXIMADOS DOS TRIBUTOS (Lei 12.741/2012)");
+  const trib = d.valores.aliqAproxTrib;
+  const vTrib = trib != null ? fmtMoeda((d.valores.servico * trib) / 100) : D;
+  linha([
+    { r: "Federais", v: D },
+    { r: "Estaduais", v: D },
+    {
+      r: `Municipais${trib != null ? ` (aprox. ${trib.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%)` : ""}`,
+      v: vTrib,
+    },
+  ]);
 
-  // Valores
-  const hv = 46;
-  page.drawRectangle({
-    x: M,
-    y: y - hv,
-    width: W,
-    height: hv,
-    color: rgb(0.97, 0.98, 0.99),
-    borderColor: LINHA,
-    borderWidth: 1,
-  });
-  rotulo("Valor do serviço", M + 8, y - 14);
-  txt(fmtMoeda(d.valores.servico), M + 8, y - 30, 12, bold);
-  rotulo("Valor líquido", M + 200, y - 14);
-  txt(fmtMoeda(d.valores.liquido), M + 200, y - 30, 12, bold, VERDE);
-  if (d.valores.aliqAproxTrib != null) {
-    rotulo("Trib. aprox. (Simples)", M + 360, y - 14);
-    txt(`${d.valores.aliqAproxTrib.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%`, M + 360, y - 30, 10, bold);
-  }
-  y -= hv + 16;
-
-  // QR + rodapé de autenticidade
-  if (qrImg) page.drawImage(qrImg, { x: 595.28 - M - 92, y: y - 92, width: 92, height: 92 });
-  rotulo("Autenticidade", M, y - 10);
-  txt("Consulte a NFS-e pela chave de acesso em", M, y - 24, 9, reg, CINZA);
-  txt("www.nfse.gov.br", M, y - 36, 9, bold, VERDE);
-  txt("(aponte a câmera para o QR Code ao lado)", M, y - 50, 8, reg, CINZA);
+  // ===== Informações complementares =====
+  secao("INFORMAÇÕES COMPLEMENTARES");
+  linha([{ r: " ", v: `DFe nº ${d.dfe || D}` }], 18);
 
   // Rodapé
   txt(
-    "DANFSe gerado pelo SALDO a partir do XML autorizado. O documento fiscal é a NFS-e (XML).",
+    "DANFSe gerado pelo SALDO a partir do XML autorizado da NFS-e. O documento fiscal é a NFS-e (XML). Consulte em www.nfse.gov.br.",
     M,
-    40,
-    7.5,
+    28,
+    6.8,
     reg,
     CINZA,
   );
 
-  const bytes = await pdf.save();
-  return Buffer.from(bytes);
+  return Buffer.from(await pdf.save());
 }
