@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.5] — 2026-08-11
+
+### Alterado
+
+- **DANFSe gerado localmente agora reproduz o layout oficial v2.0** da SEFIN Nacional (com as
+  seções da reforma tributária — IBS/CBS): logo NFS-e, cabeçalho com município/ambiente,
+  chave + QR Code, e as seções Emitente, Prestador, Tomador, Intermediário, Serviço
+  Prestado, Tributação Municipal (ISSQN), Tributação Federal, Tributação IBS/CBS, Valor
+  Total e rodapé — com os mesmos rótulos e disposição do documento oficial. Campos não
+  presentes no XML v1.0 saem como "–"/"R$ 0,00", como no oficial. Telefone e e-mail do
+  prestador vêm do cadastro do escritório; nome do município e código IBGE resolvidos.
+
 ## [6.99.4] — 2026-08-11
 
 ### Adicionado

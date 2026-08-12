@@ -1,9 +1,12 @@
 import type { DadosDanfse, EnderecoDanfse } from "./danfse-parse";
 
-// Monta o HTML do DANFSe reproduzindo o layout oficial da SEFIN Nacional. Renderizado em PDF
-// pelo Gotenberg (Chromium). Puro: recebe os dados + o QR Code já como data URI.
+// Monta o HTML do DANFSe reproduzindo o layout oficial v2.0 da SEFIN Nacional (com seções
+// IBS/CBS da reforma tributária). Renderizado em PDF pelo Gotenberg. Puro: recebe os dados
+// + o QR Code já como data URI. Campos não presentes no XML v1.0 saem como "-"/"R$ 0,00",
+// como no DANFSe oficial.
 
 const D = "-";
+const Z = "R$ 0,00";
 const esc = (t: string) =>
   String(t ?? "")
     .replace(/&/g, "&amp;")
@@ -18,7 +21,18 @@ const fmtDoc = (d: string) => {
 };
 const fmtCep = (c: string) => {
   const x = String(c ?? "").replace(/\D/g, "");
-  return x.length === 8 ? x.replace(/^(\d{5})(\d{3})$/, "$1-$2") : c || D;
+  return x.length === 8 ? x.replace(/^(\d{2})(\d{3})(\d{3})$/, "$1.$2-$3") : c || D;
+};
+const fmtIbge = (c: string) => {
+  const x = String(c ?? "").replace(/\D/g, "");
+  return x.length === 7 ? `${x.slice(0, 2)}.${x.slice(2)}` : c || D;
+};
+const fmtTel = (t: string) => {
+  let x = String(t ?? "").replace(/\D/g, "");
+  if ((x.length === 12 || x.length === 13) && x.startsWith("55")) x = x.slice(2); // remove DDI
+  if (x.length === 11) return x.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+  if (x.length === 10) return x.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+  return t || D;
 };
 const fmtMoeda = (v: number) =>
   `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -27,119 +41,106 @@ const fmtData = (iso: string) => {
   return m ? `${m[3]}/${m[2]}/${m[1]}` : iso || D;
 };
 const fmtDataHora = (iso: string) => {
-  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso);
-  return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : fmtData(iso);
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):?(\d{2})?/.exec(iso);
+  return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}:${m[6] ?? "00"}` : fmtData(iso);
 };
 const endLinha = (e: EnderecoDanfse) =>
   [[e.logradouro, e.numero].filter(Boolean).join(", "), e.bairro].filter(Boolean).join(", ") || D;
-const munUf = (e: EnderecoDanfse) => (e.municipio ? `${e.municipio}${e.uf ? " - " + e.uf : ""}` : D);
+const munUf = (e: { municipio: string; uf: string }) => (e.municipio ? `${e.municipio} / ${e.uf || D}` : D);
 
-// Uma célula "campo": rótulo pequeno + valor. flex = peso da largura na linha.
-function campo(rotulo: string, valor: string, flex = 1): string {
-  return `<td style="width:${flex}%"><div class="rot">${esc(rotulo)}</div><div class="val">${esc(valor || D)}</div></td>`;
-}
-function linha(celulas: string): string {
-  return `<table class="grid"><tr>${celulas}</tr></table>`;
-}
-function barra(titulo: string): string {
-  return `<div class="barra">${esc(titulo)}</div>`;
-}
+// Célula "campo": rótulo pequeno + valor. Célula "sec": título de seção (fundo cinza).
+const campo = (r: string, v: string, cs = 1) =>
+  `<td colspan="${cs}"><div class="rot">${esc(r)}</div><div class="val">${esc(v || D)}</div></td>`;
+const sec = (t: string, v?: string, cs = 1) =>
+  `<td colspan="${cs}" class="sec"><div class="st">${esc(t)}</div>${v != null ? `<div class="sv">${esc(v)}</div>` : ""}</td>`;
+const tr = (cells: string) => `<tr>${cells}</tr>`;
 
 export function montarDanfseHtml(d: DadosDanfse, qrDataUri: string): string {
-  const homolog = d.producao ? "" : `<div class="homolog">AMBIENTE DE HOMOLOGAÇÃO — SEM VALOR FISCAL</div>`;
+  const homolog = d.producao ? "" : `<span class="homolog"> · HOMOLOGAÇÃO (sem valor fiscal)</span>`;
 
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><style>
-  @page { size: A4; margin: 10mm; }
+  @page { size: A4; margin: 8mm; }
   * { box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 8px; margin: 0; }
-  .doc { width: 100%; }
-  .head { display: table; width: 100%; border: 1px solid #333; }
-  .head .col { display: table-cell; vertical-align: top; padding: 6px 8px; }
-  .head .id { width: 62%; }
-  .head .titulo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-  .head .titulo small { font-size: 9px; font-weight: 400; color: #555; }
-  .head .sub { font-size: 8px; color: #555; margin-top: 1px; }
-  .head .pref { font-size: 9px; font-weight: 700; margin-top: 4px; }
-  .head .chave { width: 38%; border-left: 1px solid #333; text-align: center; }
-  .head .chave .rot { font-size: 6px; color: #555; text-transform: uppercase; letter-spacing: .3px; }
-  .head .chave .num { font-size: 8px; font-weight: 700; word-break: break-all; margin: 2px 0 4px; }
-  .head .chave img { width: 78px; height: 78px; }
-  .head .chave .aut { font-size: 6px; color: #555; margin-top: 3px; line-height: 1.25; }
-  .homolog { color: #a5570a; font-weight: 700; font-size: 8px; margin-top: 3px; }
-  .barra { background: #33383f; color: #fff; font-weight: 700; font-size: 7.5px; text-transform: uppercase;
-           letter-spacing: .4px; padding: 3px 8px; margin-top: -1px; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #1a1a1a; font-size: 7.6px; margin: 0; }
+  .head { display: table; width: 100%; border: 1px solid #444; border-bottom: none; }
+  .head > div { display: table-cell; vertical-align: middle; padding: 5px 8px; }
+  .head .logo { width: 200px; }
+  .head .logo .nfs { font-size: 22px; font-weight: 800; color: #1f3b57; letter-spacing: -1px; }
+  .head .logo .e { font-size: 22px; font-weight: 800; color: #2e9e5b; }
+  .head .logo .lt { font-size: 7px; color: #2e9e5b; margin-left: 4px; line-height: 1.05; display: inline-block; vertical-align: middle; }
+  .head .mid { text-align: center; }
+  .head .mid .t1 { font-size: 13px; font-weight: 700; }
+  .head .mid .t2 { font-size: 9px; font-weight: 700; }
+  .head .amb { width: 180px; text-align: left; font-size: 7px; color: #333; }
+  .homolog { color: #a5570a; font-weight: 700; }
+
   table.grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
-  table.grid td { border: 1px solid #cfd3d8; padding: 3px 6px; vertical-align: top; }
-  .rot { font-size: 5.8px; color: #6a7078; text-transform: uppercase; letter-spacing: .2px; }
-  .val { font-size: 8px; font-weight: 700; color: #111; margin-top: 1px; word-wrap: break-word; }
-  .foot { font-size: 6.2px; color: #6a7078; margin-top: 6px; }
-</style></head><body><div class="doc">
+  table.grid td { border: 1px solid #9aa0a6; padding: 2.5px 6px; vertical-align: top; height: 20px; }
+  .rot { font-size: 5.6px; color: #40474f; }
+  .val { font-size: 7.6px; font-weight: 700; color: #111; margin-top: 1px; word-wrap: break-word; line-height: 1.15; }
+  td.sec { background: #dfe3e7; vertical-align: middle; }
+  td.sec .st { font-size: 6.6px; font-weight: 700; text-transform: uppercase; letter-spacing: .2px; color: #23272c; }
+  td.sec .sv { font-size: 7.6px; font-weight: 700; color: #111; margin-top: 1px; }
+  td.chave { }
+  td.chave .rot { font-size: 6px; }
+  td.chave .num { font-size: 8.6px; font-weight: 700; word-break: break-all; margin-top: 1px; }
+  td.qr { text-align: center; vertical-align: top; width: 150px; }
+  td.qr img { width: 82px; height: 82px; }
+  td.qr .aut { font-size: 5.5px; color: #40474f; margin-top: 2px; line-height: 1.2; text-align: left; }
+  td.center { text-align: center; font-weight: 700; font-size: 7px; background: #f2f3f5; }
+  .foot { width: 100%; border-collapse: collapse; margin-top: 0; table-layout: fixed; }
+  .foot td { border: 1px solid #9aa0a6; height: 34px; vertical-align: top; padding: 3px 6px; font-size: 6px; color: #40474f; text-transform: uppercase; }
+  .foot .rod { font-size: 7px; font-weight: 700; color: #111; text-transform: none; margin-top: 1px; word-break: break-all; }
+</style></head><body>
 
   <div class="head">
-    <div class="col id">
-      <div class="titulo">DANFSe <small>v1.0</small></div>
-      <div class="sub">Documento Auxiliar da NFS-e</div>
-      <div class="pref">Prefeitura Municipal de ${esc(d.localEmissao || D)}</div>
-      ${homolog}
-    </div>
-    <div class="col chave">
-      <div class="rot">Chave de Acesso da NFS-e</div>
-      <div class="num">${esc(d.chave)}</div>
-      ${qrDataUri ? `<img src="${qrDataUri}" alt="QR Code" />` : ""}
-      <div class="aut">A autenticidade pode ser verificada pela leitura do QR Code ou pela consulta da chave no portal nacional da NFS-e.</div>
-    </div>
+    <div class="logo"><span class="nfs">NFS</span><span class="e">e</span> <span class="lt">Nota Fiscal de<br>Serviço eletrônica</span></div>
+    <div class="mid"><div class="t1">DANFSe v2.0</div><div class="t2">Documento Auxiliar da NFS-e${homolog}</div></div>
+    <div class="amb">Município: ${esc(munUf({ municipio: d.localEmissao, uf: d.ufEmitente }))}<br>Ambiente Gerador: ${esc(d.ambGer || D)}<br>Tipo de Ambiente: ${esc(d.tpAmb || D)}</div>
   </div>
 
-  ${linha(
-    campo("Número da NFS-e", d.numero, 16) +
-      campo("Competência", fmtData(d.competencia), 14) +
-      campo("Emissão da NFS-e", fmtDataHora(d.dataEmissaoNfse), 24) +
-      campo("Número da DPS", d.numeroDps, 14) +
-      campo("Série", d.serieDps, 8) +
-      campo("Emissão da DPS", fmtDataHora(d.dataEmissaoDps), 24),
-  )}
+  <table class="grid">
+    ${tr(`<td colspan="3" class="chave"><div class="rot">CHAVE DE ACESSO DA NFS-e</div><div class="num">${esc(d.chave)}</div></td><td class="qr" rowspan="3"><img src="${qrDataUri}" alt="QR" /><div class="aut">A autenticidade desta NFS-e pode ser verificada pela leitura deste código QR ou pela consulta da chave de acesso no portal nacional da NFS-e.</div></td>`)}
+    ${tr(campo("Número da NFS-e", d.numero) + campo("Competência da NFS-e", fmtData(d.competencia)) + campo("Data e Hora da Emissão da NFS-e", fmtDataHora(d.dataEmissaoNfse)))}
+    ${tr(campo("Número da DPS", d.numeroDps) + campo("Série da DPS", d.serieDps) + campo("Data e Hora da Emissão da DPS", fmtDataHora(d.dataEmissaoDps)))}
 
-  ${barra("Emitente da NFS-e — Prestador do Serviço")}
-  ${linha(campo("CNPJ / CPF / NIF", fmtDoc(d.prestador.documento), 34) + campo("Inscrição Municipal", D, 33) + campo("Telefone", D, 33))}
-  ${linha(campo("Nome / Nome Empresarial", d.prestador.nome, 62) + campo("E-mail", d.prestador.email || D, 38))}
-  ${linha(campo("Endereço", endLinha(d.prestador.endereco), 60) + campo("Município", munUf(d.prestador.endereco), 25) + campo("CEP", fmtCep(d.prestador.endereco.cep), 15))}
-  ${linha(campo("Optante pelo Simples Nacional (na competência)", d.prestador.optanteSN, 42) + campo("Regime de Apuração", d.prestador.regimeApuracaoSN, 58))}
+    ${tr(sec("Emitente da NFS-e", "Prestador") + campo("Situação da NFS-e", "NFS-e Gerada") + campo("Finalidade", D, 2))}
+    ${tr(sec("Prestador / Fornecedor") + campo("CNPJ / CPF / NIF", fmtDoc(d.prestador.documento)) + campo("Indicador Municipal (Inscrição)", D) + campo("Telefone", fmtTel(d.prestador.telefone)))}
+    ${tr(campo("Nome / Nome Empresarial", d.prestador.nome, 2) + campo("Município / Sigla UF", munUf(d.prestador.endereco)) + campo("Código IBGE / CEP", `${fmtIbge(d.prestador.endereco.codigoIbge)} / ${fmtCep(d.prestador.endereco.cep)}`))}
+    ${tr(campo("Endereço", endLinha(d.prestador.endereco), 2) + campo("E-mail", d.prestador.email || D, 2))}
+    ${tr(campo("Simples Nacional na Data de Competência", d.prestador.optanteSN, 2) + campo("Regime de Apuração Tributária pelo SN", d.prestador.regimeApuracaoSN, 2))}
 
-  ${barra("Tomador do Serviço")}
-  ${linha(campo("CNPJ / CPF / NIF", fmtDoc(d.tomador.documento), 34) + campo("Inscrição Municipal", D, 33) + campo("Telefone", D, 33))}
-  ${linha(campo("Nome / Nome Empresarial", d.tomador.nome, 62) + campo("E-mail", d.tomador.email || D, 38))}
-  ${linha(campo("Endereço", endLinha(d.tomador.endereco), 60) + campo("Município", munUf(d.tomador.endereco), 25) + campo("CEP", fmtCep(d.tomador.endereco.cep), 15))}
+    ${tr(sec("Tomador / Adquirente") + campo("CNPJ / CPF / NIF", fmtDoc(d.tomador.documento)) + campo("Indicador Municipal (Inscrição)", D) + campo("Telefone", D))}
+    ${tr(campo("Nome / Nome Empresarial", d.tomador.nome, 2) + campo("Município / Sigla UF", munUf(d.tomador.endereco)) + campo("Código IBGE / CEP", `${fmtIbge(d.tomador.endereco.codigoIbge)} / ${fmtCep(d.tomador.endereco.cep)}`))}
+    ${tr(campo("Endereço", endLinha(d.tomador.endereco), 2) + campo("E-mail", d.tomador.email || D, 2))}
+    ${tr(`<td colspan="4" class="center">DESTINATÁRIO DA OPERAÇÃO NÃO IDENTIFICADO NA NFS-e</td>`)}
+    ${tr(`<td colspan="4" class="center">INTERMEDIÁRIO DA OPERAÇÃO NÃO IDENTIFICADO NA NFS-e</td>`)}
 
-  ${barra("Intermediário do Serviço")}
-  ${linha(campo("Intermediário", "NÃO IDENTIFICADO NA NFS-e", 100))}
+    ${tr(sec("Serviço Prestado") + campo("Cód. Tributação Nacional / Municipal", `${d.servico.codigoNac} / ${d.servico.codigoMun || D}`) + campo("Código da NBS", D) + campo("Local da Prestação / Sigla UF / País", `${d.localPrestacao || D} / ${d.ufEmitente || D} / -`))}
+    ${tr(campo("Descrição (Tributação Nacional)", d.servico.descricaoNacional, 4))}
+    ${tr(campo("Descrição do Serviço", d.servico.descricao, 4))}
 
-  ${barra("Serviço Prestado")}
-  ${linha(campo("Código de Tributação Nacional", `${d.servico.codigoNac} — ${d.servico.descricaoNacional}`, 62) + campo("Cód. Trib. Municipal", d.servico.codigoMun || D, 18) + campo("Local da Prestação", d.localPrestacao || D, 20))}
-  ${linha(campo("Descrição do Serviço", d.servico.descricao, 100))}
+    ${tr(sec("Tributação Municipal (ISSQN)") + campo("Tipo de Tributação do ISSQN", d.issqn.tributacao) + campo("Município / Sigla UF / País de Incidência do ISSQN", `${d.municipioIncidencia || D} / ${d.ufEmitente || D} / -`, 2))}
+    ${tr(campo("BC ISSQN", D) + campo("Alíquota Aplicada", D) + campo("Retenção do ISSQN", d.issqn.retencao) + campo("ISSQN Apurado", D))}
 
-  ${barra("Tributação Municipal")}
-  ${linha(campo("Tributação do ISSQN", d.issqn.tributacao, 28) + campo("Município de Incidência", d.municipioIncidencia || D, 28) + campo("Regime Especial", d.issqn.regimeEspecial, 22) + campo("Retenção do ISSQN", d.issqn.retencao, 22))}
+    ${tr(sec("Tributação Federal (exceto CBS)") + campo("IRRF", D) + campo("Contribuição Previdenciária - Retida", D) + campo("Contribuições Sociais - Retidas", D))}
+    ${tr(campo("PIS - Débito Apuração Própria", D) + campo("COFINS - Débito Apuração Própria", D) + campo("Descrição Contrib. Sociais - Retidas", D, 2))}
 
-  ${barra("Tributação Federal")}
-  ${linha(campo("IRRF", D, 20) + campo("Contrib. Previdenciária Retida", D, 20) + campo("PIS", D, 20) + campo("COFINS", D, 20) + campo("Outras Retenções", D, 20))}
+    ${tr(sec("Tributação IBS/CBS") + campo("CST / cClassTrib", `${D} / ${D}`) + campo("Indicador de Operação / Cód. IBGE / Município / UF", `${D} / ${D} / ${D} / ${D}`, 2))}
+    ${tr(campo("Exclusões e Reduções da BC", Z) + campo("BC Após Exclusões e Reduções", D) + campo("Red. Alíq. IBS / CBS", `${D} / ${D}`) + campo("Alíquota - IBS UF / IBS Mun", `${D} / ${D}`))}
+    ${tr(campo("Alíq. Efetiva Municipal - IBS", D) + campo("Valor Apurado Municipal - IBS", D) + campo("Alíq. Efetiva Estadual - IBS", D) + campo("Valor Apurado Estadual - IBS", D))}
+    ${tr(campo("Valor Total Apurado - IBS", D) + campo("Alíquota - CBS", D) + campo("Alíquota Efetiva - CBS", D) + campo("Valor Total Apurado - CBS", D))}
 
-  ${barra("Valor Total da NFS-e")}
-  ${linha(campo("Valor do Serviço", fmtMoeda(d.valores.servico), 22) + campo("Descontos", D, 18) + campo("ISSQN Retido", D, 18) + campo("Total Retenções Federais", D, 20) + campo("Valor Líquido da NFS-e", fmtMoeda(d.valores.liquido), 22))}
+    ${tr(sec("Valor Total da NFS-e") + campo("Valor da Operação / Serviço", fmtMoeda(d.valores.servico)) + campo("Desconto Incondicionado", D) + campo("Desconto Condicionado", D))}
+    ${tr(campo("Total das Retenções (ISSQN / Federais)", D) + campo("Valor Líquido da NFS-e", fmtMoeda(d.valores.liquido)) + campo("Total do IBS/CBS", Z) + campo("Valor Líquido + IBS/CBS", fmtMoeda(d.valores.liquido)))}
 
-  ${barra("Totais Aproximados dos Tributos (Lei 12.741/2012)")}
-  ${linha(
-    campo("Federais", D, 33) +
-      campo("Estaduais", D, 33) +
-      campo(
-        `Municipais${d.valores.aliqAproxTrib != null ? ` (aprox. ${d.valores.aliqAproxTrib.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%)` : ""}`,
-        d.valores.aliqAproxTrib != null ? fmtMoeda((d.valores.servico * d.valores.aliqAproxTrib) / 100) : D,
-        34,
-      ),
-  )}
+    ${tr(sec("Informações Complementares", undefined, 4))}
+    ${tr(campo(" ", `Totais aproximados dos Tributos cfe. Lei nº 12.741/2012: Federais: ${d.valores.aliqAproxTrib != null ? fmtMoeda((d.valores.servico * d.valores.aliqAproxTrib) / 100) : D}; Estaduais: -; Municipais: -;`, 4))}
+  </table>
 
-  ${barra("Informações Complementares")}
-  ${linha(campo("DFe nº", d.dfe || D, 100))}
+  <table class="foot">
+    ${tr(`<td style="width:30%">Data Cientificação:</td><td style="width:30%">Identificação e Assinatura</td><td style="width:40%">N° NFS-e / Chave NFS-e<div class="rod">${esc(d.numero)} / ${esc(d.chave)}</div></td>`)}
+  </table>
 
-  <div class="foot">DANFSe gerado pelo SALDO a partir do XML autorizado da NFS-e. O documento fiscal é a NFS-e (XML). Consulte a autenticidade em www.nfse.gov.br pela chave de acesso.</div>
-</div></body></html>`;
+</body></html>`;
 }

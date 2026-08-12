@@ -26,6 +26,10 @@ async function danfseViaGotenberg(admin: Admin, chave: string): Promise<Buffer |
       if (end.cidade) dados.tomador.endereco.municipio = end.cidade;
       if (end.uf) dados.tomador.endereco.uf = end.uf;
     }
+    // Telefone/e-mail do prestador (o escritório) vêm do cadastro, não do XML v1.0.
+    const { data: cfg } = await admin.from("escritorio_config").select("email, telefone").eq("id", 1).maybeSingle();
+    if (cfg?.telefone) dados.prestador.telefone = cfg.telefone as string;
+    if (cfg?.email) dados.prestador.email = cfg.email as string;
     const qr = await QRCode.toDataURL(`https://www.nfse.gov.br/consultapublica?tpc=1&chNFSe=${chave}`, {
       margin: 0,
       width: 200,

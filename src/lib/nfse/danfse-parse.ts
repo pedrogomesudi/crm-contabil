@@ -7,7 +7,8 @@ export type EnderecoDanfse = {
   logradouro: string;
   numero: string;
   bairro: string;
-  municipio: string;
+  municipio: string; // nome (resolvido) ou código quando não resolvido
+  codigoIbge: string; // cMun do XML
   uf: string;
   cep: string;
 };
@@ -24,10 +25,13 @@ export type DadosDanfse = {
   serieDps: string;
   numeroDps: string;
   producao: boolean;
+  ambGer: string; // ambiente gerador (código)
+  tpAmb: string; // tipo de ambiente (código)
+  ufEmitente: string;
   localEmissao: string; // xLocEmi
   localPrestacao: string; // xLocPrestacao
   municipioIncidencia: string; // xLocIncid
-  prestador: PessoaDanfse & { optanteSN: string; regimeApuracaoSN: string };
+  prestador: PessoaDanfse & { optanteSN: string; regimeApuracaoSN: string; telefone: string };
   tomador: PessoaDanfse;
   servico: { codigoNac: string; codigoMun: string; descricao: string; descricaoNacional: string };
   issqn: { tributacao: string; retencao: string; regimeEspecial: string };
@@ -70,11 +74,13 @@ const RET_ISSQN: Record<string, string> = {
 };
 
 function endereco(raw: Record<string, unknown> | undefined, nac: Record<string, unknown> | undefined): EnderecoDanfse {
+  const cMun = s(nac?.cMun ?? raw?.cMun);
   return {
     logradouro: s(raw?.xLgr),
     numero: s(raw?.nro),
     bairro: s(raw?.xBairro),
-    municipio: s(nac?.cMun ?? raw?.cMun),
+    municipio: cMun,
+    codigoIbge: cMun,
     uf: s(nac?.UF ?? raw?.UF),
     cep: s(nac?.CEP ?? raw?.CEP),
   };
@@ -115,7 +121,13 @@ export function parsearNfseXml(xml: string): DadosDanfse {
     dataEmissaoDps: s(infDps.dhEmi),
     serieDps: s(infDps.serie),
     numeroDps: s(infDps.nDPS),
-    producao: s(inf.ambGer ?? infDps.tpAmb) === "1",
+    // Produção/homologação = tipo de ambiente (tpAmb): 1=produção, 2=homologação. O ambGer
+    // é o ambiente gerador (quem emitiu), NÃO o indicador de produção — só marca homologação
+    // quando tpAmb é explicitamente 2.
+    producao: s(infDps.tpAmb) !== "2",
+    ambGer: s(inf.ambGer),
+    tpAmb: s(infDps.tpAmb),
+    ufEmitente: s(emitEnd.UF),
     localEmissao: s(inf.xLocEmi),
     localPrestacao: s(inf.xLocPrestacao),
     municipioIncidencia: s(inf.xLocIncid ?? inf.xLocPrestacao),
@@ -125,6 +137,7 @@ export function parsearNfseXml(xml: string): DadosDanfse {
       // O nome do município vem de xLocEmi (o endereço só traz o código IBGE).
       endereco: { ...endereco(emitEnd, emitEnd), municipio: s(inf.xLocEmi) || s(emitEnd.cMun) },
       email: "",
+      telefone: "",
       optanteSN: OPT_SN[s(regTrib.opSimpNac)] ?? "-",
       regimeApuracaoSN: REG_AP_SN[s(regTrib.regApTribSN)] ?? "-",
     },
