@@ -14,10 +14,10 @@ import { Botao } from "@/components/ui/Botao";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 type Formato = "pdf" | "xml";
 
-// O DANFSe vem ao vivo do ADN nacional, que retorna 502 esporádico e 429 (limite
-// de taxa). Retry paciente: 5 tentativas com espera crescente até ~18s por nota.
+// O DANFSe vem do cache e, na falta, é gerado na hora (layout oficial v2.0). Retry curto só
+// para cobrir um blip do serviço de PDF (Gotenberg): 3 tentativas com espera crescente.
 async function baixarPdfComRetry(nfseId: string): Promise<string | null> {
-  const esperas = [0, 1000, 2500, 5000, 10000];
+  const esperas = [0, 1500, 4000];
   for (const espera of esperas) {
     if (espera > 0) await sleep(espera);
     const r = await baixarDanfseNfse(nfseId);
@@ -63,9 +63,9 @@ export function BaixarNotasZip() {
     const falhou: NotaParaDownload[] = [];
     let adicionadas = 0;
 
-    // Pool de concorrência baixo: baixar do ADN em paralelo satura o serviço nacional (429)
-    // e piora a própria taxa de falha. Uma requisição por vez é mais lenta, porém confiável;
-    // o cache (populado pelo "Preparar notas") já resolve a maioria.
+    // Concorrência 1: gerar vários DANFSe em paralelo sobrecarrega o Gotenberg. Uma nota por
+    // vez é mais lenta, porém confiável; o cache (populado pelo "Preparar notas") já resolve a
+    // maioria — nesse caso a baixa é praticamente instantânea.
     let proximo = 0;
     const CONCORRENCIA = 1;
     async function worker() {
@@ -121,8 +121,9 @@ export function BaixarNotasZip() {
         <h2 className="font-display text-sm font-semibold text-texto">Baixar notas do mês (ZIP)</h2>
         <p className="text-xs text-cinza">
           Baixa as NFS-e autorizadas da competência, nomeadas pela razão social do cliente.{" "}
-          <strong>PDF (DANFSe)</strong> e <strong>XML</strong> em botões separados. Os PDFs ficam em cache — a 1ª baixa
-          do mês busca no ADN nacional (com retentativa); as seguintes são instantâneas.
+          <strong>PDF (DANFSe)</strong> e <strong>XML</strong> em botões separados. O PDF é o DANFSe oficial (v2.0)
+          gerado pelo sistema e guardado em cache — depois de rodar o <strong>“Preparar notas”</strong> do mês, as
+          baixas saem na hora.
         </p>
       </div>
 
@@ -170,7 +171,8 @@ export function BaixarNotasZip() {
       {falhas.length > 0 && !baixando && (
         <div className="space-y-2 rounded-lg border border-negativo/30 bg-negativo/10 px-3 py-2 text-xs text-negativo">
           <p className="font-medium">
-            {falhas.length} nota(s) não baixaram (o restante já foi para o ZIP) — o ADN nacional recusou (502/429).
+            {falhas.length} nota(s) não baixaram (o restante já foi para o ZIP) — não foi possível gerar o DANFSe (XML
+            ausente ou serviço de PDF indisponível).
           </p>
           <ul className="list-disc pl-4">
             {falhas.map((n) => (

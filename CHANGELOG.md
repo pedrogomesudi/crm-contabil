@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.8] — 2026-08-12
+
+### Alterado
+
+- **"Baixar notas do mês (ZIP)" alinhado ao novo fluxo.** O card já usava o gerador fiel via
+  cache; agora os textos e mensagens refletem isso: o PDF é o DANFSe oficial v2.0 gerado pelo
+  sistema e guardado em cache (não mais "busca no ADN nacional"), e a falha explica a causa real
+  (XML ausente ou serviço de PDF indisponível), não mais 502/429 do ADN. O retry por nota foi
+  encurtado (de 5 tentativas/~18s para 3/~5,5s), já que agora cobre apenas um blip do Gotenberg —
+  não a instabilidade do ADN desligado.
+
 ## [6.99.7] — 2026-08-12
 
 ### Alterado
