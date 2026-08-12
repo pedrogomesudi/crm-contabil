@@ -4,8 +4,9 @@ import { useState } from "react";
 import { Botao } from "@/components/ui/Botao";
 import { prepararDanfse } from "@/app/(app)/nfse/lote/danfse-backfill";
 
-// Baixa (em segundo plano, serializado) os PDFs das notas da competência para o cache, para o
-// envio não depender do ADN na hora. Também é o diagnóstico: se o ADN recusa, mostra o motivo.
+// Gera (em segundo plano, serializado) os PDFs das notas da competência e os guarda no cache,
+// para o envio em lote sair na hora. Desde a NT 008/2026 o ADN não entrega mais o oficial — o
+// DANFSe gerado pelo SALDO a partir do XML autorizado (layout v2.0) É o oficial.
 export function PrepararDanfse() {
   const [mes, setMes] = useState("");
   const [rodando, setRodando] = useState(false);
@@ -25,9 +26,9 @@ export function PrepararDanfse() {
         const r = await prepararDanfse(competencia);
         totalOk += r.ok;
         for (const e of r.erros) acc.set(e.motivo, (acc.get(e.motivo) ?? 0) + e.qtd);
-        setMsg(`Baixadas ${totalOk} nota(s)… ${r.restantes > 0 ? `restam ~${r.restantes}` : "concluído"}`);
+        setMsg(`Geradas ${totalOk} nota(s)… ${r.restantes > 0 ? `restam ~${r.restantes}` : "concluído"}`);
         if (r.restantes === 0) break;
-        if (r.ok === 0) break; // não progrediu: o que resta o ADN está recusando — para e mostra o motivo
+        if (r.ok === 0) break; // não progrediu: o que resta está falhando — para e mostra o motivo
       }
     } catch {
       setMsg("Falha ao preparar as notas.");
@@ -39,11 +40,10 @@ export function PrepararDanfse() {
   return (
     <div className="space-y-3 rounded-2xl border border-linha bg-white p-5 text-sm">
       <div>
-        <h2 className="font-display text-sm font-semibold text-texto">Preparar notas para envio (baixar PDFs)</h2>
+        <h2 className="font-display text-sm font-semibold text-texto">Preparar notas para envio (gerar PDFs)</h2>
         <p className="text-xs text-cinza">
-          Baixa o DANFSe <strong>oficial</strong> do servidor nacional (ADN) e guarda no sistema. É opcional: se o ADN
-          estiver instável, o envio já funciona com o DANFSe fiel que o SALDO gera a partir do XML autorizado. Use isto
-          para guardar o oficial quando o ADN estiver no ar. Pode repetir sem problema.
+          Gera o DANFSe (layout <strong>oficial v2.0</strong>) a partir do XML autorizado e guarda no sistema, para o
+          envio em lote sair na hora. É opcional — o envio também gera sob demanda. Pode repetir sem problema.
         </p>
       </div>
       <div className="flex flex-wrap items-end gap-2">
@@ -63,7 +63,7 @@ export function PrepararDanfse() {
       </div>
       {erros.length > 0 && (
         <div className="space-y-1 rounded-lg border border-atencao/30 bg-atencao-fundo px-3 py-2 text-xs text-atencao">
-          <p className="font-medium">O oficial de algumas notas não baixou (o ADN está instável). Motivos:</p>
+          <p className="font-medium">Algumas notas não puderam ser geradas. Motivos:</p>
           <ul className="list-disc pl-4">
             {erros.map((e) => (
               <li key={e.motivo}>
@@ -72,9 +72,9 @@ export function PrepararDanfse() {
             ))}
           </ul>
           <p className="mt-1 border-t border-atencao/20 pt-1 text-atencao/90">
-            É uma instabilidade do servidor nacional, não do SALDO, e <strong>não impede o envio</strong>: as notas sem
-            o oficial em cache saem com o DANFSe fiel que o SALDO gera do XML. Tente aqui de novo mais tarde para
-            guardar o oficial.
+            Em geral é o XML da nota ainda não disponível ou o serviço de PDF momentaneamente indisponível. Isso{" "}
+            <strong>não impede o envio</strong>: a nota é gerada sob demanda na hora do envio. Tente aqui de novo mais
+            tarde.
           </p>
         </div>
       )}

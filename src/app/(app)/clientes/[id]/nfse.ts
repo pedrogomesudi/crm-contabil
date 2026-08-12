@@ -11,8 +11,7 @@ import { montarDps } from "@/lib/nfse/dps";
 import { municipioIbgePorCep } from "@/lib/nfse/municipio";
 import { assinarDps } from "@/lib/nfse/assinatura";
 import { enviarDps, ehErroTransitorio, orientacaoErro } from "@/lib/nfse/envio";
-import { baixarDanfsePdf } from "@/lib/nfse/danfse";
-import { obterDanfsePdf, guardarDanfseStorage, carregarCertRowDaNota } from "@/lib/nfse/danfse-cache";
+import { gerarDanfseFiel, carregarCertRowDaNota } from "@/lib/nfse/danfse-cache";
 import { montarEventoCancelamento, assinarEvento, enviarCancelamento } from "@/lib/nfse/cancelamento";
 import { classificarSituacao } from "@/lib/nfse/lote";
 import type { ConfigFiscal, Tomador, ResultadoCliente, ClienteLote } from "@/lib/nfse/tipos";
@@ -34,21 +33,11 @@ export async function baixarXmlNfse(nfseId: string): Promise<{ erro?: string; co
   return { erro: "XML indisponível." };
 }
 
-// Baixa o DANFSe (PDF) da Sefin (ADN) usando a chave + o certificado (mTLS).
-// Busca o DANFSe do ADN reusando um certificado já aberto (usado no pré-carregamento
-// da emissão). Best-effort: em falha, apenas não cacheia (baixa sob demanda depois).
-async function prefetchDanfse(
-  admin: ReturnType<typeof createAdminSupabase>,
-  chave: string,
-  cert: { pfx: Buffer; senha: string },
-  ambiente: "homologacao" | "producao",
-): Promise<void> {
-  try {
-    const r = await baixarDanfsePdf(chave, cert, ambiente);
-    if ("pdf" in r) await guardarDanfseStorage(admin, chave, r.pdf);
-  } catch {
-    /* best-effort */
-  }
+// Pré-gera o DANFSe (layout oficial v2.0) a partir do XML autorizado e o guarda no cache logo
+// após a emissão, para os downloads/envios em lote virem prontos. Best-effort: em falha, apenas
+// não popula o cache (gera sob demanda depois).
+async function prefetchDanfse(admin: ReturnType<typeof createAdminSupabase>, chave: string): Promise<void> {
+  await gerarDanfseFiel(admin, { chave_acesso: chave, ambiente: null, emitente: "", cliente_id: "" }).catch(() => {});
 }
 
 export async function baixarDanfseNfse(nfseId: string): Promise<{ erro?: string; pdfBase64?: string; chave?: string }> {
@@ -62,7 +51,7 @@ export async function baixarDanfseNfse(nfseId: string): Promise<{ erro?: string;
     .maybeSingle();
   if (!nota?.chave_acesso) return { erro: "Nota sem chave de acesso." };
   const admin = createAdminSupabase();
-  return obterDanfsePdf(admin, {
+  return gerarDanfseFiel(admin, {
     chave_acesso: nota.chave_acesso as string,
     ambiente: nota.ambiente as string | null,
     emitente: nota.emitente as string,
@@ -208,10 +197,9 @@ export async function emitirNfseCliente(
     avulsa,
     autorizada_em: resultado.autorizada ? new Date().toISOString() : null,
   });
-  // Pré-carrega o DANFSe no storage (uma nota por vez, gentil com o ADN) — os
-  // downloads em lote passam a vir do cache. Best-effort: não afeta a emissão.
+  // Pré-gera o DANFSe no storage — os downloads em lote passam a vir do cache. Best-effort.
   if (resultado.autorizada && resultado.chaveAcesso) {
-    await prefetchDanfse(createAdminSupabase(), resultado.chaveAcesso, { pfx: cert.pfx, senha: cert.senha }, ambiente);
+    await prefetchDanfse(createAdminSupabase(), resultado.chaveAcesso);
   }
   if (resultado.autorizada) {
     return { status: "autorizada", chave: resultado.chaveAcesso, numero: resultado.numero };
