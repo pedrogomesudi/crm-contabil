@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.7] — 2026-08-12
+
+### Alterado
+
+- **"Preparar notas" agora gera o DANFSe fiel (v2.0), em vez de tentar o ADN desligado.** Com a
+  API do ADN descontinuada (NT 008/2026), o botão só reportava erro 503. Ele passa a gerar o
+  DANFSe oficial a partir do XML autorizado e a guardar no cache, populando o Storage de onde os
+  downloads/envios em lote vêm prontos. As mensagens de erro passaram a refletir a geração (XML
+  ausente / serviço de PDF indisponível), não mais o ADN.
+- **Envio, download individual e pré-carregamento na emissão** passam a usar o mesmo caminho
+  (cache-first → gera o fiel → guarda), eliminando os 30–60s de timeout por nota que o ADN morto
+  causava. O módulo de download do ADN (`danfse.ts`) foi removido — não há mais para onde apontar.
+
 ## [6.99.6] — 2026-08-11
 
 ### Alterado

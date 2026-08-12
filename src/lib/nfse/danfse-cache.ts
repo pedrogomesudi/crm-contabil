@@ -1,8 +1,5 @@
 import "server-only";
 import type { createAdminSupabase } from "@/lib/supabase/admin";
-import { decifrarDominio } from "@/lib/cripto/envelope";
-import { carregarCertificado } from "@/lib/nfse/certificado";
-import { baixarDanfsePdf } from "@/lib/nfse/danfse";
 import { descomprimirXmlNfse } from "@/lib/nfse/xml";
 import { parsearNfseXml } from "@/lib/nfse/danfse-parse";
 import { montarDanfseHtml } from "@/lib/nfse/danfse-html";
@@ -11,9 +8,10 @@ import QRCode from "qrcode";
 
 type Admin = ReturnType<typeof createAdminSupabase>;
 
-// Fallback quando o ADN não entrega o oficial: monta o DANFSe em HTML (layout oficial) a
-// partir do XML autorizado e renderiza em PDF pelo Gotenberg. Preferido o oficial; este só
-// entra na falta dele, e não é cacheado (para voltar ao oficial quando o ADN normalizar).
+// Gera o DANFSe no layout oficial v2.0 a partir do XML autorizado e o renderiza em PDF pelo
+// Gotenberg. Desde a NT SE/CGNFS-e nº 008/2026 (corte 03/08/2026) a API de download do DANFSe
+// do ambiente nacional (ADN) foi descontinuada — o padrão passou a exigir que o próprio
+// emissor gere o documento conforme o layout v2.0. Este é, portanto, o caminho oficial.
 async function danfseViaGotenberg(admin: Admin, chave: string): Promise<Buffer | null> {
   try {
     const { data } = await admin.from("nfse").select("nfse_xml, cliente_id").eq("chave_acesso", chave).maybeSingle();
@@ -76,9 +74,11 @@ export async function carregarCertRowDaNota(
 
 export type NotaDanfse = { chave_acesso: string; ambiente: string | null; emitente: string; cliente_id: string };
 
-// Só o DANFSe OFICIAL: cache-first + ADN (com retry). Sem fallback — usado pelo "Preparar
-// notas", que quer popular o cache com o oficial e reportar o erro real do ADN.
-export async function baixarDanfseOficial(
+// DANFSe fiel ao oficial v2.0 para uso (envio, download, "Preparar notas"): cache-first e, na
+// falta, gera pelo XML autorizado e guarda no cache. Como o ADN foi descontinuado (NT 008/2026),
+// não há mais download do oficial — o documento gerado aqui É o oficial. O cache no Storage
+// preserva DANFSes já baixados do ADN antes do corte, que continuam válidos.
+export async function gerarDanfseFiel(
   admin: Admin,
   nota: NotaDanfse,
 ): Promise<{ pdfBase64?: string; chave?: string; erro?: string }> {
@@ -86,45 +86,10 @@ export async function baixarDanfseOficial(
   if (!chave) return { erro: "Nota sem chave de acesso." };
   const cache = await lerDanfseStorage(admin, chave);
   if (cache) return { pdfBase64: cache.toString("base64"), chave };
-  const certRow = await carregarCertRowDaNota(admin, nota.emitente, nota.cliente_id);
-  if (!certRow) return { erro: "Certificado não cadastrado.", chave };
-  let cert;
-  try {
-    const pfx = await decifrarDominio("nfse", certRow.pfx_cifrado);
-    const senha = (await decifrarDominio("nfse", certRow.senha_cifrada)).toString("utf8");
-    cert = carregarCertificado(pfx, senha);
-  } catch {
-    return { erro: "Falha ao abrir o certificado.", chave };
+  const fiel = await danfseViaGotenberg(admin, chave);
+  if (!fiel) {
+    return { erro: "Não foi possível gerar o DANFSe (XML da nota ausente ou serviço de PDF indisponível).", chave };
   }
-  const ambiente: "homologacao" | "producao" = nota.ambiente === "producao" ? "producao" : "homologacao";
-  // Retry paciente para instabilidade do ADN (503/502, rate limit 429, timeout, rede): espera
-  // e tenta de novo. Erro permanente (404 sem nota, certificado) não insiste.
-  const esperas = [0, 3000];
-  let ultimoErro = "indisponível";
-  for (const espera of esperas) {
-    if (espera) await new Promise((r) => setTimeout(r, espera));
-    const r = await baixarDanfsePdf(chave, { pfx: cert.pfx, senha: cert.senha }, ambiente);
-    if ("pdf" in r) {
-      await guardarDanfseStorage(admin, chave, r.pdf);
-      return { pdfBase64: r.pdf.toString("base64"), chave };
-    }
-    ultimoErro = r.erro;
-    if (!/HTTP 5\d\d|HTTP 429|tempo esgotado|rede|TLS/i.test(r.erro)) break;
-  }
-  return { erro: `DANFSe indisponível — ${ultimoErro}`, chave };
-}
-
-// DANFSe para USO (envio/download): tenta o oficial e, se o ADN não entrega, gera o DANFSe
-// fiel via HTML→Gotenberg — assim o envio não trava. Volta ao oficial quando o ADN normaliza.
-export async function obterDanfsePdf(
-  admin: Admin,
-  nota: NotaDanfse,
-): Promise<{ pdfBase64?: string; chave?: string; erro?: string }> {
-  const r = await baixarDanfseOficial(admin, nota);
-  if (r.pdfBase64) return r;
-  if (r.chave) {
-    const fiel = await danfseViaGotenberg(admin, r.chave);
-    if (fiel) return { pdfBase64: fiel.toString("base64"), chave: r.chave };
-  }
-  return r;
+  await guardarDanfseStorage(admin, chave, fiel);
+  return { pdfBase64: fiel.toString("base64"), chave };
 }

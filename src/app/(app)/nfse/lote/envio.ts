@@ -5,7 +5,7 @@ import { podeVerHonorario } from "@/lib/clientes/permissoes";
 import { criarEnviadorProativo } from "@/lib/whatsapp/proativo";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { linhasPagamento, competenciaBR, montarMensagemNota, vencimentoBR, valorBR } from "@/lib/whatsapp/notas-envio";
-import { obterDanfsePdf, caminhoDanfse } from "@/lib/nfse/danfse-cache";
+import { gerarDanfseFiel, caminhoDanfse } from "@/lib/nfse/danfse-cache";
 import { canaisParaEnvio, agregarResultado, type ResultadoCanal } from "@/lib/nfse/envio-canais";
 import { flagsParaCanal, type CanalCobranca } from "@/lib/clientes/canal-cobranca";
 import { enviarEmail, type Anexo } from "@/lib/email/enviar";
@@ -216,7 +216,7 @@ export async function enviarHonorarioLote(nfseId: string): Promise<ResultadoEnvi
   if (enviar.length === 0) return { ...agregarResultado(pulados), razaoSocial };
 
   // DANFSe PDF (só pagamos o custo se há canal com contato para enviar).
-  const pdfR = await obterDanfsePdf(admin, {
+  const pdfR = await gerarDanfseFiel(admin, {
     chave_acesso: nota.chave_acesso as string,
     ambiente: nota.ambiente as string | null,
     emitente: nota.emitente as string,
