@@ -8,6 +8,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.6] — 2026-08-11
+
+### Alterado
+
+- **DANFSe gerado ficou fiel ao documento oficial v2.0.** Ajuste fino do layout contra um
+  DANFSe oficial real: rótulos em **negrito** e valores em peso normal (a ênfase estava
+  invertida), títulos de seção preservando "NFS-e", rótulos idênticos aos do padrão
+  (ex.: "Código de Tributação Nacional/Municipal", "Base de Cálculo Após Exclusões e
+  Reduções"), cabeçalho com "Município: X - UF", e o **logo oficial da NFS-e** embutido como
+  imagem (antes era uma aproximação em CSS). O documento passa a ser visualmente idêntico ao
+  emitido pelo portal nacional.
+
+### Contexto
+
+- **A API de download do DANFSe do ambiente nacional foi descontinuada** pela Nota Técnica
+  SE/CGNFS-e nº 008/2026 (corte em 03/08/2026) — daí os erros 503/429 constantes do ADN. Não
+  há endpoint substituto: o padrão nacional passou a **exigir que cada emissor gere o próprio
+  DANFSe** conforme o layout v2.0. Por isso o gerador interno (HTML → Gotenberg) deixa de ser
+  contingência e passa a ser o caminho oficial.
+
 ## [6.99.5] — 2026-08-11
 
 ### Alterado
