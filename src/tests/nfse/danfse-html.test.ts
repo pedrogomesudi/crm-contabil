@@ -7,14 +7,16 @@ const XML = `<?xml version="1.0" encoding="utf-8"?><NFSe versao="1.01" xmlns="ht
 describe("montarDanfseHtml", () => {
   const html = montarDanfseHtml(parsearNfseXml(XML), "");
 
-  it("é um HTML com as seções oficiais", () => {
+  it("é um HTML com as seções oficiais v2.0", () => {
     expect(html).toContain("<!doctype html>");
-    expect(html).toContain("DANFSe");
-    expect(html).toContain("Chave de Acesso da NFS-e");
+    expect(html).toContain("DANFSe v2.0");
+    expect(html).toMatch(/Chave de Acesso da NFS-e/i);
     expect(html).toMatch(/Emitente da NFS-e/i);
-    expect(html).toMatch(/Tomador do Serviço/i);
+    expect(html).toMatch(/Prestador \/ Fornecedor/i);
+    expect(html).toMatch(/Tomador \/ Adquirente/i);
     expect(html).toMatch(/Serviço Prestado/i);
     expect(html).toMatch(/Tributação Municipal/i);
+    expect(html).toMatch(/Tributação IBS\/CBS/i);
     expect(html).toMatch(/Valor Total da NFS-e/i);
   });
   it("inclui os dados da nota", () => {
