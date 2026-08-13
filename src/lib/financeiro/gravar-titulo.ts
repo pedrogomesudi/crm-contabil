@@ -1,6 +1,10 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { validarCobrancaAvulsa, competenciaDoVencimento } from "@/lib/financeiro/cobranca-avulsa";
+import {
+  validarCobrancaAvulsa,
+  competenciaDoVencimento,
+  normalizarCompetencia,
+} from "@/lib/financeiro/cobranca-avulsa";
 import { emitir } from "@/lib/webhooks/emitir";
 
 export type TituloAvulsoNucleoInput = {
@@ -9,6 +13,9 @@ export type TituloAvulsoNucleoInput = {
   vencimento: string;
   categoriaId: string;
   descricao: string;
+  // Mês em que os serviços foram prestados ("YYYY-MM" ou "YYYY-MM-DD"). Ausente → deriva do
+  // vencimento (retrocompat com a API v1).
+  competencia?: string;
 };
 export async function criarTituloAvulsoNucleo(
   input: TituloAvulsoNucleoInput,
@@ -25,7 +32,7 @@ export async function criarTituloAvulsoNucleo(
       cliente_id: input.clienteId,
       valor: input.valor,
       vencimento: input.vencimento,
-      competencia: competenciaDoVencimento(input.vencimento),
+      competencia: normalizarCompetencia(input.competencia) ?? competenciaDoVencimento(input.vencimento),
       categoria_id: input.categoriaId,
       descricao: input.descricao.trim() || null,
       criado_por: ctx.autorId,

@@ -179,7 +179,12 @@ export function ContasReceber({
         </button>
       </div>
       {avulsaAberta && (
-        <NovaCobrancaAvulsa clientes={clientesAv} categorias={categoriasAv} onCriado={aposCriarAvulsa} />
+        <NovaCobrancaAvulsa
+          clientes={clientesAv}
+          categorias={categoriasAv}
+          competenciaInicial={mes}
+          onCriado={aposCriarAvulsa}
+        />
       )}
       {msg && <p className="text-cinza">{msg}</p>}
 
