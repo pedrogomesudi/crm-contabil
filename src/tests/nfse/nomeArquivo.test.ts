@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { nomeArquivoUnico } from "@/lib/nfse/nomeArquivo";
+import { nomeArquivoUnico, nomeArquivoBoleto } from "@/lib/nfse/nomeArquivo";
 
 describe("nomeArquivoUnico", () => {
   it("sanitiza caracteres inválidos de nome de arquivo", () => {
@@ -17,5 +17,21 @@ describe("nomeArquivoUnico", () => {
 
   it("vazio vira placeholder", () => {
     expect(nomeArquivoUnico("   ", new Set())).toBe("SEM RAZAO SOCIAL");
+  });
+});
+
+describe("nomeArquivoBoleto", () => {
+  it("prefixa 'boleto - ' e mantém a razão social", () => {
+    expect(nomeArquivoBoleto("ACME LTDA")).toBe("boleto - ACME LTDA");
+  });
+
+  it("sanitiza caracteres inválidos de nome de arquivo", () => {
+    const r = nomeArquivoBoleto('EMPRESA / A : B * "X"');
+    expect(r).not.toMatch(/[/\\:*?"<>|]/);
+    expect(r).toMatch(/^boleto - EMPRESA/);
+  });
+
+  it("sem razão social retorna vazio (o chamador usa o número)", () => {
+    expect(nomeArquivoBoleto("   ")).toBe("");
   });
 });

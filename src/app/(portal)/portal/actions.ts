@@ -83,7 +83,7 @@ export async function urlBoletoPdf(id: string): Promise<{ url?: string; erro?: s
   else {
     const caminho = await garantirPdfBoleto(id);
     if (!caminho) return { erro: "PDF não disponível." };
-    url = await assinarPdfBoleto(caminho, Number(b.numero));
+    url = await assinarPdfBoleto(caminho, id, Number(b.numero));
   }
   if (!url) return { erro: "Falha ao gerar o link." };
   await registrar(perfil.clienteId!, perfil.id, "boleto", id);

@@ -120,7 +120,7 @@ export async function urlBoletoPdfEquipe(boletoId: string): Promise<{ url?: stri
   if (b.url_pdf) return { url: b.url_pdf as string };
   const caminho = await garantirPdfBoleto(boletoId);
   if (!caminho) return { erro: "PDF não disponível para este boleto." };
-  const url = await assinarPdfBoleto(caminho, Number(b.numero));
+  const url = await assinarPdfBoleto(caminho, boletoId, Number(b.numero));
   if (!url) return { erro: "Falha ao gerar o PDF." };
   return { url };
 }

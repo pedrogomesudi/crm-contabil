@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.9] — 2026-08-12
+
+### Alterado
+
+- **Boleto em PDF baixa com o nome padronizado "boleto - {razão social}.pdf"** (antes:
+  "boleto-{número}.pdf"), alinhado ao critério das notas fiscais (nomeadas pela razão social do
+  cliente). Vale para o download no painel da equipe e no portal do cliente. Sem razão social,
+  cai no nome de reserva por número. A sanitização de nome de arquivo passou a ser compartilhada
+  entre notas e boletos (`sanitizarNomeArquivo`).
+
 ## [6.99.8] — 2026-08-12
 
 ### Alterado
