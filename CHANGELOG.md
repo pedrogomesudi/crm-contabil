@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.10] — 2026-08-12
+
+### Corrigido
+
+- **Cobrança avulsa: competência deixa de ser forçada pelo mês do vencimento.** A "Nova cobrança
+  avulsa" ganhou o campo **Competência (mês dos serviços prestados)**, com padrão no mês
+  selecionado na tela. Antes, a competência era sempre derivada do vencimento — então uma
+  cobrança de serviços de 07/2026 com vencimento em 08/2026 caía na competência 08/2026,
+  contrariando a regra do SALDO (competência = mês em que os serviços foram prestados). Agora a
+  competência gravada é a informada; sem informá-la (ex.: API v1), mantém o padrão pelo
+  vencimento.
+
 ## [6.99.9] — 2026-08-12
 
 ### Alterado

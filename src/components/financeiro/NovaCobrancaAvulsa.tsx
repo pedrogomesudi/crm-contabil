@@ -9,16 +9,19 @@ type Opcao = { id: string; nome: string };
 export function NovaCobrancaAvulsa({
   clientes,
   categorias,
+  competenciaInicial,
   onCriado,
 }: {
   clientes: Opcao[];
   categorias: Opcao[];
+  competenciaInicial: string; // "YYYY-MM" — mês selecionado na tela; padrão do campo Competência
   onCriado: (competencia: string) => void;
 }) {
   const [cliente, setCliente] = useState("");
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
   const [vencimento, setVencimento] = useState("");
+  const [competencia, setCompetencia] = useState(competenciaInicial);
   const [categoria, setCategoria] = useState("");
   const [emitir, setEmitir] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -28,7 +31,7 @@ export function NovaCobrancaAvulsa({
     setMsg("");
     setBusy(true);
     const r = await criarCobrancaAvulsa(
-      { clienteId: cliente, valor: Number(valor), vencimento, categoriaId: categoria, descricao },
+      { clienteId: cliente, valor: Number(valor), vencimento, categoriaId: categoria, descricao, competencia },
       emitir,
     );
     setBusy(false);
@@ -37,7 +40,8 @@ export function NovaCobrancaAvulsa({
       return;
     }
     if (r.avisoBoleto) setMsg(`Cobrança criada, mas o boleto falhou: ${r.avisoBoleto}`);
-    onCriado(competenciaDoVencimento(vencimento));
+    // Navega para a competência escolhida (mês dos serviços), não a do vencimento.
+    onCriado(competencia ? `${competencia}-01` : competenciaDoVencimento(vencimento));
     setDescricao("");
     setValor("");
     setVencimento("");
@@ -72,13 +76,25 @@ export function NovaCobrancaAvulsa({
           placeholder="Valor (R$)"
           className={controleCls("compacto")}
         />
+        <label className="flex flex-1 flex-col gap-0.5 text-xs text-cinza">
+          Vencimento
+          <input
+            value={vencimento}
+            onChange={(e) => setVencimento(e.target.value)}
+            type="date"
+            className={controleCls("compacto")}
+          />
+        </label>
+      </div>
+      <label className="flex flex-col gap-0.5 text-xs text-cinza">
+        Competência (mês dos serviços prestados)
         <input
-          value={vencimento}
-          onChange={(e) => setVencimento(e.target.value)}
-          type="date"
+          value={competencia}
+          onChange={(e) => setCompetencia(e.target.value)}
+          type="month"
           className={controleCls("compacto")}
         />
-      </div>
+      </label>
       <select value={categoria} onChange={(e) => setCategoria(e.target.value)} className={controleCls("compacto")}>
         <option value="">Categoria…</option>
         {categorias.map((c) => (

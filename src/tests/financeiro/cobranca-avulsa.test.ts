@@ -1,11 +1,29 @@
 import { describe, it, expect } from "vitest";
-import { validarCobrancaAvulsa, competenciaDoVencimento } from "@/lib/financeiro/cobranca-avulsa";
+import {
+  validarCobrancaAvulsa,
+  competenciaDoVencimento,
+  normalizarCompetencia,
+} from "@/lib/financeiro/cobranca-avulsa";
 
 const ok = { clienteId: "c1", valor: 100, vencimento: "2026-08-10", categoriaId: "cat1" };
 
 describe("competenciaDoVencimento", () => {
   it("usa o mês do vencimento no dia 01", () => {
     expect(competenciaDoVencimento("2026-08-10")).toBe("2026-08-01");
+  });
+});
+
+describe("normalizarCompetencia", () => {
+  it("normaliza YYYY-MM para o dia 01", () => {
+    expect(normalizarCompetencia("2026-07")).toBe("2026-07-01");
+  });
+  it("normaliza YYYY-MM-DD para o dia 01", () => {
+    expect(normalizarCompetencia("2026-07-15")).toBe("2026-07-01");
+  });
+  it("retorna null para ausente ou inválida", () => {
+    expect(normalizarCompetencia(undefined)).toBeNull();
+    expect(normalizarCompetencia("")).toBeNull();
+    expect(normalizarCompetencia("julho")).toBeNull();
   });
 });
 

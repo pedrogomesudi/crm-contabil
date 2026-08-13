@@ -85,7 +85,14 @@ export async function listarCategoriasReceita(): Promise<{ id: string; nome: str
 export type ResultadoAvulsa = { ok: true; tituloId: string; avisoBoleto?: string } | { erro: string };
 
 export async function criarCobrancaAvulsa(
-  input: { clienteId: string; valor: number; vencimento: string; categoriaId: string; descricao: string },
+  input: {
+    clienteId: string;
+    valor: number;
+    vencimento: string;
+    categoriaId: string;
+    descricao: string;
+    competencia?: string;
+  },
   emitirBoletoAgora: boolean,
 ): Promise<ResultadoAvulsa> {
   const perfil = await gateGerir();
