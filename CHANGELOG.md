@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.11] — 2026-08-23
+
+### Adicionado
+
+- **Relatório "Honorários pagos"** em Financeiro → Relatórios, nos mesmos moldes dos demais
+  (filtro de período, busca por cliente, exportação em PDF/Excel/CSV). Lista os pagamentos de
+  honorário mensal (baixas não estornadas de títulos de origem MENSALIDADE) **por data de
+  pagamento**, uma linha por pagamento, com colunas Cliente · Competência · Vencimento ·
+  Pagamento · Valor pago e total do período.
+
 ## [6.99.10] — 2026-08-12
 
 ### Corrigido
