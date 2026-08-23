@@ -22,6 +22,11 @@ const RELATORIOS = [
     label: "Honorários pagos",
     desc: "Honorários recebidos por período de pagamento, em PDF, Excel ou CSV.",
   },
+  {
+    href: "/financeiro/relatorios/honorarios-abertos",
+    label: "Honorários em aberto",
+    desc: "Honorários ainda não pagos por vencimento, com situação de atraso.",
+  },
   { href: "/financeiro/relatorios/dre", label: "DRE", desc: "Demonstração de Resultado por período." },
   {
     href: "/financeiro/relatorios/extrato",
