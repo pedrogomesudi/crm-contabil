@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.12] — 2026-08-23
+
+### Adicionado
+
+- **Relatório "Honorários em aberto"** em Financeiro → Relatórios: honorários mensais ainda não
+  pagos (títulos MENSALIDADE a receber, ABERTO ou baixa parcial) **por período de vencimento**,
+  com colunas Cliente · Competência · Vencimento · **Situação** (A vencer / Vencido há N dias) ·
+  Valor em aberto (saldo devedor) e total. Filtro de período, busca por cliente e exportação
+  PDF/Excel/CSV, no mesmo molde dos demais.
+
 ## [6.99.11] — 2026-08-23
 
 ### Adicionado

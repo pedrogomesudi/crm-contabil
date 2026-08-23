@@ -20,3 +20,19 @@ export function pctInadimplencia(vencido: number, carteira: number): number {
   if (carteira <= 0) return 0;
   return Number(((vencido / carteira) * 100).toFixed(2));
 }
+
+// Dias de atraso de um vencimento em relação a "hoje" (ambos "YYYY-MM-DD"). Positivo = vencido;
+// 0 ou negativo = ainda a vencer.
+export function diasAtraso(vencimentoIso: string, hojeIso: string): number {
+  const v = Date.parse(`${vencimentoIso}T00:00:00Z`);
+  const h = Date.parse(`${hojeIso}T00:00:00Z`);
+  if (Number.isNaN(v) || Number.isNaN(h)) return 0;
+  return Math.round((h - v) / 86_400_000);
+}
+
+// Situação textual de um título em aberto: "A vencer" ou "Vencido há N dia(s)".
+export function situacaoAtraso(vencimentoIso: string, hojeIso: string): string {
+  const d = diasAtraso(vencimentoIso, hojeIso);
+  if (d <= 0) return "A vencer";
+  return `Vencido há ${d} dia${d === 1 ? "" : "s"}`;
+}
