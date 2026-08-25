@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.13] — 2026-08-25
+
+### Adicionado
+
+- **Relatório "Contatos e honorários"** em Financeiro → Relatórios: por cliente ativo, mostra
+  **Cliente · Celular · E-mail · Honorário mensal · Vencimento (dia)**, com total dos honorários,
+  busca e exportação em PDF/Excel/CSV. Valor e dia de vencimento vêm de `clientes_financeiro`
+  (fonte da geração de mensalidades, que cobre 100% dos clientes).
+
 ## [6.99.12] — 2026-08-23
 
 ### Adicionado
