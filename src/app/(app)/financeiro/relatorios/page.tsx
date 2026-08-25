@@ -18,6 +18,11 @@ const RELATORIOS = [
     desc: "Razão social, CPF/CNPJ e honorário mensal de cada cliente ativo.",
   },
   {
+    href: "/financeiro/relatorios/contatos-honorarios",
+    label: "Contatos e honorários",
+    desc: "Cliente, celular, e-mail, honorário mensal e dia de vencimento.",
+  },
+  {
     href: "/financeiro/relatorios/honorarios-pagos",
     label: "Honorários pagos",
     desc: "Honorários recebidos por período de pagamento, em PDF, Excel ou CSV.",
