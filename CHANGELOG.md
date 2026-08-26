@@ -8,6 +8,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.14] — 2026-08-26
+
+### Adicionado
+
+- **Filtro por status em Contas a Receber**: chips **Todos · Em aberto · Recebido · Vencido ·
+  Cancelado** acima da lista, com contador (X de Y). Filtra a competência carregada usando o
+  mesmo status derivado dos badges (Vencido = vencimento no passado com saldo).
+
 ## [6.99.13] — 2026-08-25
 
 ### Adicionado
