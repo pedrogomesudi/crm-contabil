@@ -46,8 +46,31 @@ export function ContasReceber({
   const [avulsaAberta, setAvulsaAberta] = useState(false);
   const [clientesAv, setClientesAv] = useState<{ id: string; nome: string }[]>([]);
   const [categoriasAv, setCategoriasAv] = useState<{ id: string; nome: string }[]>([]);
+  const [filtro, setFiltro] = useState<"TODOS" | "ABERTO" | "RECEBIDO" | "CANCELADO" | "VENCIDO">("TODOS");
   const [pend, start] = useTransition();
   const competencia = mes ? `${mes}-01` : "";
+
+  // Status derivado por título (VENCIDO não é persistido — é vencimento no passado com saldo),
+  // o mesmo mostrado no badge; o filtro casa exatamente com esses rótulos.
+  const linhas = titulos.map((t) => {
+    const saldo = saldoTitulo(t.valor, t.somaBaixado);
+    const status = ehVencido(t.vencimento, t.status, saldo) ? "VENCIDO" : t.status;
+    return { t, saldo, status };
+  });
+  const casaFiltro = (status: string) =>
+    filtro === "TODOS" ||
+    (filtro === "ABERTO" && status === "ABERTO") ||
+    (filtro === "RECEBIDO" && (status === "BAIXADO" || status === "BAIXADO_PARCIAL")) ||
+    (filtro === "CANCELADO" && status === "CANCELADO") ||
+    (filtro === "VENCIDO" && status === "VENCIDO");
+  const visiveis = linhas.filter((l) => casaFiltro(l.status));
+  const FILTROS: { chave: typeof filtro; rotulo: string }[] = [
+    { chave: "TODOS", rotulo: "Todos" },
+    { chave: "ABERTO", rotulo: "Em aberto" },
+    { chave: "RECEBIDO", rotulo: "Recebido" },
+    { chave: "VENCIDO", rotulo: "Vencido" },
+    { chave: "CANCELADO", rotulo: "Cancelado" },
+  ];
 
   const abrirAvulsa = () =>
     start(async () => {
@@ -189,24 +212,48 @@ export function ContasReceber({
       {msg && <p className="text-cinza">{msg}</p>}
 
       {titulos.length > 0 && (
-        <div className="overflow-auto rounded border border-linha">
-          <table className="w-full">
-            <thead className="bg-creme text-left">
-              <tr>
-                <th className="p-2">Cliente</th>
-                <th className="p-2">Origem</th>
-                <th className="p-2">Vencimento</th>
-                <th className="p-2">Valor</th>
-                <th className="p-2">Saldo</th>
-                <th className="p-2">Status</th>
-                <th className="p-2" />
-              </tr>
-            </thead>
-            <tbody>
-              {titulos.map((t) => {
-                const saldo = saldoTitulo(t.valor, t.somaBaixado);
-                const status = ehVencido(t.vencimento, t.status, saldo) ? "VENCIDO" : t.status;
-                return (
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {FILTROS.map((f) => (
+              <button
+                key={f.chave}
+                type="button"
+                onClick={() => setFiltro(f.chave)}
+                className={`rounded-full border px-3 py-0.5 text-xs ${
+                  filtro === f.chave
+                    ? "border-verde bg-verde text-white"
+                    : "border-linha text-cinza hover:border-cinza-claro"
+                }`}
+              >
+                {f.rotulo}
+              </button>
+            ))}
+            <span className="ml-1 text-xs text-cinza">
+              {visiveis.length} de {titulos.length}
+            </span>
+          </div>
+          <div className="overflow-auto rounded border border-linha">
+            <table className="w-full">
+              <thead className="bg-creme text-left">
+                <tr>
+                  <th className="p-2">Cliente</th>
+                  <th className="p-2">Origem</th>
+                  <th className="p-2">Vencimento</th>
+                  <th className="p-2">Valor</th>
+                  <th className="p-2">Saldo</th>
+                  <th className="p-2">Status</th>
+                  <th className="p-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {visiveis.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="p-3 text-cinza">
+                      Nenhum título com esse status nesta competência.
+                    </td>
+                  </tr>
+                )}
+                {visiveis.map(({ t, saldo, status }) => (
                   <tr key={t.id} className="border-t border-linha/70">
                     <td className="p-2">{t.cliente}</td>
                     <td className="p-2">
@@ -298,10 +345,10 @@ export function ContasReceber({
                       </div>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
