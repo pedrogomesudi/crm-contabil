@@ -8,6 +8,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.15] — 2026-08-27
+
+### Adicionado
+
+- **Busca por nome do cliente em Contas a Receber**: campo de busca ao lado dos filtros de
+  status, que combina com eles (filtra a lista pela competência carregada). O contador (X de Y)
+  reflete status + busca.
+
 ## [6.99.14] — 2026-08-26
 
 ### Adicionado
