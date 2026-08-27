@@ -181,6 +181,19 @@ export async function enviarHonorarioGrupoLote(grupoId: string, competencia: str
     .filter(Boolean)
     .join("\n\n");
 
+  // PDF do boleto do grupo (gera/reaproveita no Storage) — anexo no e-mail e 2º documento no
+  // WhatsApp, além das NFs.
+  let boletoPdf: Buffer | null = null;
+  let boletoPath: string | null = null;
+  if (boleto?.id) {
+    boletoPath = await garantirPdfBoleto(boleto.id);
+    if (boletoPath) {
+      const { data: blob } = await admin.storage.from("boletos").download(boletoPath);
+      if (blob) boletoPdf = Buffer.from(await blob.arrayBuffer());
+    }
+  }
+  const nomeBoletoArq = `Boleto ${grupo.nome}.pdf`;
+
   const resultados: ResultadoCanal[] = [...pulados];
 
   if (enviar.includes("whatsapp")) {
@@ -220,6 +233,37 @@ export async function enviarHonorarioGrupoLote(grupoId: string, competencia: str
         });
         if (!r.ok) falha = r.erro ?? "Falha no envio.";
       }
+      // Boleto consolidado do grupo como documento (além das NFs).
+      if (boletoPdf) {
+        const legenda = `Boleto do grupo ${grupo.nome}`;
+        const rb = await enviador.enviar(tel!, {
+          fluxo: "nfse",
+          texto: legenda,
+          params: [nome, compTexto, valorBR(Number(total)), ""],
+          midia: {
+            tipo: "document",
+            base64: boletoPdf.toString("base64"),
+            mime: "application/pdf",
+            nome: nomeBoletoArq,
+            caption: legenda,
+          },
+        });
+        await admin.from("whatsapp_mensagem").insert({
+          cliente_id: titular.id,
+          telefone: tel,
+          texto: legenda,
+          status: rb.ok ? "ENVIADO" : "ERRO",
+          direcao: "OUT",
+          lida: true,
+          resposta: (rb.resposta ?? rb.erro) as object,
+          criado_por: perfil.id,
+          midia_tipo: "document",
+          midia_path: boletoPath,
+          midia_nome: nomeBoletoArq,
+          midia_mime: "application/pdf",
+        });
+        if (!rb.ok) falha = rb.erro ?? "Falha ao enviar o boleto.";
+      }
       resultados.push(
         falha ? { canal: "whatsapp", status: "erro", motivo: falha } : { canal: "whatsapp", status: "ok" },
       );
@@ -232,18 +276,7 @@ export async function enviarHonorarioGrupoLote(grupoId: string, competencia: str
       conteudo: Buffer.from(n.pdfBase64, "base64"),
       tipo: "application/pdf",
     }));
-    if (boleto?.id) {
-      const path = await garantirPdfBoleto(boleto.id);
-      if (path) {
-        const { data: blob } = await admin.storage.from("boletos").download(path);
-        if (blob)
-          anexos.push({
-            nome: `Boleto ${grupo.nome}.pdf`,
-            conteudo: Buffer.from(await blob.arrayBuffer()),
-            tipo: "application/pdf",
-          });
-      }
-    }
+    if (boletoPdf) anexos.push({ nome: nomeBoletoArq, conteudo: boletoPdf, tipo: "application/pdf" });
     const assunto = `NFS-e e boleto consolidado — ${compTexto} — grupo ${grupo.nome}`;
     const r = await enviarEmail({ para: email, assunto, corpo: texto, anexos });
     resultados.push(r.ok ? { canal: "email", status: "ok" } : { canal: "email", status: "erro", motivo: r.erro });
