@@ -36,10 +36,18 @@ export type ClienteDefaults = {
   canal_cobranca?: string;
 };
 
+export type GrupoCobrancaFicha = {
+  nome: string | null;
+  ehTitular: boolean;
+  titularRazao: string | null;
+  soPagadoraDe: string[];
+};
+
 type Props = {
   action: (estado: EstadoCliente, formData: FormData) => Promise<EstadoCliente>;
   contadores: { id: string; nome: string }[];
   cliente?: ClienteDefaults;
+  grupoCobranca?: GrupoCobrancaFicha;
   modo: "novo" | "editar";
   // Só admin (e assistente/contador na criação) pode atribuir contador; o trigger
   // congela contador_id p/ não-admin no UPDATE. Quando false, mostra read-only.
@@ -52,6 +60,7 @@ export function FormCliente({
   action,
   contadores,
   cliente,
+  grupoCobranca,
   modo,
   contadorEditavel,
   camposCustom,
@@ -291,6 +300,28 @@ export function FormCliente({
             <input name="cep" value={f.cep} onChange={set("cep")} className={`${controleCls()} w-full`} />
           </FormCampo>
         </FormGrid>
+        {grupoCobranca && (grupoCobranca.nome || grupoCobranca.soPagadoraDe.length > 0) && (
+          <div className="mt-3 flex flex-col gap-1">
+            {grupoCobranca.nome && (
+              <span className="inline-flex w-fit items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                Cobrança em grupo: {grupoCobranca.nome}
+                {grupoCobranca.ehTitular
+                  ? " · esta empresa é a titular (boleto sai aqui)"
+                  : grupoCobranca.titularRazao
+                    ? ` · boleto emitido em ${grupoCobranca.titularRazao}`
+                    : ""}
+              </span>
+            )}
+            {grupoCobranca.soPagadoraDe.map((nome) => (
+              <span
+                key={nome}
+                className="inline-flex w-fit items-center gap-1 rounded-full bg-atencao-fundo px-3 py-1 text-xs font-medium text-atencao"
+              >
+                Titular-pagadora do grupo: {nome} (só recebe o boleto, não entra no rateio)
+              </span>
+            ))}
+          </div>
+        )}
         <div className="mt-3 max-w-xs">
           <SeletorCanalCobranca name="canal_cobranca" inicial={(c.canal_cobranca as CanalCobranca) ?? "ambos"} />
         </div>
