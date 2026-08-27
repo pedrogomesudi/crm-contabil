@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.23] — 2026-08-27
+
+### Adicionado
+
+- **Selo de grupo de cobrança na ficha do cliente.** Na aba Cadastro (seção Contato e endereço),
+  a empresa que participa de um grupo de cobrança passa a exibir um selo indicando o grupo e em
+  nome de quem o boleto é emitido; quando a empresa é apenas titular-pagadora de um grupo (sem
+  entrar no rateio), isso também é sinalizado.
+
 ## [6.99.22] — 2026-08-27
 
 ### Corrigido

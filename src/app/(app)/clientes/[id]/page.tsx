@@ -78,11 +78,37 @@ export default async function FichaClientePage({
   const { data: cliente } = await supabase
     .from("clientes")
     .select(
-      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, telefone_ddi, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados, comunicar_legalizacao, grupo_id, matriz_id, campos_custom, flag_tem_folha, flag_contribui_icms, flag_contribui_iss",
+      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, telefone_ddi, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados, comunicar_legalizacao, grupo_id, matriz_id, grupo_cobranca_id, campos_custom, flag_tem_folha, flag_contribui_icms, flag_contribui_iss",
     )
     .eq("id", id)
     .maybeSingle();
   if (!cliente) notFound();
+
+  // Grupo de cobrança: (a) grupo onde a empresa é cobrada (grupo_cobranca_id); (b) grupos em
+  // que ela é titular/pagadora. Serve ao selo na ficha (aba Cobrança).
+  const grupoCobrancaId = (cliente as { grupo_cobranca_id: string | null }).grupo_cobranca_id ?? null;
+  const [{ data: gMembro }, { data: gTitularDe }] = await Promise.all([
+    grupoCobrancaId
+      ? supabase.from("grupo_cobranca").select("nome, titular_cliente_id").eq("id", grupoCobrancaId).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.from("grupo_cobranca").select("id, nome").eq("titular_cliente_id", id),
+  ]);
+  let titularRazaoGrupo: string | null = null;
+  if (gMembro && gMembro.titular_cliente_id && gMembro.titular_cliente_id !== id) {
+    const { data: tit } = await supabase
+      .from("clientes")
+      .select("razao_social")
+      .eq("id", gMembro.titular_cliente_id)
+      .maybeSingle();
+    titularRazaoGrupo = (tit?.razao_social as string | null) ?? null;
+  }
+  const grupoCobranca = {
+    nome: (gMembro?.nome as string | null) ?? null,
+    ehTitular: Boolean(gMembro && gMembro.titular_cliente_id === id),
+    titularRazao: titularRazaoGrupo,
+    // Grupos em que é titular mas NÃO é membro cobrado (só pagadora).
+    soPagadoraDe: (gTitularDe ?? []).filter((g) => g.id !== grupoCobrancaId).map((g) => g.nome as string),
+  };
 
   // RF-026: vínculos (grupo econômico + matriz/filial).
   const cli = cliente as { grupo_id: string | null; matriz_id: string | null };
@@ -380,6 +406,7 @@ export default async function FichaClientePage({
               action={atualizarCliente.bind(null, id)}
               contadores={contadores}
               cliente={{ ...(cliente as ClienteDefaults), canal_cobranca: canalInicial }}
+              grupoCobranca={grupoCobranca}
               modo="editar"
               contadorEditavel={contadorEditavel}
               camposCustom={camposCustom}
