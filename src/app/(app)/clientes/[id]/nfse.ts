@@ -153,7 +153,16 @@ export async function emitirNfseCliente(
   // Número da DPS por sequência dedicada (monotônico, sem reuso — evita E0014).
   const { data: ndps } = await supabase.rpc("proximo_ndps");
   const numeroDps = String(ndps ?? Date.now());
-  const { xml, idDps } = montarDps({ config, tomador, valor, competencia, serie: "1", numeroDps });
+  // Honorários do escritório: a competência exibida na NFS-e sai igual à data de emissão.
+  const { xml, idDps, dCompet } = montarDps({
+    config,
+    tomador,
+    valor,
+    competencia,
+    serie: "1",
+    numeroDps,
+    dcompetDaEmissao: true,
+  });
   const assinado = assinarDps(xml, idDps, cert);
 
   let resultado;
@@ -173,7 +182,7 @@ export async function emitirNfseCliente(
       cliente_id: clienteId,
       valor,
       competencia,
-      dcompet: competencia, // o que foi enviado na DPS (dCompet)
+      dcompet: dCompet, // o que foi enviado na DPS (data de emissão neste fluxo)
       status: "erro",
       dps_xml: assinado,
       ambiente,
@@ -187,7 +196,7 @@ export async function emitirNfseCliente(
     cliente_id: clienteId,
     valor,
     competencia,
-    dcompet: competencia, // o que foi enviado na DPS (dCompet)
+    dcompet: dCompet, // o que foi enviado na DPS (data de emissão neste fluxo)
     status: resultado.autorizada ? "autorizada" : "rejeitada",
     chave_acesso: resultado.chaveAcesso ?? null,
     numero: resultado.numero ?? null,

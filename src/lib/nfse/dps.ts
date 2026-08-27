@@ -16,7 +16,7 @@ function dhEmiBrasilia(): string {
 
 // Monta a DPS no layout nacional, espelhando uma NFS-e real autorizada
 // (Uberlândia/MG, Simples Nacional).
-export function montarDps(d: DadosDps): { xml: string; idDps: string } {
+export function montarDps(d: DadosDps): { xml: string; idDps: string; dCompet: string } {
   const tpAmb = d.config.ambiente === "producao" ? "1" : "2";
   const idDps =
     "DPS" +
@@ -30,13 +30,18 @@ export function montarDps(d: DadosDps): { xml: string; idDps: string } {
     xmlns: "http://www.sped.fazenda.gov.br/nfse",
     versao: "1.00",
   });
+  // dhEmi calculado uma vez; quando dcompetDaEmissao, o dCompet usa a MESMA data (dia da emissão),
+  // garantindo que "competência" e "data de emissão" da NFS-e coincidam.
+  const dhEmi = dhEmiBrasilia();
+  const dCompet = d.dcompetDaEmissao ? dhEmi.slice(0, 10) : d.competencia;
+
   const inf = dps.ele("infDPS", { Id: idDps });
   inf.ele("tpAmb").txt(tpAmb);
-  inf.ele("dhEmi").txt(dhEmiBrasilia());
+  inf.ele("dhEmi").txt(dhEmi);
   inf.ele("verAplic").txt("crm-contabil-1");
   inf.ele("serie").txt(d.serie.padStart(5, "0"));
   inf.ele("nDPS").txt(d.numeroDps);
-  inf.ele("dCompet").txt(d.competencia);
+  inf.ele("dCompet").txt(dCompet);
   inf.ele("tpEmit").txt("1");
   inf.ele("cLocEmi").txt(d.config.codigoMunicipio);
 
@@ -92,5 +97,5 @@ export function montarDps(d: DadosDps): { xml: string; idDps: string } {
     tribMun.ele("pAliq").txt(valor2(d.config.aliquotaIss));
   }
 
-  return { xml: dps.end({ prettyPrint: false }), idDps };
+  return { xml: dps.end({ prettyPrint: false }), idDps, dCompet };
 }

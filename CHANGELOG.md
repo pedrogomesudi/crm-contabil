@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.22] — 2026-08-27
+
+### Corrigido
+
+- **Competência da NFS-e de honorários = data de emissão.** Nas notas de honorários do
+  escritório, o campo `dCompet` (COMPETÊNCIA DA NFS-e) passa a sair igual à **data de emissão**
+  da nota, em vez do mês de referência. A competência interna (que casa nota↔boleto no envio)
+  permanece o mês de referência — só o documento fiscal muda. Não afeta o fluxo de cliente
+  como emitente (onde a competência é digitada) nem notas já emitidas.
+
 ## [6.99.21] — 2026-08-27
 
 ### Adicionado

@@ -59,6 +59,20 @@ describe("montarDps", () => {
     expect(xml).not.toContain(".000");
   });
 
+  it("dCompet = competência (mês de referência) por padrão", () => {
+    const { xml, dCompet } = montarDps(dados);
+    expect(dCompet).toBe("2026-07-01");
+    expect(xml).toContain("<dCompet>2026-07-01</dCompet>");
+  });
+
+  it("dcompetDaEmissao: dCompet sai igual à data de emissão (dhEmi), não à competência", () => {
+    const { xml, dCompet } = montarDps({ ...dados, dcompetDaEmissao: true });
+    const dhEmi = xml.match(/<dhEmi>(\d{4}-\d{2}-\d{2})T/)?.[1];
+    expect(dCompet).toBe(dhEmi);
+    expect(dCompet).not.toBe("2026-07-01");
+    expect(xml).toContain(`<dCompet>${dhEmi}</dCompet>`);
+  });
+
   it("inclui o endereço do tomador (end) com CEP só dígitos", () => {
     const { xml } = montarDps(dados);
     expect(xml).toContain("<end>");
