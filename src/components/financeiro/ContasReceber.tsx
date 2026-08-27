@@ -18,6 +18,7 @@ import {
   sincronizarBoletosInter,
   cancelarTitulo,
   emitirBoleto,
+  emitirBoletoGrupo,
   type BoletoView,
 } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
 import { podeCancelarTitulo } from "@/lib/boleto/cancelamento";
@@ -96,16 +97,25 @@ export function ContasReceber({
   // travar o lote. Mesmo padrão da emissão de NFS-e em lote.
   const gerarBoletosLote = () =>
     start(async () => {
-      // "Não enviar" fica fora do lote — o boleto desses clientes é sempre manual.
-      const alvos = titulos.filter(
-        (t) => t.status !== "BAIXADO" && t.status !== "CANCELADO" && !t.naoEnvia && !boletos[t.id],
-      );
-      if (alvos.length === 0) {
+      const emAberto = (t: TituloView) => t.status !== "BAIXADO" && t.status !== "CANCELADO";
+      // Individuais: sem grupo e sem "Não enviar" (o boleto desses é manual).
+      const alvos = titulos.filter((t) => emAberto(t) && !t.naoEnvia && !t.grupoCobrancaId && !boletos[t.id]);
+      // Grupos: um boleto consolidado por grupo (na titular).
+      const grupos = [
+        ...new Set(titulos.filter((t) => emAberto(t) && t.grupoCobrancaId).map((t) => t.grupoCobrancaId!)),
+      ];
+      if (alvos.length === 0 && grupos.length === 0) {
         setMsg("Nenhum título em aberto sem boleto nesta competência.");
         return;
       }
       let ok = 0;
       const erros: string[] = [];
+      for (const g of grupos) {
+        setMsg("Emitindo boleto(s) de grupo…");
+        const r = await emitirBoletoGrupo(g, competencia);
+        if (r.erro) erros.push(`Grupo: ${r.erro}`);
+        else if (r.ok) ok++;
+      }
       for (let i = 0; i < alvos.length; i++) {
         setMsg(`Emitindo boletos… ${i + 1}/${alvos.length}`);
         const r = await emitirBoleto(alvos[i]!.id);
@@ -348,11 +358,15 @@ export function ContasReceber({
                         />
                       )}
                       <div className="mt-1">
-                        <BoletoTitulo
-                          tituloId={t.id}
-                          boleto={boletos[t.id] ?? null}
-                          onMudou={() => start(async () => setBoletos(await listarBoletosDaCompetencia(competencia)))}
-                        />
+                        {t.grupoCobrancaId ? (
+                          <span className="text-xs text-cinza">Boleto consolidado no grupo (titular)</span>
+                        ) : (
+                          <BoletoTitulo
+                            tituloId={t.id}
+                            boleto={boletos[t.id] ?? null}
+                            onMudou={() => start(async () => setBoletos(await listarBoletosDaCompetencia(competencia)))}
+                          />
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -20,6 +20,7 @@ export type TituloView = {
   status: string;
   temTelefone: boolean;
   naoEnvia: boolean; // cliente optou por "Não enviar" — fora da emissão/boleto em lote
+  grupoCobrancaId: string | null; // se em grupo, o boleto é consolidado na titular (não individual)
 };
 const ROTA = "/financeiro/contas-a-receber";
 
@@ -39,7 +40,7 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
   const { data } = await supabase
     .from("titulo")
     .select(
-      "id, origem, competencia, vencimento, valor, status, clientes(razao_social, telefone, clientes_financeiro(cobranca_whatsapp, cobranca_email)), baixa(valor_recebido, estornada)",
+      "id, origem, competencia, vencimento, valor, status, clientes(razao_social, telefone, grupo_cobranca_id, clientes_financeiro(cobranca_whatsapp, cobranca_email)), baixa(valor_recebido, estornada)",
     )
     .eq("competencia", competencia)
     .order("vencimento");
@@ -48,6 +49,7 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
     const cliente = cl as {
       razao_social?: string;
       telefone?: string;
+      grupo_cobranca_id?: string | null;
       clientes_financeiro?:
         | { cobranca_whatsapp?: boolean | null; cobranca_email?: boolean | null }
         | { cobranca_whatsapp?: boolean | null; cobranca_email?: boolean | null }[]
@@ -68,6 +70,7 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
       status: t.status as string,
       temTelefone: Boolean(cliente?.telefone),
       naoEnvia: naoEnviaHonorario({ whatsapp: fin?.cobranca_whatsapp, email: fin?.cobranca_email }),
+      grupoCobrancaId: cliente?.grupo_cobranca_id ?? null,
     };
   });
 }

@@ -41,7 +41,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
     if (!evento || !evento.pago) continue;
     const { data: bol } = await admin
       .from("boleto")
-      .select("id, titulo_id, valor, status")
+      .select("id, titulo_id, valor, status, grupo_cobranca_id")
       .eq("provedor_boleto_id", evento.provedorBoletoId)
       .maybeSingle();
     if (!bol) continue;
@@ -49,9 +49,10 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
       admin,
       {
         id: bol.id as string,
-        titulo_id: bol.titulo_id as string,
+        titulo_id: bol.titulo_id as string | null,
         valor: Number(bol.valor),
         status: bol.status as string,
+        grupo_cobranca_id: bol.grupo_cobranca_id as string | null,
       },
       evento,
       cfg.conta_bancaria_id as string | null,

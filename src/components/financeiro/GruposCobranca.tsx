@@ -11,8 +11,13 @@ import {
   excluirGrupo,
   listarGrupos,
   listarClientesSemGrupo,
+  boletosDoGrupo,
   type GrupoView,
+  type BoletoGrupoView,
 } from "@/app/(app)/financeiro/grupos-cobranca/actions";
+import { emitirBoletoGrupo } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
+import { mesAnteriorDeHoje } from "@/lib/financeiro/competencia";
+import { formatarData } from "@/lib/format";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 type Opcao = { id: string; nome: string };
@@ -24,9 +29,25 @@ export function GruposCobranca({ gruposIni, semGrupoIni }: { gruposIni: GrupoVie
   const [novoTitular, setNovoTitular] = useState("");
   const [nomeEdit, setNomeEdit] = useState<Record<string, string>>({});
   const [addSel, setAddSel] = useState<Record<string, string>>({});
+  const [comp, setComp] = useState<Record<string, string>>({});
+  const [bols, setBols] = useState<Record<string, BoletoGrupoView[]>>({});
   const [msg, setMsg] = useState("");
   const [pend, start] = useTransition();
   const inp = controleCls("compacto");
+  const mesDe = (g: string) => comp[g] ?? mesAnteriorDeHoje();
+
+  const gerarBoleto = (grupoId: string) =>
+    start(async () => {
+      const r = await emitirBoletoGrupo(grupoId, `${mesDe(grupoId)}-01`);
+      setMsg(r.erro ?? r.pulado ?? "Boleto consolidado gerado.");
+      const lista = await boletosDoGrupo(grupoId);
+      setBols((s) => ({ ...s, [grupoId]: lista }));
+    });
+  const verBoletos = (grupoId: string) =>
+    start(async () => {
+      const lista = await boletosDoGrupo(grupoId);
+      setBols((s) => ({ ...s, [grupoId]: lista }));
+    });
 
   const recarregar = () =>
     start(async () => {
@@ -187,6 +208,42 @@ export function GruposCobranca({ gruposIni, semGrupoIni }: { gruposIni: GrupoVie
             >
               Adicionar
             </Botao>
+          </div>
+
+          {/* Boleto consolidado do grupo */}
+          <div className="mt-2 space-y-1 border-t border-linha/60 pt-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-cinza">Boleto consolidado</span>
+              <input
+                type="month"
+                value={mesDe(g.id)}
+                onChange={(e) => setComp((s) => ({ ...s, [g.id]: e.target.value }))}
+                className={inp}
+              />
+              <Botao variante="secundario" disabled={pend} onClick={() => gerarBoleto(g.id)}>
+                Gerar boleto do grupo
+              </Botao>
+              <button
+                type="button"
+                className="text-xs text-cinza underline"
+                disabled={pend}
+                onClick={() => verBoletos(g.id)}
+              >
+                Ver boletos
+              </button>
+            </div>
+            {bols[g.id]?.length ? (
+              <ul className="text-xs text-cinza">
+                {bols[g.id]!.map((b) => (
+                  <li key={b.id} className="tabular-nums">
+                    #{b.numero} · {brl(b.valor)} · venc {formatarData(b.vencimento)} · {b.status}
+                    {b.linhaDigitavel ? ` · ${b.linhaDigitavel}` : ""}
+                  </li>
+                ))}
+              </ul>
+            ) : bols[g.id] ? (
+              <p className="text-xs text-cinza-claro">Nenhum boleto consolidado ainda.</p>
+            ) : null}
           </div>
         </div>
       ))}

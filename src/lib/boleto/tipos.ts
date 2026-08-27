@@ -8,6 +8,9 @@ export type DadosEmissao = {
   pagadorEmail: string | null;
   descricao: string;
   seuNumero: string;
+  // Linhas de observação impressas no boleto (mensagem ao pagador). Usado no boleto de grupo
+  // para listar razão social + CNPJ das empresas. Provedores que não suportam ignoram.
+  observacoes?: string[];
   pagadorEndereco?: {
     cep: string;
     logradouro: string;
