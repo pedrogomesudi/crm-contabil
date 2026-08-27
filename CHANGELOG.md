@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.24] — 2026-08-27
+
+### Corrigido
+
+- **Emissão de boletos em lote estourava o rate limit do Inter (HTTP 429).** Cada emissão criava
+  um adaptador novo e pedia um token OAuth próprio; num lote grande, a rajada de pedidos de token
+  era barrada pelo Inter (`Inter token 429`), fazendo a maioria dos boletos falhar. O token OAuth
+  passa a ser **cacheado em nível de módulo** (compartilhado entre as emissões, por clientId) e há
+  **retry com backoff** no 429 — o lote pede um token e o reutiliza nos demais boletos.
+
 ## [6.99.23] — 2026-08-27
 
 ### Adicionado

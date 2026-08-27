@@ -1,6 +1,6 @@
 {
   "name": "crm-contabil",
-  "version": "6.99.23",
+  "version": "6.99.24",
   "private": true,
   "packageManager": "npm@11.16.0",
   "engines": {
