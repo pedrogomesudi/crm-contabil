@@ -8,6 +8,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.21] — 2026-08-27
+
+### Adicionado
+
+- **Grupo de cobrança com titular fora do rateio.** A empresa titular do boleto pode agora ser
+  apenas a **pagadora** — sem entrar na soma dos honorários nem ter NF própria no grupo. A
+  emissão e o envio consolidado passam a buscar a titular por `titular_cliente_id`
+  (independente de ela ser membro cobrado). A tela de Grupos mostra em nome de quem sai o boleto
+  e sinaliza quando a titular é só pagadora.
+
+### Notas
+
+- Cadastrados os 3 grupos de cobrança (CONSTROI · UNA Gestão · UNA Loteadora), sendo o grupo
+  UNA Loteadora com a titular apenas como pagadora.
+
 ## [6.99.20] — 2026-08-27
 
 ### Adicionado

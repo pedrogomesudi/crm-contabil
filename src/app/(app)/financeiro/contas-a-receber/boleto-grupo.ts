@@ -66,8 +66,14 @@ export async function emitirBoletoGrupoNucleo(
     .eq("grupo_cobranca_id", grupoId)
     .eq("status", "ativo")
     .is("excluido_em", null);
-  const titular = (membros ?? []).find((m) => m.id === grupo.titular_cliente_id);
-  if (!titular) return { erro: "A titular não é uma empresa ativa do grupo." };
+  // Titular buscada por titular_cliente_id (independente dos membros): a titular pode ser só a
+  // pagadora do boleto, sem entrar no rateio dos honorários (não é membro cobrado do grupo).
+  const { data: titular } = await supabase
+    .from("clientes")
+    .select("id, razao_social, cpf_cnpj, email, endereco")
+    .eq("id", grupo.titular_cliente_id)
+    .maybeSingle();
+  if (!titular) return { erro: "Titular do grupo não encontrada." };
 
   const { data: titulos } = await supabase
     .from("titulo")
