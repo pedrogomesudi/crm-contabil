@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.18] — 2026-08-27
+
+### Adicionado
+
+- **Grupos de cobrança (Fase 1 — fundação).** Novo conceito para consolidar a cobrança de um
+  conjunto de empresas dos mesmos donos: em Financeiro → Cadastros → **Grupos de cobrança**, você
+  cria grupos, define a **empresa titular** e adiciona/remove as empresas. Base para o boleto
+  único por grupo (próximas fases). Schema: tabela `grupo_cobranca`, vínculo
+  `clientes.grupo_cobranca_id`, e o `boleto` passa a poder cobrir vários títulos (`boleto_titulo`).
+  A NF continua individual por CNPJ; nada do fluxo atual muda até um grupo ser usado.
+
 ## [6.99.17] — 2026-08-27
 
 ### Corrigido
