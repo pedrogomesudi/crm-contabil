@@ -5,6 +5,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { descomprimirXmlNfse } from "@/lib/nfse/xml";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
+import { naoEnviaHonorario } from "@/lib/clientes/canal-cobranca";
 import { decifrarDominio } from "@/lib/cripto/envelope";
 import { carregarCertificado } from "@/lib/nfse/certificado";
 import { montarDps } from "@/lib/nfse/dps";
@@ -224,7 +225,9 @@ export async function listarElegiveisLote(competencia: string): Promise<ClienteL
   // Clientes ativos com honorário (a RLS já limita ao que o usuário vê).
   const { data: clientes } = await supabase
     .from("clientes")
-    .select("id, razao_social, cpf_cnpj, endereco, status, clientes_financeiro(honorario_mensal)")
+    .select(
+      "id, razao_social, cpf_cnpj, endereco, status, clientes_financeiro(honorario_mensal, cobranca_whatsapp, cobranca_email)",
+    )
     .eq("status", "ativo")
     .is("excluido_em", null) // clientes excluídos não entram no lote
     .order("razao_social");
@@ -241,9 +244,15 @@ export async function listarElegiveisLote(competencia: string): Promise<ClienteL
 
   const lista: ClienteLote[] = [];
   for (const c of clientes ?? []) {
-    const fin = Array.isArray(c.clientes_financeiro) ? c.clientes_financeiro[0] : c.clientes_financeiro;
-    const honorario = Number((fin as { honorario_mensal?: number } | null)?.honorario_mensal ?? 0);
+    const fin = (Array.isArray(c.clientes_financeiro) ? c.clientes_financeiro[0] : c.clientes_financeiro) as {
+      honorario_mensal?: number;
+      cobranca_whatsapp?: boolean | null;
+      cobranca_email?: boolean | null;
+    } | null;
+    const honorario = Number(fin?.honorario_mensal ?? 0);
     if (!honorario || honorario <= 0) continue; // só recorrentes
+    // "Não enviar": fora do ciclo automático — não emite NF de honorário.
+    if (naoEnviaHonorario({ whatsapp: fin?.cobranca_whatsapp, email: fin?.cobranca_email })) continue;
     const documento = String(c.cpf_cnpj ?? "").replace(/\D/g, "");
     const end = c.endereco as Record<string, string> | null;
     lista.push({

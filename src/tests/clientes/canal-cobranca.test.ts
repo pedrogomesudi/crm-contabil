@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { canalParaFlags, flagsParaCanal } from "@/lib/clientes/canal-cobranca";
+import { canalParaFlags, flagsParaCanal, naoEnviaHonorario } from "@/lib/clientes/canal-cobranca";
 
 describe("canalParaFlags", () => {
   it("whatsapp liga só WhatsApp", () => {
@@ -10,6 +10,9 @@ describe("canalParaFlags", () => {
   });
   it("ambos liga os dois", () => {
     expect(canalParaFlags("ambos")).toEqual({ whatsapp: true, email: true });
+  });
+  it("nao_enviar desliga os dois", () => {
+    expect(canalParaFlags("nao_enviar")).toEqual({ whatsapp: false, email: false });
   });
 });
 
@@ -23,12 +26,21 @@ describe("flagsParaCanal", () => {
     expect(flagsParaCanal({})).toBe("ambos");
     expect(flagsParaCanal({ whatsapp: null, email: null })).toBe("ambos");
   });
-  it("os dois desligados (legado/silenciado) lê como ambos, sem seletor vazio", () => {
-    expect(flagsParaCanal({ whatsapp: false, email: false })).toBe("ambos");
+  it("os dois desligados explicitamente = nao_enviar", () => {
+    expect(flagsParaCanal({ whatsapp: false, email: false })).toBe("nao_enviar");
   });
-  it("round-trip das 3 opções", () => {
-    for (const c of ["whatsapp", "email", "ambos"] as const) {
+  it("round-trip das 4 opções", () => {
+    for (const c of ["whatsapp", "email", "ambos", "nao_enviar"] as const) {
       expect(flagsParaCanal(canalParaFlags(c))).toBe(c);
     }
+  });
+});
+
+describe("naoEnviaHonorario", () => {
+  it("verdadeiro só com os dois canais desligados", () => {
+    expect(naoEnviaHonorario({ whatsapp: false, email: false })).toBe(true);
+    expect(naoEnviaHonorario({ whatsapp: true, email: false })).toBe(false);
+    expect(naoEnviaHonorario({ whatsapp: false, email: true })).toBe(false);
+    expect(naoEnviaHonorario({})).toBe(false); // nulos = ligados (default histórico)
   });
 });

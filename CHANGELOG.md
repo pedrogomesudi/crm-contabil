@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.16] — 2026-08-27
+
+### Adicionado
+
+- **Opção "Não enviar" no envio de honorários** (cadastro do cliente → aba Financeiro). Além de
+  WhatsApp / E-mail / Ambos, agora há **Não enviar**: o cliente sai do ciclo automático de
+  honorários — **não gera mensalidade, não emite NF e não entra na geração de boletos em lote**.
+  O contas a receber desses clientes passa a ser lançado só manualmente (cobrança avulsa), sem
+  vincular NF/boleto. Internamente "Não enviar" = os dois canais desligados; o gatilho de geração
+  de mensalidades (migration 0136) e as telas de emissão/boletos em lote passam a respeitá-lo.
+
 ## [6.99.15] — 2026-08-27
 
 ### Adicionado

@@ -4,11 +4,16 @@ import { useRef, useState } from "react";
 import { listarNotasParaEnvio, enviarHonorarioLote } from "@/app/(app)/nfse/lote/envio";
 import { preSelecionadas } from "@/lib/whatsapp/notas-envio";
 import { Botao } from "@/components/ui/Botao";
+import type { CanalCobranca } from "@/lib/clientes/canal-cobranca";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-type Canal = "whatsapp" | "email" | "ambos";
-type Nota = { nfseId: string; razaoSocial: string; jaEnviada: boolean; canal: Canal; semContato: boolean };
-const ROTULO_CANAL: Record<Canal, string> = { whatsapp: "WhatsApp", email: "E-mail", ambos: "WhatsApp + e-mail" };
+type Nota = { nfseId: string; razaoSocial: string; jaEnviada: boolean; canal: CanalCobranca; semContato: boolean };
+const ROTULO_CANAL: Record<CanalCobranca, string> = {
+  whatsapp: "WhatsApp",
+  email: "E-mail",
+  ambos: "WhatsApp + e-mail",
+  nao_enviar: "Não enviar",
+};
 
 export function EnviarNotasWhatsapp() {
   const [mes, setMes] = useState("");

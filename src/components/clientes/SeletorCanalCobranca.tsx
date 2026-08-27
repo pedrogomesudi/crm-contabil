@@ -7,6 +7,7 @@ const OPCOES: { valor: CanalCobranca; rotulo: string }[] = [
   { valor: "whatsapp", rotulo: "WhatsApp" },
   { valor: "email", rotulo: "E-mail" },
   { valor: "ambos", rotulo: "WhatsApp e e-mail" },
+  { valor: "nao_enviar", rotulo: "Não enviar" },
 ];
 
 // Um seletor de canal reusado no cadastro (modo form: passa `name`, sem `onSelecionar`) e na
