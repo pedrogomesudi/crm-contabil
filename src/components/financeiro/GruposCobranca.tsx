@@ -15,7 +15,7 @@ import {
   type GrupoView,
   type BoletoGrupoView,
 } from "@/app/(app)/financeiro/grupos-cobranca/actions";
-import { emitirBoletoGrupo } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
+import { emitirBoletoGrupo, urlBoletoPdfEquipe } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
 import { mesAnteriorDeHoje } from "@/lib/financeiro/competencia";
 import { formatarData } from "@/lib/format";
 
@@ -47,6 +47,12 @@ export function GruposCobranca({ gruposIni, semGrupoIni }: { gruposIni: GrupoVie
     start(async () => {
       const lista = await boletosDoGrupo(grupoId);
       setBols((s) => ({ ...s, [grupoId]: lista }));
+    });
+  const abrirPdf = (boletoId: string) =>
+    start(async () => {
+      const r = await urlBoletoPdfEquipe(boletoId);
+      if (r.url) window.open(r.url, "_blank");
+      else setMsg(r.erro ?? "PDF indisponível.");
     });
 
   const recarregar = () =>
@@ -237,7 +243,15 @@ export function GruposCobranca({ gruposIni, semGrupoIni }: { gruposIni: GrupoVie
                 {bols[g.id]!.map((b) => (
                   <li key={b.id} className="tabular-nums">
                     #{b.numero} · {brl(b.valor)} · venc {formatarData(b.vencimento)} · {b.status}
-                    {b.linhaDigitavel ? ` · ${b.linhaDigitavel}` : ""}
+                    {b.linhaDigitavel ? ` · ${b.linhaDigitavel}` : ""}{" "}
+                    <button
+                      type="button"
+                      className="text-blue-600 underline"
+                      disabled={pend}
+                      onClick={() => abrirPdf(b.id)}
+                    >
+                      PDF
+                    </button>
                   </li>
                 ))}
               </ul>
