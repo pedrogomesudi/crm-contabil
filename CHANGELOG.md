@@ -8,6 +8,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.25] — 2026-08-27
+
+### Adicionado
+
+- **PDF do boleto no envio por WhatsApp.** Ao enviar honorários, o WhatsApp passa a mandar o
+  **PDF do boleto como segundo documento** (além da nota) — antes ia só a linha digitável no
+  texto. Vale para o envio individual e para o consolidado de grupo (boleto do grupo). O e-mail
+  já anexava o PDF e segue igual.
+
 ## [6.99.24] — 2026-08-27
 
 ### Corrigido

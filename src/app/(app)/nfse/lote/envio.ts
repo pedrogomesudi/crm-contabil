@@ -335,15 +335,18 @@ export async function enviarHonorarioLote(nfseId: string): Promise<ResultadoEnvi
   const params = [nome, competenciaTexto, valorBR(Number(nota.valor)), vencimento];
   const nomeArq = `NFS-e ${razaoSocial}.pdf`;
 
-  // Boleto PDF para anexo de e-mail (gera/reaproveita no Storage; sem PDF, segue só com a nota).
+  // Boleto PDF (gera/reaproveita no Storage) para anexar no e-mail E enviar como 2º documento no
+  // WhatsApp (além da nota). Sem PDF, segue só a linha digitável no texto.
   let boletoPdf: Buffer | null = null;
-  if (enviar.includes("email") && boleto?.id) {
-    const path = await garantirPdfBoleto(boleto.id);
-    if (path) {
-      const { data: blob } = await admin.storage.from("boletos").download(path);
+  let boletoPath: string | null = null;
+  if ((enviar.includes("email") || enviar.includes("whatsapp")) && boleto?.id) {
+    boletoPath = await garantirPdfBoleto(boleto.id);
+    if (boletoPath) {
+      const { data: blob } = await admin.storage.from("boletos").download(boletoPath);
       if (blob) boletoPdf = Buffer.from(await blob.arrayBuffer());
     }
   }
+  const nomeBoletoArq = `Boleto ${razaoSocial}.pdf`;
 
   const resultados: ResultadoCanal[] = [...pulados];
   for (const canal of enviar) {
@@ -382,6 +385,41 @@ export async function enviarHonorarioLote(nfseId: string): Promise<ResultadoEnvi
         midia_nome: nomeArq,
         midia_mime: "application/pdf",
       });
+      // 2º documento: o PDF do boleto (além da nota). A linha digitável já foi no texto acima.
+      if (boletoPdf) {
+        const legenda = `Boleto — ${razaoSocial}`;
+        const rb = await enviador.enviar(tel!, {
+          fluxo: "nfse",
+          texto: legenda,
+          params,
+          midia: {
+            tipo: "document",
+            base64: boletoPdf.toString("base64"),
+            mime: "application/pdf",
+            nome: nomeBoletoArq,
+            caption: legenda,
+          },
+        });
+        const respB = (rb.resposta ?? {}) as { messageId?: string; id?: string };
+        if (!rb.ok)
+          resultados.push({ canal: "whatsapp", status: "erro", motivo: rb.erro ?? "Falha ao enviar o boleto." });
+        await admin.from("whatsapp_mensagem").insert({
+          cliente_id: nota.cliente_id,
+          telefone: tel,
+          texto: legenda,
+          status: rb.ok ? "ENVIADO" : "ERRO",
+          direcao: "OUT",
+          lida: true,
+          resposta: (rb.resposta ?? rb.erro) as object,
+          criado_por: perfil.id,
+          z_message_id: rb.ok ? (respB.messageId ?? respB.id ?? null) : null,
+          nfse_id: nfseId,
+          midia_tipo: "document",
+          midia_path: boletoPath,
+          midia_nome: nomeBoletoArq,
+          midia_mime: "application/pdf",
+        });
+      }
     } else {
       const anexos: Anexo[] = [
         { nome: nomeArq, conteudo: Buffer.from(pdfR.pdfBase64, "base64"), tipo: "application/pdf" },
