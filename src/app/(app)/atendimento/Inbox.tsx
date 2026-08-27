@@ -219,7 +219,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
   const hoje = new Date().toISOString();
 
   return (
-    <div className="grid h-full grid-cols-1 bg-creme lg:grid-cols-[20rem_1fr_18rem]">
+    <div className="grid h-full grid-cols-1 bg-creme lg:grid-cols-[20rem_minmax(0,1fr)_18rem]">
       {/* Coluna 1 — Conversas */}
       <aside className="flex min-h-0 flex-col border-r border-linha bg-white">
         <div className="flex items-center justify-between p-4 pb-2">
@@ -377,7 +377,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
       </aside>
 
       {/* Coluna 2 — Thread */}
-      <section className="flex min-h-0 flex-col">
+      <section className="flex min-h-0 min-w-0 flex-col">
         {ativa ? (
           <>
             <div className="flex items-center gap-3 border-b border-linha bg-white px-5 py-3">
@@ -430,14 +430,18 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
                       </div>
                     )}
                     <div
-                      className={`mb-1.5 max-w-[62%] rounded-2xl px-3 py-2 text-sm ${
+                      className={`mb-1.5 max-w-[62%] overflow-hidden rounded-2xl px-3 py-2 text-sm ${
                         m.direcao === "OUT"
                           ? "ml-auto rounded-br-md bg-verde/15 text-texto"
                           : "rounded-bl-md border border-linha bg-white text-texto"
                       }`}
                     >
                       <Midia msg={m} onAbrirImagem={(url, nome) => setLightbox({ url, nome })} />
-                      {m.texto && <span className={m.midiaPath ? "mt-1 block" : ""}>{m.texto}</span>}
+                      {m.texto && (
+                        <span className={`whitespace-pre-wrap break-words ${m.midiaPath ? "mt-1 block" : "block"}`}>
+                          {m.texto}
+                        </span>
+                      )}
                       <span className="mt-0.5 flex items-center justify-end gap-1 font-mono text-[10px] text-cinza-claro">
                         {horaMsg(m.criado_em)}
                         <Check marca={marcaEntrega(m.status, m.direcao)} />

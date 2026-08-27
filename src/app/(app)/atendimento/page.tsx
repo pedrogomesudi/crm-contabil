@@ -10,7 +10,7 @@ export default async function AtendimentoPage() {
   const conversas = await listarConversas();
   // Cancela o padding do <main> e preenche a viewport. Offset do topo mobile ajustado no dev-server.
   return (
-    <div className="-m-4 h-[calc(100dvh-3.5rem)] md:-m-6 md:h-screen">
+    <div className="-m-4 h-[calc(100dvh-3.5rem)] overflow-x-hidden md:-m-6 md:h-screen">
       <Inbox inicial={conversas} />
     </div>
   );
