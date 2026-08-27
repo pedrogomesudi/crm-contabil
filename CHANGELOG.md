@@ -8,6 +8,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.20] — 2026-08-27
+
+### Adicionado
+
+- **Cobrança consolidada por grupo — Fase 3 (envio + cancelamento).** Na tela **Enviar
+  honorários**, as empresas de um grupo de cobrança aparecem como **um único item (a titular)**:
+  o envio manda, num só destinatário, o **boleto consolidado do grupo** + as **NFs de todas as
+  empresas** (WhatsApp: cada NF como documento, dados do boleto no texto; e-mail: todas as NFs +
+  o boleto como anexos). O envio individual das demais empresas segue inalterado.
+- **Boleto do grupo — PDF e cancelamento na tela de Grupos de cobrança.** Cada boleto consolidado
+  ganhou os botões **PDF** (baixar) e **Cancelar** (quando emitido) — o cancelamento desfaz o
+  boleto no provedor e deixa os títulos do grupo em aberto para reemissão.
+
+### Corrigido
+
+- **Cancelamento coerente de título em grupo.** Cancelar isoladamente um título coberto por um
+  boleto consolidado agora é bloqueado com aviso, evitando deixar o boleto do grupo ativo no
+  provedor com valor divergente; a operação é direcionada ao cancelamento do boleto do grupo.
+
 ## [6.99.19] — 2026-08-27
 
 ### Adicionado

@@ -15,7 +15,11 @@ import {
   type GrupoView,
   type BoletoGrupoView,
 } from "@/app/(app)/financeiro/grupos-cobranca/actions";
-import { emitirBoletoGrupo } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
+import {
+  emitirBoletoGrupo,
+  urlBoletoPdfEquipe,
+  cancelarBoletoGrupo,
+} from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
 import { mesAnteriorDeHoje } from "@/lib/financeiro/competencia";
 import { formatarData } from "@/lib/format";
 
@@ -48,6 +52,24 @@ export function GruposCobranca({ gruposIni, semGrupoIni }: { gruposIni: GrupoVie
       const lista = await boletosDoGrupo(grupoId);
       setBols((s) => ({ ...s, [grupoId]: lista }));
     });
+  const abrirPdf = (boletoId: string) =>
+    start(async () => {
+      const r = await urlBoletoPdfEquipe(boletoId);
+      if (r.url) window.open(r.url, "_blank");
+      else setMsg(r.erro ?? "PDF indisponível.");
+    });
+  const cancelarBoleto = (grupoId: string, boletoId: string) => {
+    const motivo = prompt("Motivo do cancelamento do boleto do grupo?") ?? "";
+    if (motivo.trim().length < 3) return;
+    start(async () => {
+      const r = await cancelarBoletoGrupo(boletoId, motivo);
+      setMsg(r.erro ?? "Boleto do grupo cancelado.");
+      if (!r.erro) {
+        const lista = await boletosDoGrupo(grupoId);
+        setBols((s) => ({ ...s, [grupoId]: lista }));
+      }
+    });
+  };
 
   const recarregar = () =>
     start(async () => {
@@ -237,7 +259,28 @@ export function GruposCobranca({ gruposIni, semGrupoIni }: { gruposIni: GrupoVie
                 {bols[g.id]!.map((b) => (
                   <li key={b.id} className="tabular-nums">
                     #{b.numero} · {brl(b.valor)} · venc {formatarData(b.vencimento)} · {b.status}
-                    {b.linhaDigitavel ? ` · ${b.linhaDigitavel}` : ""}
+                    {b.linhaDigitavel ? ` · ${b.linhaDigitavel}` : ""}{" "}
+                    <button
+                      type="button"
+                      className="text-blue-600 underline"
+                      disabled={pend}
+                      onClick={() => abrirPdf(b.id)}
+                    >
+                      PDF
+                    </button>
+                    {b.status === "emitido" && (
+                      <>
+                        {" · "}
+                        <button
+                          type="button"
+                          className="text-negativo underline"
+                          disabled={pend}
+                          onClick={() => cancelarBoleto(g.id, b.id)}
+                        >
+                          Cancelar
+                        </button>
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>

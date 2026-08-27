@@ -2,12 +2,21 @@
 import { controleCls } from "@/components/ui/Campo";
 import { useRef, useState } from "react";
 import { listarNotasParaEnvio, enviarHonorarioLote } from "@/app/(app)/nfse/lote/envio";
+import { enviarHonorarioGrupoLote } from "@/app/(app)/nfse/lote/envio-grupo";
 import { preSelecionadas } from "@/lib/whatsapp/notas-envio";
 import { Botao } from "@/components/ui/Botao";
 import type { CanalCobranca } from "@/lib/clientes/canal-cobranca";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-type Nota = { nfseId: string; razaoSocial: string; jaEnviada: boolean; canal: CanalCobranca; semContato: boolean };
+type Nota = {
+  id: string;
+  tipo: "individual" | "grupo";
+  razaoSocial: string;
+  jaEnviada: boolean;
+  canal: CanalCobranca;
+  semContato: boolean;
+  qtdEmpresas?: number;
+};
 const ROTULO_CANAL: Record<CanalCobranca, string> = {
   whatsapp: "WhatsApp",
   email: "E-mail",
@@ -53,8 +62,8 @@ export function EnviarNotasWhatsapp() {
     setSelecionadas((s) => {
       const n = new Set(s);
       for (const v of visiveis) {
-        if (marcar) n.add(v.nfseId);
-        else n.delete(v.nfseId);
+        if (marcar) n.add(v.id);
+        else n.delete(v.id);
       }
       return n;
     });
@@ -70,7 +79,8 @@ export function EnviarNotasWhatsapp() {
     const falhou: { nota: Nota; motivo?: string }[] = [];
     for (const n of alvo) {
       if (pararRef.current) break;
-      const r = await enviarHonorarioLote(n.nfseId);
+      const r =
+        n.tipo === "grupo" ? await enviarHonorarioGrupoLote(n.id, competencia) : await enviarHonorarioLote(n.id);
       if (r.status === "erro") falhou.push({ nota: n, motivo: r.motivo });
       setProg((p) => ({
         feitas: p.feitas + 1,
@@ -85,7 +95,7 @@ export function EnviarNotasWhatsapp() {
     setEnviando(false);
   }
 
-  const selecionadasList = (notas ?? []).filter((n) => selecionadas.has(n.nfseId));
+  const selecionadasList = (notas ?? []).filter((n) => selecionadas.has(n.id));
 
   return (
     <div className="space-y-3 rounded-2xl border border-linha bg-white p-5 text-sm">
@@ -155,13 +165,13 @@ export function EnviarNotasWhatsapp() {
               <div className="max-h-72 overflow-y-auto rounded-lg border border-linha">
                 {visiveis.map((n) => (
                   <label
-                    key={n.nfseId}
+                    key={n.id}
                     className="flex cursor-pointer items-center gap-2 border-b border-linha/60 px-3 py-2 last:border-b-0 hover:bg-creme"
                   >
                     <input
                       type="checkbox"
-                      checked={selecionadas.has(n.nfseId)}
-                      onChange={() => alternar(n.nfseId)}
+                      checked={selecionadas.has(n.id)}
+                      onChange={() => alternar(n.id)}
                       className="accent-verde"
                     />
                     <span className="flex-1 truncate text-texto">{n.razaoSocial}</span>
@@ -192,7 +202,7 @@ export function EnviarNotasWhatsapp() {
           <p className="font-medium">{falhas.length} não enviada(s) (erro). Reenvie para tentar de novo:</p>
           <ul className="list-disc space-y-0.5 pl-4">
             {falhas.map((f) => (
-              <li key={f.nota.nfseId}>
+              <li key={f.nota.id}>
                 {f.nota.razaoSocial}
                 {f.motivo && <span className="text-cinza"> — {f.motivo}</span>}
               </li>

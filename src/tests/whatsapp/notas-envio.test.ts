@@ -44,20 +44,20 @@ describe("competenciaBR", () => {
 describe("preSelecionadas", () => {
   it("marca só as pendentes (jaEnviada false)", () => {
     const s = preSelecionadas([
-      { nfseId: "a", jaEnviada: false },
-      { nfseId: "b", jaEnviada: true },
-      { nfseId: "c", jaEnviada: false },
+      { id: "a", jaEnviada: false },
+      { id: "b", jaEnviada: true },
+      { id: "c", jaEnviada: false },
     ]);
     expect([...s].sort()).toEqual(["a", "c"]);
   });
   it("todas enviadas → vazio", () => {
-    expect(preSelecionadas([{ nfseId: "a", jaEnviada: true }]).size).toBe(0);
+    expect(preSelecionadas([{ id: "a", jaEnviada: true }]).size).toBe(0);
   });
   it("nenhuma enviada → todas", () => {
     expect(
       preSelecionadas([
-        { nfseId: "a", jaEnviada: false },
-        { nfseId: "b", jaEnviada: false },
+        { id: "a", jaEnviada: false },
+        { id: "b", jaEnviada: false },
       ]).size,
     ).toBe(2);
   });

@@ -24,6 +24,38 @@ export async function emitirBoletoGrupo(
   return r;
 }
 
+// Cancela um boleto consolidado de grupo no provedor e marca status='cancelado'. Os títulos
+// ligados (boleto_titulo) permanecem em aberto — seguem devendo e podem ser reemitidos.
+export async function cancelarBoletoGrupo(boletoId: string, motivo: string): Promise<{ ok?: true; erro?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  if (!motivo || motivo.trim().length < 3) return { erro: "Informe a justificativa do cancelamento." };
+  const admin = createAdminSupabase();
+  const { data: bol } = await admin
+    .from("boleto")
+    .select("id, provedor, provedor_boleto_id, status, grupo_cobranca_id")
+    .eq("id", boletoId)
+    .maybeSingle();
+  if (!bol) return { erro: "Boleto não encontrado." };
+  if (!bol.grupo_cobranca_id) return { erro: "Este boleto não é de um grupo de cobrança." };
+  if (bol.status !== "emitido") return { erro: "Só é possível cancelar boleto emitido (não pago/cancelado)." };
+  try {
+    await cancelarBoletoNoInter(
+      admin,
+      {
+        id: bol.id as string,
+        provedor: bol.provedor as string,
+        provedor_boleto_id: (bol.provedor_boleto_id as string | null) ?? null,
+        status: bol.status as string,
+      },
+      motivo.trim(),
+    );
+  } catch (e) {
+    return { erro: `Falha ao cancelar o boleto no provedor: ${(e as Error).message}` };
+  }
+  revalidatePath("/financeiro/contas-a-receber");
+  return { ok: true };
+}
+
 export type BoletoView = {
   id: string;
   numero: number;
@@ -222,6 +254,21 @@ export async function cancelarTitulo(tituloId: string, motivo: string): Promise<
     .reduce((s, x) => s + Number(x.valor_recebido), 0);
   if (!podeCancelarTitulo(t.status as string, somaBaixado))
     return { erro: "Título não pode ser cancelado (baixado, pago ou já cancelado)." };
+  // Título coberto por boleto consolidado de grupo (ligado via boleto_titulo, não titulo_id):
+  // cancelá-lo isolado deixaria o boleto do grupo ativo no provedor com valor divergente.
+  // Direciona a operação para o cancelamento do boleto do grupo.
+  const { data: emGrupo } = await admin
+    .from("boleto_titulo")
+    .select("boleto:boleto_id(status)")
+    .eq("titulo_id", tituloId);
+  const temBoletoGrupoAtivo = (emGrupo ?? []).some((r) => {
+    const b = (Array.isArray(r.boleto) ? r.boleto[0] : r.boleto) as { status?: string } | null;
+    return b?.status === "emitido";
+  });
+  if (temBoletoGrupoAtivo)
+    return {
+      erro: "Este título está em um boleto consolidado de grupo. Cancele o boleto do grupo na tela de Grupos de cobrança.",
+    };
   const { data: bol } = await admin
     .from("boleto")
     .select("id, provedor, provedor_boleto_id, status")

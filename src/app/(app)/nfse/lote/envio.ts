@@ -17,11 +17,15 @@ async function gate() {
 }
 
 export type NotaParaEnvio = {
-  nfseId: string;
+  // id = nfseId (item individual) ou grupoId (item de grupo consolidado).
+  id: string;
+  tipo: "individual" | "grupo";
   razaoSocial: string;
   jaEnviada: boolean;
   canal: CanalCobranca;
   semContato: boolean;
+  // Item de grupo: nº de empresas com NF na competência (para o rótulo da lista).
+  qtdEmpresas?: number;
 };
 
 export async function listarNotasParaEnvio(competencia: string): Promise<NotaParaEnvio[]> {
@@ -31,7 +35,7 @@ export async function listarNotasParaEnvio(competencia: string): Promise<NotaPar
   const { data } = await admin
     .from("nfse")
     .select(
-      "id, cliente_id, valor, tomador_razao_social, numero, clientes(razao_social, telefone, telefone_ddi, email, clientes_financeiro(cobranca_whatsapp, cobranca_email))",
+      "id, cliente_id, valor, tomador_razao_social, numero, clientes(razao_social, telefone, telefone_ddi, email, grupo_cobranca_id, clientes_financeiro(cobranca_whatsapp, cobranca_email))",
     )
     .eq("status", "autorizada")
     .eq("competencia", competencia)
@@ -42,6 +46,7 @@ export async function listarNotasParaEnvio(competencia: string): Promise<NotaPar
       telefone?: string;
       telefone_ddi?: string;
       email?: string | null;
+      grupo_cobranca_id?: string | null;
       clientes_financeiro?:
         | { cobranca_whatsapp?: boolean; cobranca_email?: boolean }
         | { cobranca_whatsapp?: boolean; cobranca_email?: boolean }[];
@@ -50,6 +55,7 @@ export async function listarNotasParaEnvio(competencia: string): Promise<NotaPar
     return {
       nfseId: n.id as string,
       clienteId: (n.cliente_id as string | null) ?? null,
+      grupoCobrancaId: (cl?.grupo_cobranca_id as string | null) ?? null,
       valor: Number(n.valor),
       razaoSocial: cl?.razao_social ?? (n.tomador_razao_social as string | null) ?? "SEM RAZAO SOCIAL",
       telefone: normalizarTelefone(cl?.telefone ?? "", cl?.telefone_ddi ?? "55"),
@@ -112,15 +118,76 @@ export async function listarNotasParaEnvio(competencia: string): Promise<NotaPar
 
   // Só entram: notas de honorários (valor casa com o boleto) cuja fatura não foi recebida
   // (BAIXADO) nem cancelada.
-  return notas
-    .filter((n) => ehNotaHonorario(n) && !(n.clienteId && faturaEncerrada.has(n.clienteId)))
-    .map((n) => {
-      const canal = flagsParaCanal(n.flags);
+  const passam = notas.filter((n) => ehNotaHonorario(n) && !(n.clienteId && faturaEncerrada.has(n.clienteId)));
+
+  // Empresas em grupo de cobrança colapsam num único item (a titular): a cobrança é
+  // consolidada — um boleto do grupo + as NFs de todas as empresas, enviados à titular.
+  const individuais = passam.filter((n) => !n.grupoCobrancaId);
+  const emGrupo = passam.filter((n) => n.grupoCobrancaId);
+
+  const itensIndiv: NotaParaEnvio[] = individuais.map((n) => {
+    const canal = flagsParaCanal(n.flags);
+    const semContato =
+      canaisParaEnvio(n.flags, { temTelefone: Boolean(n.telefone), temEmail: Boolean(n.email) }).enviar.length === 0;
+    const jaEnviada = enviadasWa.has(n.nfseId) || (n.clienteId ? clientesComEmail.has(n.clienteId) : false);
+    return { id: n.nfseId, tipo: "individual", razaoSocial: n.razaoSocial, jaEnviada, canal, semContato };
+  });
+
+  const itensGrupo: NotaParaEnvio[] = [];
+  const grupoIds = [...new Set(emGrupo.map((n) => n.grupoCobrancaId!))];
+  if (grupoIds.length) {
+    const { data: gruposData } = await admin
+      .from("grupo_cobranca")
+      .select("id, nome, titular_cliente_id")
+      .in("id", grupoIds);
+    const titularIds = [...new Set((gruposData ?? []).map((g) => g.titular_cliente_id as string))];
+    const { data: titularData } = await admin
+      .from("clientes")
+      .select("id, telefone, telefone_ddi, email, clientes_financeiro(cobranca_whatsapp, cobranca_email)")
+      .in("id", titularIds);
+    const titularPorId = new Map(
+      (titularData ?? []).map((t) => {
+        const f = Array.isArray(t.clientes_financeiro) ? t.clientes_financeiro[0] : t.clientes_financeiro;
+        return [
+          t.id as string,
+          {
+            temTelefone: Boolean(normalizarTelefone((t.telefone as string) ?? "", (t.telefone_ddi as string) ?? "55")),
+            temEmail: Boolean(((t.email as string | null) ?? "").trim()),
+            flags: {
+              whatsapp: (f as { cobranca_whatsapp?: boolean })?.cobranca_whatsapp ?? true,
+              email: (f as { cobranca_email?: boolean })?.cobranca_email ?? true,
+            },
+          },
+        ];
+      }),
+    );
+    for (const g of gruposData ?? []) {
+      const membros = emGrupo.filter((n) => n.grupoCobrancaId === g.id);
+      if (membros.length === 0) continue;
+      const titular = titularPorId.get(g.titular_cliente_id as string) ?? {
+        temTelefone: false,
+        temEmail: false,
+        flags: { whatsapp: true, email: true },
+      };
+      const canal = flagsParaCanal(titular.flags);
       const semContato =
-        canaisParaEnvio(n.flags, { temTelefone: Boolean(n.telefone), temEmail: Boolean(n.email) }).enviar.length === 0;
-      const jaEnviada = enviadasWa.has(n.nfseId) || (n.clienteId ? clientesComEmail.has(n.clienteId) : false);
-      return { nfseId: n.nfseId, razaoSocial: n.razaoSocial, jaEnviada, canal, semContato };
-    });
+        canaisParaEnvio(titular.flags, { temTelefone: titular.temTelefone, temEmail: titular.temEmail }).enviar
+          .length === 0;
+      const jaEnviada =
+        membros.some((n) => enviadasWa.has(n.nfseId)) || clientesComEmail.has(g.titular_cliente_id as string);
+      itensGrupo.push({
+        id: g.id as string,
+        tipo: "grupo",
+        razaoSocial: `Grupo ${g.nome} (${membros.length} empresa${membros.length === 1 ? "" : "s"})`,
+        jaEnviada,
+        canal,
+        semContato,
+        qtdEmpresas: membros.length,
+      });
+    }
+  }
+
+  return [...itensIndiv, ...itensGrupo];
 }
 
 export type ResultadoEnvioNota = { status: "ok" | "pulado" | "erro"; motivo?: string; razaoSocial: string };
