@@ -11,6 +11,18 @@ import { sincronizarBoletosCore } from "./sincronizar";
 import { cancelarBoletoNoInter } from "@/lib/boleto/cancelar-exec";
 import { podeCancelarTitulo } from "@/lib/boleto/cancelamento";
 import { validarNovaVencimento } from "@/lib/boleto/vencimento";
+import { emitirBoletoGrupoNucleo } from "./boleto-grupo";
+
+export async function emitirBoletoGrupo(
+  grupoId: string,
+  competencia: string,
+): Promise<{ ok?: true; erro?: string; pulado?: string }> {
+  if (!(await gate())) return { erro: "Sem permissão." };
+  const supabase = await createServerSupabase();
+  const r = await emitirBoletoGrupoNucleo(supabase, grupoId, competencia);
+  if (r.ok) revalidatePath("/financeiro/contas-a-receber");
+  return r;
+}
 
 export type BoletoView = {
   id: string;

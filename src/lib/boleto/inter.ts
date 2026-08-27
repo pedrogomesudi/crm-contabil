@@ -42,13 +42,22 @@ export function corpoCobrancaInter(dados: DadosEmissao): Record<string, unknown>
     uf: e?.uf ?? "",
   };
   if (dados.pagadorEmail) pagador.email = dados.pagadorEmail;
-  return {
+  const corpo: Record<string, unknown> = {
     seuNumero: dados.seuNumero,
     valorNominal: dados.valor,
     dataVencimento: dados.vencimento,
     numDiasAgenda: 60,
     pagador,
   };
+  // Mensagem/observações do boleto: o Inter aceita linha1..linha5 (~78 chars cada).
+  if (dados.observacoes?.length) {
+    const mensagem: Record<string, string> = {};
+    dados.observacoes.slice(0, 5).forEach((l, i) => {
+      mensagem[`linha${i + 1}`] = String(l).slice(0, 78);
+    });
+    corpo.mensagem = mensagem;
+  }
+  return corpo;
 }
 
 const str = (v: unknown): string | null => (typeof v === "string" && v.length > 0 ? v : null);

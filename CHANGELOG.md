@@ -8,6 +8,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.19] — 2026-08-27
+
+### Adicionado
+
+- **Grupos de cobrança (Fase 2 — boleto consolidado + baixa).** A geração de boletos passa a
+  emitir **um único boleto por grupo**, no CNPJ da **titular**, somando os honorários das empresas
+  do grupo, com **vencimento da titular** e as **observações listando razão social + CNPJ de cada
+  empresa**. A "Gerar boletos em lote" desvia os grupos (as empresas em grupo não geram boleto
+  individual); e a tela de grupos ganhou **gerar/ver o boleto consolidado por competência**.
+  Quando o boleto do grupo é **pago**, o sistema **dá baixa em todos os honorários do grupo** de
+  uma vez (webhook e sincronização). O adaptador do Inter passou a enviar o campo de mensagem.
+  A NF segue individual por CNPJ. (O envio automático consolidado à titular vem na próxima fase.)
+
 ## [6.99.18] — 2026-08-27
 
 ### Adicionado

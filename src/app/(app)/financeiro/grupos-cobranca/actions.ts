@@ -143,6 +143,33 @@ export async function definirTitular(grupoId: string, clienteId: string): Promis
   return {};
 }
 
+export type BoletoGrupoView = {
+  id: string;
+  numero: number;
+  valor: number;
+  vencimento: string;
+  status: string;
+  linhaDigitavel: string | null;
+};
+
+export async function boletosDoGrupo(grupoId: string): Promise<BoletoGrupoView[]> {
+  if (!(await gate())) return [];
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("boleto")
+    .select("id, numero, valor, vencimento, status, linha_digitavel")
+    .eq("grupo_cobranca_id", grupoId)
+    .order("vencimento", { ascending: false });
+  return (data ?? []).map((b) => ({
+    id: b.id as string,
+    numero: Number(b.numero),
+    valor: Number(b.valor),
+    vencimento: b.vencimento as string,
+    status: b.status as string,
+    linhaDigitavel: (b.linha_digitavel as string | null) ?? null,
+  }));
+}
+
 export async function excluirGrupo(grupoId: string): Promise<{ erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   const supabase = await createServerSupabase();

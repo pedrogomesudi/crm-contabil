@@ -17,7 +17,7 @@ export async function sincronizarBoletosCore(): Promise<{ baixados: number }> {
   if ("erro" in ativo || typeof ativo.adaptador.consultarPagamento !== "function") return { baixados: 0 };
   const { data: boletos } = await admin
     .from("boleto")
-    .select("id, titulo_id, valor, status, provedor_boleto_id")
+    .select("id, titulo_id, valor, status, provedor_boleto_id, grupo_cobranca_id")
     .eq("provedor", "inter")
     .eq("status", "emitido");
   const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
@@ -28,7 +28,13 @@ export async function sincronizarBoletosCore(): Promise<{ baixados: number }> {
     if (!evento || !evento.pago) continue;
     const baixou = await baixarBoletoPago(
       admin,
-      { id: b.id as string, titulo_id: b.titulo_id as string, valor: Number(b.valor), status: b.status as string },
+      {
+        id: b.id as string,
+        titulo_id: b.titulo_id as string | null,
+        valor: Number(b.valor),
+        status: b.status as string,
+        grupo_cobranca_id: b.grupo_cobranca_id as string | null,
+      },
       evento,
       cfg.conta_bancaria_id as string | null,
       hoje,
