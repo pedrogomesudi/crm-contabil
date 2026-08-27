@@ -47,6 +47,7 @@ export function ContasReceber({
   const [clientesAv, setClientesAv] = useState<{ id: string; nome: string }[]>([]);
   const [categoriasAv, setCategoriasAv] = useState<{ id: string; nome: string }[]>([]);
   const [filtro, setFiltro] = useState<"TODOS" | "ABERTO" | "RECEBIDO" | "CANCELADO" | "VENCIDO">("TODOS");
+  const [busca, setBusca] = useState("");
   const [pend, start] = useTransition();
   const competencia = mes ? `${mes}-01` : "";
 
@@ -63,7 +64,8 @@ export function ContasReceber({
     (filtro === "RECEBIDO" && (status === "BAIXADO" || status === "BAIXADO_PARCIAL")) ||
     (filtro === "CANCELADO" && status === "CANCELADO") ||
     (filtro === "VENCIDO" && status === "VENCIDO");
-  const visiveis = linhas.filter((l) => casaFiltro(l.status));
+  const q = busca.trim().toLowerCase();
+  const visiveis = linhas.filter((l) => casaFiltro(l.status) && (!q || l.t.cliente.toLowerCase().includes(q)));
   const FILTROS: { chave: typeof filtro; rotulo: string }[] = [
     { chave: "TODOS", rotulo: "Todos" },
     { chave: "ABERTO", rotulo: "Em aberto" },
@@ -228,6 +230,12 @@ export function ContasReceber({
                 {f.rotulo}
               </button>
             ))}
+            <input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar cliente"
+              className={`${controleCls("compacto")} ml-1`}
+            />
             <span className="ml-1 text-xs text-cinza">
               {visiveis.length} de {titulos.length}
             </span>
