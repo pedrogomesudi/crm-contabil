@@ -8,6 +8,24 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.26] — 2026-08-27
+
+### Corrigido
+
+- **Atendimento (WhatsApp) — mídia recebida não aparecia.** O download da mídia usava
+  `redirect: "error"`; como a Z-API/Meta servem os arquivos por CDN com redirect, qualquer 3xx
+  quebrava o download e a mensagem virava só o texto `[image]`/`[audio]`/`[document]`. Agora o
+  download **segue os redirects** revalidando o host a cada salto (anti-SSRF preservado) e só
+  manda o segredo (Client-Token/Bearer) ao host a que pertence.
+- **Atendimento — rolagem horizontal indevida.** Ajustado o layout: `overflow-x-hidden` no
+  container, grade central com `minmax(0,1fr)` + `min-w-0` na coluna da conversa, e quebra de
+  palavras longas nas bolhas de mensagem (`break-words`).
+
+### Adicionado
+
+- **Atendimento — suporte a vídeo recebido.** Vídeos do WhatsApp passam a ser baixados,
+  guardados e **reproduzidos** na conversa (player inline), como já ocorria com imagem e áudio.
+
 ## [6.99.25] — 2026-08-27
 
 ### Adicionado

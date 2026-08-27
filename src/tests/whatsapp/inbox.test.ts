@@ -36,8 +36,23 @@ describe("extrairMensagemZapi", () => {
   it("aceita o campo message direto", () => {
     expect(extrairMensagemZapi({ phone: "553400", messageId: "M2", message: "oi" })?.texto).toBe("oi");
   });
-  it("mídia não suportada (vídeo) → marcador", () => {
-    expect(extrairMensagemZapi({ phone: "553400", messageId: "M3", video: { url: "x" } })?.texto).toBe(
+  it("vídeo (videoUrl + caption) → mídia tipo video", () => {
+    const r = extrairMensagemZapi({
+      phone: "553400",
+      messageId: "M3",
+      video: { videoUrl: "https://x/v.mp4", mimeType: "video/mp4", caption: "olha isso" },
+    });
+    expect(r?.midia).toEqual({
+      tipo: "video",
+      url: "https://x/v.mp4",
+      mime: "video/mp4",
+      nome: null,
+      caption: "olha isso",
+    });
+    expect(r?.texto).toBe("olha isso");
+  });
+  it("sticker/location ainda caem em marcador não suportado", () => {
+    expect(extrairMensagemZapi({ phone: "553400", messageId: "M3b", sticker: { url: "x" } })?.texto).toBe(
       "[mídia não suportada]",
     );
   });

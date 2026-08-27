@@ -45,6 +45,12 @@ export function Midia({
     return <audio controls src={src} className="w-64 max-w-full" />;
   }
 
+  if (msg.midiaTipo === "video") {
+    // Vídeo do WhatsApp não traz faixa de legenda; a regra de caption não se aplica.
+    // eslint-disable-next-line jsx-a11y/media-has-caption
+    return <video controls src={src} className="w-64 max-w-full rounded-xl" />;
+  }
+
   // documento
   const selo = iconeDeMime(msg.midiaMime);
   return (

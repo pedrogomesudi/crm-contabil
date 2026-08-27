@@ -34,56 +34,72 @@ export function ehHostMeta(host: string): boolean {
   return h === "graph.facebook.com" || h.endsWith(".fbcdn.net") || h.endsWith(".fbsbx.com");
 }
 
-// O download com todas as proteções (HTTPS, anti-SSRF, teto em streaming, timeout, sem redirect).
-// Os headers já vêm decididos por quem chama — é lá que mora a regra de "a quem eu mando o segredo".
-async function baixarComHeaders(url: string, headers: Record<string, string>): Promise<Buffer | null> {
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return null;
-  }
-  if (parsed.protocol !== "https:") return null; // só HTTPS
-  if (hostInterno(parsed.hostname)) return null; // anti-SSRF
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 20000);
-  try {
-    const res = await fetch(url, { signal: ctrl.signal, headers, redirect: "error" }); // não segue redirect (anti-SSRF)
-    if (!res.ok || !res.body) return null;
-    // Enforce o teto lendo em streaming (não confia no content-length).
-    const reader = res.body.getReader();
-    const chunks: Buffer[] = [];
-    let total = 0;
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value) {
-        total += value.byteLength;
-        if (total > MAX_BYTES) {
-          await reader.cancel();
-          return null;
-        }
-        chunks.push(Buffer.from(value));
-      }
+// O download com todas as proteções (HTTPS, anti-SSRF, teto em streaming, timeout). Segue
+// redirects MANUALMENTE — a mídia do WhatsApp costuma vir por CDN que redireciona (Z-API e Meta);
+// com `redirect: "error"` qualquer 3xx quebrava o download e a mídia sumia. A cada salto o host é
+// revalidado (anti-SSRF preservado) e os headers são RECALCULADOS por host via `headersPara`, para
+// o segredo (Client-Token / Bearer) só ir ao host a que pertence, nunca a um CDN de terceiro.
+async function baixarSeguindoRedirects(
+  urlInicial: string,
+  headersPara: (host: string) => Record<string, string>,
+): Promise<Buffer | null> {
+  let url = urlInicial;
+  for (let salto = 0; salto < 5; salto++) {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return null;
     }
-    return Buffer.concat(chunks);
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timer);
+    if (parsed.protocol !== "https:") return null; // só HTTPS
+    if (hostInterno(parsed.hostname)) return null; // anti-SSRF (revalidado a cada salto)
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000);
+    try {
+      const res = await fetch(url, {
+        signal: ctrl.signal,
+        headers: headersPara(parsed.hostname),
+        redirect: "manual",
+      });
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get("location");
+        if (!loc) return null;
+        url = new URL(loc, url).toString(); // o destino é validado no próximo giro do laço
+        continue;
+      }
+      if (!res.ok || !res.body) return null;
+      // Enforce o teto lendo em streaming (não confia no content-length).
+      const reader = res.body.getReader();
+      const chunks: Buffer[] = [];
+      let total = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          total += value.byteLength;
+          if (total > MAX_BYTES) {
+            await reader.cancel();
+            return null;
+          }
+          chunks.push(Buffer.from(value));
+        }
+      }
+      return Buffer.concat(chunks);
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
   }
+  return null; // redirects demais
 }
 
-// Z-API: o Client-Token só vai para hosts do próprio Z-API.
+// Z-API: o Client-Token só vai para hosts do próprio Z-API (mesmo após redirect).
 async function baixar(url: string, clientToken: string | null): Promise<Buffer | null> {
-  let host: string;
-  try {
-    host = new URL(url).hostname;
-  } catch {
-    return null;
-  }
-  const headers: Record<string, string> = ehHostZapi(host) && clientToken ? { "Client-Token": clientToken } : {};
-  return baixarComHeaders(url, headers);
+  return baixarSeguindoRedirects(
+    url,
+    (host): Record<string, string> => (ehHostZapi(host) && clientToken ? { "Client-Token": clientToken } : {}),
+  );
 }
 
 // Baixa a mídia (Client-Token só para hosts do Z-API) e sobe no bucket 'documentos'.
@@ -109,8 +125,13 @@ export async function baixarEStorearMidiaOficial(
   token: string,
 ): Promise<{ path: string; mime: string } | null> {
   const auth = { Authorization: `Bearer ${token}` };
+  // O Bearer só vai para hosts da Meta (revalidado a cada salto de redirect).
+  const headersMeta = (host: string): Record<string, string> => (ehHostMeta(host) ? auth : {});
   // 1) media id → { url, mime_type }
-  const metaBuf = await baixarComHeaders(`https://graph.facebook.com/v21.0/${encodeURIComponent(mediaId)}`, auth);
+  const metaBuf = await baixarSeguindoRedirects(
+    `https://graph.facebook.com/v21.0/${encodeURIComponent(mediaId)}`,
+    headersMeta,
+  );
   if (!metaBuf) return null;
   let url: string;
   let mime: string;
@@ -130,7 +151,7 @@ export async function baixarEStorearMidiaOficial(
     return null;
   }
   if (!hostOk) return null;
-  const bytes = await baixarComHeaders(url, auth);
+  const bytes = await baixarSeguindoRedirects(url, headersMeta);
   if (!bytes) return null;
   // 3) mesmo destino do Z-API
   const path = `atendimento/in/${crypto.randomUUID()}.${extensaoPorMime(mime)}`;

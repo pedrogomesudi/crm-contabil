@@ -44,7 +44,7 @@ export type FiltroAba = "abertas" | "pendentes" | "finalizadas" | "favoritos";
 const CHAVES_MIDIA = ["image", "audio", "video", "document", "sticker", "contact", "location"];
 
 export type MidiaRecebida = {
-  tipo: "image" | "audio" | "document";
+  tipo: "image" | "audio" | "video" | "document";
   url: string;
   mime: string;
   nome: string | null;
@@ -87,6 +87,18 @@ export function extrairMensagemZapi(
         zId,
         texto: "",
         midia: { tipo: "audio", url, mime: str(aud.mimeType) ?? "audio/ogg", nome: null, caption: "" },
+      };
+  }
+  const vid = p.video as Record<string, unknown> | undefined;
+  if (vid) {
+    const url = str(vid.videoUrl) ?? str(vid.url);
+    const caption = str(vid.caption) ?? "";
+    if (url)
+      return {
+        telefone,
+        zId,
+        texto: caption,
+        midia: { tipo: "video", url, mime: str(vid.mimeType) ?? "video/mp4", nome: null, caption },
       };
   }
   const doc = p.document as Record<string, unknown> | undefined;

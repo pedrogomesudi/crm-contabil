@@ -16,6 +16,10 @@ const INLINE_SEGURO = new Set([
   "audio/mp4",
   "audio/aac",
   "audio/wav",
+  "video/mp4",
+  "video/webm",
+  "video/3gpp",
+  "video/quicktime",
   "application/pdf",
 ]);
 
