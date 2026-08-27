@@ -20,6 +20,10 @@ export type DadosDps = {
   competencia: string;
   serie: string;
   numeroDps: string;
+  // Quando true, o dCompet da DPS sai igual à DATA DE EMISSÃO (dia de hoje), não ao mês de
+  // referência (competencia). Usado nos honorários do escritório — a competência exibida na
+  // NFS-e passa a coincidir com a data de emissão.
+  dcompetDaEmissao?: boolean;
 };
 export type ResultadoEmissao = {
   autorizada: boolean;
