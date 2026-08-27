@@ -13,6 +13,7 @@ const ITENS = [
   { href: "/financeiro/orcamento", label: "Orçamento" },
   { href: "/financeiro/orcado-realizado", label: "Orçado × Realizado" },
   { href: "/financeiro/contas-a-receber", label: "Contas a receber" },
+  { href: "/financeiro/grupos-cobranca", label: "Grupos de cobrança" },
   { href: "/financeiro/contas-a-pagar", label: "Contas a pagar" },
   { href: "/financeiro/regua-cobranca", label: "Régua de cobrança" },
   { href: "/financeiro/inadimplencia", label: "Inadimplência e suspensão" },
