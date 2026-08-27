@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.27] — 2026-08-27
+
+### Corrigido
+
+- **Atendimento — áudio de voz não tocava.** O áudio do WhatsApp chega como
+  `audio/ogg; codecs=opus`; o proxy de mídia comparava o mime exato com a lista de tipos seguros
+  (só `audio/ogg`) e, por causa do parâmetro `; codecs=opus`, servia o arquivo como
+  `application/octet-stream` — o navegador não reproduzia. Agora o mime é normalizado (tipo-base)
+  antes de decidir inline, e o áudio toca.
+
 ## [6.99.26] — 2026-08-27
 
 ### Corrigido

@@ -41,7 +41,10 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   if (error || !arquivo) return NextResponse.json({ erro: "não encontrado" }, { status: 404 });
   const buf = Buffer.from(await arquivo.arrayBuffer());
 
-  const mime = ((msg.midia_mime as string) ?? "").toLowerCase();
+  // Normaliza o mime tirando parâmetros (ex.: "audio/ogg; codecs=opus" → "audio/ogg"): o áudio de
+  // voz do WhatsApp vem com o codec no mime e, sem isto, não casava a lista e ia como octet-stream
+  // (não tocava). Serve o tipo-base, que o navegador reproduz.
+  const mime = ((msg.midia_mime as string) ?? "").toLowerCase().split(";")[0]!.trim();
   const seguro = INLINE_SEGURO.has(mime);
   const nome = msg.midia_nome ? String(msg.midia_nome).replace(/[\r\n"]/g, "") : "arquivo";
   const headers: Record<string, string> = {
