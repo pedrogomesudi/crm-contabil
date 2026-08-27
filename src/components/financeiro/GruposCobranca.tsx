@@ -15,7 +15,11 @@ import {
   type GrupoView,
   type BoletoGrupoView,
 } from "@/app/(app)/financeiro/grupos-cobranca/actions";
-import { emitirBoletoGrupo, urlBoletoPdfEquipe } from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
+import {
+  emitirBoletoGrupo,
+  urlBoletoPdfEquipe,
+  cancelarBoletoGrupo,
+} from "@/app/(app)/financeiro/contas-a-receber/boleto-actions";
 import { mesAnteriorDeHoje } from "@/lib/financeiro/competencia";
 import { formatarData } from "@/lib/format";
 
@@ -54,6 +58,18 @@ export function GruposCobranca({ gruposIni, semGrupoIni }: { gruposIni: GrupoVie
       if (r.url) window.open(r.url, "_blank");
       else setMsg(r.erro ?? "PDF indisponível.");
     });
+  const cancelarBoleto = (grupoId: string, boletoId: string) => {
+    const motivo = prompt("Motivo do cancelamento do boleto do grupo?") ?? "";
+    if (motivo.trim().length < 3) return;
+    start(async () => {
+      const r = await cancelarBoletoGrupo(boletoId, motivo);
+      setMsg(r.erro ?? "Boleto do grupo cancelado.");
+      if (!r.erro) {
+        const lista = await boletosDoGrupo(grupoId);
+        setBols((s) => ({ ...s, [grupoId]: lista }));
+      }
+    });
+  };
 
   const recarregar = () =>
     start(async () => {
@@ -252,6 +268,19 @@ export function GruposCobranca({ gruposIni, semGrupoIni }: { gruposIni: GrupoVie
                     >
                       PDF
                     </button>
+                    {b.status === "emitido" && (
+                      <>
+                        {" · "}
+                        <button
+                          type="button"
+                          className="text-negativo underline"
+                          disabled={pend}
+                          onClick={() => cancelarBoleto(g.id, b.id)}
+                        >
+                          Cancelar
+                        </button>
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>

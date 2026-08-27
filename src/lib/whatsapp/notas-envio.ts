@@ -29,9 +29,9 @@ export function competenciaBR(dataIso: string): string {
   return m ? `${m[2]}/${m[1]}` : dataIso;
 }
 
-// nfseIds das notas ainda não enviadas (para pré-marcar na seleção).
-export function preSelecionadas(notas: { nfseId: string; jaEnviada: boolean }[]): Set<string> {
-  return new Set(notas.filter((n) => !n.jaEnviada).map((n) => n.nfseId));
+// ids dos itens ainda não enviados (para pré-marcar na seleção).
+export function preSelecionadas(notas: { id: string; jaEnviada: boolean }[]): Set<string> {
+  return new Set(notas.filter((n) => !n.jaEnviada).map((n) => n.id));
 }
 
 export type VarsNota = {
