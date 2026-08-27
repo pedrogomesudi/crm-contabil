@@ -120,6 +120,16 @@ export function interpretarSituacaoInter(cod: string, resp: Record<string, unkno
   return { provedorBoletoId: cod, pago: true, valorPago: valor, pagoEm: data };
 }
 
+// Token OAuth do Inter cacheado por clientId e COMPARTILHADO entre instâncias do adaptador.
+// Sem isto, cada emissão de boleto cria um adaptador novo (o lote emite N boletos em sequência)
+// e cada um pedia um token próprio — a rajada estourava o rate limit do OAuth do Inter (429).
+const tokenCacheInter = new Map<string, { valor: string; expiraEm: number }>();
+
+// Uso em testes: zera o cache de token compartilhado para isolar cada caso.
+export function _resetTokenCacheInter(): void {
+  tokenCacheInter.clear();
+}
+
 export function criarAdaptadorInter(
   clientId: string,
   clientSecret: string,
@@ -132,23 +142,36 @@ export function criarAdaptadorInter(
   const urls = baseUrlInter(ambiente);
   const contaHeader = normalizarContaCorrenteInter(contaCorrente);
   const dispatcher = new Agent({ connect: { cert: certPem, key: keyPem } });
-  let token: { valor: string; expiraEm: number } | null = null;
 
   async function obterToken(): Promise<string> {
-    const agora = Date.now();
-    if (token && token.expiraEm > agora + 30000) return token.valor;
+    const cached = tokenCacheInter.get(clientId);
+    if (cached && cached.expiraEm > Date.now() + 30000) return cached.valor;
     const body = new URLSearchParams(corpoTokenInter(clientId, clientSecret)).toString();
-    const r = await fetch(urls.oauth, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body,
-      dispatcher,
-    } as RequestInit & { dispatcher: Agent });
-    const j = (await r.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!r.ok) throw new Error(`Inter token ${r.status}: ${JSON.stringify(j)}`);
-    const exp = typeof j.expires_in === "number" ? j.expires_in : 3600;
-    token = { valor: String(j.access_token ?? ""), expiraEm: agora + exp * 1000 };
-    return token.valor;
+    // Retry no 429 (backoff crescente): defesa extra caso o cache ainda não esteja quente
+    // (ex.: emissões concorrentes) ou o Inter ainda esteja limitando de uma rajada anterior.
+    let ultimo = "";
+    for (let tent = 0; tent < 4; tent++) {
+      const r = await fetch(urls.oauth, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+        dispatcher,
+      } as RequestInit & { dispatcher: Agent });
+      const j = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+      if (r.ok) {
+        const exp = typeof j.expires_in === "number" ? j.expires_in : 3600;
+        const novo = { valor: String(j.access_token ?? ""), expiraEm: Date.now() + exp * 1000 };
+        tokenCacheInter.set(clientId, novo);
+        return novo.valor;
+      }
+      if (r.status === 429) {
+        ultimo = `Inter token 429: ${JSON.stringify(j)}`;
+        await esperar(1000 * (tent + 1));
+        continue;
+      }
+      throw new Error(`Inter token ${r.status}: ${JSON.stringify(j)}`);
+    }
+    throw new Error(ultimo || "Inter token: falha após novas tentativas.");
   }
 
   // Detecta erro de conexão fechada (undici não re-tenta POST nessa situação).
