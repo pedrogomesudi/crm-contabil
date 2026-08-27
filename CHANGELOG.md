@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.17] — 2026-08-27
+
+### Corrigido
+
+- **Falso positivo "Já emitida" na emissão de NFS-e em lote.** O lote marcava o cliente como
+  "Já emitida" se ele tivesse **qualquer** nota autorizada na competência — inclusive notas de
+  outros serviços (o cliente como emitente para terceiros). Agora o "Já emitida" casa pelo
+  **valor do honorário**: só bloqueia quando existe nota autorizada com o valor da mensalidade.
+  Assim, clientes com notas de outros valores na mesma competência voltam a ficar disponíveis
+  para emitir o honorário.
+
 ## [6.99.16] — 2026-08-27
 
 ### Adicionado

@@ -232,15 +232,25 @@ export async function listarElegiveisLote(competencia: string): Promise<ClienteL
     .is("excluido_em", null) // clientes excluídos não entram no lote
     .order("razao_social");
 
-  // Notas autorizadas nessa competência+ambiente (para marcar já_emitida).
+  // Notas autorizadas nessa competência+ambiente. "Já emitida" casa pelo VALOR do honorário:
+  // uma nota só marca o cliente como já emitido se o valor dela for o do honorário. Assim,
+  // notas de OUTROS serviços do cliente (valores diferentes) não geram falso positivo — foi o
+  // que bloqueava indevidamente clientes que emitem notas próprias na mesma competência.
   const { data: notas } = await supabase
     .from("nfse")
-    .select("cliente_id")
+    .select("cliente_id, valor")
     .eq("competencia", competencia)
     .eq("status", "autorizada")
     .eq("ambiente", ambiente)
-    .eq("avulsa", false); // só a recorrente marca "já emitida"; avulsas não contam
-  const jaEmitidas = new Set((notas ?? []).map((n) => n.cliente_id));
+    .eq("avulsa", false); // avulsas não contam
+  const centavos = (v: number) => Math.round(v * 100);
+  const valoresPorCliente = new Map<string, number[]>();
+  for (const n of notas ?? []) {
+    const k = n.cliente_id as string;
+    const arr = valoresPorCliente.get(k) ?? [];
+    arr.push(centavos(Number(n.valor)));
+    valoresPorCliente.set(k, arr);
+  }
 
   const lista: ClienteLote[] = [];
   for (const c of clientes ?? []) {
@@ -261,7 +271,7 @@ export async function listarElegiveisLote(competencia: string): Promise<ClienteL
       documento,
       honorario,
       temEndereco: Boolean(end?.cep && end?.logradouro),
-      situacao: classificarSituacao(documento, jaEmitidas.has(c.id)),
+      situacao: classificarSituacao(documento, (valoresPorCliente.get(c.id) ?? []).includes(centavos(honorario))),
     });
   }
   return lista;
