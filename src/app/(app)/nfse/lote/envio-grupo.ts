@@ -85,26 +85,31 @@ export async function enviarHonorarioGrupoLote(grupoId: string, competencia: str
   if (!grupo) return { status: "erro", motivo: "Grupo não encontrado.", razaoSocial: "" };
   const { data: membros } = await admin
     .from("clientes")
-    .select(
-      "id, razao_social, cpf_cnpj, responsavel_nome, telefone, telefone_ddi, email, clientes_financeiro(cobranca_whatsapp, cobranca_email)",
-    )
+    .select("id")
     .eq("grupo_cobranca_id", grupoId)
     .eq("status", "ativo")
     .is("excluido_em", null);
-  const titular = (membros ?? []).find((m) => m.id === grupo.titular_cliente_id) as
-    | {
-        id: string;
-        razao_social?: string;
-        cpf_cnpj?: string;
-        responsavel_nome?: string | null;
-        telefone?: string;
-        telefone_ddi?: string;
-        email?: string | null;
-        clientes_financeiro?:
-          | { cobranca_whatsapp?: boolean; cobranca_email?: boolean }
-          | { cobranca_whatsapp?: boolean; cobranca_email?: boolean }[];
-      }
-    | undefined;
+  // Titular por titular_cliente_id (independente dos membros): ela pode ser só a pagadora, sem
+  // NF/honorário próprio no grupo. Suas NFs não entram no envio — só as das empresas do grupo.
+  const { data: titular } = (await admin
+    .from("clientes")
+    .select(
+      "id, razao_social, responsavel_nome, telefone, telefone_ddi, email, clientes_financeiro(cobranca_whatsapp, cobranca_email)",
+    )
+    .eq("id", grupo.titular_cliente_id)
+    .maybeSingle()) as {
+    data: {
+      id: string;
+      razao_social?: string;
+      responsavel_nome?: string | null;
+      telefone?: string;
+      telefone_ddi?: string;
+      email?: string | null;
+      clientes_financeiro?:
+        | { cobranca_whatsapp?: boolean; cobranca_email?: boolean }
+        | { cobranca_whatsapp?: boolean; cobranca_email?: boolean }[];
+    } | null;
+  };
   if (!titular)
     return { status: "erro", motivo: "Titular do grupo não encontrada.", razaoSocial: grupo.nome as string };
   const razaoSocial = titular.razao_social ?? (grupo.nome as string);

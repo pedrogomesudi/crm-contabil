@@ -147,6 +147,10 @@ export function GruposCobranca({ gruposIni, semGrupoIni }: { gruposIni: GrupoVie
               Salvar nome
             </Botao>
             <span className="ml-auto text-sm font-medium">Total do boleto: {brl(g.total)}</span>
+            <span className="w-full text-xs text-cinza">
+              Boleto em nome de <strong>{g.titularRazao}</strong>
+              {!g.titularNoRateio && " (só pagadora — não entra no rateio)"}
+            </span>
             <button
               type="button"
               className="text-xs text-negativo underline"

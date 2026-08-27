@@ -18,6 +18,9 @@ export type GrupoView = {
   id: string;
   nome: string;
   titularClienteId: string;
+  titularRazao: string;
+  // false quando a titular é só pagadora (não entra no rateio dos honorários do grupo).
+  titularNoRateio: boolean;
   membros: MembroView[];
   total: number;
 };
@@ -45,6 +48,15 @@ export async function listarGrupos(): Promise<GrupoView[]> {
     .eq("status", "ativo")
     .is("excluido_em", null)
     .order("razao_social");
+  // Razão social de cada titular (a titular pode não estar entre os membros — só pagadora).
+  const { data: titulares } = await supabase
+    .from("clientes")
+    .select("id, razao_social")
+    .in(
+      "id",
+      grupos.map((g) => g.titular_cliente_id),
+    );
+  const razaoTitular = new Map((titulares ?? []).map((t) => [t.id as string, (t.razao_social as string) ?? "—"]));
   return grupos.map((g) => {
     const ms = (membros ?? [])
       .filter((m) => m.grupo_cobranca_id === g.id)
@@ -62,6 +74,8 @@ export async function listarGrupos(): Promise<GrupoView[]> {
       id: g.id as string,
       nome: g.nome as string,
       titularClienteId: g.titular_cliente_id as string,
+      titularRazao: razaoTitular.get(g.titular_cliente_id as string) ?? "—",
+      titularNoRateio: ms.some((m) => m.titular),
       membros: ms,
       total: ms.reduce((s, m) => s + m.honorario, 0),
     };
