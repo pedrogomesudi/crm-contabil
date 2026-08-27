@@ -4,6 +4,7 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { podeGerenciarFinanceiro } from "@/lib/financeiro/permissoes";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
+import { naoEnviaHonorario } from "@/lib/clientes/canal-cobranca";
 import { criarTituloAvulsoNucleo } from "@/lib/financeiro/gravar-titulo";
 import { registrarBaixaNucleo } from "@/lib/financeiro/gravar-baixa";
 import { emitirBoleto } from "./boleto-actions";
@@ -18,6 +19,7 @@ export type TituloView = {
   somaBaixado: number;
   status: string;
   temTelefone: boolean;
+  naoEnvia: boolean; // cliente optou por "Não enviar" — fora da emissão/boleto em lote
 };
 const ROTA = "/financeiro/contas-a-receber";
 
@@ -37,13 +39,23 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
   const { data } = await supabase
     .from("titulo")
     .select(
-      "id, origem, competencia, vencimento, valor, status, clientes(razao_social, telefone), baixa(valor_recebido, estornada)",
+      "id, origem, competencia, vencimento, valor, status, clientes(razao_social, telefone, clientes_financeiro(cobranca_whatsapp, cobranca_email)), baixa(valor_recebido, estornada)",
     )
     .eq("competencia", competencia)
     .order("vencimento");
   return (data ?? []).map((t) => {
     const cl = Array.isArray(t.clientes) ? t.clientes[0] : t.clientes;
-    const cliente = cl as { razao_social?: string; telefone?: string } | null;
+    const cliente = cl as {
+      razao_social?: string;
+      telefone?: string;
+      clientes_financeiro?:
+        | { cobranca_whatsapp?: boolean | null; cobranca_email?: boolean | null }
+        | { cobranca_whatsapp?: boolean | null; cobranca_email?: boolean | null }[]
+        | null;
+    } | null;
+    const fin = Array.isArray(cliente?.clientes_financeiro)
+      ? cliente?.clientes_financeiro[0]
+      : cliente?.clientes_financeiro;
     const baixas = (t.baixa ?? []) as { valor_recebido: number; estornada: boolean }[];
     return {
       id: t.id as string,
@@ -55,6 +67,7 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
       somaBaixado: baixas.filter((b) => !b.estornada).reduce((s, b) => s + Number(b.valor_recebido), 0),
       status: t.status as string,
       temTelefone: Boolean(cliente?.telefone),
+      naoEnvia: naoEnviaHonorario({ whatsapp: fin?.cobranca_whatsapp, email: fin?.cobranca_email }),
     };
   });
 }

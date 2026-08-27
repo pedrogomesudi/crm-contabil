@@ -96,7 +96,10 @@ export function ContasReceber({
   // travar o lote. Mesmo padrão da emissão de NFS-e em lote.
   const gerarBoletosLote = () =>
     start(async () => {
-      const alvos = titulos.filter((t) => t.status !== "BAIXADO" && t.status !== "CANCELADO" && !boletos[t.id]);
+      // "Não enviar" fica fora do lote — o boleto desses clientes é sempre manual.
+      const alvos = titulos.filter(
+        (t) => t.status !== "BAIXADO" && t.status !== "CANCELADO" && !t.naoEnvia && !boletos[t.id],
+      );
       if (alvos.length === 0) {
         setMsg("Nenhum título em aberto sem boleto nesta competência.");
         return;
