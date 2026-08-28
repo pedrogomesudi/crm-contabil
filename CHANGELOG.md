@@ -8,7 +8,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-## [6.99.28] — 2026-08-28
+## [6.99.29] — 2026-08-28
+
+### Adicionado
+
+- **2º e-mail e 2º telefone por cliente, com escolha de quais entram nos envios.** No cadastro
+  (aba Contato), a empresa passa a ter **E-mail 2** e **Telefone 2**; cada contato (principal e 2º)
+  tem um seletor **"usar no envio"**, permitindo enviar para o principal, o 2º, ou ambos —
+  inclusive só o 2º. Vale para o **envio de honorários** (individual e consolidado de grupo) e para
+  os **comunicados**: cada destinatário marcado recebe (2 e-mails ou 2 WhatsApp, quando for o caso).
+  Defaults preservam o comportamento atual (principal ligado, 2º desligado).
+
+### Pendente
+
+- A **régua automática de cobrança** ainda envia a um contato por etapa; o 2º contato nela exige
+  ajustar o índice de deduplicação (por destinatário) e será entregue em seguida.
 
 ### Corrigido
 

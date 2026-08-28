@@ -78,7 +78,7 @@ export default async function FichaClientePage({
   const { data: cliente } = await supabase
     .from("clientes")
     .select(
-      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, telefone_ddi, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados, comunicar_legalizacao, grupo_id, matriz_id, grupo_cobranca_id, campos_custom, flag_tem_folha, flag_contribui_icms, flag_contribui_iss",
+      "id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, regime_tributario, inscricao_estadual, inscricao_municipal, email, telefone, telefone_ddi, email_2, telefone_2, telefone_ddi_2, email_envio, email_2_envio, whatsapp_envio, whatsapp_2_envio, endereco, responsavel_nome, representante, contador_id, status, data_inicio, observacoes, excluido_em, atualizado_em, competencia_inicial, aceita_comunicados, comunicar_legalizacao, grupo_id, matriz_id, grupo_cobranca_id, campos_custom, flag_tem_folha, flag_contribui_icms, flag_contribui_iss",
     )
     .eq("id", id)
     .maybeSingle();

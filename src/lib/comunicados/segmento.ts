@@ -1,5 +1,3 @@
-import { emailValido } from "@/lib/email/validacao";
-
 export type Filtro = {
   regimes?: string[];
   tipos?: string[];
@@ -17,6 +15,9 @@ export type ClienteAlvo = {
   email: string | null;
   telefone: string | null;
   telefoneDdi: string | null;
+  // Destinatários já resolvidos (principal e/ou 2º) e validados, prontos para o disparo.
+  emailsEnvio: string[];
+  telefonesEnvio: string[];
   cpfCnpj: string | null;
   regime: string | null;
   tipo: string;
@@ -81,13 +82,13 @@ export function elegiveis(
       continue;
     }
     if (canal === "email") {
-      // E-mail malformado no cadastro é "sem e-mail" — não vira erro de envio depois.
-      if (!c.email || !emailValido(c.email)) {
-        excluidos.push({ cliente: c, motivo: "Sem e-mail cadastrado" });
+      // Sem nenhum e-mail marcado para envio (principal e/ou 2º) — e já filtrados os malformados.
+      if (c.emailsEnvio.length === 0) {
+        excluidos.push({ cliente: c, motivo: "Sem e-mail para envio" });
         continue;
       }
-    } else if (!c.telefone) {
-      excluidos.push({ cliente: c, motivo: "Sem telefone cadastrado" });
+    } else if (c.telefonesEnvio.length === 0) {
+      excluidos.push({ cliente: c, motivo: "Sem telefone para envio" });
       continue;
     }
     destinatarios.push(c);

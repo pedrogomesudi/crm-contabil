@@ -7,8 +7,10 @@ import { podeCriarCliente, podeGerenciarTemplatesEmail } from "@/lib/clientes/pe
 import { registrarConsentimento } from "@/lib/lgpd/consentimento";
 import { enviarEmail } from "@/lib/email/enviar";
 import { aplicarEmail, variaveisDoCliente } from "@/lib/email/template";
-import { aplicarTemplate, normalizarTelefone } from "@/lib/whatsapp/mensagem";
+import { aplicarTemplate } from "@/lib/whatsapp/mensagem";
 import { criarEnviadorProativo } from "@/lib/whatsapp/proativo";
+import { emailsDeEnvio, telefonesDeEnvio, type ContatosEnvio } from "@/lib/clientes/contatos-envio";
+import { emailValido } from "@/lib/email/validacao";
 import {
   TETO_WHATSAPP,
   aplicarFiltro,
@@ -59,7 +61,7 @@ async function carregarAlvos(filtro: Filtro): Promise<ClienteAlvo[]> {
   const { data } = await supabase
     .from("clientes")
     .select(
-      "id, razao_social, email, telefone, telefone_ddi, cpf_cnpj, regime_tributario, tipo_pessoa, status, endereco, contador_id, aceita_comunicados",
+      "id, razao_social, email, telefone, telefone_ddi, email_2, telefone_2, telefone_ddi_2, email_envio, email_2_envio, whatsapp_envio, whatsapp_2_envio, cpf_cnpj, regime_tributario, tipo_pessoa, status, endereco, contador_id, aceita_comunicados",
     )
     .is("excluido_em", null)
     .limit(2000);
@@ -72,6 +74,9 @@ async function carregarAlvos(filtro: Filtro): Promise<ClienteAlvo[]> {
       email: (c.email as string | null) ?? null,
       telefone: (c.telefone as string | null) ?? null,
       telefoneDdi: (c.telefone_ddi as string | null) ?? null,
+      // Destinatários resolvidos (principal e/ou 2º); e-mails malformados já ficam de fora.
+      emailsEnvio: emailsDeEnvio(c as unknown as ContatosEnvio).filter(emailValido),
+      telefonesEnvio: telefonesDeEnvio(c as unknown as ContatosEnvio),
       cpfCnpj: (c.cpf_cnpj as string | null) ?? null,
       regime: (c.regime_tributario as string | null) ?? null,
       tipo: c.tipo_pessoa as string,
@@ -111,7 +116,7 @@ export async function previa(filtro: Filtro, canal: Canal): Promise<PreviaView> 
     destinatarios: destinatarios.map((c) => ({
       id: c.id,
       nome: c.razaoSocial,
-      para: (canal === "email" ? c.email : c.telefone) ?? "",
+      para: (canal === "email" ? c.emailsEnvio : c.telefonesEnvio).join(", "),
     })),
     excluidos: excluidos.map((e) => ({ nome: e.cliente.razaoSocial, motivo: e.motivo })),
     total: destinatarios.length,
@@ -188,24 +193,22 @@ export async function dispararComunicado(
 
   for (const c of destinatarios) {
     const vars = variaveisDoCliente({ razaoSocial: c.razaoSocial, cnpj: c.cpfCnpj, email: c.email }, escritorio, hoje);
+    // Um envio por destinatário escolhido (principal e/ou 2º) do canal do comunicado.
+    const paras = input.canal === "email" ? c.emailsEnvio : c.telefonesEnvio;
 
-    let ok = false;
-    let msgErro: string | null = null;
-    let para = "";
+    for (const para of paras) {
+      let ok = false;
+      let msgErro: string | null = null;
 
-    if (input.canal === "email") {
-      const msg = aplicarEmail({ assunto, corpo }, vars);
-      para = c.email as string;
-      const r = await enviarEmail({ para, assunto: msg.assunto, corpo: msg.corpo });
-      ok = r.ok;
-      if (!r.ok) msgErro = r.erro;
-    } else {
-      const tel = normalizarTelefone(c.telefone ?? "", c.telefoneDdi ?? "55");
-      para = tel ?? (c.telefone as string);
-      if (!tel || !enviarWa) {
-        msgErro = "Telefone inválido.";
+      if (input.canal === "email") {
+        const msg = aplicarEmail({ assunto, corpo }, vars);
+        const r = await enviarEmail({ para, assunto: msg.assunto, corpo: msg.corpo });
+        ok = r.ok;
+        if (!r.ok) msgErro = r.erro;
+      } else if (!enviarWa) {
+        msgErro = "WhatsApp não configurado.";
       } else {
-        const r = await enviarWa.enviar(tel, {
+        const r = await enviarWa.enviar(para, {
           fluxo: "comunicado",
           texto: aplicarTemplate(corpo, vars),
           // A ORDEM é o contrato de PARAMS_FLUXO.comunicado: cliente, titulo.
@@ -214,20 +217,20 @@ export async function dispararComunicado(
         ok = r.ok;
         if (!r.ok) msgErro = r.erro ?? "Falha no envio.";
       }
+
+      // Grava SEMPRE — inclusive a falha. Um envio que não saiu não pode sumir.
+      // comunicado_destinatario não tem policy de INSERT: só o servidor grava.
+      await admin.from("comunicado_destinatario").insert({
+        comunicado_id: comunicadoId,
+        cliente_id: c.id,
+        para,
+        status: ok ? "ENVIADO" : "ERRO",
+        erro: msgErro,
+      });
+
+      if (ok) enviados++;
+      else erros++;
     }
-
-    // Grava SEMPRE — inclusive a falha. Um envio que não saiu não pode sumir.
-    // comunicado_destinatario não tem policy de INSERT: só o servidor grava.
-    await admin.from("comunicado_destinatario").insert({
-      comunicado_id: comunicadoId,
-      cliente_id: c.id,
-      para,
-      status: ok ? "ENVIADO" : "ERRO",
-      erro: msgErro,
-    });
-
-    if (ok) enviados++;
-    else erros++;
   }
 
   await admin
