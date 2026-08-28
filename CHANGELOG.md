@@ -8,6 +8,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.28] — 2026-08-28
+
+### Corrigido
+
+- **Atendimento — imagem/áudio/vídeo não carregavam (bloqueio de CSP).** A mídia era servida por
+  URL assinada do Storage (domínio do Supabase), mas a CSP do app (`img-src 'self' data: blob:`,
+  sem `media-src`) bloqueava o carregamento cross-origem em `<img>`/`<audio>`/`<video>`. Agora a
+  mídia é **sempre servida pelo proxy same-origin** (`/api/atendimento/midia/[id]`), coberto por
+  `'self'` — carrega a imagem, toca o áudio e o vídeo. Bônus: sem a expiração de 10 min da URL
+  assinada e sem uma chamada de assinatura por conversa aberta.
+
 ## [6.99.27] — 2026-08-27
 
 ### Corrigido

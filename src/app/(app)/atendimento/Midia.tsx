@@ -21,8 +21,9 @@ export function Midia({
   onAbrirImagem: (url: string, nome: string) => void;
 }) {
   if (!msg.midiaTipo || !msg.midiaPath) return null;
-  // Fallback: se a URL assinada não veio (evento Realtime / erro ao assinar), usa o proxy.
-  const src = msg.midiaUrl ?? `/api/atendimento/midia/${msg.id}`;
+  // Sempre pelo proxy same-origin: a CSP (img-src/media-src 'self') bloqueia a URL assinada do
+  // Storage (cross-origin ao Supabase); o proxy é 'self', não expira em 10 min e normaliza o mime.
+  const src = `/api/atendimento/midia/${msg.id}`;
   const nome = msg.midiaNome ?? "arquivo";
 
   if (msg.midiaTipo === "image") {
