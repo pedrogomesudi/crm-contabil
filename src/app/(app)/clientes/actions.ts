@@ -67,8 +67,10 @@ function lerEValidar(formData: FormData) {
   const dados = Object.fromEntries(formData) as Record<string, string>;
   if (dados.cpf_cnpj) dados.cpf_cnpj = dados.cpf_cnpj.replace(/\D/g, ""); // só dígitos (unicidade)
   if (dados.email) dados.email = dados.email.trim();
+  if (dados.email_2) dados.email_2 = dados.email_2.trim();
   // DDI: só dígitos; vazio nunca vai ao banco — o Brasil é o default.
   dados.telefone_ddi = (dados.telefone_ddi ?? "").replace(/\D/g, "") || "55";
+  dados.telefone_ddi_2 = (dados.telefone_ddi_2 ?? "").replace(/\D/g, "") || "55";
   return clienteSchema.safeParse(dados);
 }
 

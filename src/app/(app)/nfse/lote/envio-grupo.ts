@@ -3,10 +3,10 @@ import { getPerfilAtual } from "@/lib/auth/perfil";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
 import { criarEnviadorProativo } from "@/lib/whatsapp/proativo";
-import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
 import { linhasPagamento, competenciaBR, valorBR } from "@/lib/whatsapp/notas-envio";
 import { gerarDanfseFiel, caminhoDanfse } from "@/lib/nfse/danfse-cache";
 import { canaisParaEnvio, agregarResultado, type ResultadoCanal } from "@/lib/nfse/envio-canais";
+import { emailsDeEnvio, telefonesDeEnvio } from "@/lib/clientes/contatos-envio";
 import { enviarEmail, type Anexo } from "@/lib/email/enviar";
 import { garantirPdfBoleto } from "@/app/(app)/financeiro/contas-a-receber/boleto-pdf";
 
@@ -94,7 +94,7 @@ export async function enviarHonorarioGrupoLote(grupoId: string, competencia: str
   const { data: titular } = (await admin
     .from("clientes")
     .select(
-      "id, razao_social, responsavel_nome, telefone, telefone_ddi, email, clientes_financeiro(cobranca_whatsapp, cobranca_email)",
+      "id, razao_social, responsavel_nome, telefone, telefone_ddi, email, email_2, telefone_2, telefone_ddi_2, email_envio, email_2_envio, whatsapp_envio, whatsapp_2_envio, clientes_financeiro(cobranca_whatsapp, cobranca_email)",
     )
     .eq("id", grupo.titular_cliente_id)
     .maybeSingle()) as {
@@ -105,6 +105,13 @@ export async function enviarHonorarioGrupoLote(grupoId: string, competencia: str
       telefone?: string;
       telefone_ddi?: string;
       email?: string | null;
+      email_2?: string | null;
+      telefone_2?: string | null;
+      telefone_ddi_2?: string | null;
+      email_envio?: boolean | null;
+      email_2_envio?: boolean | null;
+      whatsapp_envio?: boolean | null;
+      whatsapp_2_envio?: boolean | null;
       clientes_financeiro?:
         | { cobranca_whatsapp?: boolean; cobranca_email?: boolean }
         | { cobranca_whatsapp?: boolean; cobranca_email?: boolean }[];
@@ -115,10 +122,11 @@ export async function enviarHonorarioGrupoLote(grupoId: string, competencia: str
   const razaoSocial = titular.razao_social ?? (grupo.nome as string);
   const fin = Array.isArray(titular.clientes_financeiro) ? titular.clientes_financeiro[0] : titular.clientes_financeiro;
 
-  const tel = normalizarTelefone(titular.telefone ?? "", titular.telefone_ddi ?? "55");
-  const email = (titular.email ?? "").trim();
+  // Destinatários da titular por contato (principal e/ou 2º).
+  const tels = telefonesDeEnvio(titular);
+  const emails = emailsDeEnvio(titular);
   const flags = { whatsapp: fin?.cobranca_whatsapp ?? true, email: fin?.cobranca_email ?? true };
-  const { enviar, pulados } = canaisParaEnvio(flags, { temTelefone: Boolean(tel), temEmail: Boolean(email) });
+  const { enviar, pulados } = canaisParaEnvio(flags, { temTelefone: tels.length > 0, temEmail: emails.length > 0 });
   if (enviar.length === 0) return { ...agregarResultado(pulados), razaoSocial };
 
   const nfs = await nfsDoGrupo(
@@ -201,68 +209,71 @@ export async function enviarHonorarioGrupoLote(grupoId: string, competencia: str
     if ("erro" in enviador) resultados.push({ canal: "whatsapp", status: "erro", motivo: enviador.erro });
     else {
       let falha: string | null = null;
-      for (let i = 0; i < nfs.length; i++) {
-        const n = nfs[i]!;
-        const caption = i === 0 ? texto : `NFS-e — ${n.razaoSocial}`;
-        const r = await enviador.enviar(tel!, {
-          fluxo: "nfse",
-          texto: caption,
-          params: [nome, compTexto, valorBR(Number(total)), ""],
-          midia: {
-            tipo: "document",
-            base64: n.pdfBase64,
-            mime: "application/pdf",
-            nome: `NFS-e ${n.razaoSocial}.pdf`,
-            caption,
-          },
-        });
-        await admin.from("whatsapp_mensagem").insert({
-          cliente_id: titular.id,
-          telefone: tel,
-          texto: caption,
-          status: r.ok ? "ENVIADO" : "ERRO",
-          direcao: "OUT",
-          lida: true,
-          resposta: (r.resposta ?? r.erro) as object,
-          criado_por: perfil.id,
-          nfse_id: n.nfseId,
-          midia_tipo: "document",
-          midia_path: caminhoDanfse(n.chave),
-          midia_nome: `NFS-e ${n.razaoSocial}.pdf`,
-          midia_mime: "application/pdf",
-        });
-        if (!r.ok) falha = r.erro ?? "Falha no envio.";
-      }
-      // Boleto consolidado do grupo como documento (além das NFs).
-      if (boletoPdf) {
-        const legenda = `Boleto do grupo ${grupo.nome}`;
-        const rb = await enviador.enviar(tel!, {
-          fluxo: "nfse",
-          texto: legenda,
-          params: [nome, compTexto, valorBR(Number(total)), ""],
-          midia: {
-            tipo: "document",
-            base64: boletoPdf.toString("base64"),
-            mime: "application/pdf",
-            nome: nomeBoletoArq,
-            caption: legenda,
-          },
-        });
-        await admin.from("whatsapp_mensagem").insert({
-          cliente_id: titular.id,
-          telefone: tel,
-          texto: legenda,
-          status: rb.ok ? "ENVIADO" : "ERRO",
-          direcao: "OUT",
-          lida: true,
-          resposta: (rb.resposta ?? rb.erro) as object,
-          criado_por: perfil.id,
-          midia_tipo: "document",
-          midia_path: boletoPath,
-          midia_nome: nomeBoletoArq,
-          midia_mime: "application/pdf",
-        });
-        if (!rb.ok) falha = rb.erro ?? "Falha ao enviar o boleto.";
+      // Um conjunto de envios (NFs + boleto) por telefone escolhido da titular.
+      for (const tel of tels) {
+        for (let i = 0; i < nfs.length; i++) {
+          const n = nfs[i]!;
+          const caption = i === 0 ? texto : `NFS-e — ${n.razaoSocial}`;
+          const r = await enviador.enviar(tel, {
+            fluxo: "nfse",
+            texto: caption,
+            params: [nome, compTexto, valorBR(Number(total)), ""],
+            midia: {
+              tipo: "document",
+              base64: n.pdfBase64,
+              mime: "application/pdf",
+              nome: `NFS-e ${n.razaoSocial}.pdf`,
+              caption,
+            },
+          });
+          await admin.from("whatsapp_mensagem").insert({
+            cliente_id: titular.id,
+            telefone: tel,
+            texto: caption,
+            status: r.ok ? "ENVIADO" : "ERRO",
+            direcao: "OUT",
+            lida: true,
+            resposta: (r.resposta ?? r.erro) as object,
+            criado_por: perfil.id,
+            nfse_id: n.nfseId,
+            midia_tipo: "document",
+            midia_path: caminhoDanfse(n.chave),
+            midia_nome: `NFS-e ${n.razaoSocial}.pdf`,
+            midia_mime: "application/pdf",
+          });
+          if (!r.ok) falha = r.erro ?? "Falha no envio.";
+        }
+        // Boleto consolidado do grupo como documento (além das NFs).
+        if (boletoPdf) {
+          const legenda = `Boleto do grupo ${grupo.nome}`;
+          const rb = await enviador.enviar(tel, {
+            fluxo: "nfse",
+            texto: legenda,
+            params: [nome, compTexto, valorBR(Number(total)), ""],
+            midia: {
+              tipo: "document",
+              base64: boletoPdf.toString("base64"),
+              mime: "application/pdf",
+              nome: nomeBoletoArq,
+              caption: legenda,
+            },
+          });
+          await admin.from("whatsapp_mensagem").insert({
+            cliente_id: titular.id,
+            telefone: tel,
+            texto: legenda,
+            status: rb.ok ? "ENVIADO" : "ERRO",
+            direcao: "OUT",
+            lida: true,
+            resposta: (rb.resposta ?? rb.erro) as object,
+            criado_por: perfil.id,
+            midia_tipo: "document",
+            midia_path: boletoPath,
+            midia_nome: nomeBoletoArq,
+            midia_mime: "application/pdf",
+          });
+          if (!rb.ok) falha = rb.erro ?? "Falha ao enviar o boleto.";
+        }
       }
       resultados.push(
         falha ? { canal: "whatsapp", status: "erro", motivo: falha } : { canal: "whatsapp", status: "ok" },
@@ -278,18 +289,21 @@ export async function enviarHonorarioGrupoLote(grupoId: string, competencia: str
     }));
     if (boletoPdf) anexos.push({ nome: nomeBoletoArq, conteudo: boletoPdf, tipo: "application/pdf" });
     const assunto = `NFS-e e boleto consolidado — ${compTexto} — grupo ${grupo.nome}`;
-    const r = await enviarEmail({ para: email, assunto, corpo: texto, anexos });
-    resultados.push(r.ok ? { canal: "email", status: "ok" } : { canal: "email", status: "erro", motivo: r.erro });
-    await admin.from("email_mensagem").insert({
-      cliente_id: titular.id,
-      titulo_id: tituloTitularId,
-      para: email,
-      assunto,
-      corpo: texto,
-      status: r.ok ? "ENVIADO" : "ERRO",
-      erro: r.ok ? null : r.erro,
-      enviado_por: perfil.id,
-    });
+    // Um e-mail por endereço escolhido da titular.
+    for (const email of emails) {
+      const r = await enviarEmail({ para: email, assunto, corpo: texto, anexos });
+      resultados.push(r.ok ? { canal: "email", status: "ok" } : { canal: "email", status: "erro", motivo: r.erro });
+      await admin.from("email_mensagem").insert({
+        cliente_id: titular.id,
+        titulo_id: tituloTitularId,
+        para: email,
+        assunto,
+        corpo: texto,
+        status: r.ok ? "ENVIADO" : "ERRO",
+        erro: r.ok ? null : r.erro,
+        enviado_por: perfil.id,
+      });
+    }
   }
 
   return { ...agregarResultado(resultados), razaoSocial };

@@ -22,6 +22,24 @@ export const clienteSchema = z
     email: z.union([z.email("E-mail inválido").max(120), z.literal("")]).optional(),
     telefone: z.string().trim().max(30).optional(),
     telefone_ddi: z.string().trim().max(4).optional(),
+    // Contato secundário (2º e-mail / 2º telefone) + escolha, por contato, de usar no envio.
+    // Os flags vêm do form como "on"/"off"; ausentes (API pública) ficam undefined → null → o
+    // helper de envio aplica o default (principal ligado, 2º desligado).
+    email_2: z.union([z.email("E-mail 2 inválido").max(120), z.literal("")]).optional(),
+    telefone_2: z.string().trim().max(30).optional(),
+    telefone_ddi_2: z.string().trim().max(4).optional(),
+    email_envio: z
+      .preprocess((v) => (v === undefined ? undefined : v === "on" || v === "1" || v === true), z.boolean().optional())
+      .optional(),
+    email_2_envio: z
+      .preprocess((v) => (v === undefined ? undefined : v === "on" || v === "1" || v === true), z.boolean().optional())
+      .optional(),
+    whatsapp_envio: z
+      .preprocess((v) => (v === undefined ? undefined : v === "on" || v === "1" || v === true), z.boolean().optional())
+      .optional(),
+    whatsapp_2_envio: z
+      .preprocess((v) => (v === undefined ? undefined : v === "on" || v === "1" || v === true), z.boolean().optional())
+      .optional(),
     responsavel_nome: z.string().trim().max(120).optional(),
     observacoes: z.string().max(2000).optional(),
     // Campos persistidos que vêm do formulário — sem eles o Zod os descartaria.

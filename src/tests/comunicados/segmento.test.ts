@@ -1,22 +1,30 @@
 import { describe, it, expect } from "vitest";
 import { aplicarFiltro, descreverFiltro, elegiveis, type ClienteAlvo } from "@/lib/comunicados/segmento";
 
-const cli = (over: Partial<ClienteAlvo>): ClienteAlvo => ({
-  id: "1",
-  razaoSocial: "Cliente",
-  email: "c@x.com",
-  telefone: "62999998888",
-  telefoneDdi: "55",
-  cpfCnpj: "1",
-  regime: "Simples",
-  tipo: "PJ",
-  status: "ativo",
-  cidade: "Goiânia",
-  uf: "GO",
-  contadorId: null,
-  aceitaComunicados: true,
-  ...over,
-});
+const cli = (over: Partial<ClienteAlvo>): ClienteAlvo => {
+  const base = {
+    id: "1",
+    razaoSocial: "Cliente",
+    email: "c@x.com" as string | null,
+    telefone: "62999998888" as string | null,
+    telefoneDdi: "55" as string | null,
+    cpfCnpj: "1",
+    regime: "Simples",
+    tipo: "PJ",
+    status: "ativo",
+    cidade: "Goiânia",
+    uf: "GO",
+    contadorId: null,
+    aceitaComunicados: true,
+    ...over,
+  };
+  // Por padrão os destinatários derivam do contato principal (o que os testes assumem).
+  return {
+    ...base,
+    emailsEnvio: over.emailsEnvio ?? (base.email ? [base.email] : []),
+    telefonesEnvio: over.telefonesEnvio ?? (base.telefone ? [base.telefone] : []),
+  };
+};
 
 describe("aplicarFiltro", () => {
   it("OU dentro do critério: Simples ou MEI", () => {
@@ -64,21 +72,26 @@ describe("elegiveis", () => {
     const r = elegiveis(base, "email");
     expect(r.destinatarios.map((c) => c.id)).toEqual(["a"]);
     expect(r.excluidos.map((e) => [e.cliente.id, e.motivo])).toEqual([
-      ["b", "Sem e-mail cadastrado"],
+      ["b", "Sem e-mail para envio"],
       ["c", "Não aceita comunicados"],
     ]);
   });
 
-  it("no WhatsApp, exclui quem não tem telefone", () => {
+  it("no WhatsApp, exclui quem não tem telefone para envio", () => {
     const r = elegiveis([cli({ id: "a", telefone: null })], "whatsapp");
     expect(r.destinatarios).toHaveLength(0);
-    expect(r.excluidos[0]?.motivo).toBe("Sem telefone cadastrado");
+    expect(r.excluidos[0]?.motivo).toBe("Sem telefone para envio");
   });
 
-  it("e-mail inválido no cadastro conta como sem e-mail (não vira erro de envio)", () => {
-    const r = elegiveis([cli({ id: "a", email: "nao-eh-email" })], "email");
+  it("sem nenhum e-mail marcado para envio (ex.: inválido filtrado no carregamento) → excluído", () => {
+    const r = elegiveis([cli({ id: "a", emailsEnvio: [] })], "email");
     expect(r.destinatarios).toHaveLength(0);
-    expect(r.excluidos[0]?.motivo).toBe("Sem e-mail cadastrado");
+    expect(r.excluidos[0]?.motivo).toBe("Sem e-mail para envio");
+  });
+
+  it("2 e-mails marcados → cliente elegível (o disparo manda para os dois)", () => {
+    const r = elegiveis([cli({ id: "a", emailsEnvio: ["a@x.com", "b@x.com"] })], "email");
+    expect(r.destinatarios).toHaveLength(1);
   });
 });
 

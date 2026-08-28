@@ -25,6 +25,13 @@ export type ClienteDefaults = {
   email?: string;
   telefone?: string;
   telefone_ddi?: string;
+  email_2?: string;
+  telefone_2?: string;
+  telefone_ddi_2?: string;
+  email_envio?: boolean | null;
+  email_2_envio?: boolean | null;
+  whatsapp_envio?: boolean | null;
+  whatsapp_2_envio?: boolean | null;
   endereco?: Record<string, string> | null;
   responsavel_nome?: string;
   representante?: Record<string, string> | null;
@@ -87,6 +94,29 @@ export function FormCliente({
   });
   const set = (k: keyof typeof f) => (e: ChangeEvent<HTMLInputElement>) => setF((s) => ({ ...s, [k]: e.target.value }));
   const ehCnpj = tipoPessoa === "PJ" || tipoPessoa === "MEI";
+
+  // "Usar no envio" por contato (honorários, comunicados, régua). Controlados para poder enviar
+  // valor explícito (permite desligar o principal). Default: principal ligado, 2º desligado.
+  const [envioFlags, setEnvioFlags] = useState({
+    email_envio: c.email_envio ?? true,
+    email_2_envio: c.email_2_envio ?? false,
+    whatsapp_envio: c.whatsapp_envio ?? true,
+    whatsapp_2_envio: c.whatsapp_2_envio ?? false,
+  });
+  const toggleEnvio = (name: keyof typeof envioFlags, label: string) => (
+    <>
+      <input type="hidden" name={name} value={envioFlags[name] ? "on" : "off"} />
+      <label className="mt-1 flex cursor-pointer items-center gap-1.5 text-xs text-cinza">
+        <input
+          type="checkbox"
+          checked={envioFlags[name]}
+          onChange={(e) => setEnvioFlags((s) => ({ ...s, [name]: e.target.checked }))}
+          className="accent-verde"
+        />
+        {label}
+      </label>
+    </>
+  );
 
   const [buscando, setBuscando] = useState(false);
   const [msgBusca, setMsgBusca] = useState<{ ok: boolean; texto: string } | null>(null);
@@ -241,6 +271,7 @@ export function FormCliente({
         <FormGrid>
           <FormCampo label="E-mail" span={5}>
             <input name="email" type="email" defaultValue={c.email ?? ""} className={`${controleCls()} w-full`} />
+            {toggleEnvio("email_envio", "usar no envio")}
           </FormCampo>
           <FormCampo label="DDI" span={1}>
             <input
@@ -253,6 +284,24 @@ export function FormCliente({
           </FormCampo>
           <FormCampo label="Telefone / WhatsApp" span={2}>
             <input name="telefone" defaultValue={c.telefone ?? ""} className={`${controleCls()} w-full`} />
+            {toggleEnvio("whatsapp_envio", "usar no envio")}
+          </FormCampo>
+          <FormCampo label="E-mail 2 (opcional)" span={5}>
+            <input name="email_2" type="email" defaultValue={c.email_2 ?? ""} className={`${controleCls()} w-full`} />
+            {toggleEnvio("email_2_envio", "usar no envio")}
+          </FormCampo>
+          <FormCampo label="DDI 2" span={1}>
+            <input
+              name="telefone_ddi_2"
+              inputMode="numeric"
+              defaultValue={c.telefone_ddi_2 ?? "55"}
+              className={`${controleCls()} w-full`}
+              aria-label="Código do país (2º telefone)"
+            />
+          </FormCampo>
+          <FormCampo label="Telefone 2 (opcional)" span={2}>
+            <input name="telefone_2" defaultValue={c.telefone_2 ?? ""} className={`${controleCls()} w-full`} />
+            {toggleEnvio("whatsapp_2_envio", "usar no envio")}
           </FormCampo>
           <FormCampo label="Responsável (contato)" span={4}>
             <input
