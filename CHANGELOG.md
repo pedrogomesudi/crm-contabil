@@ -8,6 +8,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.30] — 2026-09-03
+
+### Adicionado
+
+- **Planos comerciais por instância (camada de feature-flags).** Base para comercializar o SALDO
+  no modelo instância-por-cliente: cada deploy tem um **plano** (`escritorio_config.plano` —
+  contratos < relacionamento < financeiro < contabil < enterprise, cumulativos) que controla
+  quais módulos ficam visíveis/acessíveis. O menu (`menuDoPapel`) passa a filtrar por **papel E
+  plano**, e cada grupo de rota gateável ganhou um guard server-side (`exigirModulo`) contra
+  acesso por URL direta. O mapa plano→módulo é a tabela comercial aprovada. Default `contabil`,
+  para a instância atual (ELEVARE) não perder nenhum módulo.
+
 ## [6.99.29] — 2026-08-28
 
 ### Adicionado

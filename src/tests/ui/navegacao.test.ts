@@ -70,4 +70,42 @@ describe("menuDoPapel", () => {
       expect(h).toContain(r);
     }
   });
+
+  it("gating por plano: Contratos mostra só a base; esconde relacionamento/financeiro/fiscal", () => {
+    const h = menuDoPapel("admin", ZERO, "contratos").flatMap((g) => g.itens.map((i) => i.href));
+    // base sempre
+    expect(h).toEqual(
+      expect.arrayContaining(["/", "/clientes", "/documentos", "/comercial", "/onboarding", "/configuracoes"]),
+    );
+    // gateados fora
+    for (const r of [
+      "/atendimento",
+      "/comunicados",
+      "/nps",
+      "/financeiro/cadastros",
+      "/obrigacoes",
+      "/legalizacao",
+      "/tarefas",
+    ]) {
+      expect(h).not.toContain(r);
+    }
+  });
+
+  it("gating por plano: Relacionamento libera atendimento/comunicados, não financeiro/fiscal", () => {
+    const h = menuDoPapel("admin", ZERO, "relacionamento").flatMap((g) => g.itens.map((i) => i.href));
+    expect(h).toEqual(expect.arrayContaining(["/atendimento", "/comunicados", "/nps"]));
+    for (const r of ["/financeiro/cadastros", "/obrigacoes", "/legalizacao"]) expect(h).not.toContain(r);
+  });
+
+  it("gating por plano: Financeiro libera o financeiro, mas não o fiscal (obrigações/legalização)", () => {
+    const h = menuDoPapel("admin", ZERO, "financeiro").flatMap((g) => g.itens.map((i) => i.href));
+    expect(h).toContain("/financeiro/cadastros");
+    for (const r of ["/obrigacoes", "/legalizacao", "/tarefas", "/vencimentos"]) expect(h).not.toContain(r);
+  });
+
+  it("gating por plano: default (sem plano) = Contábil = tudo (retrocompatível)", () => {
+    expect(hrefs("admin")).toContain("/obrigacoes");
+    expect(hrefs("admin")).toContain("/financeiro/cadastros");
+    expect(hrefs("admin")).toContain("/legalizacao");
+  });
 });

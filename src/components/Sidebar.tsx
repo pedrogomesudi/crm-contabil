@@ -4,15 +4,27 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Papel } from "@/lib/tipos";
 import { menuDoPapel, type Badges } from "@/lib/ui/navegacao";
+import { PLANO_PADRAO, type Plano } from "@/lib/planos/planos";
 import { sair } from "@/app/login/actions";
 import { LogoSaldo } from "@/components/marca/LogoSaldo";
 
-export function Sidebar({ papel, nome, badges }: { papel: Papel; nome: string; badges: Badges }) {
+export function Sidebar({
+  papel,
+  nome,
+  badges,
+  plano = PLANO_PADRAO,
+}: {
+  papel: Papel;
+  nome: string;
+  badges: Badges;
+  plano?: Plano;
+}) {
   const pathname = usePathname();
   const [aberto, setAberto] = useState(false);
 
-  // Quem vê o quê é regra e vive em lib/ui/navegacao (puro, testado sem DOM). Aqui é só render.
-  const grupos = menuDoPapel(papel, badges);
+  // Quem vê o quê é regra e vive em lib/ui/navegacao (puro, testado sem DOM). Filtra por papel
+  // (permissões) E por plano (comercial). Aqui é só render.
+  const grupos = menuDoPapel(papel, badges, plano);
 
   // As rotas sem item próprio realçam a seção que as abriga — senão o usuário fica sem
   // referência de "onde estou". Obrigações e Vencimentos saíram daqui: viraram itens.
