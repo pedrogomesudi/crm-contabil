@@ -9,6 +9,9 @@
 //   --dry-run   mostra o que faria, sem criar projeto nem gravar arquivo
 //   --retomar   reaproveita o tenants/<slug>.env existente (não cria projeto de novo)
 //   --regiao    padrão sa-east-1 (São Paulo — os dados ficam no Brasil)
+//   --plano     plano comercial da instância (default contabil). Um de:
+//               contratos | relacionamento | financeiro | contabil | enterprise.
+//               Define quais módulos o cliente enxerga (ver lib/planos).
 //
 // POR QUE NÃO EXISTE `tenant:remover`
 // O SUPABASE_ACCESS_TOKEN pode DESTRUIR projetos inteiros da organização. Um script com
@@ -51,11 +54,16 @@ const dbUrlManual = opt("db-url");
 const dryRun = flag("dry-run");
 const retomar = flag("retomar");
 
+// Planos comerciais (espelha lib/planos/planos.ts — scripts são JS puro, sem importar TS).
+const PLANOS = ["contratos", "relacionamento", "financeiro", "contabil", "enterprise"];
+const plano = opt("plano", "contabil");
+
 if (!slug || !SLUG_RE.test(slug)) {
   abortar("--slug obrigatório (3-30 chars, [a-z0-9-], vira subdomínio e nome de arquivo).");
 }
 if (!nome) abortar("--nome obrigatório (razão social do escritório).");
 if (!email) abortar("--email obrigatório (e-mail do admin do escritório).");
+if (!PLANOS.includes(plano)) abortar(`--plano inválido ("${plano}"). Use: ${PLANOS.join(" | ")}.`);
 
 const appUrl = `https://${slug}.${dominio}`;
 const caminhoEnv = envDoTenant(slug);
@@ -178,6 +186,15 @@ async function habilitarExtensoes(dbUrl) {
   });
 }
 
+// Define o PLANO comercial da instância + o nome do escritório em escritorio_config (id=1, já
+// semeado pela migration 0076). O plano controla quais módulos o cliente enxerga (ver lib/planos).
+// nome usa coalesce para não sobrescrever um valor já editado num --retomar.
+async function definirPlanoEConfig(dbUrl) {
+  await comBanco(dbUrl, (cli) =>
+    cli.query("update escritorio_config set plano = $1, nome = coalesce(nome, $2) where id = 1", [plano, nome]),
+  );
+}
+
 // ---------------------------------------------------------------- passos locais
 function rodar(script, envExtra = {}) {
   console.log(`• ${script}…`);
@@ -196,9 +213,10 @@ try {
     console.log(`  slug       : ${slug}`);
     console.log(`  app        : ${appUrl}`);
     console.log(`  admin      : ${email}`);
+    console.log(`  plano      : ${plano}`);
     console.log(`  região     : ${regiao}`);
     console.log(`  env        : ${caminhoEnv} (chmod 600, fora do git)`);
-    console.log("\n  faria: criar projeto Supabase → migrations → chaves → admin → crons → registry.");
+    console.log("\n  faria: criar projeto Supabase → migrations → plano → chaves → admin → crons → registry.");
     process.exit(0);
   }
 
@@ -287,6 +305,8 @@ try {
   }
 
   rodar("db-migrate");
+  console.log(`• Definindo o plano comercial da instância: ${plano}…`);
+  await definirPlanoEConfig(env.SUPABASE_DB_URL);
   rodar("bootstrap-admin");
   // Envelope: transforma as 5 chaves de domínio em DEKs cifradas pela mestra.
   rodar("cripto-migrar");
@@ -310,13 +330,14 @@ try {
       slug,
       nome,
       appUrl,
+      plano,
       projectRef: env.SUPABASE_PROJECT_REF ?? null,
       criadoEm: new Date().toISOString().slice(0, 10),
     },
   ].sort((a, b) => a.slug.localeCompare(b.slug));
   salvarRegistry(reg);
 
-  console.log(`\n✓ Escritório "${nome}" provisionado.\n`);
+  console.log(`\n✓ Escritório "${nome}" provisionado no plano ${plano}.\n`);
   console.log("FALTA FAZER À MÃO (no EasyPanel e no Supabase):");
   console.log(`  1. Criar o app no EasyPanel apontando para o repositório (ramo main).`);
   console.log(`  2. Colar as variáveis de ${caminhoEnv} em Environment (as NEXT_PUBLIC_* como build args).`);
