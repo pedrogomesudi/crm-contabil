@@ -24,7 +24,7 @@ import {
 import { podeCancelarTitulo } from "@/lib/boleto/cancelamento";
 import { BoletoTitulo } from "./BoletoTitulo";
 import { AlterarVencimentoTitulo } from "./AlterarVencimentoTitulo";
-import { saldoTitulo, ehVencido, LABEL_STATUS } from "@/lib/financeiro/titulos";
+import { saldoTitulo, ehVencido, consolidadoNoGrupo, LABEL_STATUS } from "@/lib/financeiro/titulos";
 import { Badge } from "@/components/ui/Badge";
 import { badgeStatusTitulo } from "@/lib/ui/apresentacao";
 import { formatarMoeda, formatarData } from "@/lib/format";
@@ -98,11 +98,12 @@ export function ContasReceber({
   const gerarBoletosLote = () =>
     start(async () => {
       const emAberto = (t: TituloView) => t.status !== "BAIXADO" && t.status !== "CANCELADO";
-      // Individuais: sem grupo e sem "Não enviar" (o boleto desses é manual).
-      const alvos = titulos.filter((t) => emAberto(t) && !t.naoEnvia && !t.grupoCobrancaId && !boletos[t.id]);
-      // Grupos: um boleto consolidado por grupo (na titular).
+      // Individuais: fora do grupo consolidado (inclui avulsas de cliente em grupo) e sem
+      // "Não enviar" (o boleto desses é manual).
+      const alvos = titulos.filter((t) => emAberto(t) && !t.naoEnvia && !consolidadoNoGrupo(t) && !boletos[t.id]);
+      // Grupos: um boleto consolidado por grupo (na titular), só das mensalidades.
       const grupos = [
-        ...new Set(titulos.filter((t) => emAberto(t) && t.grupoCobrancaId).map((t) => t.grupoCobrancaId!)),
+        ...new Set(titulos.filter((t) => emAberto(t) && consolidadoNoGrupo(t)).map((t) => t.grupoCobrancaId!)),
       ];
       if (alvos.length === 0 && grupos.length === 0) {
         setMsg("Nenhum título em aberto sem boleto nesta competência.");
@@ -358,7 +359,7 @@ export function ContasReceber({
                         />
                       )}
                       <div className="mt-1">
-                        {t.grupoCobrancaId ? (
+                        {consolidadoNoGrupo(t) ? (
                           <span className="text-xs text-cinza">Boleto consolidado no grupo (titular)</span>
                         ) : (
                           <BoletoTitulo

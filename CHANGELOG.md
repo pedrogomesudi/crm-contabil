@@ -8,6 +8,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.31] — 2026-09-15
+
+### Corrigido
+
+- **Cobrança avulsa de cliente em grupo agora é individual.** Em Contas a receber, um título de
+  cliente que compõe grupo de cobrança só é tratado como "boleto consolidado no grupo" quando é
+  **mensalidade**; as **avulsas** (RECEITA_AVULSA, 13º, etc.) voltam a mostrar o botão de emitir
+  boleto individual e entram no lote como individuais. O grupo consolida apenas os honorários
+  mensais/fixos, como esperado.
+
 ## [6.99.30] — 2026-09-03
 
 ### Adicionado
