@@ -38,13 +38,20 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
   if (!(await gateVer())) return [];
   if (!/^\d{4}-\d{2}-\d{2}$/.test(competencia)) return [];
   const supabase = await createServerSupabase();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("titulo")
     .select(
-      "id, origem, competencia, vencimento, valor, status, clientes(razao_social, telefone, grupo_cobranca_id, grupo_cobranca(nome), clientes_financeiro(cobranca_whatsapp, cobranca_email)), baixa(valor_recebido, estornada)",
+      "id, origem, competencia, vencimento, valor, status, clientes(razao_social, telefone, grupo_cobranca_id, grupo_cobranca!clientes_grupo_cobranca_id_fkey(nome), clientes_financeiro(cobranca_whatsapp, cobranca_email)), baixa(valor_recebido, estornada)",
     )
     .eq("competencia", competencia)
     .order("vencimento");
+  // Sem isto, uma query que falha vira lista vazia e a tela fica indistinguível de um mês sem
+  // títulos — foi assim que um embed ambíguo (PGRST201) chegou à produção parecendo "nada a
+  // receber". O erro vai para o log do servidor e a UI recebe a exceção em vez do silêncio.
+  if (error) {
+    console.error("[contas-a-receber] listarTitulos falhou:", error);
+    throw new Error(`Não foi possível carregar os títulos: ${error.message}`);
+  }
   return (data ?? []).map((t) => {
     const cl = Array.isArray(t.clientes) ? t.clientes[0] : t.clientes;
     const cliente = cl as {
