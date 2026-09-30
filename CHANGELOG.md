@@ -8,6 +8,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.33] — 2026-09-30
+
+### Corrigido
+
+- **Contas a receber não carregava nenhum título (regressão da 6.99.32).** O `listarTitulos`
+  passou a embutir `grupo_cobranca(nome)` dentro de `clientes` para exibir o nome do grupo, mas
+  existem **duas** chaves estrangeiras entre `clientes` e `grupo_cobranca`
+  (`clientes.grupo_cobranca_id` e `grupo_cobranca.titular_cliente_id`). O PostgREST não tinha como
+  escolher e rejeitava a consulta inteira com `PGRST201`. O embed agora é desambiguado pela FK
+  (`grupo_cobranca!clientes_grupo_cobranca_id_fkey`).
+- **Uma consulta que falha não vira mais uma tela vazia.** O `listarTitulos` descartava o `error`
+  do Supabase, então a query quebrada devolvia lista vazia e a tela ficava idêntica a um mês sem
+  títulos — foi o que fez a regressão acima passar por "nada a receber" em vez de por um erro.
+  Agora o erro é registrado no log do servidor e propagado.
+
 ## [6.99.32] — 2026-09-30
 
 ### Adicionado
