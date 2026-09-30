@@ -28,6 +28,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   `admin`/`financeiro` — ou seja, justamente quem opera Contas a receber recebia o nome do grupo
   nulo e ficaria sem o filtro novo. A migration `0140` acrescenta `financeiro` à policy de
   **leitura** (a escrita — criar/renomear grupo, mover membro — segue `admin`/`assistente`).
+- **`db:test` voltou a rodar até o fim.** O assert de `encerrar_contrato` em `rls.test.sql` tinha
+  apodrecido: a função corta por `competencia >= date_trunc('month', now())` — o mês do relógio,
+  não o `p_data` recebido —, mas o teste só criava um título de competência fixa (`2026-07`). De
+  ago/2026 em diante nenhum título caía dentro do corte, nada era cancelado e a suíte inteira
+  parava ali. Agora o teste gera a competência corrente na hora e passou a checar as **duas**
+  metades da regra: o título do mês corrente é cancelado e o de competência já faturada é
+  preservado.
 
 ## [6.99.31] — 2026-09-15
 

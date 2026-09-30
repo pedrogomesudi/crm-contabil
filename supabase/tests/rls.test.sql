@@ -683,7 +683,7 @@ do $$ declare s titulo_status; begin
 end $$;
 
 -- ===== V6.2 — RPC gerar_mensalidades =====
-do $$ declare r1 jsonb; r2 jsonb; v numeric; n int; begin
+do $$ declare r1 jsonb; r2 jsonb; v numeric; n int; st text; begin
   reset role;
   insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario)
     values ('aaaaaaaa-0000-0000-0000-0000000000d1','PJ','Cli ProRata','55000000000272','Simples') on conflict do nothing;
@@ -703,11 +703,21 @@ do $$ declare r1 jsonb; r2 jsonb; v numeric; n int; begin
   select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1';
   if n <> 1 then raise exception 'FALHA: geração duplicou (n=%, esperado só a mensalidade)', n; end if;
 
+  -- encerrar_contrato corta por `competencia >= date_trunc('month', now())` — o MÊS DO RELÓGIO,
+  -- não o p_data recebido. Com só o título de competência fixa (2026-07) o assert apodreceu: a
+  -- partir de ago/2026 não havia mais nenhum título dentro do corte e o update não cancelava
+  -- nada. Geramos a competência corrente na hora para o teste não depender da data de execução.
+  perform gerar_mensalidades(date_trunc('month', now())::date);
   perform encerrar_contrato('dddddddd-0000-0000-0000-0000000000d1', now()::date, 'teste');
-  select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1' and status='CANCELADO';
-  if n < 1 then raise exception 'FALHA: encerramento não cancelou títulos futuros'; end if;
+  select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1'
+    and competencia = date_trunc('month', now())::date and status='CANCELADO';
+  if n <> 1 then raise exception 'FALHA: encerramento não cancelou o título da competência corrente (n=%)', n; end if;
+  -- A outra metade da regra: competência já faturada NÃO é cancelada pelo encerramento.
+  select status into st from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1'
+    and competencia='2026-07-01' and origem='MENSALIDADE';
+  if st <> 'ABERTO' then raise exception 'FALHA: encerramento cancelou título de competência passada (=%)', st; end if;
 
-  raise notice 'OK: gerar_mensalidades (pró-rata 1600, 13º, idempotente, encerramento cancela)';
+  raise notice 'OK: gerar_mensalidades (pró-rata 1600, 13º, idempotente; encerramento cancela do mês corrente em diante e preserva o passado)';
 end $$;
 
 -- ===== V6.5 — RPCs de relatório =====
