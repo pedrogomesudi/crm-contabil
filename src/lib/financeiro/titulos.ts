@@ -16,6 +16,28 @@ export function ehVencido(vencimento: string, status: string, saldo: number): bo
   return vencimento < new Date().toISOString().slice(0, 10);
 }
 
+// Rótulos da origem do título. Vivem aqui, e não no JSX, porque a planilha exportada
+// precisa dizer exatamente o mesmo que a tabela — rótulo duplicado é rótulo que diverge.
+export const LABEL_ORIGEM: Record<string, string> = {
+  MENSALIDADE: "Mensalidade",
+  RECEITA_AVULSA: "Avulsa",
+  DECIMO_TERCEIRO: "13º",
+};
+export function rotuloOrigem(origem: string): string {
+  return LABEL_ORIGEM[origem] ?? LABEL_ORIGEM.MENSALIDADE!;
+}
+
+// Os chips de status da tela de contas a receber, na ordem em que aparecem. O relatório
+// exportado usa os mesmos rótulos para registrar qual recorte gerou o arquivo.
+export const FILTROS_STATUS = [
+  { chave: "TODOS", rotulo: "Todos" },
+  { chave: "ABERTO", rotulo: "Em aberto" },
+  { chave: "RECEBIDO", rotulo: "Recebido" },
+  { chave: "VENCIDO", rotulo: "Vencido" },
+  { chave: "CANCELADO", rotulo: "Cancelado" },
+] as const;
+export type FiltroStatus = (typeof FILTROS_STATUS)[number]["chave"];
+
 export const LABEL_STATUS: Record<string, string> = {
   ABERTO: "Em aberto",
   VENCIDO: "Vencido",

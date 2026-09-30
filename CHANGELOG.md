@@ -8,6 +8,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.34] — 2026-09-30
+
+### Adicionado
+
+- **Exportação de Contas a receber em XLSX, PDF e CSV, respeitando os filtros da tela.** Os botões
+  aparecem na barra de filtros e o arquivo espelha **exatamente** o que está na tabela: o recorte
+  de status, o grupo de empresas e a busca por cliente, combinados. Colunas: Cliente, Grupo,
+  Origem, Competência, Vencimento, Valor, Saldo e Status. Valor e Saldo vão como **número nativo**
+  no XLSX, então o Excel soma e ordena de verdade. O subtítulo registra o recorte que gerou o
+  arquivo (ex.: `Competência 08/2026 · Vencido · Grupo Alfa · busca: "padaria"`) — sem isso uma
+  planilha filtrada chega ao destinatário parecendo o mês inteiro — e o rodapé fecha com a soma de
+  Valor e Saldo e a contagem de títulos.
+
+### Modificado
+
+- Os rótulos de **origem** do título (Mensalidade / Avulsa / 13º) e os **chips de status** saíram
+  do JSX da tela para `src/lib/financeiro/titulos.ts`, de onde a tabela e o arquivo exportado leem
+  os mesmos textos. Rótulo duplicado é rótulo que diverge.
+
 ## [6.99.33] — 2026-09-30
 
 ### Corrigido

@@ -31,9 +31,14 @@ import {
   consolidadoNoGrupo,
   gruposPresentes,
   casaGrupoTitulo,
+  rotuloOrigem,
+  FILTROS_STATUS,
   LABEL_STATUS,
   type SelecaoGrupo,
+  type FiltroStatus,
 } from "@/lib/financeiro/titulos";
+import { montarRelatorioTitulos } from "@/lib/financeiro/relatorio-titulos";
+import { BotaoExportar } from "@/components/ui/BotaoExportar";
 import { Badge } from "@/components/ui/Badge";
 import { badgeStatusTitulo } from "@/lib/ui/apresentacao";
 import { formatarMoeda, formatarData } from "@/lib/format";
@@ -56,7 +61,7 @@ export function ContasReceber({
   const [avulsaAberta, setAvulsaAberta] = useState(false);
   const [clientesAv, setClientesAv] = useState<{ id: string; nome: string }[]>([]);
   const [categoriasAv, setCategoriasAv] = useState<{ id: string; nome: string }[]>([]);
-  const [filtro, setFiltro] = useState<"TODOS" | "ABERTO" | "RECEBIDO" | "CANCELADO" | "VENCIDO">("TODOS");
+  const [filtro, setFiltro] = useState<FiltroStatus>("TODOS");
   const [busca, setBusca] = useState("");
   const [grupoSel, setGrupoSel] = useState<SelecaoGrupo>("TODOS");
   const [pend, start] = useTransition();
@@ -81,13 +86,9 @@ export function ContasReceber({
   const visiveis = linhas.filter(
     (l) => casaFiltro(l.status) && casaGrupoTitulo(l.t, grupoSel) && (!q || l.t.cliente.toLowerCase().includes(q)),
   );
-  const FILTROS: { chave: typeof filtro; rotulo: string }[] = [
-    { chave: "TODOS", rotulo: "Todos" },
-    { chave: "ABERTO", rotulo: "Em aberto" },
-    { chave: "RECEBIDO", rotulo: "Recebido" },
-    { chave: "VENCIDO", rotulo: "Vencido" },
-    { chave: "CANCELADO", rotulo: "Cancelado" },
-  ];
+
+  // O arquivo exportado espelha exatamente o que está na tabela: mesmas linhas, mesmo recorte.
+  const relatorio = montarRelatorioTitulos(visiveis, { competencia, filtro, grupoSel, grupos, busca });
 
   const abrirAvulsa = () =>
     start(async () => {
@@ -244,7 +245,7 @@ export function ContasReceber({
       {titulos.length > 0 && (
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-1.5">
-            {FILTROS.map((f) => (
+            {FILTROS_STATUS.map((f) => (
               <button
                 key={f.chave}
                 type="button"
@@ -268,6 +269,9 @@ export function ContasReceber({
             <span className="ml-1 text-xs text-cinza">
               {visiveis.length} de {titulos.length}
             </span>
+            <div className="ml-auto">
+              <BotaoExportar relatorio={relatorio} />
+            </div>
           </div>
           <div className="overflow-auto rounded border border-linha">
             <table className="w-full">
@@ -296,13 +300,7 @@ export function ContasReceber({
                       {t.cliente}
                       {t.grupoNome && <span className="block text-xs text-cinza">{t.grupoNome}</span>}
                     </td>
-                    <td className="p-2">
-                      {t.origem === "DECIMO_TERCEIRO"
-                        ? "13º"
-                        : t.origem === "RECEITA_AVULSA"
-                          ? "Avulsa"
-                          : "Mensalidade"}
-                    </td>
+                    <td className="p-2">{rotuloOrigem(t.origem)}</td>
                     <td className="p-2">{formatarData(t.vencimento)}</td>
                     <td className="p-2">{formatarMoeda(t.valor)}</td>
                     <td className="p-2">{formatarMoeda(saldo)}</td>
