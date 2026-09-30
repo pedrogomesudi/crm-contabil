@@ -8,6 +8,34 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.32] — 2026-09-30
+
+### Adicionado
+
+- **Filtro por grupo de empresas em Contas a receber.** Ao lado dos filtros de status, um seletor
+  **Grupo de empresas** permite isolar os títulos das empresas de um mesmo grupo de cobrança na
+  competência carregada (ou ver só quem está **Sem grupo**). O recorte é por **pertencimento ao
+  grupo**: aparecem tanto as mensalidades — cujo boleto é consolidado na titular — quanto as
+  avulsas/13º daquelas empresas, que emitem boleto próprio. As opções saem dos próprios títulos
+  em tela, então só listam grupos com movimento no mês, e o seletor some quando a competência não
+  tem nenhum título em grupo. O nome do grupo também passa a aparecer como selo abaixo da razão
+  social, na coluna Cliente.
+
+### Corrigido
+
+- **O papel `financeiro` não enxergava os grupos de cobrança.** A RLS de `grupo_cobranca` (0137)
+  liberava leitura só para `admin`/`assistente`/`contador`, mas `titulo` é legível por
+  `admin`/`financeiro` — ou seja, justamente quem opera Contas a receber recebia o nome do grupo
+  nulo e ficaria sem o filtro novo. A migration `0140` acrescenta `financeiro` à policy de
+  **leitura** (a escrita — criar/renomear grupo, mover membro — segue `admin`/`assistente`).
+- **`db:test` voltou a rodar até o fim.** O assert de `encerrar_contrato` em `rls.test.sql` tinha
+  apodrecido: a função corta por `competencia >= date_trunc('month', now())` — o mês do relógio,
+  não o `p_data` recebido —, mas o teste só criava um título de competência fixa (`2026-07`). De
+  ago/2026 em diante nenhum título caía dentro do corte, nada era cancelado e a suíte inteira
+  parava ali. Agora o teste gera a competência corrente na hora e passou a checar as **duas**
+  metades da regra: o título do mês corrente é cancelado e o de competência já faturada é
+  preservado.
+
 ## [6.99.31] — 2026-09-15
 
 ### Corrigido

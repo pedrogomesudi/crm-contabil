@@ -21,6 +21,7 @@ export type TituloView = {
   temTelefone: boolean;
   naoEnvia: boolean; // cliente optou por "Não enviar" — fora da emissão/boleto em lote
   grupoCobrancaId: string | null; // se em grupo, o boleto é consolidado na titular (não individual)
+  grupoNome: string | null; // nome do grupo de cobrança, para o selo e o filtro da tela
 };
 const ROTA = "/financeiro/contas-a-receber";
 
@@ -40,7 +41,7 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
   const { data } = await supabase
     .from("titulo")
     .select(
-      "id, origem, competencia, vencimento, valor, status, clientes(razao_social, telefone, grupo_cobranca_id, clientes_financeiro(cobranca_whatsapp, cobranca_email)), baixa(valor_recebido, estornada)",
+      "id, origem, competencia, vencimento, valor, status, clientes(razao_social, telefone, grupo_cobranca_id, grupo_cobranca(nome), clientes_financeiro(cobranca_whatsapp, cobranca_email)), baixa(valor_recebido, estornada)",
     )
     .eq("competencia", competencia)
     .order("vencimento");
@@ -50,6 +51,7 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
       razao_social?: string;
       telefone?: string;
       grupo_cobranca_id?: string | null;
+      grupo_cobranca?: { nome?: string | null } | { nome?: string | null }[] | null;
       clientes_financeiro?:
         | { cobranca_whatsapp?: boolean | null; cobranca_email?: boolean | null }
         | { cobranca_whatsapp?: boolean | null; cobranca_email?: boolean | null }[]
@@ -58,6 +60,7 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
     const fin = Array.isArray(cliente?.clientes_financeiro)
       ? cliente?.clientes_financeiro[0]
       : cliente?.clientes_financeiro;
+    const grp = Array.isArray(cliente?.grupo_cobranca) ? cliente?.grupo_cobranca[0] : cliente?.grupo_cobranca;
     const baixas = (t.baixa ?? []) as { valor_recebido: number; estornada: boolean }[];
     return {
       id: t.id as string,
@@ -71,6 +74,7 @@ export async function listarTitulos(competencia: string): Promise<TituloView[]> 
       temTelefone: Boolean(cliente?.telefone),
       naoEnvia: naoEnviaHonorario({ whatsapp: fin?.cobranca_whatsapp, email: fin?.cobranca_email }),
       grupoCobrancaId: cliente?.grupo_cobranca_id ?? null,
+      grupoNome: grp?.nome ?? null,
     };
   });
 }

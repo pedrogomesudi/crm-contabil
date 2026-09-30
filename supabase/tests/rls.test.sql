@@ -683,7 +683,7 @@ do $$ declare s titulo_status; begin
 end $$;
 
 -- ===== V6.2 — RPC gerar_mensalidades =====
-do $$ declare r1 jsonb; r2 jsonb; v numeric; n int; begin
+do $$ declare r1 jsonb; r2 jsonb; v numeric; n int; st text; begin
   reset role;
   insert into clientes (id, tipo_pessoa, razao_social, cpf_cnpj, regime_tributario)
     values ('aaaaaaaa-0000-0000-0000-0000000000d1','PJ','Cli ProRata','55000000000272','Simples') on conflict do nothing;
@@ -703,11 +703,21 @@ do $$ declare r1 jsonb; r2 jsonb; v numeric; n int; begin
   select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1';
   if n <> 1 then raise exception 'FALHA: geração duplicou (n=%, esperado só a mensalidade)', n; end if;
 
+  -- encerrar_contrato corta por `competencia >= date_trunc('month', now())` — o MÊS DO RELÓGIO,
+  -- não o p_data recebido. Com só o título de competência fixa (2026-07) o assert apodreceu: a
+  -- partir de ago/2026 não havia mais nenhum título dentro do corte e o update não cancelava
+  -- nada. Geramos a competência corrente na hora para o teste não depender da data de execução.
+  perform gerar_mensalidades(date_trunc('month', now())::date);
   perform encerrar_contrato('dddddddd-0000-0000-0000-0000000000d1', now()::date, 'teste');
-  select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1' and status='CANCELADO';
-  if n < 1 then raise exception 'FALHA: encerramento não cancelou títulos futuros'; end if;
+  select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1'
+    and competencia = date_trunc('month', now())::date and status='CANCELADO';
+  if n <> 1 then raise exception 'FALHA: encerramento não cancelou o título da competência corrente (n=%)', n; end if;
+  -- A outra metade da regra: competência já faturada NÃO é cancelada pelo encerramento.
+  select status into st from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1'
+    and competencia='2026-07-01' and origem='MENSALIDADE';
+  if st <> 'ABERTO' then raise exception 'FALHA: encerramento cancelou título de competência passada (=%)', st; end if;
 
-  raise notice 'OK: gerar_mensalidades (pró-rata 1600, 13º, idempotente, encerramento cancela)';
+  raise notice 'OK: gerar_mensalidades (pró-rata 1600, 13º, idempotente; encerramento cancela do mês corrente em diante e preserva o passado)';
 end $$;
 
 -- ===== V6.5 — RPCs de relatório =====
@@ -2168,4 +2178,35 @@ begin
 
   delete from chave_dados where dominio = 'teste';
   raise notice 'OK: chave_dados — a DEK cifrada é invisível a qualquer usuário autenticado (só service_role)';
+end $$;
+
+-- ============================================================================
+-- Grupo de cobrança (0137/0140) — o financeiro LÊ o grupo (filtro de contas a receber),
+-- mas não escreve; o cliente do portal não vê nada.
+-- ============================================================================
+do $$
+declare n int; ok boolean;
+begin
+  reset role;
+  insert into grupo_cobranca (id, nome, titular_cliente_id)
+    values ('cccccccc-0000-0000-0000-000000000001', 'Grupo Teste', 'aaaaaaaa-0000-0000-0000-000000000001')
+    on conflict (id) do nothing;
+
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  select count(*) into n from grupo_cobranca;
+  if n < 1 then raise exception 'FALHA(grupo): financeiro não lê grupo_cobranca — o filtro de grupo some da tela'; end if;
+  ok := false;
+  begin
+    update grupo_cobranca set nome = 'Renomeado' where id = 'cccccccc-0000-0000-0000-000000000001';
+    ok := found;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(grupo): financeiro renomeou grupo_cobranca (escrita é admin/assistente)'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000005'); -- cliente do portal
+  select count(*) into n from grupo_cobranca;
+  if n <> 0 then raise exception 'FALHA(grupo): cliente do portal vê grupo_cobranca'; end if;
+  reset role;
+
+  delete from grupo_cobranca where id = 'cccccccc-0000-0000-0000-000000000001';
+  raise notice 'OK: grupo_cobranca — financeiro lê (filtro de contas a receber) e não escreve';
 end $$;
