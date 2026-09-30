@@ -23,3 +23,27 @@ export const LABEL_STATUS: Record<string, string> = {
   BAIXADO_PARCIAL: "Recebido parcial",
   CANCELADO: "Cancelado",
 };
+
+// Seleção do filtro de grupo na tela de contas a receber: nenhum recorte, só quem está fora
+// de grupo, ou um grupo específico (o próprio id).
+export type SelecaoGrupo = "TODOS" | "SEM_GRUPO" | (string & {});
+
+// Grupos que têm ao menos um título na competência carregada — é daqui que sai o seletor,
+// para não oferecer grupo sem movimento no mês.
+export function gruposPresentes(
+  titulos: { grupoCobrancaId: string | null; grupoNome: string | null }[],
+): { id: string; nome: string }[] {
+  const mapa = new Map<string, string>();
+  for (const t of titulos) {
+    if (t.grupoCobrancaId) mapa.set(t.grupoCobrancaId, t.grupoNome ?? t.grupoCobrancaId);
+  }
+  return [...mapa].map(([id, nome]) => ({ id, nome })).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+}
+
+// Filtro por PERTENCIMENTO ao grupo, não por boleto consolidado: a avulsa de um cliente em
+// grupo (que emite boleto próprio — ver consolidadoNoGrupo) também aparece no recorte.
+export function casaGrupoTitulo(t: { grupoCobrancaId: string | null }, selecao: SelecaoGrupo): boolean {
+  if (selecao === "TODOS") return true;
+  if (selecao === "SEM_GRUPO") return t.grupoCobrancaId === null;
+  return t.grupoCobrancaId === selecao;
+}

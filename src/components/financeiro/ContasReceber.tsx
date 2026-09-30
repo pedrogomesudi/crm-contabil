@@ -24,7 +24,16 @@ import {
 import { podeCancelarTitulo } from "@/lib/boleto/cancelamento";
 import { BoletoTitulo } from "./BoletoTitulo";
 import { AlterarVencimentoTitulo } from "./AlterarVencimentoTitulo";
-import { saldoTitulo, ehVencido, consolidadoNoGrupo, LABEL_STATUS } from "@/lib/financeiro/titulos";
+import { FiltroGrupo } from "./FiltroGrupo";
+import {
+  saldoTitulo,
+  ehVencido,
+  consolidadoNoGrupo,
+  gruposPresentes,
+  casaGrupoTitulo,
+  LABEL_STATUS,
+  type SelecaoGrupo,
+} from "@/lib/financeiro/titulos";
 import { Badge } from "@/components/ui/Badge";
 import { badgeStatusTitulo } from "@/lib/ui/apresentacao";
 import { formatarMoeda, formatarData } from "@/lib/format";
@@ -49,6 +58,7 @@ export function ContasReceber({
   const [categoriasAv, setCategoriasAv] = useState<{ id: string; nome: string }[]>([]);
   const [filtro, setFiltro] = useState<"TODOS" | "ABERTO" | "RECEBIDO" | "CANCELADO" | "VENCIDO">("TODOS");
   const [busca, setBusca] = useState("");
+  const [grupoSel, setGrupoSel] = useState<SelecaoGrupo>("TODOS");
   const [pend, start] = useTransition();
   const competencia = mes ? `${mes}-01` : "";
 
@@ -66,7 +76,11 @@ export function ContasReceber({
     (filtro === "CANCELADO" && status === "CANCELADO") ||
     (filtro === "VENCIDO" && status === "VENCIDO");
   const q = busca.trim().toLowerCase();
-  const visiveis = linhas.filter((l) => casaFiltro(l.status) && (!q || l.t.cliente.toLowerCase().includes(q)));
+  // Grupos oferecidos no seletor: só os que têm título na competência carregada.
+  const grupos = gruposPresentes(titulos);
+  const visiveis = linhas.filter(
+    (l) => casaFiltro(l.status) && casaGrupoTitulo(l.t, grupoSel) && (!q || l.t.cliente.toLowerCase().includes(q)),
+  );
   const FILTROS: { chave: typeof filtro; rotulo: string }[] = [
     { chave: "TODOS", rotulo: "Todos" },
     { chave: "ABERTO", rotulo: "Em aberto" },
@@ -244,6 +258,7 @@ export function ContasReceber({
                 {f.rotulo}
               </button>
             ))}
+            <FiltroGrupo grupos={grupos} valor={grupoSel} onMudar={setGrupoSel} />
             <input
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
@@ -271,13 +286,16 @@ export function ContasReceber({
                 {visiveis.length === 0 && (
                   <tr>
                     <td colSpan={7} className="p-3 text-cinza">
-                      Nenhum título com esse status nesta competência.
+                      Nenhum título com esses filtros nesta competência.
                     </td>
                   </tr>
                 )}
                 {visiveis.map(({ t, saldo, status }) => (
                   <tr key={t.id} className="border-t border-linha/70">
-                    <td className="p-2">{t.cliente}</td>
+                    <td className="p-2">
+                      {t.cliente}
+                      {t.grupoNome && <span className="block text-xs text-cinza">{t.grupoNome}</span>}
+                    </td>
                     <td className="p-2">
                       {t.origem === "DECIMO_TERCEIRO"
                         ? "13º"

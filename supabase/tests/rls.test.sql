@@ -2169,3 +2169,34 @@ begin
   delete from chave_dados where dominio = 'teste';
   raise notice 'OK: chave_dados — a DEK cifrada é invisível a qualquer usuário autenticado (só service_role)';
 end $$;
+
+-- ============================================================================
+-- Grupo de cobrança (0137/0140) — o financeiro LÊ o grupo (filtro de contas a receber),
+-- mas não escreve; o cliente do portal não vê nada.
+-- ============================================================================
+do $$
+declare n int; ok boolean;
+begin
+  reset role;
+  insert into grupo_cobranca (id, nome, titular_cliente_id)
+    values ('cccccccc-0000-0000-0000-000000000001', 'Grupo Teste', 'aaaaaaaa-0000-0000-0000-000000000001')
+    on conflict (id) do nothing;
+
+  perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
+  select count(*) into n from grupo_cobranca;
+  if n < 1 then raise exception 'FALHA(grupo): financeiro não lê grupo_cobranca — o filtro de grupo some da tela'; end if;
+  ok := false;
+  begin
+    update grupo_cobranca set nome = 'Renomeado' where id = 'cccccccc-0000-0000-0000-000000000001';
+    ok := found;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA(grupo): financeiro renomeou grupo_cobranca (escrita é admin/assistente)'; end if;
+
+  perform _simular('00000000-0000-0000-0000-000000000005'); -- cliente do portal
+  select count(*) into n from grupo_cobranca;
+  if n <> 0 then raise exception 'FALHA(grupo): cliente do portal vê grupo_cobranca'; end if;
+  reset role;
+
+  delete from grupo_cobranca where id = 'cccccccc-0000-0000-0000-000000000001';
+  raise notice 'OK: grupo_cobranca — financeiro lê (filtro de contas a receber) e não escreve';
+end $$;
