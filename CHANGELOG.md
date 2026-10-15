@@ -8,6 +8,30 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.35] — 2026-10-15
+
+### Corrigido
+
+- **O link de convite/recuperação era destruído por pré-visualizadores de link.** `/auth/confirmar`
+  era um **GET que consumia o token de uso único**: bastava alguém ou alguma coisa *buscar* a URL
+  para queimá-la. Em 15/10/2026 o pré-visualizador do WhatsApp fez exatamente isso — a tabela
+  `auth.sessions` registrou a sessão com user-agent `WhatsApp/2.23.20.0` — e a usuária convidada
+  recebeu "o link expirou ou é inválido" ao clicar. O mesmo valeria para Safe Links do Outlook,
+  antivírus corporativo e prefetch do navegador, de forma intermitente e difícil de diagnosticar.
+  Agora o GET só desenha uma tela com o botão **"Confirmar meu acesso"**, e o token é consumido
+  apenas no **POST** desse clique — robôs fazem GET, nunca POST.
+- **Link morto deixou de ser um beco sem saída.** Antes, token expirado ou já usado jogava a pessoa
+  no `/login` com um aviso e nenhuma ação possível — dependia de um administrador. Agora a própria
+  tela oferece um campo de e-mail e o botão **"Receber novo link"**, com resposta neutra para não
+  revelar quais endereços existem no sistema.
+
+### Modificado
+
+- `src/app/auth/confirmar/route.ts` deu lugar a `page.tsx` + `actions.ts` + `ConfirmarForm.tsx`.
+  A URL e os parâmetros não mudaram, então os templates de e-mail do Supabase e os quatro pontos
+  que apontam para ela (convite de usuário, reenvio de acesso, "esqueci a senha" e convite do
+  portal do cliente) seguem iguais. A página é `noindex, nofollow`.
+
 ## [6.99.34] — 2026-09-30
 
 ### Adicionado
