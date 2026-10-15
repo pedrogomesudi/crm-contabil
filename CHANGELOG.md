@@ -8,6 +8,41 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.36] — 2026-10-15
+
+### Adicionado
+
+- **`npm run db:smoke` — valida os `select` do app contra o PostgREST real.** Preenche a lacuna
+  que deixou um embed ambíguo chegar à produção em 30/09: a string do `.select()` só é
+  interpretada em tempo de execução, então `typecheck`, `lint`, testes e `build` passam com ela
+  quebrada. O script **descobre as consultas sozinho** (pares `.from()` + `.select()` com embed) e
+  roda cada uma com `limit(0)` — nenhuma linha trafega. O que não consegue analisar é listado, para
+  a lacuna ficar visível. Também disponível como `db:smoke:all`, para todos os tenants.
+- **A régua de cobrança passou a alcançar o 2º contato do cliente.** Era a pendência registrada
+  desde a 6.99.29: nota fiscal e boleto já iam para os dois contatos, mas a **cobrança de título
+  atrasado ia só para o principal** — quem estava no 2º contato recebia a nota e não a cobrança.
+  A escolha do canal (WhatsApp × e-mail) segue sendo por cliente; escolhido o canal, a mensagem vai
+  para todos os contatos marcados dele.
+
+### Modificado
+
+- **`tenant-novo.mjs` configura o Auth do projeto sozinho.** SMTP próprio, remetente, Site URL,
+  Redirect URLs e os **templates de convite e recuperação** passaram de passo manual (um aviso
+  impresso na tela) para execução pela API de gerenciamento do Supabase. Esquecer esse passo não
+  dava erro: o convite sumia em silêncio. Exige `--remetente` e `TENANT_SMTP_HOST/PORT/USER/PASS`;
+  sem eles o script avisa e mantém o passo manual, em vez de seguir calado.
+- **A trava contra cobrança duplicada passou a ser por destinatário** (migration `0141`):
+  `(titulo_id, etapa_id, telefone)` e `(titulo_id, etapa_id, para)`, no lugar das chaves por
+  título+etapa. A garantia que importa continua — o cron rodando duas vezes não cobra o mesmo
+  contato duas vezes —, mas agora o 2º contato não é barrado pelo envio ao primeiro.
+
+### Corrigido
+
+- **`db:test` travava num assert com dependência de data.** O teste de `encerrar_contrato`,
+  corrigido em 30/09, passou a chamar `gerar_mensalidades` do mês do relógio — que ao virar
+  outubro gerou o 13º de toda a base de teste e quebrou um assert mais adiante. Agora o teste
+  insere o próprio título direto, sem agir sobre os dados dos outros.
+
 ## [6.99.35] — 2026-10-15
 
 ### Corrigido

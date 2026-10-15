@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { decidirCanal, podeEmail, conteudoEmail, type EstadoCanal } from "@/lib/email/regua";
+import { decidirCanal, podeEmail, conteudoEmail, destinosDaRegua, type EstadoCanal } from "@/lib/email/regua";
 
 const base: EstadoCanal = {
   whatsappConfigurado: true,
-  telefone: "5511999999999",
+  telefones: ["5511999999999"],
   optOutWhatsapp: false,
   emailFallbackLigado: true,
   emailConfigurado: true,
-  email: "cliente@x.com",
+  emails: ["cliente@x.com"],
   optOutEmail: false,
 };
 
@@ -17,7 +17,7 @@ describe("decidirCanal", () => {
   });
 
   it("sem telefone, cai para e-mail", () => {
-    expect(decidirCanal({ ...base, telefone: null }).canal).toBe("email");
+    expect(decidirCanal({ ...base, telefones: [] }).canal).toBe("email");
   });
 
   it("WhatsApp não configurado (banimento do número), cai para e-mail", () => {
@@ -37,7 +37,7 @@ describe("decidirCanal", () => {
   });
 
   it("sem e-mail cadastrado e sem telefone: nada sai", () => {
-    expect(decidirCanal({ ...base, telefone: null, email: null }).canal).toBe("nenhum");
+    expect(decidirCanal({ ...base, telefones: [], emails: [] }).canal).toBe("nenhum");
   });
 });
 
@@ -46,7 +46,7 @@ describe("podeEmail", () => {
     expect(podeEmail(base)).toBe(true);
     expect(podeEmail({ ...base, emailFallbackLigado: false })).toBe(false);
     expect(podeEmail({ ...base, emailConfigurado: false })).toBe(false);
-    expect(podeEmail({ ...base, email: null })).toBe(false);
+    expect(podeEmail({ ...base, emails: [] })).toBe(false);
     expect(podeEmail({ ...base, optOutEmail: true })).toBe(false);
   });
 });
@@ -70,5 +70,47 @@ describe("conteudoEmail", () => {
     );
     expect(r.corpo).toBe("Olá Padaria Sol, saldo de R$ 890,00.");
     expect(r.assunto).toBe("Cobrança — Padaria Sol");
+  });
+});
+
+describe("destinosDaRegua — o 2º contato entra no envio", () => {
+  it("manda para TODOS os telefones marcados, não só o principal", () => {
+    const r = destinosDaRegua({ ...base, telefones: ["5511999999999", "5511888888888"] });
+    expect(r.canal).toBe("whatsapp");
+    expect(r.destinos).toEqual(["5511999999999", "5511888888888"]);
+  });
+
+  it("no canal e-mail, manda para todos os e-mails marcados", () => {
+    const r = destinosDaRegua({ ...base, telefones: [], emails: ["a@x.com", "b@x.com"] });
+    expect(r.canal).toBe("email");
+    expect(r.destinos).toEqual(["a@x.com", "b@x.com"]);
+  });
+
+  it("opt-out de WhatsApp manda para os dois e-mails, não para os telefones", () => {
+    const r = destinosDaRegua({
+      ...base,
+      optOutWhatsapp: true,
+      telefones: ["5511999999999", "5511888888888"],
+      emails: ["a@x.com", "b@x.com"],
+    });
+    expect(r.canal).toBe("email");
+    expect(r.destinos).toEqual(["a@x.com", "b@x.com"]);
+  });
+
+  it("sem canal possível, não há destino nenhum", () => {
+    const r = destinosDaRegua({ ...base, telefones: [], emails: [] });
+    expect(r.canal).toBe("nenhum");
+    expect(r.destinos).toEqual([]);
+  });
+
+  it("um contato só continua sendo um envio só (quem não configurou o 2º não muda de comportamento)", () => {
+    expect(destinosDaRegua(base).destinos).toHaveLength(1);
+  });
+});
+
+describe("podeWhatsapp/podeEmail com listas", () => {
+  it("lista vazia é o mesmo que não ter contato", () => {
+    expect(podeEmail({ ...base, emails: [] })).toBe(false);
+    expect(podeEmail({ ...base, emails: ["a@x.com"] })).toBe(true);
   });
 });
