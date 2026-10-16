@@ -11,7 +11,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { envDoTenant, lerEnv, lerRegistry } from "./_tenants.mjs";
 
-const PERMITIDOS = new Set(["db-migrate", "db-test-rls", "bootstrap-cron"]);
+const PERMITIDOS = new Set(["db-migrate", "db-test-rls", "db-smoke", "bootstrap-cron"]);
 const script = process.argv[2];
 
 if (!PERMITIDOS.has(script)) {

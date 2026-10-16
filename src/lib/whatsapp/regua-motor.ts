@@ -1,10 +1,11 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { criarEnviadorProativo } from "@/lib/whatsapp/proativo";
-import { aplicarTemplate, normalizarTelefone } from "@/lib/whatsapp/mensagem";
+import { aplicarTemplate } from "@/lib/whatsapp/mensagem";
 import { formatarMoeda, formatarData } from "@/lib/format";
 import { diffDias, etapaDoDia, type EtapaAtiva } from "@/lib/whatsapp/regua";
 import { enviarEmail } from "@/lib/email/enviar";
-import { conteudoEmail, decidirCanal, podeEmail, type EstadoCanal } from "@/lib/email/regua";
+import { conteudoEmail, destinosDaRegua, podeEmail, type EstadoCanal } from "@/lib/email/regua";
+import { emailsDeEnvio, telefonesDeEnvio, type ContatosEnvio } from "@/lib/clientes/contatos-envio";
 import { emailValido } from "@/lib/email/validacao";
 
 export type ResumoRegua = {
@@ -24,10 +25,25 @@ type Admin = ReturnType<typeof createAdminSupabase>;
 
 // Dedupe ENTRE CANAIS: o índice único de cada tabela sozinho não impede que uma
 // reexecução do cron cobre de novo pelo outro canal.
-async function jaEnviado(admin: Admin, tituloId: string, etapaId: string): Promise<boolean> {
+// Por DESTINATÁRIO, não por título+etapa: com dois contatos marcados, a etapa gera uma
+// mensagem para cada um, e barrar por título+etapa deixaria o segundo sem receber. O índice
+// único da 0141 é a garantia de verdade; este SELECT só evita a chamada à API à toa.
+async function jaEnviadoPara(admin: Admin, tituloId: string, etapaId: string, destino: string): Promise<boolean> {
   const [wa, em] = await Promise.all([
-    admin.from("whatsapp_mensagem").select("id").eq("titulo_id", tituloId).eq("etapa_id", etapaId).maybeSingle(),
-    admin.from("email_mensagem").select("id").eq("titulo_id", tituloId).eq("etapa_id", etapaId).maybeSingle(),
+    admin
+      .from("whatsapp_mensagem")
+      .select("id")
+      .eq("titulo_id", tituloId)
+      .eq("etapa_id", etapaId)
+      .eq("telefone", destino)
+      .maybeSingle(),
+    admin
+      .from("email_mensagem")
+      .select("id")
+      .eq("titulo_id", tituloId)
+      .eq("etapa_id", etapaId)
+      .eq("para", destino)
+      .maybeSingle(),
   ]);
   return Boolean(wa.data || em.data);
 }
@@ -78,7 +94,7 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
   const { data: titulos } = await admin
     .from("titulo")
     .select(
-      "id, valor, vencimento, cliente_id, clientes(razao_social, telefone, telefone_ddi, email, clientes_financeiro(cobranca_whatsapp, cobranca_email)), baixa(valor_recebido, estornada)",
+      "id, valor, vencimento, cliente_id, clientes(razao_social, telefone, telefone_ddi, telefone_2, telefone_ddi_2, whatsapp_envio, whatsapp_2_envio, email, email_2, email_envio, email_2_envio, clientes_financeiro(cobranca_whatsapp, cobranca_email)), baixa(valor_recebido, estornada)",
     )
     .eq("tipo", "RECEBER")
     .in("status", ["ABERTO", "BAIXADO_PARCIAL"]);
@@ -111,19 +127,16 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
       resumo.pulados++;
       continue;
     }
-    if (await jaEnviado(admin, t.id as string, etapa.id)) {
-      resumo.pulados++;
-      continue;
-    }
-
-    const emailCliente = (cl?.email ?? "").trim();
+    // Contatos marcados para envio (principal e/ou 2º). O default preserva o comportamento de
+    // quem nunca configurou o 2º: principal ligado, secundário desligado.
+    const contatos = (cl ?? {}) as ContatosEnvio;
     const estado: EstadoCanal = {
       whatsappConfigurado: Boolean(envioWa),
-      telefone: normalizarTelefone(cl?.telefone ?? "", cl?.telefone_ddi ?? "55"),
+      telefones: telefonesDeEnvio(contatos),
       optOutWhatsapp: fin?.cobranca_whatsapp === false,
       emailFallbackLigado,
       emailConfigurado,
-      email: emailValido(emailCliente) ? emailCliente : null,
+      emails: emailsDeEnvio(contatos).filter(emailValido),
       optOutEmail: fin?.cobranca_email === false,
     };
 
@@ -134,74 +147,93 @@ export async function processarRegua(hoje: string, opts?: { forcarManual?: boole
       dias: String(Math.abs(diffDias(hoje, t.vencimento as string))),
     };
 
-    const { canal } = decidirCanal(estado);
-    if (canal === "nenhum") {
+    const { canal, destinos } = destinosDaRegua(estado);
+    if (canal === "nenhum" || destinos.length === 0) {
       resumo.pulados++;
       continue;
     }
 
-    // 1) WhatsApp, quando disponível.
-    if (canal === "whatsapp" && envioWa && estado.telefone) {
+    // 1) WhatsApp, quando disponível — para CADA telefone marcado.
+    if (canal === "whatsapp" && envioWa) {
       const texto = aplicarTemplate(etapa.template, vars);
-      // Entrega as DUAS formas: o texto livre (o que a Z-API envia, inalterado) e os
-      // parâmetros na ORDEM de PARAMS_FLUXO.regua — cliente, valor, vencimento.
-      const r = await envioWa.enviar(estado.telefone, {
-        fluxo: "regua",
-        texto,
-        params: [vars.nome, vars.valor, vars.vencimento],
-      });
-      const { error: errIns } = await admin.from("whatsapp_mensagem").insert({
-        cliente_id: (t.cliente_id as string | null) ?? null,
-        titulo_id: t.id as string,
-        etapa_id: etapa.id,
-        telefone: estado.telefone,
-        texto,
-        status: r.ok ? "ENVIADO" : "ERRO",
-        resposta: (r.resposta ?? r.erro) as object,
-      });
-      // Corrida com outra execução do cron: o índice único barra — conta como pulado.
-      if (errIns) {
-        resumo.pulados++;
-        continue;
+      let algumEnviado = false;
+      for (const telefone of destinos) {
+        if (await jaEnviadoPara(admin, t.id as string, etapa.id, telefone)) {
+          resumo.pulados++;
+          algumEnviado = true; // já saiu antes: não é motivo para cair no e-mail
+          continue;
+        }
+        // Entrega as DUAS formas: o texto livre (o que a Z-API envia, inalterado) e os
+        // parâmetros na ORDEM de PARAMS_FLUXO.regua — cliente, valor, vencimento.
+        const r = await envioWa.enviar(telefone, {
+          fluxo: "regua",
+          texto,
+          params: [vars.nome, vars.valor, vars.vencimento],
+        });
+        const { error: errIns } = await admin.from("whatsapp_mensagem").insert({
+          cliente_id: (t.cliente_id as string | null) ?? null,
+          titulo_id: t.id as string,
+          etapa_id: etapa.id,
+          telefone,
+          texto,
+          status: r.ok ? "ENVIADO" : "ERRO",
+          resposta: (r.resposta ?? r.erro) as object,
+        });
+        // Corrida com outra execução do cron: o índice único barra — conta como pulado.
+        if (errIns) {
+          resumo.pulados++;
+          algumEnviado = true;
+          continue;
+        }
+        if (r.ok) {
+          resumo.enviados++;
+          resumo.enviadosWhatsapp++;
+          algumEnviado = true;
+        }
       }
-      if (r.ok) {
-        resumo.enviados++;
-        resumo.enviadosWhatsapp++;
-        continue;
-      }
-      // O Z-API recusou: cai para o e-mail, se houver. Senão, é erro mesmo.
+      // Só cai para o e-mail se o WhatsApp não alcançou NINGUÉM. Por destinatário, um número
+      // inválido faria o cliente receber a mesma cobrança pelos dois canais.
+      if (algumEnviado) continue;
       if (!podeEmail(estado)) {
         resumo.erros++;
         continue;
       }
     }
 
-    // 2) E-mail — como canal principal (WhatsApp indisponível) ou como fallback do erro acima.
-    if (!estado.email) {
+    // 2) E-mail — canal principal (WhatsApp indisponível) ou fallback do erro acima. Quando é
+    // fallback, `destinos` traz telefones; os e-mails saem de estado.emails.
+    const paraEmails = canal === "email" ? destinos : estado.emails;
+    if (paraEmails.length === 0) {
       resumo.pulados++;
       continue;
     }
     const { assunto, corpo } = conteudoEmail(etapa, vars);
-    const r = await enviarEmail({ para: estado.email, assunto, corpo });
-    const { error: errIns } = await admin.from("email_mensagem").insert({
-      cliente_id: (t.cliente_id as string | null) ?? null,
-      titulo_id: t.id as string,
-      etapa_id: etapa.id,
-      para: estado.email,
-      assunto,
-      corpo,
-      status: r.ok ? "ENVIADO" : "ERRO",
-      erro: r.ok ? null : r.erro,
-    });
-    if (errIns) {
-      resumo.pulados++;
-      continue;
-    }
-    if (r.ok) {
-      resumo.enviados++;
-      resumo.enviadosEmail++;
-    } else {
-      resumo.erros++;
+    for (const para of paraEmails) {
+      if (await jaEnviadoPara(admin, t.id as string, etapa.id, para)) {
+        resumo.pulados++;
+        continue;
+      }
+      const r = await enviarEmail({ para, assunto, corpo });
+      const { error: errIns } = await admin.from("email_mensagem").insert({
+        cliente_id: (t.cliente_id as string | null) ?? null,
+        titulo_id: t.id as string,
+        etapa_id: etapa.id,
+        para,
+        assunto,
+        corpo,
+        status: r.ok ? "ENVIADO" : "ERRO",
+        erro: r.ok ? null : r.erro,
+      });
+      if (errIns) {
+        resumo.pulados++;
+        continue;
+      }
+      if (r.ok) {
+        resumo.enviados++;
+        resumo.enviadosEmail++;
+      } else {
+        resumo.erros++;
+      }
     }
   }
 

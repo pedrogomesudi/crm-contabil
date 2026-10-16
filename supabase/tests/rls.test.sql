@@ -705,9 +705,15 @@ do $$ declare r1 jsonb; r2 jsonb; v numeric; n int; st text; begin
 
   -- encerrar_contrato corta por `competencia >= date_trunc('month', now())` — o MÊS DO RELÓGIO,
   -- não o p_data recebido. Com só o título de competência fixa (2026-07) o assert apodreceu: a
-  -- partir de ago/2026 não havia mais nenhum título dentro do corte e o update não cancelava
-  -- nada. Geramos a competência corrente na hora para o teste não depender da data de execução.
-  perform gerar_mensalidades(date_trunc('month', now())::date);
+  -- partir de ago/2026 não havia mais nenhum título dentro do corte e o update não cancelava nada.
+  --
+  -- O título da competência corrente é inserido DIRETO, e não via gerar_mensalidades: a RPC age
+  -- sobre a base inteira e, quando o mês do relógio virou outubro, passou a gerar o 13º de todos
+  -- os clientes de teste — quebrando um assert mais abaixo. Teste que depende da data não pode
+  -- também mexer na base dos outros.
+  insert into titulo (cliente_id, contrato_id, origem, descricao, valor, competencia, vencimento)
+    values ('aaaaaaaa-0000-0000-0000-0000000000d1','dddddddd-0000-0000-0000-0000000000d1','MENSALIDADE','X',
+            3100, date_trunc('month', now())::date, (date_trunc('month', now()) + interval '9 days')::date);
   perform encerrar_contrato('dddddddd-0000-0000-0000-0000000000d1', now()::date, 'teste');
   select count(*) into n from titulo where contrato_id='dddddddd-0000-0000-0000-0000000000d1'
     and competencia = date_trunc('month', now())::date and status='CANCELADO';
@@ -2209,4 +2215,57 @@ begin
 
   delete from grupo_cobranca where id = 'cccccccc-0000-0000-0000-000000000001';
   raise notice 'OK: grupo_cobranca — financeiro lê (filtro de contas a receber) e não escreve';
+end $$;
+
+-- ============================================================================
+-- Régua: dedupe POR DESTINATÁRIO (0141). A régua alcança o 2º contato do cliente, então a
+-- trava deixou de ser "1 por etapa" e virou "1 por etapa por destinatário" — sem perder a
+-- garantia que importa: o cron rodando duas vezes não cobra o mesmo contato duas vezes.
+-- ============================================================================
+do $$
+declare v_etapa uuid; v_titulo uuid := 'eeeeeeee-0000-0000-0000-0000000000c1'; ok boolean; n int;
+begin
+  reset role;
+  select id into v_etapa from regua_etapa limit 1;
+  if v_etapa is null then raise exception 'FALHA(regua): sem etapa para testar'; end if;
+
+  -- 1º contato recebe.
+  insert into whatsapp_mensagem (titulo_id, etapa_id, telefone, texto, status)
+    values (v_titulo, v_etapa, '5534999990001', 'cobranca', 'ENVIADO');
+  -- 2ª execução do cron para o MESMO contato: o banco barra.
+  ok := false;
+  begin
+    insert into whatsapp_mensagem (titulo_id, etapa_id, telefone, texto, status)
+      values (v_titulo, v_etapa, '5534999990001', 'cobranca', 'ENVIADO');
+    ok := true;
+  exception when unique_violation then ok := false; end;
+  if ok then raise exception 'FALHA(regua): cobrança DUPLICADA para o mesmo telefone na mesma etapa'; end if;
+
+  -- 2º contato do mesmo cliente PRECISA passar — é o ponto da mudança.
+  insert into whatsapp_mensagem (titulo_id, etapa_id, telefone, texto, status)
+    values (v_titulo, v_etapa, '5534999990002', 'cobranca', 'ENVIADO');
+  select count(*) into n from whatsapp_mensagem where titulo_id = v_titulo and etapa_id = v_etapa;
+  if n <> 2 then raise exception 'FALHA(regua): esperava 2 envios (um por contato), vieram %', n; end if;
+
+  -- Mesma regra no e-mail, que até a 0141 não tinha índice único nenhum.
+  insert into email_mensagem (titulo_id, etapa_id, para, assunto, corpo, status)
+    values (v_titulo, v_etapa, 'um@cliente.com', 'Cobranca', 'corpo', 'ENVIADO');
+  ok := false;
+  begin
+    insert into email_mensagem (titulo_id, etapa_id, para, assunto, corpo, status)
+      values (v_titulo, v_etapa, 'um@cliente.com', 'Cobranca', 'corpo', 'ENVIADO');
+    ok := true;
+  exception when unique_violation then ok := false; end;
+  if ok then raise exception 'FALHA(regua): cobrança DUPLICADA para o mesmo e-mail na mesma etapa'; end if;
+  insert into email_mensagem (titulo_id, etapa_id, para, assunto, corpo, status)
+    values (v_titulo, v_etapa, 'dois@cliente.com', 'Cobranca', 'corpo', 'ENVIADO');
+
+  -- Fora da régua (etapa_id nulo) o índice parcial não se aplica: avulsas repetem à vontade.
+  insert into email_mensagem (titulo_id, para, assunto, corpo, status)
+    values (v_titulo, 'avulso@cliente.com', 'A', 'b', 'ENVIADO');
+  insert into email_mensagem (titulo_id, para, assunto, corpo, status)
+    values (v_titulo, 'avulso@cliente.com', 'A', 'b', 'ENVIADO');
+
+  reset role;
+  raise notice 'OK: régua — 1 cobrança por etapa POR DESTINATÁRIO; o 2º contato recebe; avulsas livres';
 end $$;

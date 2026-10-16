@@ -9,6 +9,9 @@
 //   --dry-run   mostra o que faria, sem criar projeto nem gravar arquivo
 //   --retomar   reaproveita o tenants/<slug>.env existente (não cria projeto de novo)
 //   --regiao    padrão sa-east-1 (São Paulo — os dados ficam no Brasil)
+//   --remetente e-mail remetente dos e-mails de autenticação (convite/recuperação).
+//               Exige TENANT_SMTP_HOST/PORT/USER/PASS no ambiente; sem eles, o SMTP
+//               não é aplicado e o passo volta a ser manual (o script avisa).
 //   --plano     plano comercial da instância (default contabil). Um de:
 //               contratos | relacionamento | financeiro | contabil | enterprise.
 //               Define quais módulos o cliente enxerga (ver lib/planos).
@@ -57,6 +60,9 @@ const retomar = flag("retomar");
 // Planos comerciais (espelha lib/planos/planos.ts — scripts são JS puro, sem importar TS).
 const PLANOS = ["contratos", "relacionamento", "financeiro", "contabil", "enterprise"];
 const plano = opt("plano", "contabil");
+// Remetente dos e-mails de AUTENTICAÇÃO (convite, recuperação). Precisa estar validado no
+// provedor de SMTP, senão a mensagem é aceita e descartada sem erro visível.
+const remetente = opt("remetente", "");
 
 if (!slug || !SLUG_RE.test(slug)) {
   abortar("--slug obrigatório (3-30 chars, [a-z0-9-], vira subdomínio e nome de arquivo).");
@@ -96,6 +102,51 @@ async function api(caminho, init = {}) {
   const txt = await r.text();
   if (!r.ok) throw new Error(`Supabase API ${r.status} em ${caminho}: ${mascarar(txt).slice(0, 300)}`);
   return txt ? JSON.parse(txt) : null;
+}
+
+// Configura o Auth do projeto: SMTP próprio, remetente, URLs e os templates de convite e
+// recuperação. Era o passo manual nº 5 — e esquecê-lo não dá erro: o GoTrue cai no SMTP padrão
+// do Supabase, que só entrega para membros do projeto, e o convite some em silêncio.
+//
+// Os templates importam tanto quanto o SMTP. O padrão do Supabase usa {{ .ConfirmationURL }},
+// que gera um link /auth/v1/verify devolvendo a sessão no FRAGMENTO da URL — que uma rota de
+// servidor nunca lê. A aplicação espera {{ .TokenHash }}; com o template padrão o convite
+// chega e mesmo assim não funciona.
+function templateAuth(tipo) {
+  const titulo = tipo === "invite" ? "Você foi convidado para o CRM Contábil" : "Redefinição de senha";
+  const chamada = tipo === "invite" ? "definir sua senha e acessar o sistema" : "definir uma nova senha";
+  const botao = tipo === "invite" ? "Definir minha senha" : "Redefinir minha senha";
+  return (
+    `<h2>${titulo}</h2>` +
+    `<p>Clique no link abaixo para ${chamada}:</p>` +
+    `<p><a href="{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=${tipo}">${botao}</a></p>`
+  );
+}
+
+async function configurarAuth(ref, appUrl, remetente) {
+  const host = process.env.TENANT_SMTP_HOST;
+  const porta = process.env.TENANT_SMTP_PORT;
+  const usuario = process.env.TENANT_SMTP_USER;
+  const senha = process.env.TENANT_SMTP_PASS;
+  const corpo = {
+    site_url: appUrl,
+    uri_allow_list: `${appUrl}/**`,
+    mailer_templates_invite_content: templateAuth("invite"),
+    mailer_templates_recovery_content: templateAuth("recovery"),
+  };
+  const temSmtp = Boolean(host && porta && usuario && senha && remetente);
+  if (temSmtp) {
+    Object.assign(corpo, {
+      smtp_host: host,
+      smtp_port: String(porta),
+      smtp_user: usuario,
+      smtp_pass: senha,
+      smtp_admin_email: remetente,
+      smtp_sender_name: "SALDO",
+    });
+  }
+  await api(`/projects/${ref}/config/auth`, { method: "PATCH", body: JSON.stringify(corpo) });
+  return temSmtp;
 }
 
 async function criarProjeto(dbPass) {
@@ -216,7 +267,18 @@ try {
     console.log(`  plano      : ${plano}`);
     console.log(`  região     : ${regiao}`);
     console.log(`  env        : ${caminhoEnv} (chmod 600, fora do git)`);
-    console.log("\n  faria: criar projeto Supabase → migrations → plano → chaves → admin → crons → registry.");
+    const smtpPronto = Boolean(
+      remetente &&
+      process.env.TENANT_SMTP_HOST &&
+      process.env.TENANT_SMTP_PORT &&
+      process.env.TENANT_SMTP_USER &&
+      process.env.TENANT_SMTP_PASS,
+    );
+    console.log(`  remetente  : ${remetente || "(não informado)"}`);
+    console.log(
+      `  auth SMTP  : ${smtpPronto ? "será aplicado pelo script" : "FICA MANUAL (faltam --remetente e/ou TENANT_SMTP_*)"}`,
+    );
+    console.log("\n  faria: criar projeto Supabase → migrations → plano → chaves → admin → crons → auth → registry.");
     process.exit(0);
   }
 
@@ -323,6 +385,16 @@ try {
 
   rodar("bootstrap-cron", { APP_URL: appUrl, CRON_SECRET: env.CRON_SECRET });
 
+  console.log("• Configurando o Auth (URLs, templates de convite/recuperação e SMTP)…");
+  let smtpOk = false;
+  try {
+    smtpOk = await configurarAuth(env.SUPABASE_PROJECT_REF, appUrl, remetente);
+    console.log(smtpOk ? "  ok (SMTP próprio aplicado)." : "  ok (URLs e templates) — SMTP NÃO aplicado.");
+  } catch (e) {
+    console.error(`  falhou: ${String(e.message).slice(0, 160)}`);
+    console.error("  Configure à mão no painel (Auth → URL Configuration, Emails e SMTP Settings).");
+  }
+
   const reg = lerRegistry();
   reg.escritorios = [
     ...reg.escritorios.filter((e) => e.slug !== slug),
@@ -342,11 +414,15 @@ try {
   console.log(`  1. Criar o app no EasyPanel apontando para o repositório (ramo main).`);
   console.log(`  2. Colar as variáveis de ${caminhoEnv} em Environment (as NEXT_PUBLIC_* como build args).`);
   console.log(`  3. Apontar o domínio ${slug}.${dominio} para o app.`);
-  console.log(`  4. No Supabase (Auth → URL Configuration): Site URL = ${appUrl} e Redirect URLs = ${appUrl}/**`);
-  console.log(`  5. No Supabase (Auth → SMTP Settings): ligar SMTP próprio e definir o remetente.`);
-  console.log(`     SEM ISTO O CONVITE DE USUÁRIO NÃO CHEGA: o SMTP padrão do Supabase só entrega`);
-  console.log(`     para membros do projeto e limita a poucos e-mails por hora. É por aqui que saem`);
-  console.log(`     convite, recuperação de senha e convite do portal — não pela tela de E-mail do app.`);
+  if (!smtpOk) {
+    console.log(`  4. No Supabase (Auth → SMTP Settings): ligar SMTP próprio e definir o remetente.`);
+    console.log(`     SEM ISTO O CONVITE DE USUÁRIO NÃO CHEGA: o SMTP padrão do Supabase só entrega`);
+    console.log(`     para membros do projeto e limita a poucos e-mails por hora. É por aqui que saem`);
+    console.log(`     convite, recuperação de senha e convite do portal — não pela tela de E-mail do app.`);
+    console.log(`     Para o script fazer isso sozinho: --remetente + TENANT_SMTP_HOST/PORT/USER/PASS.`);
+    console.log(`     O remetente precisa estar VALIDADO no provedor (no Brevo: Senders & IPs → Senders);`);
+    console.log(`     um remetente não validado é aceito no SMTP e descartado depois, sem erro nenhum.`);
+  }
   console.log(`  6. Implantar e entrar com ${email} (a senha está no arquivo de env — troque no primeiro acesso).`);
   console.log(`  7. No app, Configurações → E-mail: provedor e remetente dos e-mails do produto`);
   console.log(`     (cobrança, comunicados, NFS-e). É configuração SEPARADA da do passo 5.`);
