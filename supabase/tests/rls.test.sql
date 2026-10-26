@@ -371,14 +371,23 @@ insert into assinaturas (id, cliente_id, clicksign_envelope_id, status) values
   ('11111111-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'env_teste', 'enviado')
   on conflict do nothing;
 
--- ASSERT: financeiro NÃO gerencia assinaturas (não está em admin/assistente/contador-dono)
+-- ASSERT: desde a 0142 o financeiro LÊ assinaturas — a lista de Clientes mostra a situação do
+-- contrato de honorários, e ele lê `clientes` (0003); sem isto a coluna nasceria vazia só para
+-- ele. Gerenciar (criar/enviar envelope) segue restrito a admin/assistente/contador-dono.
 do $$
-declare n int;
+declare n int; ok boolean;
 begin
   perform _simular('00000000-0000-0000-0000-000000000004'); -- financeiro
   select count(*) into n from assinaturas;
-  if n <> 0 then raise exception 'FALHA: financeiro viu % assinaturas (devia ser 0)', n; end if;
-  raise notice 'OK: financeiro não acessa assinaturas';
+  if n < 1 then raise exception 'FALHA: financeiro não lê assinaturas — a coluna Contrato fica vazia para ele'; end if;
+  ok := false;
+  begin
+    insert into assinaturas (cliente_id, clicksign_envelope_id, status)
+      values ('aaaaaaaa-0000-0000-0000-000000000001', 'env_financeiro', 'enviado');
+    ok := true;
+  exception when insufficient_privilege then ok := false; end;
+  if ok then raise exception 'FALHA: financeiro criou envelope de assinatura (devia ser só leitura)'; end if;
+  raise notice 'OK: financeiro lê assinaturas (coluna Contrato) e não as cria';
 end $$;
 
 -- ===== V5: NFS-e segue a RLS financeira; config/cert são só admin =====
