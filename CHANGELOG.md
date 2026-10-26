@@ -8,6 +8,29 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.37] — 2026-10-26
+
+### Adicionado
+
+- **Paginação na lista de Clientes.** A tela mostrava os primeiros 100 e pedia para "refinar a
+  busca para ver mais" — na carteira atual, de **171 clientes**, 71 estavam inalcançáveis pela
+  lista. Agora há **Anterior / Próxima** no rodapé, com `101–200 de 171 · página 2 de 2`, e os
+  links preservam a busca e o filtro de situação. Como o total passou a ser conhecido, o
+  subtítulo deixou de dizer `100+ na carteira` e mostra o número real.
+- **Coluna "Contrato" na lista de Clientes**, com quatro estados: **Assinado**, **Enviado**,
+  **Recusado** e vazio. Lê as duas origens possíveis: o envelope do ClickSign e — para quem
+  assina em papel — um documento anexado com o novo tipo **"Contrato assinado"**, semeado no
+  catálogo do GED pela migration `0142`. Sem essa segunda via, contrato assinado fora do sistema
+  ficaria para sempre como "não enviado". As duas consultas cobrem a página inteira de uma vez;
+  não há uma consulta por linha.
+
+### Modificado
+
+- O papel **`financeiro` passou a ler `assinaturas`** (migration `0142`). Ele lê `clientes` desde
+  a `0003`, mas não lia assinaturas — a coluna nova nasceria vazia justamente para quem
+  acompanha honorários, sem nada na tela explicando o porquê. Leitura apenas: criar e enviar
+  envelope segue com admin/assistente/contador-dono.
+
 ## [6.99.36] — 2026-10-15
 
 ### Adicionado

@@ -15,33 +15,75 @@ import { Iniciais } from "@/components/ui/Iniciais";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { badgeRegime } from "@/lib/ui/apresentacao";
 import { Container } from "@/components/ui/Container";
+import { Paginacao } from "@/components/ui/Paginacao";
+import { totalPaginas, paginaValida, intervaloPagina } from "@/lib/ui/paginacao";
+import { estadoContratoCliente, LABEL_CONTRATO, type EstadoContrato } from "@/lib/clientes/contrato-status";
 
 export const metadata = { title: "Clientes" };
 
-const LIMITE = 100;
+const POR_PAGINA = 100;
 
 export default async function ClientesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; ok?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; ok?: string; pagina?: string }>;
 }) {
-  const { q: qRaw, status, ok } = await searchParams;
+  const { q: qRaw, status, ok, pagina: paginaRaw } = await searchParams;
   const q = (qRaw ?? "").slice(0, 100);
   const supabase = await createServerSupabase();
   const perfil = await getPerfilAtual();
   const podeCriar = podeCriarCliente(perfil?.papel);
 
+  const filtro = normalizarFiltro(status);
+  // Duas passadas: a 1ª conta (head, sem trafegar linha) para saber quantas páginas existem e
+  // poder validar a página pedida; a 2ª traz só a fatia. Sem a contagem, a tela não teria como
+  // dizer "de 7" nem barrar uma página fora do intervalo.
+  let contagem = supabase.from("clientes").select("id", { count: "exact", head: true });
+  contagem = aplicarFiltroStatus(aplicarBusca(contagem, q), filtro);
+  const { count } = await contagem;
+  const total = count ?? 0;
+  const paginas = totalPaginas(total, POR_PAGINA);
+  const pagina = paginaValida(paginaRaw, paginas);
+  const { de, ate } = intervaloPagina(pagina, POR_PAGINA);
+
   let query = supabase
     .from("clientes")
     .select("id, razao_social, cpf_cnpj, tipo_pessoa, regime_tributario, status, excluido_em")
     .order("atualizado_em", { ascending: false })
-    .limit(LIMITE);
+    .range(de, ate);
 
-  query = aplicarBusca(query, q);
-  const filtro = normalizarFiltro(status);
-  query = aplicarFiltroStatus(query, filtro);
+  query = aplicarFiltroStatus(aplicarBusca(query, q), filtro);
 
   const { data: clientes, error } = await query;
+
+  // Situação do contrato de honorários dos clientes DESTA página — duas consultas para a página
+  // inteira, não uma por linha. O embed nomeia a FK: `assinaturas` tem duas chaves para
+  // `documentos` (documento_id e documento_assinado_id) e o PostgREST recusa o embed ambíguo.
+  const ids = (clientes ?? []).map((c) => c.id as string);
+  const contratos = new Map<string, EstadoContrato>();
+  if (ids.length > 0) {
+    const [{ data: assins }, { data: docs }] = await Promise.all([
+      supabase
+        .from("assinaturas")
+        .select("cliente_id, status, documentos!assinaturas_documento_id_fkey(tipo)")
+        .in("cliente_id", ids),
+      supabase.from("documentos").select("cliente_id, tipo").in("cliente_id", ids).ilike("tipo", "contrato assinado"),
+    ]);
+    const porCliente = new Map<string, { status: string }[]>();
+    for (const a of assins ?? []) {
+      const doc = Array.isArray(a.documentos) ? a.documentos[0] : a.documentos;
+      const tipo = (doc as { tipo?: string } | null)?.tipo ?? "";
+      // Só envelopes de CONTRATO: o mesmo fluxo envia procuração e outros documentos.
+      if (!/contrato/i.test(tipo)) continue;
+      const lista = porCliente.get(a.cliente_id as string) ?? [];
+      lista.push({ status: a.status as string });
+      porCliente.set(a.cliente_id as string, lista);
+    }
+    const assinadoEmPapel = new Set((docs ?? []).map((d) => d.cliente_id as string));
+    for (const id of ids) {
+      contratos.set(id, estadoContratoCliente(porCliente.get(id) ?? [], assinadoEmPapel.has(id)));
+    }
+  }
 
   // Obrigações e Vencimentos voltaram para o menu (agora são itens próprios, com badge cada
   // um) — nada em "Clientes" sugeria conformidade fiscal. Aqui ficam só as telas que são
@@ -58,7 +100,7 @@ export default async function ClientesPage({
       <div className="space-y-5">
         <PageHeader
           titulo="Clientes"
-          subtitulo={clientes ? `${clientes.length}${clientes.length === LIMITE ? "+" : ""} na carteira` : undefined}
+          subtitulo={error ? undefined : `${total} na carteira`}
           acoes={
             <>
               {/* A tela lista até LIMITE; a exportação refaz a busca sem limite. */}
@@ -144,6 +186,9 @@ export default async function ClientesPage({
                   <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
                     Regime
                   </th>
+                  <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
+                    Contrato
+                  </th>
                   <th className="px-4 py-3 text-right font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
                     Situação
                   </th>
@@ -170,6 +215,9 @@ export default async function ClientesPage({
                       ) : (
                         <span className="text-cinza-claro">—</span>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <BadgeContrato estado={contratos.get(cl.id as string) ?? "nenhum"} />
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className="inline-flex items-center gap-1.5 text-sm text-cinza">
@@ -210,7 +258,7 @@ export default async function ClientesPage({
                 ))}
                 {!clientes?.length && (
                   <tr>
-                    <td colSpan={4}>
+                    <td colSpan={5}>
                       <EmptyState
                         titulo="Nenhum cliente encontrado"
                         descricao="Ajuste a busca ou cadastre um novo cliente."
@@ -229,14 +277,18 @@ export default async function ClientesPage({
                 )}
               </tbody>
             </table>
-            {clientes?.length === LIMITE && (
-              <p className="border-t border-linha bg-creme/60 px-4 py-2.5 text-xs text-cinza-claro">
-                Mostrando os primeiros {LIMITE}. Refine a busca para ver mais.
-              </p>
-            )}
+            <Paginacao pagina={pagina} total={total} porPagina={POR_PAGINA} base="/clientes" params={{ q, status }} />
           </Painel>
         )}
       </div>
     </Container>
   );
+}
+
+// Selo da coluna "Contrato". Cores com significado: verde = resolvido, atenção = em curso,
+// vermelho = recusado, cinza = não começou.
+function BadgeContrato({ estado }: { estado: EstadoContrato }) {
+  if (estado === "nenhum") return <span className="text-cinza-claro">{LABEL_CONTRATO.nenhum}</span>;
+  const variante = estado === "assinado" ? "positivo" : estado === "enviado" ? "atencao" : "negativo";
+  return <Badge variante={variante}>{LABEL_CONTRATO[estado]}</Badge>;
 }
