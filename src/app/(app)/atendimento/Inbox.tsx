@@ -219,9 +219,11 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
   const hoje = new Date().toISOString();
 
   return (
-    <div className="grid h-full grid-cols-1 bg-creme lg:grid-cols-[20rem_minmax(0,1fr)_18rem]">
-      {/* Coluna 1 — Conversas */}
-      <aside className="flex min-h-0 flex-col border-r border-linha bg-white">
+    <div className="grid h-full grid-cols-1 bg-creme md:grid-cols-[20rem_minmax(0,1fr)_18rem]">
+      {/* Coluna 1 — Conversas. Mestre/detalhe no celular: some quando há conversa aberta,
+          volta a aparecer ao lado da thread a partir de 768px (md), o breakpoint único do
+          sistema (igual à Sidebar) — não há "lg" aqui. */}
+      <aside className={`min-h-0 flex-col border-r border-linha bg-white ${ativa ? "hidden md:flex" : "flex"}`}>
         <div className="flex items-center justify-between p-4 pb-2">
           <h1 className="font-display text-xl font-bold tracking-tight text-texto">Atendimento</h1>
           <div className="flex items-center gap-1">
@@ -376,10 +378,29 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
         </div>
       </aside>
 
-      {/* Coluna 2 — Thread */}
-      <section className="flex min-h-0 min-w-0 flex-col">
+      {/* Coluna 2 — Thread. Espelha a coluna 1: só aparece abaixo de 768px quando há conversa
+          selecionada (botão "Conversas" abaixo volta para a lista). */}
+      <section className={`min-h-0 min-w-0 flex-col ${ativa ? "flex" : "hidden md:flex"}`}>
         {ativa ? (
           <>
+            <button
+              type="button"
+              onClick={() => setAtiva(null)}
+              className="flex items-center gap-1.5 border-b border-linha bg-white px-4 py-2.5 text-sm font-medium text-verde md:hidden"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              Conversas
+            </button>
             <div className="flex items-center gap-3 border-b border-linha bg-white px-5 py-3">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-verde/10 text-xs font-semibold text-verde">
                 {iniciais(convAtiva?.cliente ?? ativa)}
@@ -517,8 +538,10 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
         )}
       </section>
 
-      {/* Coluna 3 — Painel do contato */}
-      <aside className="hidden min-h-0 overflow-y-auto border-l border-linha bg-white lg:block">
+      {/* Coluna 3 — Painel do contato. Desktop-only; some até 768px (md), mesmo ponto de corte
+          das colunas 1 e 2 — nunca aparece isolada no celular, pois a tela já está ocupada
+          pela lista ou pela thread. */}
+      <aside className="hidden min-h-0 overflow-y-auto border-l border-linha bg-white md:block">
         {ativa ? (
           contato?.clienteId ? (
             <div>
