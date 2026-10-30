@@ -54,7 +54,7 @@ export function DocumentoProposta({
         </p>
       </section>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto print:overflow-visible">
         <table className="mt-4 w-full text-sm">
           <thead>
             <tr className="border-b border-linha text-left text-xs text-cinza">
