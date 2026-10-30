@@ -8,6 +8,38 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.38] — 2026-10-30
+
+### Adicionado
+
+- **Tabelas viram cartões no celular, nas telas de uso fora da mesa.** Abaixo de **768px** — o
+  mesmo ponto em que a barra lateral vira gaveta — o cabeçalho da tabela some e cada linha vira
+  um cartão, com o rótulo da coluna ao lado do valor. Aplicado em **Clientes**, **Contas a
+  receber**, **Tarefas**, **Obrigações** e **Vencimentos**. O CSS é escrito uma vez
+  (`.tabela-cartao`, em `globals.css`) e vale para qualquer tabela que receba o componente
+  `TabelaCartao` — estender às demais telas é tarefa por tela, não projeto novo.
+- **Atendimento funciona no celular.** A tela era de três colunas lado a lado, impossível em
+  390px. Agora é mestre/detalhe: abaixo de 768px aparece a lista **ou** a conversa, com um botão
+  "Conversas" para voltar. Entre 768 e 1024px, lista e conversa; acima disso, as três colunas,
+  idêntico ao que era.
+
+### Corrigido
+
+- **11 tabelas estouravam a largura da tela** por não terem rolagem horizontal. Todas corrigidas.
+  Na folha impressa da proposta comercial, a rolagem ganhou `print:overflow-visible`: contêiner
+  com `overflow: auto` tende a ser **recortado** na impressão, e a tabela sumiria do PDF enviado
+  ao cliente em vez de rolar.
+- **20 grades de 2 ou mais colunas não tinham breakpoint** e espremiam os campos no celular. Os
+  formulários migraram para o `FormGrid`, que já existia para isso e só tinha sido adotado por 3
+  arquivos; as grades de layout passaram a empilhar. O calendário de tarefas é exceção
+  deliberada: 7 colunas são a forma do dado, então ele rola de lado em vez de empilhar.
+
+### Modificado
+
+- **Duas varreduras do código-fonte entraram na suíte** e passam a barrar a regressão: uma falha
+  se qualquer `<table>` ficar sem rolagem, outra se qualquer grade de 2+ colunas ficar sem
+  breakpoint. Tabela nova sem wrapper quebra o CI, não a produção.
+
 ## [6.99.37] — 2026-10-26
 
 ### Adicionado
