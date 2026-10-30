@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SubNav, type ItemSubNav } from "@/components/ui/SubNav";
 import { Botao } from "@/components/ui/Botao";
 import { Painel } from "@/components/ui/Painel";
+import { TabelaCartao } from "@/components/ui/TabelaCartao";
 import { Badge } from "@/components/ui/Badge";
 import { Iniciais } from "@/components/ui/Iniciais";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -176,7 +177,7 @@ export default async function ClientesPage({
           </p>
         ) : (
           <Painel>
-            <div className="overflow-x-auto">
+            <TabelaCartao>
               <table className="w-full text-sm">
                 <caption className="sr-only">Lista de clientes</caption>
                 <thead>
@@ -199,7 +200,7 @@ export default async function ClientesPage({
                 <tbody>
                   {clientes?.map((cl) => (
                     <tr key={cl.id} className="border-b border-linha/70 transition last:border-0 hover:bg-creme">
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" data-rotulo="Cliente">
                         <Link href={`/clientes/${cl.id}`} className="flex items-center gap-3">
                           <Iniciais nome={cl.razao_social} />
                           <span className="min-w-0">
@@ -210,17 +211,17 @@ export default async function ClientesPage({
                           </span>
                         </Link>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" data-rotulo="Regime">
                         {cl.regime_tributario ? (
                           <Badge variante={badgeRegime(cl.regime_tributario)}>{cl.regime_tributario}</Badge>
                         ) : (
                           <span className="text-cinza-claro">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" data-rotulo="Contrato">
                         <BadgeContrato estado={contratos.get(cl.id as string) ?? "nenhum"} />
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-right" data-rotulo="Situação">
                         <span className="inline-flex items-center gap-1.5 text-sm text-cinza">
                           <span
                             className={`h-1.5 w-1.5 rounded-full ${cl.status === "ativo" ? "bg-verde" : cl.status === "em_constituicao" ? "bg-atencao-solido" : "bg-cinza-claro"}`}
@@ -278,7 +279,7 @@ export default async function ClientesPage({
                   )}
                 </tbody>
               </table>
-            </div>
+            </TabelaCartao>
             <Paginacao pagina={pagina} total={total} porPagina={POR_PAGINA} base="/clientes" params={{ q, status }} />
           </Painel>
         )}
