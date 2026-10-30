@@ -126,4 +126,10 @@ body {
     padding: 0;
     background: transparent;
   }
+
+  /* Defesa: célula de colspan é o estado vazio ("Nenhum resultado"), não um campo. Se alguém
+     lhe puser data-rotulo por engano, o rótulo não deve aparecer sobre a mensagem. */
+  .tabela-cartao td[colspan][data-rotulo]::before {
+    content: none;
+  }
 }
