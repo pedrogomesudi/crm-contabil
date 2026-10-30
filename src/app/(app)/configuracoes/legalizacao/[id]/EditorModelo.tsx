@@ -12,6 +12,7 @@ import {
   type EtapaModelo,
 } from "../actions";
 import { LEGALIZACAO_TIPOS, LEGALIZACAO_ORGAOS } from "@/lib/legalizacao/tipos";
+import { FormGrid, FormCampo } from "@/components/ui/FormGrid";
 
 const PAPEIS = [
   { v: "", l: "—" },
@@ -53,33 +54,26 @@ export function EditorModelo({ modelo }: { modelo: ModeloDetalhe }) {
   return (
     <div className="space-y-5">
       <section className="space-y-2 rounded-2xl border border-linha bg-white p-4 text-sm">
-        <div className="grid grid-cols-2 gap-2">
-          <label className="col-span-2 text-xs text-cinza">
-            Nome
-            <input value={nome} onChange={(e) => setNome(e.target.value)} className={`mt-0.5 block w-full ${cls}`} />
-          </label>
-          <label className="col-span-2 text-xs text-cinza">
-            Descrição
-            <input
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              className={`mt-0.5 block w-full ${cls}`}
-            />
-          </label>
-          <label className="text-xs text-cinza">
-            Tipo
-            <select value={tipo} onChange={(e) => setTipo(e.target.value)} className={`mt-0.5 block w-full ${cls}`}>
+        <FormGrid>
+          <FormCampo label="Nome" span={12}>
+            <input value={nome} onChange={(e) => setNome(e.target.value)} className={`w-full ${cls}`} />
+          </FormCampo>
+          <FormCampo label="Descrição" span={12}>
+            <input value={descricao} onChange={(e) => setDescricao(e.target.value)} className={`w-full ${cls}`} />
+          </FormCampo>
+          <FormCampo label="Tipo" span={6}>
+            <select value={tipo} onChange={(e) => setTipo(e.target.value)} className={`w-full ${cls}`}>
               {LEGALIZACAO_TIPOS.map((t) => (
                 <option key={t.valor} value={t.valor}>
                   {t.rotulo}
                 </option>
               ))}
             </select>
-          </label>
-          <label className="flex items-center gap-2 pt-5 text-xs text-cinza">
+          </FormCampo>
+          <div className="flex items-center gap-2 pt-5 text-xs text-cinza md:col-span-6">
             <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} /> Ativo
-          </label>
-        </div>
+          </div>
+        </FormGrid>
         <div className="flex items-center gap-3">
           <button
             disabled={ocupado}

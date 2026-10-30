@@ -3,6 +3,7 @@ import { useActionState, useState } from "react";
 import { emitirComoEmitente, consultarCnpjTomador, type EstadoEmitente } from "@/app/(app)/clientes/[id]/nfse-emitente";
 import { mesAnteriorDeHoje } from "@/lib/financeiro/competencia";
 import { controleCls } from "@/components/ui/Campo";
+import { FormGrid } from "@/components/ui/FormGrid";
 
 type CamposTomador = {
   doc: string;
@@ -97,68 +98,84 @@ export function EmitirNfseCliente({ clienteId, ambiente }: { clienteId: string; 
         </button>
       </div>
       {msgBusca && <p className={`text-xs ${msgBusca.ok ? "text-verde" : "text-negativo"}`}>{msgBusca.texto}</p>}
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          name="tomador_razao_social"
-          value={f.razao}
-          onChange={set("razao")}
-          placeholder="Razão social"
-          required
-          className={controleCls()}
-        />
-        <input
-          name="tom_cep"
-          value={f.cep}
-          onChange={set("cep")}
-          placeholder="CEP"
-          required
-          className={controleCls()}
-        />
-        <input
-          name="tom_logradouro"
-          value={f.logradouro}
-          onChange={set("logradouro")}
-          placeholder="Logradouro"
-          required
-          className={controleCls()}
-        />
-        <input
-          name="tom_numero"
-          value={f.numero}
-          onChange={set("numero")}
-          placeholder="Número"
-          className={controleCls()}
-        />
-        <input
-          name="tom_bairro"
-          value={f.bairro}
-          onChange={set("bairro")}
-          placeholder="Bairro"
-          className={controleCls()}
-        />
-        <input
-          name="tom_cidade"
-          value={f.cidade}
-          onChange={set("cidade")}
-          placeholder="Cidade"
-          className={controleCls()}
-        />
-        <input
-          name="tom_uf"
-          value={f.uf}
-          onChange={set("uf")}
-          placeholder="UF"
-          maxLength={2}
-          className={controleCls()}
-        />
-        <input
-          name="tom_cmun"
-          value={f.cmun}
-          onChange={set("cmun")}
-          placeholder="Cód. município (IBGE)"
-          className={controleCls()}
-        />
-      </div>
+      <FormGrid>
+        <div className="md:col-span-8">
+          <input
+            name="tomador_razao_social"
+            value={f.razao}
+            onChange={set("razao")}
+            placeholder="Razão social"
+            required
+            className={`${controleCls()} w-full`}
+          />
+        </div>
+        <div className="md:col-span-4">
+          <input
+            name="tom_cep"
+            value={f.cep}
+            onChange={set("cep")}
+            placeholder="CEP"
+            required
+            className={`${controleCls()} w-full`}
+          />
+        </div>
+        <div className="md:col-span-8">
+          <input
+            name="tom_logradouro"
+            value={f.logradouro}
+            onChange={set("logradouro")}
+            placeholder="Logradouro"
+            required
+            className={`${controleCls()} w-full`}
+          />
+        </div>
+        <div className="md:col-span-4">
+          <input
+            name="tom_numero"
+            value={f.numero}
+            onChange={set("numero")}
+            placeholder="Número"
+            className={`${controleCls()} w-full`}
+          />
+        </div>
+        <div className="md:col-span-6">
+          <input
+            name="tom_bairro"
+            value={f.bairro}
+            onChange={set("bairro")}
+            placeholder="Bairro"
+            className={`${controleCls()} w-full`}
+          />
+        </div>
+        <div className="md:col-span-6">
+          <input
+            name="tom_cidade"
+            value={f.cidade}
+            onChange={set("cidade")}
+            placeholder="Cidade"
+            className={`${controleCls()} w-full`}
+          />
+        </div>
+        <div className="md:col-span-3">
+          <input
+            name="tom_uf"
+            value={f.uf}
+            onChange={set("uf")}
+            placeholder="UF"
+            maxLength={2}
+            className={`${controleCls()} w-full`}
+          />
+        </div>
+        <div className="md:col-span-9">
+          <input
+            name="tom_cmun"
+            value={f.cmun}
+            onChange={set("cmun")}
+            placeholder="Cód. município (IBGE)"
+            className={`${controleCls()} w-full`}
+          />
+        </div>
+      </FormGrid>
       <p className="font-medium text-cinza">Serviço</p>
       <input name="descricao_servico" placeholder="Descrição do serviço" className={`${controleCls()} w-full`} />
       <label className="block text-cinza">

@@ -3,6 +3,7 @@ import { controleCls } from "@/components/ui/Campo";
 import { useActionState } from "react";
 import { salvarEmitente, salvarCertificadoCliente, type EstadoEmitente } from "@/app/(app)/clientes/[id]/nfse-emitente";
 import { certificadoValido } from "@/lib/nfse/emitente";
+import { FormGrid, FormCampo } from "@/components/ui/FormGrid";
 
 type EmitenteDefaults = {
   codigo_municipio?: string | null;
@@ -37,109 +38,97 @@ export function EmitenteConfig({
 
   return (
     <div className="space-y-4">
-      <form action={action} className="grid grid-cols-2 gap-2 text-sm">
-        <label className="block">
-          Código do município (IBGE)
-          <input
-            name="codigo_municipio"
-            defaultValue={emitente?.codigo_municipio ?? ""}
-            className={`${controleCls()} mt-1 w-full`}
-          />
-        </label>
-        <label className="block">
-          Item LC 116
-          <input
-            name="item_lc116"
-            defaultValue={emitente?.item_lc116 ?? ""}
-            className={`${controleCls()} mt-1 w-full`}
-          />
-        </label>
-        <label className="block">
-          Código de serviço nacional (cTribNac)
-          <input
-            name="codigo_servico_nacional"
-            defaultValue={emitente?.codigo_servico_nacional ?? ""}
-            className={`${controleCls()} mt-1 w-full`}
-          />
-        </label>
-        <label className="block">
-          Código de tributação municipal
-          <input
-            name="codigo_tributacao_municipal"
-            defaultValue={emitente?.codigo_tributacao_municipal ?? ""}
-            className={`${controleCls()} mt-1 w-full`}
-          />
-        </label>
-        <label className="block">
-          Alíquota ISS (%)
-          <input
-            type="number"
-            step="0.01"
-            name="aliquota_iss"
-            defaultValue={emitente?.aliquota_iss ?? 0}
-            className={`${controleCls()} mt-1 w-full`}
-          />
-        </label>
-        <label className="block">
-          % tributos (Simples)
-          <input
-            type="number"
-            step="0.01"
-            name="pct_trib_sn"
-            defaultValue={emitente?.pct_trib_sn ?? 0}
-            className={`${controleCls()} mt-1 w-full`}
-          />
-        </label>
-        <label className="block">
-          Natureza da operação
-          <input
-            name="natureza_operacao"
-            defaultValue={emitente?.natureza_operacao ?? ""}
-            className={`${controleCls()} mt-1 w-full`}
-          />
-        </label>
-        <label className="block">
-          Descrição de serviço padrão
-          <input
-            name="descricao_servico_padrao"
-            defaultValue={emitente?.descricao_servico_padrao ?? ""}
-            className={`${controleCls()} mt-1 w-full`}
-          />
-        </label>
-        <label className="block">
-          Série
-          <input name="serie" defaultValue={emitente?.serie ?? "1"} className={`${controleCls()} mt-1 w-full`} />
-        </label>
-        <label className="block">
-          Próximo nº da DPS
-          <input
-            type="number"
-            min="1"
-            step="1"
-            name="proximo_ndps"
-            defaultValue={emitente?.proximo_ndps ?? 1}
-            className={`${controleCls()} mt-1 w-full`}
-          />
-          <span className="mt-0.5 block text-xs text-cinza-claro">
-            Ajuste ao migrar de outro sistema (nº seguinte ao último já emitido).
-          </span>
-        </label>
-        <label className="block">
-          Ambiente
-          <select
-            name="ambiente"
-            defaultValue={emitente?.ambiente ?? "homologacao"}
-            className={`${controleCls()} mt-1 w-full`}
+      <form action={action} className="text-sm">
+        <FormGrid>
+          <FormCampo label="Código do município (IBGE)" span={4}>
+            <input
+              name="codigo_municipio"
+              defaultValue={emitente?.codigo_municipio ?? ""}
+              className={`${controleCls()} w-full`}
+            />
+          </FormCampo>
+          <FormCampo label="Item LC 116" span={4}>
+            <input name="item_lc116" defaultValue={emitente?.item_lc116 ?? ""} className={`${controleCls()} w-full`} />
+          </FormCampo>
+          <FormCampo label="Código de serviço nacional (cTribNac)" span={4}>
+            <input
+              name="codigo_servico_nacional"
+              defaultValue={emitente?.codigo_servico_nacional ?? ""}
+              className={`${controleCls()} w-full`}
+            />
+          </FormCampo>
+          <FormCampo label="Código de tributação municipal" span={6}>
+            <input
+              name="codigo_tributacao_municipal"
+              defaultValue={emitente?.codigo_tributacao_municipal ?? ""}
+              className={`${controleCls()} w-full`}
+            />
+          </FormCampo>
+          <FormCampo label="Alíquota ISS (%)" span={3}>
+            <input
+              type="number"
+              step="0.01"
+              name="aliquota_iss"
+              defaultValue={emitente?.aliquota_iss ?? 0}
+              className={`${controleCls()} w-full`}
+            />
+          </FormCampo>
+          <FormCampo label="% tributos (Simples)" span={3}>
+            <input
+              type="number"
+              step="0.01"
+              name="pct_trib_sn"
+              defaultValue={emitente?.pct_trib_sn ?? 0}
+              className={`${controleCls()} w-full`}
+            />
+          </FormCampo>
+          <FormCampo label="Natureza da operação" span={6}>
+            <input
+              name="natureza_operacao"
+              defaultValue={emitente?.natureza_operacao ?? ""}
+              className={`${controleCls()} w-full`}
+            />
+          </FormCampo>
+          <FormCampo label="Descrição de serviço padrão" span={6}>
+            <input
+              name="descricao_servico_padrao"
+              defaultValue={emitente?.descricao_servico_padrao ?? ""}
+              className={`${controleCls()} w-full`}
+            />
+          </FormCampo>
+          <FormCampo label="Série" span={2}>
+            <input name="serie" defaultValue={emitente?.serie ?? "1"} className={`${controleCls()} w-full`} />
+          </FormCampo>
+          <FormCampo
+            label="Próximo nº da DPS"
+            span={4}
+            hint="Ajuste ao migrar de outro sistema (nº seguinte ao último já emitido)."
           >
-            <option value="homologacao">Homologação</option>
-            <option value="producao">Produção</option>
-          </select>
-        </label>
-        <label className="col-span-2 flex items-center gap-2">
-          <input type="checkbox" name="simples" defaultChecked={emitente?.simples_nacional ?? true} />
-          Optante do Simples Nacional
-        </label>
-        <div className="col-span-2 flex items-center gap-3">
+            <input
+              type="number"
+              min="1"
+              step="1"
+              name="proximo_ndps"
+              defaultValue={emitente?.proximo_ndps ?? 1}
+              className={`${controleCls()} w-full`}
+            />
+          </FormCampo>
+          <FormCampo label="Ambiente" span={4}>
+            <select
+              name="ambiente"
+              defaultValue={emitente?.ambiente ?? "homologacao"}
+              className={`${controleCls()} w-full`}
+            >
+              <option value="homologacao">Homologação</option>
+              <option value="producao">Produção</option>
+            </select>
+          </FormCampo>
+          <div className="flex items-center gap-2 md:col-span-12">
+            <input type="checkbox" name="simples" defaultChecked={emitente?.simples_nacional ?? true} />
+            Optante do Simples Nacional
+          </div>
+        </FormGrid>
+        <div className="mt-3 flex items-center gap-3">
           <button
             disabled={pend}
             className="rounded-lg bg-verde px-3 py-1 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"

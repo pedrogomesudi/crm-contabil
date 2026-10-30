@@ -146,7 +146,7 @@ export function Calculadora({
 
       {/* Resultado */}
       <div className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <StatCard rotulo="Mensal" valor={brl(r.mensal)} variante="positivo" />
           <StatCard rotulo="Único" valor={brl(r.unico)} />
         </div>

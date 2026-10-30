@@ -81,7 +81,7 @@ export function MetricasFunil({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
           <div className="rounded-2xl border border-linha bg-white p-3">
             <div className="text-[11px] uppercase tracking-wide text-cinza">Ganhos</div>
             <div className="font-display text-lg text-verde tabular-nums">{m.periodo.ganhos.qtd}</div>

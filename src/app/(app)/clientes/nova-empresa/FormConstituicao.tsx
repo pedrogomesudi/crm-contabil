@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { criarEmpresaConstituicao } from "../constituicao-actions";
 import { controleCls } from "@/components/ui/Campo";
+import { FormGrid, FormCampo } from "@/components/ui/FormGrid";
 
 const input = `${controleCls()} mt-0.5 w-full`;
 type Socio = { nome: string; cpf: string; participacao: string; papelSocietario: "administrador" | "quotista" };
@@ -61,25 +62,21 @@ export function FormConstituicao({
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 text-sm">
-        <label className="col-span-2 block">
-          Razão social pretendida
+      <FormGrid>
+        <FormCampo label="Razão social pretendida" span={7}>
           <input name="razao_social" required className={input} />
-        </label>
-        <label className="col-span-2 block">
-          Nome fantasia
+        </FormCampo>
+        <FormCampo label="Nome fantasia" span={5}>
           <input name="nome_fantasia" className={input} />
-        </label>
-        <label className="block">
-          Regime pretendido
+        </FormCampo>
+        <FormCampo label="Regime pretendido" span={3}>
           <select name="regime" defaultValue="Simples" className={input}>
             <option value="Simples">Simples</option>
             <option value="Presumido">Presumido</option>
             <option value="Real">Real</option>
           </select>
-        </label>
-        <label className="block">
-          Contador responsável
+        </FormCampo>
+        <FormCampo label="Contador responsável" span={5}>
           {contadorEditavel ? (
             <select name="contador_id" className={input}>
               <option value="">—</option>
@@ -92,36 +89,29 @@ export function FormConstituicao({
           ) : (
             <input value="Você (contador)" disabled className={input} />
           )}
-        </label>
-        <label className="block">
-          Logradouro
+        </FormCampo>
+        <FormCampo label="Logradouro" span={7}>
           <input name="logradouro" className={input} />
-        </label>
-        <label className="block">
-          Número
+        </FormCampo>
+        <FormCampo label="Número" span={2}>
           <input name="numero" className={input} />
-        </label>
-        <label className="block">
-          Bairro
+        </FormCampo>
+        <FormCampo label="Bairro" span={5}>
           <input name="bairro" className={input} />
-        </label>
-        <label className="block">
-          Cidade
+        </FormCampo>
+        <FormCampo label="Cidade" span={4}>
           <input name="cidade" className={input} />
-        </label>
-        <label className="block">
-          UF
+        </FormCampo>
+        <FormCampo label="UF" span={1}>
           <input name="uf" maxLength={2} className={input} />
-        </label>
-        <label className="block">
-          CEP
+        </FormCampo>
+        <FormCampo label="CEP" span={2}>
           <input name="cep" className={input} />
-        </label>
-        <label className="col-span-2 block">
-          Observações / atividades
+        </FormCampo>
+        <FormCampo label="Observações / atividades" span={12}>
           <textarea name="observacoes" rows={3} className={input} />
-        </label>
-      </div>
+        </FormCampo>
+      </FormGrid>
 
       <div className="space-y-2 rounded-2xl border border-linha bg-white p-3">
         <div className="flex items-center justify-between">

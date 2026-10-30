@@ -411,7 +411,7 @@ export function ContasReceber({
             className="w-full max-w-xl space-y-2 rounded-lg border border-linha bg-white p-4 shadow-flutuante"
           >
             <p className="text-sm font-medium">Registrar baixa</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               <input
                 name="valor_recebido"
                 type="number"
