@@ -2,6 +2,7 @@
 import { controleCls } from "@/components/ui/Campo";
 import { useActionState } from "react";
 import { salvarDadosPagamento, type EstadoPagamento } from "@/app/(app)/configuracoes/pagamento/actions";
+import { FormGrid, FormCampo } from "@/components/ui/FormGrid";
 
 type Dados = {
   pix_chave?: string | null;
@@ -23,24 +24,20 @@ export function FormDadosPagamento({ inicial }: { inicial: Dados }) {
         Chave PIX
         <input name="pix_chave" defaultValue={inicial?.pix_chave ?? ""} className={cls} />
       </label>
-      <div className="grid grid-cols-2 gap-3">
-        <label className="block text-cinza">
-          Banco
+      <FormGrid>
+        <FormCampo label="Banco" span={4}>
           <input name="banco" defaultValue={inicial?.banco ?? ""} className={cls} />
-        </label>
-        <label className="block text-cinza">
-          Agência
+        </FormCampo>
+        <FormCampo label="Agência" span={2}>
           <input name="agencia" defaultValue={inicial?.agencia ?? ""} className={cls} />
-        </label>
-        <label className="block text-cinza">
-          Conta
+        </FormCampo>
+        <FormCampo label="Conta" span={3}>
           <input name="conta" defaultValue={inicial?.conta ?? ""} className={cls} />
-        </label>
-        <label className="block text-cinza">
-          Titular
+        </FormCampo>
+        <FormCampo label="Titular" span={3}>
           <input name="titular" defaultValue={inicial?.titular ?? ""} className={cls} />
-        </label>
-      </div>
+        </FormCampo>
+      </FormGrid>
       <label className="block text-cinza">
         CNPJ/Documento do titular
         <input name="documento" defaultValue={inicial?.documento ?? ""} className={cls} />

@@ -161,52 +161,54 @@ export function GruposCobranca({ gruposIni, semGrupoIni }: { gruposIni: GrupoVie
             </button>
           </div>
 
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-linha text-left text-xs text-cinza">
-                <th className="px-2 py-1 font-medium">Empresa</th>
-                <th className="px-2 py-1 font-medium">CNPJ</th>
-                <th className="px-2 py-1 text-right font-medium">Honorário</th>
-                <th className="px-2 py-1 font-medium">Titular</th>
-                <th className="px-2 py-1" />
-              </tr>
-            </thead>
-            <tbody>
-              {g.membros.map((m) => (
-                <tr key={m.clienteId} className="border-b border-linha/60">
-                  <td className="px-2 py-1 text-texto">{m.razaoSocial}</td>
-                  <td className="px-2 py-1 tabular-nums">{m.documento}</td>
-                  <td className="px-2 py-1 text-right tabular-nums">{brl(m.honorario)}</td>
-                  <td className="px-2 py-1">
-                    {m.titular ? (
-                      <span className="text-verde">Titular</span>
-                    ) : (
-                      <button
-                        type="button"
-                        className="text-xs text-blue-600 underline"
-                        disabled={pend}
-                        onClick={() => rodar(() => definirTitular(g.id, m.clienteId))}
-                      >
-                        Tornar titular
-                      </button>
-                    )}
-                  </td>
-                  <td className="px-2 py-1 text-right">
-                    {!m.titular && (
-                      <button
-                        type="button"
-                        className="text-xs text-negativo underline"
-                        disabled={pend}
-                        onClick={() => rodar(() => removerMembro(m.clienteId))}
-                      >
-                        Remover
-                      </button>
-                    )}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-linha text-left text-xs text-cinza">
+                  <th className="px-2 py-1 font-medium">Empresa</th>
+                  <th className="px-2 py-1 font-medium">CNPJ</th>
+                  <th className="px-2 py-1 text-right font-medium">Honorário</th>
+                  <th className="px-2 py-1 font-medium">Titular</th>
+                  <th className="px-2 py-1" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {g.membros.map((m) => (
+                  <tr key={m.clienteId} className="border-b border-linha/60">
+                    <td className="px-2 py-1 text-texto">{m.razaoSocial}</td>
+                    <td className="px-2 py-1 tabular-nums">{m.documento}</td>
+                    <td className="px-2 py-1 text-right tabular-nums">{brl(m.honorario)}</td>
+                    <td className="px-2 py-1">
+                      {m.titular ? (
+                        <span className="text-verde">Titular</span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="text-xs text-blue-600 underline"
+                          disabled={pend}
+                          onClick={() => rodar(() => definirTitular(g.id, m.clienteId))}
+                        >
+                          Tornar titular
+                        </button>
+                      )}
+                    </td>
+                    <td className="px-2 py-1 text-right">
+                      {!m.titular && (
+                        <button
+                          type="button"
+                          className="text-xs text-negativo underline"
+                          disabled={pend}
+                          onClick={() => rodar(() => removerMembro(m.clienteId))}
+                        >
+                          Remover
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <select

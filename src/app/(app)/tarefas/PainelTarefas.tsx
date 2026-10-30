@@ -8,6 +8,7 @@ import { DEPARTAMENTOS } from "@/lib/clientes/departamentos";
 import { classificarAlerta } from "@/lib/onboarding/alertas";
 import { Calendario } from "./Calendario";
 import { controleCls } from "@/components/ui/Campo";
+import { TabelaCartao } from "@/components/ui/TabelaCartao";
 
 type Colab = { id: string; nome: string };
 const rotStatus = (s: string) => TAREFA_STATUS.find((x) => x.valor === s)?.rotulo ?? s;
@@ -192,7 +193,7 @@ export function PainelTarefas({
       {vista === "calendario" ? (
         <Calendario tarefas={tarefas} ano={ano} mes={mes} hoje={hoje} link={link} />
       ) : vista === "lista" ? (
-        <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
+        <TabelaCartao className="rounded-2xl border border-linha bg-white">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-linha text-xs text-cinza">
@@ -216,27 +217,35 @@ export function PainelTarefas({
                   const sev = t.status !== "concluida" && t.prazo ? classificarAlerta(t.prazo, hoje) : null;
                   return (
                     <tr key={t.id} className="border-b border-linha/60 hover:bg-creme">
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2" data-rotulo="Tarefa">
                         <Link href={`/tarefas/${t.id}`} className="text-verde underline">
                           {t.titulo}
                         </Link>
                       </td>
-                      <td className="px-3 py-2 text-cinza">{t.responsavelNome ?? "—"}</td>
-                      <td className="px-3 py-2 text-cinza">{t.clienteNome ?? "—"}</td>
-                      <td className={`px-3 py-2 ${sev ? SEV[sev] : "text-cinza"}`}>{dataBR(t.prazo)}</td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 text-cinza" data-rotulo="Responsável">
+                        {t.responsavelNome ?? "—"}
+                      </td>
+                      <td className="px-3 py-2 text-cinza" data-rotulo="Cliente">
+                        {t.clienteNome ?? "—"}
+                      </td>
+                      <td className={`px-3 py-2 ${sev ? SEV[sev] : "text-cinza"}`} data-rotulo="Prazo">
+                        {dataBR(t.prazo)}
+                      </td>
+                      <td className="px-3 py-2" data-rotulo="Prioridade">
                         <span className={`rounded-full px-2 py-0.5 text-xs ${PRIO_COR[t.prioridade]}`}>
                           {rotPrio(t.prioridade)}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-cinza">{rotStatus(t.status)}</td>
+                      <td className="px-3 py-2 text-cinza" data-rotulo="Status">
+                        {rotStatus(t.status)}
+                      </td>
                     </tr>
                   );
                 })
               )}
             </tbody>
           </table>
-        </div>
+        </TabelaCartao>
       ) : (
         <div className="grid gap-3 sm:grid-cols-3">
           {KANBAN.map((col) => (

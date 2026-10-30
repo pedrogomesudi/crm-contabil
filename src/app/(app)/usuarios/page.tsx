@@ -75,7 +75,7 @@ export default async function UsuariosPage({
           Não foi possível carregar os usuários.
         </p>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-linha bg-white">
+        <div className="overflow-x-auto rounded-lg border border-linha bg-white">
           <table className="w-full text-sm">
             <caption className="sr-only">Lista de usuários do escritório</caption>
             <thead className="bg-creme text-left text-cinza">

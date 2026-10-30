@@ -48,7 +48,7 @@ export function ContratosSection({ clienteId, contratos }: { clienteId: string; 
       <form action={action} className="space-y-2 border-t border-linha/70 pt-3">
         <p className="text-xs font-medium text-cinza">{editando ? "Editar contrato" : "Novo contrato"}</p>
         {editando && <input type="hidden" name="id" value={editando.id} />}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           <input
             name="descricao"
             placeholder="Descrição"

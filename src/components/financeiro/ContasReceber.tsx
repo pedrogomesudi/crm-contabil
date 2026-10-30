@@ -39,6 +39,7 @@ import {
 } from "@/lib/financeiro/titulos";
 import { montarRelatorioTitulos } from "@/lib/financeiro/relatorio-titulos";
 import { BotaoExportar } from "@/components/ui/BotaoExportar";
+import { TabelaCartao } from "@/components/ui/TabelaCartao";
 import { Badge } from "@/components/ui/Badge";
 import { badgeStatusTitulo } from "@/lib/ui/apresentacao";
 import { formatarMoeda, formatarData } from "@/lib/format";
@@ -273,7 +274,7 @@ export function ContasReceber({
               <BotaoExportar relatorio={relatorio} />
             </div>
           </div>
-          <div className="overflow-auto rounded border border-linha">
+          <TabelaCartao className="rounded border border-linha">
             <table className="w-full">
               <thead className="bg-creme text-left">
                 <tr>
@@ -296,15 +297,23 @@ export function ContasReceber({
                 )}
                 {visiveis.map(({ t, saldo, status }) => (
                   <tr key={t.id} className="border-t border-linha/70">
-                    <td className="p-2">
+                    <td className="p-2" data-rotulo="Cliente">
                       {t.cliente}
                       {t.grupoNome && <span className="block text-xs text-cinza">{t.grupoNome}</span>}
                     </td>
-                    <td className="p-2">{rotuloOrigem(t.origem)}</td>
-                    <td className="p-2">{formatarData(t.vencimento)}</td>
-                    <td className="p-2">{formatarMoeda(t.valor)}</td>
-                    <td className="p-2">{formatarMoeda(saldo)}</td>
-                    <td className="p-2">
+                    <td className="p-2" data-rotulo="Origem">
+                      {rotuloOrigem(t.origem)}
+                    </td>
+                    <td className="p-2" data-rotulo="Vencimento">
+                      {formatarData(t.vencimento)}
+                    </td>
+                    <td className="p-2" data-rotulo="Valor">
+                      {formatarMoeda(t.valor)}
+                    </td>
+                    <td className="p-2" data-rotulo="Saldo">
+                      {formatarMoeda(saldo)}
+                    </td>
+                    <td className="p-2" data-rotulo="Status">
                       <Badge variante={badgeStatusTitulo(status)}>{LABEL_STATUS[status] ?? status}</Badge>
                     </td>
                     <td className="p-2 text-right">
@@ -390,7 +399,7 @@ export function ContasReceber({
                 ))}
               </tbody>
             </table>
-          </div>
+          </TabelaCartao>
         </div>
       )}
 
@@ -411,7 +420,7 @@ export function ContasReceber({
             className="w-full max-w-xl space-y-2 rounded-lg border border-linha bg-white p-4 shadow-flutuante"
           >
             <p className="text-sm font-medium">Registrar baixa</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               <input
                 name="valor_recebido"
                 type="number"

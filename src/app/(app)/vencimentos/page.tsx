@@ -8,6 +8,7 @@ import { listarVencimentos } from "./actions";
 import { BotaoExportar } from "@/components/ui/BotaoExportar";
 import type { RelatorioExportavel } from "@/lib/exportar/tipos";
 import { controleCls } from "@/components/ui/Campo";
+import { TabelaCartao } from "@/components/ui/TabelaCartao";
 
 export const metadata = { title: "Vencimentos" };
 
@@ -111,7 +112,7 @@ export default async function VencimentosPage({
         <button className="rounded-lg border border-linha px-3 text-sm text-cinza">Filtrar</button>
       </form>
 
-      <div className="overflow-x-auto rounded-lg border border-linha bg-white">
+      <TabelaCartao className="rounded-lg border border-linha bg-white">
         <table className="w-full text-sm">
           <caption className="sr-only">Certificados e procurações a vencer</caption>
           <thead className="bg-creme text-left text-cinza">
@@ -126,7 +127,7 @@ export default async function VencimentosPage({
           <tbody>
             {visiveis.map((i) => (
               <tr key={`${i.origem}-${i.id}`} className="border-t border-linha">
-                <td className="p-2 text-texto">
+                <td className="p-2 text-texto" data-rotulo="Cliente">
                   {i.clienteId ? (
                     <Link href={`/clientes/${i.clienteId}`} className="underline">
                       {i.clienteNome}
@@ -135,10 +136,16 @@ export default async function VencimentosPage({
                     i.clienteNome
                   )}
                 </td>
-                <td className="p-2 text-cinza">{i.titulo}</td>
-                <td className="p-2 text-cinza">{i.detalhe}</td>
-                <td className="p-2 text-cinza">{formatarData(i.validade)}</td>
-                <td className="p-2">
+                <td className="p-2 text-cinza" data-rotulo="Item">
+                  {i.titulo}
+                </td>
+                <td className="p-2 text-cinza" data-rotulo="Detalhe">
+                  {i.detalhe}
+                </td>
+                <td className="p-2 text-cinza" data-rotulo="Validade">
+                  {formatarData(i.validade)}
+                </td>
+                <td className="p-2" data-rotulo="Situação">
                   <span className={`rounded px-1.5 py-0.5 text-xs ${CLASSE[i.severidade]}`}>
                     {ROTULO[i.severidade]} · {i.diasRestantes} d
                   </span>
@@ -154,7 +161,7 @@ export default async function VencimentosPage({
             )}
           </tbody>
         </table>
-      </div>
+      </TabelaCartao>
     </div>
   );
 }

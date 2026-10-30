@@ -85,7 +85,7 @@ export function DocumentosTabela({
         />
       </div>
 
-      <div className="overflow-hidden rounded border border-linha">
+      <div className="overflow-x-auto rounded border border-linha">
         <table className="w-full text-sm">
           <caption className="sr-only">Documentos do cliente</caption>
           <thead className="bg-creme text-left text-cinza">

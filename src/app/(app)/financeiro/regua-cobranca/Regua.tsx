@@ -137,25 +137,27 @@ export function Regua({
 
       <section className="space-y-2">
         <h2 className="text-sm font-semibold">Últimos envios da régua</h2>
-        <table className="w-full">
-          <tbody>
-            {historico.map((h) => (
-              <tr key={h.id} className="border-t border-linha/70">
-                <td className="py-1">{h.cliente}</td>
-                <td className="py-1">{h.etapa}</td>
-                <td className="py-1 text-cinza">{h.canal}</td>
-                <td className="py-1">
-                  <Badge variante={h.status === "ENVIADO" ? "positivo" : "negativo"}>{h.status}</Badge>
-                </td>
-              </tr>
-            ))}
-            {historico.length === 0 && (
-              <tr>
-                <td className="py-1 text-cinza-claro">Nenhum envio ainda.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
+          <table className="w-full">
+            <tbody>
+              {historico.map((h) => (
+                <tr key={h.id} className="border-t border-linha/70">
+                  <td className="py-1">{h.cliente}</td>
+                  <td className="py-1">{h.etapa}</td>
+                  <td className="py-1 text-cinza">{h.canal}</td>
+                  <td className="py-1">
+                    <Badge variante={h.status === "ENVIADO" ? "positivo" : "negativo"}>{h.status}</Badge>
+                  </td>
+                </tr>
+              ))}
+              {historico.length === 0 && (
+                <tr>
+                  <td className="py-1 text-cinza-claro">Nenhum envio ainda.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );

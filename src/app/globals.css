@@ -61,3 +61,75 @@ body {
 .bg-tinta-2 :focus-visible {
   outline-color: #ffffff;
 }
+
+/* Tabela que vira cartões no celular.
+   Mora aqui, e não em utilitários, porque o scanner do Tailwind 4 só reconhece strings
+   literais completas: classe montada por interpolação passaria nos testes e NÃO seria gerada
+   no build — quebrando em produção, em silêncio. Mesmo motivo documentado no FormGrid.
+   O limiar é 767px: o complemento exato do `md` (768px) que a Sidebar já usa. */
+@media (max-width: 767px) {
+  .tabela-cartao table,
+  .tabela-cartao tbody,
+  .tabela-cartao tr,
+  .tabela-cartao td {
+    display: block;
+    width: 100%;
+  }
+
+  /* O cabeçalho some: cada valor passa a carregar o próprio rótulo. */
+  .tabela-cartao thead {
+    display: none;
+  }
+
+  .tabela-cartao tr {
+    border: 1px solid var(--color-linha);
+    border-radius: 12px;
+    background: #fff;
+    padding: 4px 12px;
+    margin-bottom: 12px;
+  }
+
+  .tabela-cartao td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 6px 0;
+    text-align: left;
+    border-bottom: 1px solid var(--color-linha);
+  }
+
+  .tabela-cartao td:last-child {
+    border-bottom: 0;
+  }
+
+  /* O rótulo vem do atributo da própria célula. Só aparece quando existe: célula sem
+     data-rotulo (ícone de navegação, ações) fica com o valor ocupando a linha inteira. */
+  .tabela-cartao td[data-rotulo]::before {
+    content: attr(data-rotulo);
+    color: var(--color-cinza-claro);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+
+  /* Estado vazio ("Nenhum cliente encontrado") ocupa a largura toda e não é cartão. */
+  .tabela-cartao td[colspan] {
+    display: block;
+    border: 0;
+    padding: 0;
+  }
+
+  .tabela-cartao tr:has(td[colspan]) {
+    border: 0;
+    padding: 0;
+    background: transparent;
+  }
+
+  /* Defesa: célula de colspan é o estado vazio ("Nenhum resultado"), não um campo. Se alguém
+     lhe puser data-rotulo por engano, o rótulo não deve aparecer sobre a mensagem. */
+  .tabela-cartao td[colspan][data-rotulo]::before {
+    content: none;
+  }
+}

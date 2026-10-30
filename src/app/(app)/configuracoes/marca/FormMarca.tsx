@@ -3,6 +3,7 @@ import { controleCls } from "@/components/ui/Campo";
 import { useActionState } from "react";
 import Image from "next/image";
 import { salvarMarca, salvarLogo, type EstadoMarca } from "./actions";
+import { FormGrid, FormCampo } from "@/components/ui/FormGrid";
 
 const input = `${controleCls()} mt-1 w-full`;
 
@@ -21,48 +22,40 @@ export function FormMarca({ marca, logoUrl }: { marca: Marca; logoUrl: string | 
 
   return (
     <div className="space-y-6">
-      <form action={salvar} className="grid grid-cols-2 gap-3 text-sm">
-        <label className="col-span-2 block">
-          Nome
-          <input name="nome" defaultValue={marca?.nome ?? ""} className={input} />
-        </label>
-        <label className="block">
-          CNPJ
-          <input name="cnpj" defaultValue={marca?.cnpj ?? ""} className={input} />
-        </label>
-        <label className="block">
-          Telefone
-          <input name="telefone" defaultValue={marca?.telefone ?? ""} className={input} />
-        </label>
-        <label className="col-span-2 block">
-          E-mail
-          <input name="email" defaultValue={marca?.email ?? ""} className={input} />
-        </label>
-        <label className="block">
-          Logradouro
-          <input name="logradouro" defaultValue={e.logradouro ?? ""} className={input} />
-        </label>
-        <label className="block">
-          Número
-          <input name="numero" defaultValue={e.numero ?? ""} className={input} />
-        </label>
-        <label className="block">
-          Bairro
-          <input name="bairro" defaultValue={e.bairro ?? ""} className={input} />
-        </label>
-        <label className="block">
-          Cidade
-          <input name="cidade" defaultValue={e.cidade ?? ""} className={input} />
-        </label>
-        <label className="block">
-          UF
-          <input name="uf" maxLength={2} defaultValue={e.uf ?? ""} className={input} />
-        </label>
-        <label className="block">
-          CEP
-          <input name="cep" defaultValue={e.cep ?? ""} className={input} />
-        </label>
-        <div className="col-span-2 flex items-center gap-3">
+      <form action={salvar} className="text-sm">
+        <FormGrid>
+          <FormCampo label="Nome" span={12}>
+            <input name="nome" defaultValue={marca?.nome ?? ""} className={input} />
+          </FormCampo>
+          <FormCampo label="CNPJ" span={5}>
+            <input name="cnpj" defaultValue={marca?.cnpj ?? ""} className={input} />
+          </FormCampo>
+          <FormCampo label="Telefone" span={4}>
+            <input name="telefone" defaultValue={marca?.telefone ?? ""} className={input} />
+          </FormCampo>
+          <FormCampo label="E-mail" span={12}>
+            <input name="email" defaultValue={marca?.email ?? ""} className={input} />
+          </FormCampo>
+          <FormCampo label="Logradouro" span={7}>
+            <input name="logradouro" defaultValue={e.logradouro ?? ""} className={input} />
+          </FormCampo>
+          <FormCampo label="Número" span={2}>
+            <input name="numero" defaultValue={e.numero ?? ""} className={input} />
+          </FormCampo>
+          <FormCampo label="Bairro" span={5}>
+            <input name="bairro" defaultValue={e.bairro ?? ""} className={input} />
+          </FormCampo>
+          <FormCampo label="Cidade" span={4}>
+            <input name="cidade" defaultValue={e.cidade ?? ""} className={input} />
+          </FormCampo>
+          <FormCampo label="UF" span={1}>
+            <input name="uf" maxLength={2} defaultValue={e.uf ?? ""} className={input} />
+          </FormCampo>
+          <FormCampo label="CEP" span={2}>
+            <input name="cep" defaultValue={e.cep ?? ""} className={input} />
+          </FormCampo>
+        </FormGrid>
+        <div className="mt-3 flex items-center gap-3">
           <button disabled={pend} className="rounded-lg bg-verde px-3 py-1.5 text-white disabled:opacity-60">
             {pend ? "Salvando…" : "Salvar marca"}
           </button>

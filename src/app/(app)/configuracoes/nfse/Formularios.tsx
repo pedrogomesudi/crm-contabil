@@ -2,44 +2,39 @@
 import { useActionState } from "react";
 import { salvarConfig, salvarCertificado, type EstadoConfig } from "./actions";
 import { controleCls } from "@/components/ui/Campo";
+import { FormGrid, FormCampo } from "@/components/ui/FormGrid";
 
 export function FormConfig({ inicial }: { inicial: Record<string, string | boolean> }) {
   const [estado, action, pend] = useActionState<EstadoConfig, FormData>(salvarConfig, {});
   return (
     <form action={action} className="space-y-2 text-sm">
-      <div className="grid grid-cols-2 gap-2">
-        <label className="block">
-          CNPJ
+      <FormGrid>
+        <FormCampo label="CNPJ" span={4}>
           <input name="cnpj" defaultValue={String(inicial.cnpj)} required className={`${controleCls()} w-full`} />
-        </label>
-        <label className="block">
-          Inscrição municipal
+        </FormCampo>
+        <FormCampo label="Inscrição municipal" span={4}>
           <input name="im" defaultValue={String(inicial.im)} required className={`${controleCls()} w-full`} />
-        </label>
-        <label className="col-span-2 block">
-          Razão social
+        </FormCampo>
+        <FormCampo label="Razão social" span={12}>
           <input
             name="razao_social"
             defaultValue={String(inicial.razao_social)}
             required
             className={`${controleCls()} w-full`}
           />
-        </label>
-        <label className="block">
-          Código do município (IBGE)
+        </FormCampo>
+        <FormCampo label="Código do município (IBGE)" span={4}>
           <input
             name="codigo_municipio"
             defaultValue={String(inicial.codigo_municipio)}
             required
             className={`${controleCls()} w-full`}
           />
-        </label>
-        <label className="block">
-          UF
+        </FormCampo>
+        <FormCampo label="UF" span={1}>
           <input name="uf" defaultValue={String(inicial.uf)} required className={`${controleCls()} w-full`} />
-        </label>
-        <label className="block">
-          Código de serviço nacional (cTribNac)
+        </FormCampo>
+        <FormCampo label="Código de serviço nacional (cTribNac)" span={4}>
           <input
             name="codigo_servico_nacional"
             defaultValue={String(inicial.codigo_servico_nacional)}
@@ -47,9 +42,8 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
             required
             className={`${controleCls()} w-full`}
           />
-        </label>
-        <label className="block">
-          Descrição do serviço
+        </FormCampo>
+        <FormCampo label="Descrição do serviço" span={5}>
           <input
             name="descricao_servico"
             defaultValue={String(inicial.descricao_servico)}
@@ -57,9 +51,8 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
             required
             className={`${controleCls()} w-full`}
           />
-        </label>
-        <label className="block">
-          Alíquota ISS (%) — se não Simples
+        </FormCampo>
+        <FormCampo label="Alíquota ISS (%) — se não Simples" span={3}>
           <input
             name="aliquota_iss"
             type="number"
@@ -67,9 +60,8 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
             defaultValue={String(inicial.aliquota_iss)}
             className={`${controleCls()} w-full`}
           />
-        </label>
-        <label className="block">
-          % aprox. tributos (Simples, pTotTribSN)
+        </FormCampo>
+        <FormCampo label="% aprox. tributos (Simples, pTotTribSN)" span={4}>
           <input
             name="pct_trib_sn"
             type="number"
@@ -77,19 +69,18 @@ export function FormConfig({ inicial }: { inicial: Record<string, string | boole
             defaultValue={String(inicial.pct_trib_sn)}
             className={`${controleCls()} w-full`}
           />
-        </label>
-        <label className="block">
-          Ambiente
+        </FormCampo>
+        <FormCampo label="Ambiente" span={4}>
           <select name="ambiente" defaultValue={String(inicial.ambiente)} className={`${controleCls()} w-full`}>
             <option value="homologacao">Homologação (produção restrita)</option>
             <option value="producao">Produção</option>
           </select>
-        </label>
-        <label className="flex items-center gap-2">
+        </FormCampo>
+        <div className="flex items-center gap-2 pt-5 md:col-span-12">
           <input type="checkbox" name="simples" defaultChecked={Boolean(inicial.simples)} />
           Optante do Simples Nacional
-        </label>
-      </div>
+        </div>
+      </FormGrid>
       {estado.erro && (
         <p role="alert" className="text-negativo">
           {estado.erro}

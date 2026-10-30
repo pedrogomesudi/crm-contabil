@@ -30,7 +30,7 @@ export function PainelRiscosView({ painel: ini, hoje }: { painel: PainelRiscos; 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <Card titulo="Vencendo hoje" n={painel.resumo.vencendoHoje} />
           <Card titulo="Vencidas" n={painel.resumo.vencidas} cor="text-negativo" />
           <Card titulo="Sem responsável" n={painel.resumo.semResponsavel} />

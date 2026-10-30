@@ -5,6 +5,7 @@ import { classificarAlerta } from "@/lib/onboarding/alertas";
 import { listarInstancias, gerarCompetencia, type InstanciaView } from "./actions";
 import { AcoesInstancia } from "./AcoesInstancia";
 import { GerarRetroativo } from "./GerarRetroativo";
+import { TabelaCartao } from "@/components/ui/TabelaCartao";
 
 const MES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const dataBR = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
@@ -129,7 +130,7 @@ export function Calendario({
         {resumoStatus && <span> · {resumoStatus}</span>}
       </p>
 
-      <div className="overflow-x-auto rounded-2xl border border-linha bg-white">
+      <TabelaCartao className="rounded-2xl border border-linha bg-white">
         <table className="min-w-full text-sm">
           <thead>
             <tr className="border-b border-linha text-left text-xs text-cinza">
@@ -154,12 +155,26 @@ export function Calendario({
               const sev = classificarAlerta(r.vencimentoInterno, hoje);
               return (
                 <tr key={r.id} className="border-b border-linha/60">
-                  <td className="px-3 py-1.5 text-texto">{r.clienteNome}</td>
-                  <td className="px-3 py-1.5">{r.obrigacaoNome}</td>
-                  <td className="px-3 py-1.5">{rotuloComp(r.competencia, r.periodicidade)}</td>
-                  <td className="px-3 py-1.5">{dataBR(r.vencimentoInterno)}</td>
-                  <td className="px-3 py-1.5">{dataBR(r.vencimentoLegal)}</td>
-                  <td className="px-3 py-1.5">{r.responsavelNome ?? "—"}</td>
+                  <td className="px-3 py-1.5 text-texto" data-rotulo="Cliente">
+                    {r.clienteNome}
+                  </td>
+                  <td className="px-3 py-1.5" data-rotulo="Obrigação">
+                    {r.obrigacaoNome}
+                  </td>
+                  <td className="px-3 py-1.5" data-rotulo="Competência">
+                    {rotuloComp(r.competencia, r.periodicidade)}
+                  </td>
+                  <td className="px-3 py-1.5" data-rotulo="Interno">
+                    {dataBR(r.vencimentoInterno)}
+                  </td>
+                  <td className="px-3 py-1.5" data-rotulo="Legal">
+                    {dataBR(r.vencimentoLegal)}
+                  </td>
+                  <td className="px-3 py-1.5" data-rotulo="Responsável">
+                    {r.responsavelNome ?? "—"}
+                  </td>
+                  {/* Célula de ação (AcoesInstancia: dar baixa/dispensar/reabrir), não de dado puro —
+                      por isso sem data-rotulo, mesmo com o <th> "Status" preenchido. */}
                   <td className="px-3 py-1.5">
                     <div className="flex flex-col gap-1">
                       {sev && r.status === "pendente" ? (
@@ -175,7 +190,7 @@ export function Calendario({
             })}
           </tbody>
         </table>
-      </div>
+      </TabelaCartao>
     </div>
   );
 }

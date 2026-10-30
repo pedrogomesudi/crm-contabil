@@ -71,7 +71,7 @@ export function ContasPagar({
             </label>
           ))}
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           <input name="descricao" placeholder="Descrição" required className={controleCls()} />
           <select name="fornecedor_id" required className={controleCls()}>
             <option value="">Fornecedor…</option>
@@ -217,7 +217,7 @@ export function ContasPagar({
           className="max-w-xl space-y-2 rounded border border-linha p-3"
         >
           <p className="text-sm font-medium">Registrar pagamento</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             <input
               name="valor_recebido"
               type="number"
