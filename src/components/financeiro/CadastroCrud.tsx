@@ -102,57 +102,59 @@ export function CadastroCrud({
       </div>
 
       <Painel>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-linha bg-creme/60 text-left">
-              {campos.map((c) => (
-                <th
-                  key={c.nome}
-                  className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro"
-                >
-                  {c.label}
-                </th>
-              ))}
-              <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
-                Status
-              </th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {itens.map((it) => (
-              <tr key={it.id} className={`border-b border-linha/70 last:border-0 ${it.ativa ? "" : "opacity-60"}`}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-linha bg-creme/60 text-left">
                 {campos.map((c) => (
-                  <td key={c.nome} className="px-4 py-3 text-texto">
-                    {String(it[c.nome] ?? "")}
-                  </td>
+                  <th
+                    key={c.nome}
+                    className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro"
+                  >
+                    {c.label}
+                  </th>
                 ))}
-                <td className="px-4 py-3">
-                  <Badge variante={it.ativa ? "positivo" : "neutro"}>{it.ativa ? "Ativo" : "Inativo"}</Badge>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <button type="button" onClick={() => setEditando(it)} className="mr-3 text-cinza hover:text-verde">
-                    Editar
-                  </button>
-                  <form action={alternarAtiva} className="inline">
-                    <input type="hidden" name="id" value={it.id} />
-                    <input type="hidden" name="ativa" value={it.ativa ? "false" : "true"} />
-                    <button type="submit" className="text-cinza hover:text-verde">
-                      {it.ativa ? "Inativar" : "Reativar"}
+                <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
+                  Status
+                </th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {itens.map((it) => (
+                <tr key={it.id} className={`border-b border-linha/70 last:border-0 ${it.ativa ? "" : "opacity-60"}`}>
+                  {campos.map((c) => (
+                    <td key={c.nome} className="px-4 py-3 text-texto">
+                      {String(it[c.nome] ?? "")}
+                    </td>
+                  ))}
+                  <td className="px-4 py-3">
+                    <Badge variante={it.ativa ? "positivo" : "neutro"}>{it.ativa ? "Ativo" : "Inativo"}</Badge>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button type="button" onClick={() => setEditando(it)} className="mr-3 text-cinza hover:text-verde">
+                      Editar
                     </button>
-                  </form>
-                </td>
-              </tr>
-            ))}
-            {itens.length === 0 && (
-              <tr>
-                <td colSpan={campos.length + 2} className="px-4 py-8 text-center text-cinza-claro">
-                  Nenhum registro.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                    <form action={alternarAtiva} className="inline">
+                      <input type="hidden" name="id" value={it.id} />
+                      <input type="hidden" name="ativa" value={it.ativa ? "false" : "true"} />
+                      <button type="submit" className="text-cinza hover:text-verde">
+                        {it.ativa ? "Inativar" : "Reativar"}
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+              {itens.length === 0 && (
+                <tr>
+                  <td colSpan={campos.length + 2} className="px-4 py-8 text-center text-cinza-claro">
+                    Nenhum registro.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </Painel>
     </Container>
   );

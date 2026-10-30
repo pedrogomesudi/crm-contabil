@@ -134,42 +134,46 @@ export function DashboardFinanceiro({
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <h2 className="mb-2 font-display text-sm font-semibold text-texto">Maiores devedores</h2>
-          <table className="w-full text-sm">
-            <tbody>
-              {dados.devedores.map((d) => (
-                <tr key={d.cliente} className="border-t border-linha/70">
-                  <td className="py-1.5 text-texto">{d.cliente}</td>
-                  <td className="py-1.5 text-right font-mono text-xs tabular-nums text-texto">
-                    {formatarMoeda(d.total)} <span className="text-cinza-claro">({d.qtd})</span>
-                  </td>
-                </tr>
-              ))}
-              {dados.devedores.length === 0 && (
-                <tr>
-                  <td className="py-1.5 text-cinza-claro">Nenhum vencido.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <tbody>
+                {dados.devedores.map((d) => (
+                  <tr key={d.cliente} className="border-t border-linha/70">
+                    <td className="py-1.5 text-texto">{d.cliente}</td>
+                    <td className="py-1.5 text-right font-mono text-xs tabular-nums text-texto">
+                      {formatarMoeda(d.total)} <span className="text-cinza-claro">({d.qtd})</span>
+                    </td>
+                  </tr>
+                ))}
+                {dados.devedores.length === 0 && (
+                  <tr>
+                    <td className="py-1.5 text-cinza-claro">Nenhum vencido.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </Card>
         <Card>
           <h2 className="mb-2 font-display text-sm font-semibold text-texto">Receita por tipo (competência)</h2>
-          <table className="w-full text-sm">
-            <tbody>
-              <tr className="border-t border-linha/70">
-                <td className="py-1.5 text-texto">Mensalidade</td>
-                <td className="py-1.5 text-right font-mono text-xs tabular-nums text-texto">
-                  {formatarMoeda(r.receita_por_tipo.MENSALIDADE ?? 0)}
-                </td>
-              </tr>
-              <tr className="border-t border-linha/70">
-                <td className="py-1.5 text-texto">13º</td>
-                <td className="py-1.5 text-right font-mono text-xs tabular-nums text-texto">
-                  {formatarMoeda(r.receita_por_tipo.DECIMO_TERCEIRO ?? 0)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <tbody>
+                <tr className="border-t border-linha/70">
+                  <td className="py-1.5 text-texto">Mensalidade</td>
+                  <td className="py-1.5 text-right font-mono text-xs tabular-nums text-texto">
+                    {formatarMoeda(r.receita_por_tipo.MENSALIDADE ?? 0)}
+                  </td>
+                </tr>
+                <tr className="border-t border-linha/70">
+                  <td className="py-1.5 text-texto">13º</td>
+                  <td className="py-1.5 text-right font-mono text-xs tabular-nums text-texto">
+                    {formatarMoeda(r.receita_por_tipo.DECIMO_TERCEIRO ?? 0)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </Card>
       </div>
     </div>

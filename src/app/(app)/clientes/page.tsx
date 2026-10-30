@@ -176,107 +176,109 @@ export default async function ClientesPage({
           </p>
         ) : (
           <Painel>
-            <table className="w-full text-sm">
-              <caption className="sr-only">Lista de clientes</caption>
-              <thead>
-                <tr className="border-b border-linha bg-creme/60 text-left">
-                  <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
-                    Cliente
-                  </th>
-                  <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
-                    Regime
-                  </th>
-                  <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
-                    Contrato
-                  </th>
-                  <th className="px-4 py-3 text-right font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
-                    Situação
-                  </th>
-                  <th className="w-10" />
-                </tr>
-              </thead>
-              <tbody>
-                {clientes?.map((cl) => (
-                  <tr key={cl.id} className="border-b border-linha/70 transition last:border-0 hover:bg-creme">
-                    <td className="px-4 py-3">
-                      <Link href={`/clientes/${cl.id}`} className="flex items-center gap-3">
-                        <Iniciais nome={cl.razao_social} />
-                        <span className="min-w-0">
-                          <span className="block truncate font-medium text-texto">{cl.razao_social}</span>
-                          <span className="block font-mono text-xs text-cinza-claro">
-                            {cl.cpf_cnpj ?? "— sem CNPJ"}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <caption className="sr-only">Lista de clientes</caption>
+                <thead>
+                  <tr className="border-b border-linha bg-creme/60 text-left">
+                    <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
+                      Cliente
+                    </th>
+                    <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
+                      Regime
+                    </th>
+                    <th className="px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
+                      Contrato
+                    </th>
+                    <th className="px-4 py-3 text-right font-mono text-[10.5px] font-medium uppercase tracking-wide text-cinza-claro">
+                      Situação
+                    </th>
+                    <th className="w-10" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {clientes?.map((cl) => (
+                    <tr key={cl.id} className="border-b border-linha/70 transition last:border-0 hover:bg-creme">
+                      <td className="px-4 py-3">
+                        <Link href={`/clientes/${cl.id}`} className="flex items-center gap-3">
+                          <Iniciais nome={cl.razao_social} />
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium text-texto">{cl.razao_social}</span>
+                            <span className="block font-mono text-xs text-cinza-claro">
+                              {cl.cpf_cnpj ?? "— sem CNPJ"}
+                            </span>
                           </span>
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        {cl.regime_tributario ? (
+                          <Badge variante={badgeRegime(cl.regime_tributario)}>{cl.regime_tributario}</Badge>
+                        ) : (
+                          <span className="text-cinza-claro">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <BadgeContrato estado={contratos.get(cl.id as string) ?? "nenhum"} />
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="inline-flex items-center gap-1.5 text-sm text-cinza">
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${cl.status === "ativo" ? "bg-verde" : cl.status === "em_constituicao" ? "bg-atencao-solido" : "bg-cinza-claro"}`}
+                          />
+                          {cl.status === "ativo"
+                            ? "Ativo"
+                            : cl.status === "em_constituicao"
+                              ? "Em constituição"
+                              : "Inativo"}
                         </span>
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      {cl.regime_tributario ? (
-                        <Badge variante={badgeRegime(cl.regime_tributario)}>{cl.regime_tributario}</Badge>
-                      ) : (
-                        <span className="text-cinza-claro">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <BadgeContrato estado={contratos.get(cl.id as string) ?? "nenhum"} />
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="inline-flex items-center gap-1.5 text-sm text-cinza">
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${cl.status === "ativo" ? "bg-verde" : cl.status === "em_constituicao" ? "bg-atencao-solido" : "bg-cinza-claro"}`}
-                        />
-                        {cl.status === "ativo"
-                          ? "Ativo"
-                          : cl.status === "em_constituicao"
-                            ? "Em constituição"
-                            : "Inativo"}
-                      </span>
-                      {cl.excluido_em && (
-                        <span className="ml-2 rounded-full bg-negativo/10 px-2 py-0.5 text-xs text-negativo">
-                          excluído
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-2 py-3 text-right">
-                      <Link
-                        href={`/clientes/${cl.id}`}
-                        aria-label={`Abrir ${cl.razao_social}`}
-                        className="text-cinza-claro"
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
+                        {cl.excluido_em && (
+                          <span className="ml-2 rounded-full bg-negativo/10 px-2 py-0.5 text-xs text-negativo">
+                            excluído
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-2 py-3 text-right">
+                        <Link
+                          href={`/clientes/${cl.id}`}
+                          aria-label={`Abrir ${cl.razao_social}`}
+                          className="text-cinza-claro"
                         >
-                          <path d="m9 6 6 6-6 6" />
-                        </svg>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-                {!clientes?.length && (
-                  <tr>
-                    <td colSpan={5}>
-                      <EmptyState
-                        titulo="Nenhum cliente encontrado"
-                        descricao="Ajuste a busca ou cadastre um novo cliente."
-                        acao={
-                          podeCriar ? (
-                            <Link href="/clientes/novo">
-                              <Botao variante="primario">
-                                <span aria-hidden="true">+ </span>Novo cliente
-                              </Botao>
-                            </Link>
-                          ) : undefined
-                        }
-                      />
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path d="m9 6 6 6-6 6" />
+                          </svg>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                  {!clientes?.length && (
+                    <tr>
+                      <td colSpan={5}>
+                        <EmptyState
+                          titulo="Nenhum cliente encontrado"
+                          descricao="Ajuste a busca ou cadastre um novo cliente."
+                          acao={
+                            podeCriar ? (
+                              <Link href="/clientes/novo">
+                                <Botao variante="primario">
+                                  <span aria-hidden="true">+ </span>Novo cliente
+                                </Botao>
+                              </Link>
+                            ) : undefined
+                          }
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
             <Paginacao pagina={pagina} total={total} porPagina={POR_PAGINA} base="/clientes" params={{ q, status }} />
           </Painel>
         )}

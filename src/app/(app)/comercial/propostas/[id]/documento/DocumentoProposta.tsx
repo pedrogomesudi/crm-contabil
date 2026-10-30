@@ -54,24 +54,26 @@ export function DocumentoProposta({
         </p>
       </section>
 
-      <table className="mt-4 w-full text-sm">
-        <thead>
-          <tr className="border-b border-linha text-left text-xs text-cinza">
-            <th className="py-1 font-medium">Descrição</th>
-            <th className="py-1 font-medium">Recorrência</th>
-            <th className="py-1 text-right font-medium">Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          {proposta.itens.map((i) => (
-            <tr key={i.id} className="border-b border-linha/60">
-              <td className="py-1.5">{i.descricao}</td>
-              <td className="py-1.5">{i.recorrencia === "mensal" ? "Mensal" : "Único"}</td>
-              <td className="py-1.5 text-right tabular-nums">{brl(i.valor)}</td>
+      <div className="overflow-x-auto">
+        <table className="mt-4 w-full text-sm">
+          <thead>
+            <tr className="border-b border-linha text-left text-xs text-cinza">
+              <th className="py-1 font-medium">Descrição</th>
+              <th className="py-1 font-medium">Recorrência</th>
+              <th className="py-1 text-right font-medium">Valor</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {proposta.itens.map((i) => (
+              <tr key={i.id} className="border-b border-linha/60">
+                <td className="py-1.5">{i.descricao}</td>
+                <td className="py-1.5">{i.recorrencia === "mensal" ? "Mensal" : "Único"}</td>
+                <td className="py-1.5 text-right tabular-nums">{brl(i.valor)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <div className="mt-3 space-y-0.5 text-right text-sm">
         <p>

@@ -8,7 +8,7 @@ import type { DocVencido } from "@/app/(app)/documentos/actions";
 export function TabelaRetencao({ docs }: { docs: DocVencido[] }) {
   if (docs.length === 0) return <p className="text-sm text-cinza-claro">Nenhum documento vencido.</p>;
   return (
-    <div className="overflow-hidden rounded border border-linha">
+    <div className="overflow-x-auto rounded border border-linha">
       <table className="w-full text-sm">
         <thead className="bg-creme text-left text-cinza">
           <tr>
