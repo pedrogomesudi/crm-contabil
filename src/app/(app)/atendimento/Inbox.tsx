@@ -219,10 +219,13 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
   const hoje = new Date().toISOString();
 
   return (
-    <div className="grid h-full grid-cols-1 bg-creme md:grid-cols-[20rem_minmax(0,1fr)_18rem]">
+    <div className="grid h-full grid-cols-1 bg-creme md:grid-cols-[20rem_minmax(0,1fr)] lg:grid-cols-[20rem_minmax(0,1fr)_18rem]">
       {/* Coluna 1 — Conversas. Mestre/detalhe no celular: some quando há conversa aberta,
-          volta a aparecer ao lado da thread a partir de 768px (md), o breakpoint único do
-          sistema (igual à Sidebar) — não há "lg" aqui. */}
+          volta a aparecer ao lado da thread a partir de 768px (md) — o breakpoint único do
+          sistema para ESSA troca. O painel do contato (coluna 3) é outro papel: só aparece a
+          partir de 1024px (lg), por isso o grid tem duas larguras de template — md ainda com
+          só duas colunas (lista + thread), lg acrescentando a terceira. Não uniformizar para
+          um breakpoint só: na faixa 768–1024px a coluna 3 não cabe ao lado das outras duas. */}
       <aside className={`min-h-0 flex-col border-r border-linha bg-white ${ativa ? "hidden md:flex" : "flex"}`}>
         <div className="flex items-center justify-between p-4 pb-2">
           <h1 className="font-display text-xl font-bold tracking-tight text-texto">Atendimento</h1>
@@ -538,10 +541,10 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
         )}
       </section>
 
-      {/* Coluna 3 — Painel do contato. Desktop-only; some até 768px (md), mesmo ponto de corte
-          das colunas 1 e 2 — nunca aparece isolada no celular, pois a tela já está ocupada
-          pela lista ou pela thread. */}
-      <aside className="hidden min-h-0 overflow-y-auto border-l border-linha bg-white md:block">
+      {/* Coluna 3 — Painel do contato. Breakpoint PRÓPRIO, lg (1024px) — diferente do md (768px)
+          da troca mestre/detalhe das colunas 1/2. Entre 768 e 1024px o grid acima só reserva
+          duas colunas (lista + thread); esta fica escondida até lg, sem espaço fantasma. */}
+      <aside className="hidden min-h-0 overflow-y-auto border-l border-linha bg-white lg:block">
         {ativa ? (
           contato?.clienteId ? (
             <div>
