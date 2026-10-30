@@ -8,6 +8,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.39] — 2026-10-30
+
+### Corrigido
+
+- **Atendimento não abria no celular** — a aba era encerrada pelo navegador, com "This page
+  couldn't load", de forma determinística e em qualquer navegador do aparelho; no computador
+  funcionava. A tela é a **única do sistema** que prende a própria altura à viewport, e usava a
+  altura **dinâmica** (`dvh`), que muda quando a barra do navegador se esconde ao rolar. No iOS
+  isso realimenta o layout — a barra some, a altura cresce, o conteúdo reflui, a barra volta — e
+  o WebKit recalcula até o sistema matar a aba. Passou a usar a viewport **estável** (`svh`), que
+  não muda com a barra. Um teste impede que a unidade dinâmica volte, aqui ou em outra tela.
+
+### Notas
+
+- A correção é a hipótese que melhor explica as evidências — descartados, com medição: erro de
+  servidor, volume de dados (96 conversas, 500 mensagens, 133 kB de texto), peso do payload,
+  laço de renderização no tempo real, e navegador específico. **Não foi possível confirmar no
+  aparelho** (sem acesso ao console do iPhone), então a verificação é de quem usa.
+
 ## [6.99.38] — 2026-10-30
 
 ### Adicionado
