@@ -1,11 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { arquivosTsx, lerSemComentarios } from "../ui/_fonte";
 
-// O Atendimento é a ÚNICA tela que prende a própria altura à viewport. Com a altura DINÂMICA,
-// essa altura muda quando a barra do navegador se esconde ao rolar — e no iOS isso realimenta o
-// layout: a barra some, a altura cresce, o conteúdo reflui, a barra volta. O WebKit recalcula até
-// o sistema encerrar a aba, e a tela aparece como "This page couldn't load". Só acontece em
-// celular, porque só ali a barra se esconde. A viewport MENOR (svh) é estável e encerra o ciclo.
+// O Atendimento é a única tela que prende a própria altura à viewport. `svh` é a viewport MENOR:
+// estável. A dinâmica (`dvh`) muda quando a barra do navegador se esconde ao rolar, e altura que
+// muda sozinha faz o conteúdo pular no celular.
+//
+// Registro honesto: durante a investigação do travamento no iPhone eu atribuí o bug a esta
+// unidade. Estava errado — a causa era a CSP bloqueando o WebSocket (ver next.config.ts e o
+// teste em src/tests/seguranca/csp.test.ts). A regra fica porque `svh` é a unidade certa aqui,
+// não porque conserta aquilo.
 //
 // Os testes leem o código SEM COMENTÁRIOS: o comentário que explica a decisão cita a unidade
 // proibida, e acusá-lo seria falso positivo impossível de silenciar.

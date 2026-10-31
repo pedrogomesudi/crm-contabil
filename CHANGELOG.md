@@ -8,6 +8,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.42] — 2026-10-31
+
+### Modificado
+
+- **Removido o andaime de diagnóstico do Atendimento.** Os parâmetros `?diag=vazio`,
+  `?diag=sem-tempo-real` e `?limite=N` cumpriram o papel: foram eles que, abertos no próprio
+  celular, isolaram a causa do travamento em três cliques — a CSP bloqueando o WebSocket
+  (corrigido na 6.99.41). Saem do código, como previsto quando entraram.
+- **Corrigido um comentário que afirmava causa errada.** O comentário da unidade de altura no
+  Atendimento atribuía o travamento ao `dvh`. Era hipótese minha, e estava errada. O `svh` fica,
+  por ser a unidade certa para contêiner de altura fixa — mas o texto agora diz isso, em vez de
+  se apresentar como correção de um bug que não corrigiu. Comentário que mente custa mais caro
+  que comentário ausente.
+
 ## [6.99.41] — 2026-10-31
 
 ### Corrigido

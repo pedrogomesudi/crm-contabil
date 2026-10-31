@@ -56,10 +56,7 @@ function mapMsgs(rows: unknown[]): MsgConversa[] {
   });
 }
 
-// DIAGNÓSTICO TEMPORÁRIO: o limite é parametrizável para bissectar, no celular e sem cabo, se a
-// tela cai por volume de dados. O padrão (500) é o comportamento de sempre. Remover junto com os
-// parâmetros de diagnóstico quando a causa do travamento no iOS estiver identificada.
-export async function listarConversas(limite = 500): Promise<Conversa[]> {
+export async function listarConversas(): Promise<Conversa[]> {
   if (!(await gate())) return [];
   const supabase = await createServerSupabase();
   const { data } = await supabase
@@ -68,7 +65,7 @@ export async function listarConversas(limite = 500): Promise<Conversa[]> {
       "id, telefone, texto, direcao, lida, criado_em, status, midia_tipo, midia_path, midia_nome, midia_mime, clientes(razao_social)",
     )
     .order("criado_em", { ascending: false })
-    .limit(Math.min(Math.max(limite, 1), 500));
+    .limit(500);
   const admin = createAdminSupabase();
   const { data: clientes } = await admin
     .from("clientes")
