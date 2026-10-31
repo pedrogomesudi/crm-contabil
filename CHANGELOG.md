@@ -8,6 +8,29 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.41] — 2026-10-31
+
+### Corrigido
+
+- **Atendimento não abria no celular — causa encontrada: o WebSocket era bloqueado pela própria
+  política de segurança do app.** O `connect-src` da CSP liberava `https://*.supabase.co` mas
+  **não** `wss://*.supabase.co`. Pela especificação, uma origem `https:` deveria autorizar `wss:`
+  — o **WebKit não implementa essa equivalência**. No iPhone a conexão de tempo real era negada,
+  o cliente do Supabase reconectava indefinidamente e a aba acabava encerrada por memória. No
+  Chrome a equivalência vale, então funcionava — e foi isso que escondeu o defeito. Um teste
+  passa a exigir o `wss:` explícito, e a mesma suíte protege as outras diretivas de segurança.
+
+### Modificado
+
+- **A reconsulta da lista de conversas deixou de ser desperdício no celular.** O intervalo de 30s
+  existia como rede de segurança para queda do WebSocket, mas rodava **sempre** — inclusive com a
+  conexão sã e com a aba em segundo plano. Agora só roda quando a conexão caiu e a aba está
+  visível. E a reconsulta disparada ao voltar à aba ganhou janela mínima de 30s: no celular,
+  bloquear a tela ou trocar de app dispara esse evento o tempo todo, e cada um custava uma busca
+  completa de até 500 mensagens. A decisão virou função pura e testada.
+- Os parâmetros de diagnóstico do Atendimento (`?diag=`, `?limite=`) **permanecem por ora** — saem
+  quando a correção for confirmada no aparelho.
+
 ## [6.99.40] — 2026-10-30
 
 ### Adicionado

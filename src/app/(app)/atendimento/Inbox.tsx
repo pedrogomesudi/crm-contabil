@@ -103,7 +103,7 @@ export function Inbox({ inicial, semTempoReal = false }: { inicial: Conversa[]; 
   // Tempo real: mensagem nova aparece na hora (Supabase Realtime). A lista faz refetch leve,
   // com debounce para não refazer a cada mensagem de uma rajada.
   const debounceLista = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useRealtimeAtendimento({
+  const { conectado } = useRealtimeAtendimento({
     desligado: semTempoReal,
     telefoneAtivo: ativa,
     onMensagemNaConversa: (msg) => setMsgs((m) => (m.some((x) => x.id === msg.id) ? m : [...m, msg])),
@@ -126,10 +126,14 @@ export function Inbox({ inicial, semTempoReal = false }: { inicial: Conversa[]; 
     };
   }, []);
 
-  // Rede de segurança: se o WebSocket cair, um refetch a cada 30s ressincroniza.
+  // Rede de segurança: se o WebSocket cair, um refetch a cada 30s ressincroniza. SÓ nesse caso:
+  // com a conexão sã o tempo real já traz tudo, e consultar mesmo assim era gastar bateria e
+  // memória do celular à toa. A aba em segundo plano também não consulta — ao voltar, o
+  // visibilitychange cobre.
   useEffect(() => {
-    if (semTempoReal) return;
+    if (semTempoReal || conectado) return;
     const id = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
       start(async () => {
         setConversas(await listarConversas());
         const alvo = ativaRef.current;
@@ -137,7 +141,7 @@ export function Inbox({ inicial, semTempoReal = false }: { inicial: Conversa[]; 
       });
     }, 30000);
     return () => clearInterval(id);
-  }, [semTempoReal]);
+  }, [semTempoReal, conectado]);
 
   // auto-scroll ao fim quando a thread muda
   useEffect(() => {

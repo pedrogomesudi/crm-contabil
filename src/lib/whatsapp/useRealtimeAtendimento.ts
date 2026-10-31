@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { createBrowserSupabase } from "@/lib/supabase/client";
 import { linhaParaMsg, rotearEvento, type LinhaMensagemRaw } from "@/lib/whatsapp/realtime";
 import type { MsgConversa } from "@/lib/whatsapp/inbox";
+import { deveReconsultar } from "@/lib/whatsapp/reconsulta";
 
 // Tempo real do atendimento (Supabase Realtime). Assina os INSERT/UPDATE de whatsapp_mensagem com o
 // client AUTENTICADO do browser — o Realtime aplica a RLS, então um contador não recebe mensagem de
@@ -16,6 +17,8 @@ export function useRealtimeAtendimento(opts: {
 }): { conectado: boolean } {
   const [conectado, setConectado] = useState(false);
   const ref = useRef(opts);
+  // Quando a lista foi reconsultada pela última vez — a janela mínima vive em reconsulta.ts.
+  const ultimaBusca = useRef<number | null>(null);
   const idsThread = useRef<Set<string>>(new Set());
 
   // Mantém a ref com os valores atuais (telefoneAtivo/callbacks) sem re-assinar o canal a cada
@@ -47,8 +50,13 @@ export function useRealtimeAtendimento(opts: {
       .subscribe((status) => setConectado(status === "SUBSCRIBED"));
 
     // aba que dormiu: ao voltar, força um refetch (o WebSocket pode ter perdido eventos).
+    // Trocar de app, bloquear a tela ou puxar a barra de notificações dispara este evento. No
+    // celular isso acontece o tempo todo, e sem janela mínima cada um custava uma busca completa.
     const aoVoltar = () => {
-      if (document.visibilityState === "visible") ref.current.onListaMudou();
+      const visivel = document.visibilityState === "visible";
+      if (!deveReconsultar(ultimaBusca.current, Date.now(), visivel)) return;
+      ultimaBusca.current = Date.now();
+      ref.current.onListaMudou();
     };
     document.addEventListener("visibilitychange", aoVoltar);
 
