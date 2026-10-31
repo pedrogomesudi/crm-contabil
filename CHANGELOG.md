@@ -8,6 +8,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [6.99.40] — 2026-10-30
+
+### Adicionado
+
+- **Erro de navegador passou a ser registrado.** Até agora o sistema só guardava erro de
+  **servidor** (`instrumentation.ts`): uma tela que quebrava no navegador não deixava rastro
+  nenhum, e foi isso que transformou o diagnóstico do Atendimento no celular numa sequência de
+  deduções. Um error boundary no grupo `(app)` captura a exceção, grava em `evento_erro` com
+  origem `navegador` e mostra à pessoa uma tela com o código do erro, em vez de uma página
+  branca. Aparece em **Configurações → Observabilidade**, junto com os erros de servidor.
+  Limite conhecido e deliberado: captura **exceção de JavaScript**. Se o navegador encerrar a
+  aba por memória, nada é registrado — e, nesse caso, a ausência de registro é ela própria a
+  informação.
+- **Modo diagnóstico temporário no Atendimento.** A tela não abre no celular — a aba é
+  encerrada, sempre, em qualquer navegador e em qualquer orientação, enquanto no computador
+  funciona. Sem acesso ao console do aparelho, três parâmetros permitem bissectar a causa
+  abrindo endereços no próprio celular: `?diag=vazio` (só o cabeçalho), `?diag=sem-tempo-real`
+  (sem WebSocket nem reconsulta periódica) e `?limite=50` (50 mensagens em vez de 500). O
+  primeiro que carregar aponta o culpado. **São temporários** e saem quando a causa aparecer.
+
 ## [6.99.39] — 2026-10-30
 
 ### Corrigido

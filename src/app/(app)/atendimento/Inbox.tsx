@@ -41,7 +41,10 @@ const ABAS: { id: FiltroAba; label: string }[] = [
   { id: "favoritos", label: "Favoritos" },
 ];
 
-export function Inbox({ inicial }: { inicial: Conversa[] }) {
+// `semTempoReal` é DIAGNÓSTICO TEMPORÁRIO: desliga o WebSocket e a reconsulta periódica, para
+// bissectar no celular se é a conexão de tempo real que derruba a aba no iOS. Remover junto com
+// os parâmetros de diagnóstico da página quando a causa estiver identificada.
+export function Inbox({ inicial, semTempoReal = false }: { inicial: Conversa[]; semTempoReal?: boolean }) {
   const [conversas, setConversas] = useState<Conversa[]>(inicial);
   const [aba, setAba] = useState<FiltroAba>("abertas");
   const [atendentes, setAtendentes] = useState<{ id: string; nome: string }[]>([]);
@@ -101,6 +104,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
   // com debounce para não refazer a cada mensagem de uma rajada.
   const debounceLista = useRef<ReturnType<typeof setTimeout> | null>(null);
   useRealtimeAtendimento({
+    desligado: semTempoReal,
     telefoneAtivo: ativa,
     onMensagemNaConversa: (msg) => setMsgs((m) => (m.some((x) => x.id === msg.id) ? m : [...m, msg])),
     onListaMudou: () => {
@@ -124,6 +128,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
 
   // Rede de segurança: se o WebSocket cair, um refetch a cada 30s ressincroniza.
   useEffect(() => {
+    if (semTempoReal) return;
     const id = setInterval(() => {
       start(async () => {
         setConversas(await listarConversas());
@@ -132,7 +137,7 @@ export function Inbox({ inicial }: { inicial: Conversa[] }) {
       });
     }, 30000);
     return () => clearInterval(id);
-  }, []);
+  }, [semTempoReal]);
 
   // auto-scroll ao fim quando a thread muda
   useEffect(() => {
