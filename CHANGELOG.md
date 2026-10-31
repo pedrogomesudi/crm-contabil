@@ -6,6 +6,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 [Versionamento Semântico](https://semver.org/lang/pt-BR/). Veja as regras em
 [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md) e o plano de evolução em [`ROADMAP.md`](ROADMAP.md).
 
+## [6.99.43] - 2026-10-31
+
+### Adicionado
+
+- **Cópia oculta em todo e-mail do sistema.** Configurações → E-mail ganhou o campo
+  "Cópia oculta": o endereço informado entra em Bcc de toda mensagem que o SALDO dispara,
+  em qualquer canal (SMTP, Resend, SendGrid). O destinatário não o vê. O endereço é
+  configurável por instância em vez de embutido no código — cada escritório tem o seu, ou
+  nenhum. Fica de fora quando está vazio e quando coincide com o próprio destinatário,
+  para a pessoa não receber a mesma mensagem duas vezes.
+  Convite de usuário e redefinição de senha saem pelo Supabase (GoTrue), não por este
+  funil, e portanto **não** entram na cópia.
+
 ## [Não lançado]
 
 ## [6.99.42] — 2026-10-31

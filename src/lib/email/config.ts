@@ -8,6 +8,8 @@ export type ConfigEmail = {
   remetenteEmail: string;
   // Caixa que recebe as respostas. Vazio = o próprio remetente (comportamento de sempre).
   responderPara?: string;
+  // Cópia oculta de arquivo em TODA mensagem enviada pelo sistema. Vazio = ninguém em cópia.
+  copiaOculta?: string;
   smtp?: { host: string; porta: number; seguro: boolean; usuario: string; senha: string };
   api?: { provedor: "resend" | "sendgrid"; chave: string };
 };
@@ -18,7 +20,7 @@ export async function carregarConfig(): Promise<ConfigEmail | { erro: string }> 
   const { data: c } = await admin
     .from("email_config")
     .select(
-      "provedor, remetente_nome, remetente_email, responder_para, smtp_host, smtp_porta, smtp_seguro, smtp_usuario, smtp_senha_cifrada, api_provedor, api_chave_cifrada",
+      "provedor, remetente_nome, remetente_email, responder_para, copia_oculta, smtp_host, smtp_porta, smtp_seguro, smtp_usuario, smtp_senha_cifrada, api_provedor, api_chave_cifrada",
     )
     .eq("id", 1)
     .maybeSingle();
@@ -28,6 +30,7 @@ export async function carregarConfig(): Promise<ConfigEmail | { erro: string }> 
     remetenteNome: (c.remetente_nome as string | null) ?? (c.remetente_email as string),
     remetenteEmail: c.remetente_email as string,
     responderPara: (c.responder_para as string | null) ?? undefined,
+    copiaOculta: (c.copia_oculta as string | null) ?? undefined,
   };
 
   if (c.provedor === "smtp") {

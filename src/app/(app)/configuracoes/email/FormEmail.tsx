@@ -63,10 +63,22 @@ export function FormEmail({ status, emailAdmin }: { status: StatusEmail; emailAd
               className={`mt-0.5 block w-64 ${cls}`}
             />
           </label>
+          <label className="text-xs text-cinza">
+            Cópia oculta <span className="text-cinza-claro">(opcional)</span>
+            <input
+              name="copia_oculta"
+              type="email"
+              defaultValue={status.copiaOculta}
+              placeholder="arquivo@seudominio.com.br"
+              className={`mt-0.5 block w-64 ${cls}`}
+            />
+          </label>
         </div>
         <p className="text-xs text-cinza-claro">
           Deixe o remetente num domínio já verificado e use “Responder para” com o e-mail real do escritório: o envio
-          sai verificado e as respostas do cliente chegam na caixa certa.
+          sai verificado e as respostas do cliente chegam na caixa certa. A “Cópia oculta” recebe, em Bcc, todo e-mail
+          que o sistema disparar — o destinatário não a vê. E-mails de convite e de redefinição de senha saem pelo
+          Supabase, não por aqui, e por isso não entram nessa cópia.
         </p>
 
         {provedor === "smtp" ? (
