@@ -21,6 +21,12 @@ const siteHost = (() => {
 
 // CSP: self por padrão. script/style com 'unsafe-inline' (Next injeta scripts inline
 // de hidratação sem nonce; Tailwind usa estilos inline). 'unsafe-eval' só em dev (HMR).
+//
+// O `wss:` do connect-src é OBRIGATÓRIO e não é redundante: o tempo real do Atendimento é
+// WebSocket, e pela especificação uma origem `https:` deveria autorizar `wss:` — mas o WebKit
+// NÃO implementa essa equivalência. Sem ele, o iPhone bloqueia a conexão, o cliente do Supabase
+// reconecta sem parar e a aba é encerrada por memória; no Chrome funciona, o que escondeu o
+// defeito até alguém abrir o Atendimento no celular.
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -31,7 +37,7 @@ const csp = [
   "font-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  `connect-src 'self' ${supabaseOrigin} https://*.supabase.co`.trim(),
+  `connect-src 'self' ${supabaseOrigin} https://*.supabase.co wss://*.supabase.co`.trim(),
 ]
   .join("; ")
   .replace(/\s+/g, " ");
