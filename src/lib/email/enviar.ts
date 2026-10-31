@@ -34,10 +34,13 @@ async function viaSmtp(cfg: ConfigEmail, smtp: NonNullable<ConfigEmail["smtp"]>,
   });
   try {
     const replyTo = cfg.responderPara?.trim();
+    const bcc = cfg.copiaOculta?.trim();
     await transport.sendMail({
       from: `${cfg.remetenteNome} <${cfg.remetenteEmail}>`,
       to: msg.para,
       ...(replyTo && replyTo.toLowerCase() !== cfg.remetenteEmail.toLowerCase() ? { replyTo } : {}),
+      // Mesma regra dos payloads de API: nada de mandar a mensagem duas vezes para quem já é o destinatário.
+      ...(bcc && bcc.toLowerCase() !== msg.para.trim().toLowerCase() ? { bcc } : {}),
       subject: msg.assunto,
       text: msg.corpo,
       html: htmlDoTexto(msg.corpo),
