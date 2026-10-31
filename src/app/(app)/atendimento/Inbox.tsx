@@ -41,10 +41,7 @@ const ABAS: { id: FiltroAba; label: string }[] = [
   { id: "favoritos", label: "Favoritos" },
 ];
 
-// `semTempoReal` é DIAGNÓSTICO TEMPORÁRIO: desliga o WebSocket e a reconsulta periódica, para
-// bissectar no celular se é a conexão de tempo real que derruba a aba no iOS. Remover junto com
-// os parâmetros de diagnóstico da página quando a causa estiver identificada.
-export function Inbox({ inicial, semTempoReal = false }: { inicial: Conversa[]; semTempoReal?: boolean }) {
+export function Inbox({ inicial }: { inicial: Conversa[] }) {
   const [conversas, setConversas] = useState<Conversa[]>(inicial);
   const [aba, setAba] = useState<FiltroAba>("abertas");
   const [atendentes, setAtendentes] = useState<{ id: string; nome: string }[]>([]);
@@ -104,7 +101,6 @@ export function Inbox({ inicial, semTempoReal = false }: { inicial: Conversa[]; 
   // com debounce para não refazer a cada mensagem de uma rajada.
   const debounceLista = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { conectado } = useRealtimeAtendimento({
-    desligado: semTempoReal,
     telefoneAtivo: ativa,
     onMensagemNaConversa: (msg) => setMsgs((m) => (m.some((x) => x.id === msg.id) ? m : [...m, msg])),
     onListaMudou: () => {
@@ -131,7 +127,7 @@ export function Inbox({ inicial, semTempoReal = false }: { inicial: Conversa[]; 
   // memória do celular à toa. A aba em segundo plano também não consulta — ao voltar, o
   // visibilitychange cobre.
   useEffect(() => {
-    if (semTempoReal || conectado) return;
+    if (conectado) return;
     const id = setInterval(() => {
       if (document.visibilityState !== "visible") return;
       start(async () => {
@@ -141,7 +137,7 @@ export function Inbox({ inicial, semTempoReal = false }: { inicial: Conversa[]; 
       });
     }, 30000);
     return () => clearInterval(id);
-  }, [semTempoReal, conectado]);
+  }, [conectado]);
 
   // auto-scroll ao fim quando a thread muda
   useEffect(() => {

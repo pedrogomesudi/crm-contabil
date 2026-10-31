@@ -10,7 +10,6 @@ import { deveReconsultar } from "@/lib/whatsapp/reconsulta";
 // cliente alheio. O canal é assinado uma vez (deps []); refs dão ao callback os valores atuais sem
 // reconectar a cada render.
 export function useRealtimeAtendimento(opts: {
-  desligado?: boolean; // diagnóstico temporário: ver Inbox.tsx
   telefoneAtivo: string | null;
   onMensagemNaConversa: (msg: MsgConversa) => void;
   onListaMudou: () => void;
@@ -27,9 +26,7 @@ export function useRealtimeAtendimento(opts: {
     ref.current = opts;
   });
 
-  const desligado = opts.desligado ?? false;
   useEffect(() => {
-    if (desligado) return;
     const supabase = createBrowserSupabase();
     const canal = supabase
       .channel("atendimento")
@@ -64,7 +61,7 @@ export function useRealtimeAtendimento(opts: {
       document.removeEventListener("visibilitychange", aoVoltar);
       supabase.removeChannel(canal);
     };
-  }, [desligado]);
+  }, []);
 
   // quando a conversa aberta muda, zera o dedup de ids da thread.
   useEffect(() => {
