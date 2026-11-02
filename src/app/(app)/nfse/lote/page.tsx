@@ -6,6 +6,7 @@ import { LoteNfse } from "@/components/nfse/LoteNfse";
 import { BaixarNotasZip } from "@/components/nfse/BaixarNotasZip";
 import { EnviarNotasWhatsapp } from "@/components/nfse/EnviarNotasWhatsapp";
 import { PrepararDanfse } from "@/components/nfse/PrepararDanfse";
+import { ConferenciaLote } from "@/components/nfse/ConferenciaLote";
 
 export default async function LoteNfsePage() {
   const perfil = await getPerfilAtual();
@@ -16,6 +17,7 @@ export default async function LoteNfsePage() {
       <LoteNfse />
       <PrepararDanfse />
       <BaixarNotasZip />
+      <ConferenciaLote />
       <EnviarNotasWhatsapp />
     </Container>
   );

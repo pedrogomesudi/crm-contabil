@@ -6,6 +6,30 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 [Versionamento Semântico](https://semver.org/lang/pt-BR/). Veja as regras em
 [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md) e o plano de evolução em [`ROADMAP.md`](ROADMAP.md).
 
+## [6.99.48] - 2026-11-02
+
+### Adicionado
+
+- **Conferência financeiro × fiscal antes do envio em lote.** Novo cartão em *Emitir NFS-e em
+  lote*, entre "Baixar notas" e "Enviar": confronta, por competência, o **boleto** de cada
+  honorário com a **nota fiscal** correspondente.
+
+  No topo, os dois totais e a diferença entre eles. Abaixo, uma linha por cliente com o valor de
+  cada lado, os números da nota e do boleto, e a situação. Nove situações são reconhecidas; seis
+  marcam o cliente em vermelho porque colocariam cobrança errada na mão dele ou impediriam a
+  cobrança de chegar — valor divergente, honorário sem nota, título sem boleto, boleto sem linha
+  digitável, cliente sem contato, e mais de uma nota no valor do honorário. As outras três são
+  contexto: nota de outro serviço, nota cancelada e fatura já baixada.
+
+  O painel **não bloqueia** o envio: ele existe para você ver antes, não para ser um segundo
+  portão — o lote já recusa nota com valor divergente por conta própria.
+
+  Exporta em XLSX, PDF e CSV, pelo mesmo caminho dos demais relatórios. A planilha é montada no
+  servidor a partir da mesma função que alimenta a tela, para as duas nunca divergirem.
+
+  Na primeira execução contra a competência 10/2026, apontou três clientes com NFS-e emitida em
+  duplicidade que a conferência manual não tinha visto.
+
 ## [6.99.47] - 2026-11-02
 
 ### Corrigido
