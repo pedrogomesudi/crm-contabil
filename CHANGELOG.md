@@ -25,6 +25,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   seguinte até ficarem distintas (`CONSTROI PARTICIPACOES` e `CONSTROI INCORPORADORA`), para o
   boleto não ficar ambíguo.
 
+  O titular do grupo abre a lista, mesmo quando já é um dos membros cobrados — ele é quem recebe
+  o boleto, e ver o próprio nome na relação evita a pergunta "por que pago a conta das outras e
+  não apareço?". Quando é membro, aparece uma vez só, na frente.
+
   O Inter imprime no máximo 5 linhas de 78 caracteres. Repetir a competência em cada empresa
   consumia 308 desses 390 caracteres e deixava 10 das 14 empresas do maior grupo de fora; com o
   cabeçalho único e a abreviação, os três grupos existentes cabem inteiros, com linha sobrando.

@@ -25,6 +25,16 @@ describe("montarDadosBoletoGrupo", () => {
   it("competência no cabeçalho e empresas abreviadas ao primeiro nome", () => {
     expect(d.observacoes).toEqual(["Competência 08/2026", "MATRIZ, FILIAL"]);
   });
+  it("o titular abre a lista mesmo quando não é membro cobrado do grupo", () => {
+    const soFilial: MembroGrupo[] = [
+      { clienteId: "2", razaoSocial: "FILIAL LTDA", cpfCnpj: "12345678000271", honorario: 150 },
+    ];
+    const r = montarDadosBoletoGrupo(titular, soFilial, "Grupo X", 1, "2026-09-10", "2026-08-01");
+    expect(r.observacoes).toEqual(["Competência 08/2026", "MATRIZ, FILIAL"]);
+  });
+  it("titular que também é membro não sai duas vezes", () => {
+    expect(d.observacoes!.join(", ").match(/MATRIZ/g)).toHaveLength(1);
+  });
   it("as 14 empresas do maior grupo real cabem nas 5 linhas do Inter", () => {
     const reais = [
       "ADCEGRO ADMINISTRACAO E AGRONEGOCIOS LTD",

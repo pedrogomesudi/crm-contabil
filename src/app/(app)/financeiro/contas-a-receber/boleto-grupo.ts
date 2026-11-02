@@ -13,7 +13,19 @@ export type TitularBoleto = {
 };
 
 // Monta os dados de emissão do boleto consolidado (pagador = titular, valor = soma dos
-// honorários do grupo, observações = razão social + CNPJ de cada empresa). Puro/testável.
+// honorários do grupo, observações = competência + empresas do grupo). Puro/testável.
+// O titular costuma ser membro do próprio grupo: sem isto o nome dele sairia duas vezes.
+// Compara sem caixa porque o cadastro não é consistente nisso.
+function semRepetir(razoes: string[]): string[] {
+  const vistas = new Set<string>();
+  return razoes.filter((r) => {
+    const chave = r.trim().toUpperCase();
+    if (!chave || vistas.has(chave)) return false;
+    vistas.add(chave);
+    return true;
+  });
+}
+
 export function montarDadosBoletoGrupo(
   titular: TitularBoleto,
   membros: MembroGrupo[],
@@ -33,11 +45,17 @@ export function montarDadosBoletoGrupo(
     descricao: `Honorários — grupo ${nomeGrupo}`,
     seuNumero: String(numero),
     // Competência uma vez, no cabeçalho, e as empresas do grupo abreviadas ao primeiro nome.
-    // É o que faz a lista inteira caber nas 5 linhas que o Inter imprime. O titular não entra:
-    // ele já é o pagador do boleto.
+    // É o que faz a lista inteira caber nas 5 linhas que o Inter imprime.
+    //
+    // O titular abre a lista mesmo quando já é membro do grupo (o caso comum, e aí a repetição
+    // é só de ordem). Ele é quem recebe o boleto: ver o próprio nome na relação evita a pergunta
+    // "por que estou pagando a conta de outras empresas e não apareço aqui?".
     observacoes: (() => {
       const cabecalho = rotuloDaOrigem("MENSALIDADE", competencia);
-      const empresas = empacotarLinhas(abreviarRazoesSociais(membros.map((m) => m.razaoSocial)), cabecalho ? 4 : 5);
+      const empresas = empacotarLinhas(
+        abreviarRazoesSociais(semRepetir([titular.razaoSocial, ...membros.map((m) => m.razaoSocial)])),
+        cabecalho ? 4 : 5,
+      );
       return cabecalho ? [cabecalho, ...empresas] : empresas;
     })(),
     pagadorEndereco: temEnd
