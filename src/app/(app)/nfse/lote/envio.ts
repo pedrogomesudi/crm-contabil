@@ -4,7 +4,7 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { podeVerHonorario } from "@/lib/clientes/permissoes";
 import { criarEnviadorProativo } from "@/lib/whatsapp/proativo";
 import { normalizarTelefone } from "@/lib/whatsapp/mensagem";
-import { linhasPagamento, competenciaBR, montarMensagemNota, vencimentoBR, valorBR } from "@/lib/whatsapp/notas-envio";
+import { linhasPagamento, competenciaBR, montarMensagemNota, dataBR, valorBR } from "@/lib/whatsapp/notas-envio";
 import { gerarDanfseFiel, caminhoDanfse } from "@/lib/nfse/danfse-cache";
 import { canaisParaEnvio, agregarResultado, type ResultadoCanal } from "@/lib/nfse/envio-canais";
 import { flagsParaCanal, type CanalCobranca } from "@/lib/clientes/canal-cobranca";
@@ -199,17 +199,17 @@ async function tituloMensalidade(
   admin: ReturnType<typeof createAdminSupabase>,
   clienteId: string,
   competencia: string,
-): Promise<{ id: string; valor: number } | null> {
+): Promise<{ id: string; valor: number; vencimento: string } | null> {
   const { data } = await admin
     .from("titulo")
-    .select("id, valor")
+    .select("id, valor, vencimento")
     .eq("cliente_id", clienteId)
     .eq("competencia", competencia)
     .eq("origem", "MENSALIDADE")
     .limit(1)
     .maybeSingle();
   if (!data) return null;
-  return { id: data.id as string, valor: Number(data.valor) };
+  return { id: data.id as string, valor: Number(data.valor), vencimento: String(data.vencimento) };
 }
 
 // Boleto ativo do título do honorário. Opcional: sem boleto, envia só a nota.
@@ -306,7 +306,7 @@ export async function enviarHonorarioLote(nfseId: string): Promise<ResultadoEnvi
     .eq("id", 1)
     .maybeSingle();
   const boleto = await boletoDoHonorario(admin, titulo.id);
-  const vencimento = vencimentoBR(String(nota.competencia), (fin?.dia_vencimento as number | null) ?? null);
+  const vencimento = dataBR(titulo.vencimento);
   const pagamento = linhasPagamento({
     pixChave: dados?.pix_chave,
     banco: dados?.banco,

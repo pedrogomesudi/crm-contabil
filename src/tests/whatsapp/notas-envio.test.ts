@@ -4,7 +4,7 @@ import {
   competenciaBR,
   preSelecionadas,
   montarMensagemNota,
-  vencimentoBR,
+  dataBR,
   valorBR,
 } from "@/lib/whatsapp/notas-envio";
 
@@ -93,15 +93,25 @@ describe("montarMensagemNota", () => {
   });
 });
 
-describe("vencimentoBR", () => {
-  it("dia do cadastro + mês da competência → DD/MM/YYYY", () => {
-    expect(vencimentoBR("2026-07-01", 15)).toBe("15/07/2026");
+describe("dataBR", () => {
+  it("ISO do banco vira DD/MM/AAAA", () => {
+    expect(dataBR("2026-11-03")).toBe("03/11/2026");
   });
-  it("dia com 1 dígito → zero-pad", () => {
-    expect(vencimentoBR("2026-07-01", 5)).toBe("05/07/2026");
+
+  // O vencimento cai no mês SEGUINTE ao da competência (gerar_mensalidades soma 1 mês).
+  // A versão anterior montava a data com o mês da própria competência e imprimia 03/10/2026
+  // numa cobrança que vence em 03/11/2026 — data já vencida na mão do cliente.
+  it("respeita o mês do vencimento, não o da competência", () => {
+    expect(dataBR("2026-11-03")).not.toBe("03/10/2026");
   });
-  it("sem dia (null) → vazio", () => {
-    expect(vencimentoBR("2026-07-01", null)).toBe("");
+
+  it("aceita timestamp e usa só a data", () => {
+    expect(dataBR("2026-11-03T12:30:00+00:00")).toBe("03/11/2026");
+  });
+
+  it("vazio ou malformado não inventa data", () => {
+    expect(dataBR("")).toBe("");
+    expect(dataBR("qualquer coisa")).toBe("");
   });
 });
 

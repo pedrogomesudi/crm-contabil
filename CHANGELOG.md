@@ -6,6 +6,22 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 [Versionamento Semântico](https://semver.org/lang/pt-BR/). Veja as regras em
 [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md) e o plano de evolução em [`ROADMAP.md`](ROADMAP.md).
 
+## [6.99.47] - 2026-11-02
+
+### Corrigido
+
+- **`{VENCIMENTO}` imprimia o mês errado na mensagem da NFS-e.** O marcador não lia o
+  vencimento: remontava a data juntando o dia do cadastro com o mês da **competência**. Mas o
+  vencimento cai no mês seguinte (`gerar_mensalidades` soma um mês), então a mensagem anunciava
+  03/10/2026 numa cobrança que vence em 03/11/2026 — data já vencida na mão de quem recebe.
+  E ignorava alteração de vencimento feita depois, na tela de contas a receber.
+
+  Agora o valor vem do `vencimento` do próprio título, que é a fonte de verdade. `vencimentoBR`
+  deu lugar a `dataBR`, que só formata a data do banco.
+
+  O template em produção usa "no próximo mês", não o marcador, então nenhuma mensagem saiu com
+  a data errada — mas usar `{VENCIMENTO}` era uma armadilha pronta.
+
 ## [6.99.46] - 2026-11-02
 
 ### Corrigido
