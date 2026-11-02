@@ -3,6 +3,7 @@ import { montarDadosBoletoGrupo } from "@/app/(app)/financeiro/contas-a-receber/
 import type { MembroGrupo } from "@/lib/financeiro/grupo-cobranca";
 
 const titular = {
+  clienteId: "1",
   razaoSocial: "MATRIZ LTDA",
   cpfCnpj: "12.345.678/0001-90",
   email: "m@x.com",
@@ -22,17 +23,17 @@ describe("montarDadosBoletoGrupo", () => {
   it("valor = soma dos honorários", () => {
     expect(d.valor).toBe(350);
   });
-  it("competência no cabeçalho e empresas abreviadas ao primeiro nome", () => {
-    expect(d.observacoes).toEqual(["Competência 08/2026", "MATRIZ, FILIAL"]);
-  });
-  it("o titular abre a lista mesmo quando não é membro cobrado do grupo", () => {
+  it("titular fora do grupo de faturamento não entra na lista", () => {
     const soFilial: MembroGrupo[] = [
       { clienteId: "2", razaoSocial: "FILIAL LTDA", cpfCnpj: "12345678000271", honorario: 150 },
     ];
     const r = montarDadosBoletoGrupo(titular, soFilial, "Grupo X", 1, "2026-09-10", "2026-08-01");
-    expect(r.observacoes).toEqual(["Competência 08/2026", "MATRIZ, FILIAL"]);
+    expect(r.observacoes).toEqual(["Competência 08/2026", "FILIAL"]);
   });
-  it("titular que também é membro não sai duas vezes", () => {
+  it("titular membro abre a lista com a razão social inteira, sem abreviar", () => {
+    expect(d.observacoes).toEqual(["Competência 08/2026", "MATRIZ LTDA, FILIAL"]);
+  });
+  it("titular membro aparece uma vez só", () => {
     expect(d.observacoes!.join(", ").match(/MATRIZ/g)).toHaveLength(1);
   });
   it("as 14 empresas do maior grupo real cabem nas 5 linhas do Inter", () => {

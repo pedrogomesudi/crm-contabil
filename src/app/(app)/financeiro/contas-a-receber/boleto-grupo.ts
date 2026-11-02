@@ -6,6 +6,7 @@ import { abreviarRazoesSociais, somarHonorariosGrupo, type MembroGrupo } from "@
 import type { DadosEmissao } from "@/lib/boleto/tipos";
 
 export type TitularBoleto = {
+  clienteId: string;
   razaoSocial: string;
   cpfCnpj: string;
   email: string | null;
@@ -14,16 +15,20 @@ export type TitularBoleto = {
 
 // Monta os dados de emissão do boleto consolidado (pagador = titular, valor = soma dos
 // honorários do grupo, observações = competência + empresas do grupo). Puro/testável.
-// O titular costuma ser membro do próprio grupo: sem isto o nome dele sairia duas vezes.
-// Compara sem caixa porque o cadastro não é consistente nisso.
-function semRepetir(razoes: string[]): string[] {
-  const vistas = new Set<string>();
-  return razoes.filter((r) => {
-    const chave = r.trim().toUpperCase();
-    if (!chave || vistas.has(chave)) return false;
-    vistas.add(chave);
-    return true;
-  });
+// As empresas que vão impressas no boleto, na ordem.
+//
+// O titular só entra se for um dos membros cobrados neste boleto. Quando é titular de um grupo
+// mas é faturado em outro, o nome dele aqui anunciaria uma cobrança que não está na soma.
+//
+// Entrando, abre a lista com a razão social INTEIRA: ele é o pagador, e o primeiro nome sozinho
+// pode não bastar para ele se reconhecer ("UNA" serve igual para duas empresas do mesmo dono).
+// A abreviação dos demais é calculada com o titular dentro da lista para que um membro que
+// compartilhe o primeiro nome dele também seja estendido.
+export function razoesParaOBoleto(titular: TitularBoleto, membros: MembroGrupo[]): string[] {
+  const outros = membros.filter((m) => m.clienteId !== titular.clienteId).map((m) => m.razaoSocial);
+  if (outros.length === membros.length) return abreviarRazoesSociais(outros);
+  const nome = titular.razaoSocial.trim();
+  return [nome, ...abreviarRazoesSociais([nome, ...outros]).slice(1)];
 }
 
 export function montarDadosBoletoGrupo(
@@ -46,16 +51,9 @@ export function montarDadosBoletoGrupo(
     seuNumero: String(numero),
     // Competência uma vez, no cabeçalho, e as empresas do grupo abreviadas ao primeiro nome.
     // É o que faz a lista inteira caber nas 5 linhas que o Inter imprime.
-    //
-    // O titular abre a lista mesmo quando já é membro do grupo (o caso comum, e aí a repetição
-    // é só de ordem). Ele é quem recebe o boleto: ver o próprio nome na relação evita a pergunta
-    // "por que estou pagando a conta de outras empresas e não apareço aqui?".
     observacoes: (() => {
       const cabecalho = rotuloDaOrigem("MENSALIDADE", competencia);
-      const empresas = empacotarLinhas(
-        abreviarRazoesSociais(semRepetir([titular.razaoSocial, ...membros.map((m) => m.razaoSocial)])),
-        cabecalho ? 4 : 5,
-      );
+      const empresas = empacotarLinhas(razoesParaOBoleto(titular, membros), cabecalho ? 4 : 5);
       return cabecalho ? [cabecalho, ...empresas] : empresas;
     })(),
     pagadorEndereco: temEnd
@@ -144,6 +142,7 @@ export async function emitirBoletoGrupoNucleo(
   const numero = Number(n);
   const dados = montarDadosBoletoGrupo(
     {
+      clienteId: titular.id as string,
       razaoSocial: titular.razao_social as string,
       cpfCnpj: (titular.cpf_cnpj as string) ?? "",
       email: (titular.email as string | null) ?? null,
