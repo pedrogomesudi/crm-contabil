@@ -6,6 +6,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 [Versionamento Semântico](https://semver.org/lang/pt-BR/). Veja as regras em
 [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md) e o plano de evolução em [`ROADMAP.md`](ROADMAP.md).
 
+## [6.99.44] - 2026-11-01
+
+### Adicionado
+
+- **Cliente e competência impressos no boleto.** Todo boleto emitido passa a trazer, na
+  mensagem ao pagador, a razão social do cliente e o mês de competência — por exemplo
+  `GOMES ADVOCACIA — competência 10/2026`. Razão social que não cabe nos 78 caracteres da
+  linha do Inter vai numa linha e a competência na seguinte, em vez de ser truncada.
+  No boleto consolidado de grupo, a identificação vem antes da lista de empresas, que cede
+  o espaço necessário dentro das cinco linhas que o Inter imprime.
+  No Asaas, que não tem campo de mensagem ao pagador, o mesmo texto entra na descrição da
+  cobrança — assim a informação não desaparece em silêncio numa troca de provedor.
+
 ## [6.99.43] - 2026-10-31
 
 ### Adicionado

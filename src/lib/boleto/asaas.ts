@@ -28,12 +28,15 @@ export function corpoCobrancaAsaas(
   description: string;
   externalReference: string;
 } {
+  // O Asaas não tem campo de mensagem ao pagador como o Inter: as observações entram na
+  // `description`, senão a identificação de cliente/competência desapareceria numa troca de provedor.
+  const obs = (dados.observacoes ?? []).filter((l) => l.trim()).join(" · ");
   return {
     customer: customerId,
     billingType: "BOLETO",
     value: dados.valor,
     dueDate: dados.vencimento,
-    description: dados.descricao,
+    description: obs ? `${dados.descricao} — ${obs}` : dados.descricao,
     externalReference: dados.seuNumero,
   };
 }

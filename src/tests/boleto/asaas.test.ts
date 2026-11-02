@@ -35,6 +35,10 @@ describe("asaas puras", () => {
     expect(corpoClienteAsaas(dados)).toEqual({ name: "ACME", cpfCnpj: "12345678000199", email: "a@b.com" });
     expect(corpoClienteAsaas({ ...dados, pagadorEmail: null })).toEqual({ name: "ACME", cpfCnpj: "12345678000199" });
   });
+  it("corpoCobrancaAsaas junta as observações na descrição (o Asaas não tem campo de mensagem)", () => {
+    const comObs = { ...dados, observacoes: ["ACME — competência 10/2026"] };
+    expect(corpoCobrancaAsaas("cus_1", comObs).description).toBe("Honorário julho — ACME — competência 10/2026");
+  });
   it("corpoCobrancaAsaas", () => {
     expect(corpoCobrancaAsaas("cus_1", dados)).toEqual({
       customer: "cus_1",

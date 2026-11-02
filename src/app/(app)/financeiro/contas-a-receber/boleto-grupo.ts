@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { adaptadorAtivo } from "@/lib/boleto/ativo";
+import { linhasObservacaoBoleto } from "@/lib/boleto/emissao";
 import { somarHonorariosGrupo, montarObservacoesGrupo, type MembroGrupo } from "@/lib/financeiro/grupo-cobranca";
 import type { DadosEmissao } from "@/lib/boleto/tipos";
 
@@ -19,6 +20,7 @@ export function montarDadosBoletoGrupo(
   nomeGrupo: string,
   numero: number,
   vencimento: string,
+  competencia: string | null,
 ): DadosEmissao {
   const e = titular.endereco ?? {};
   const temEnd = !!(e.cep || e.logradouro || e.cidade);
@@ -30,7 +32,12 @@ export function montarDadosBoletoGrupo(
     pagadorEmail: titular.email,
     descricao: `Honorários — grupo ${nomeGrupo}`,
     seuNumero: String(numero),
-    observacoes: montarObservacoesGrupo(membros),
+    // Identificação primeiro (titular + competência), lista de empresas depois. O Inter só
+    // imprime 5 linhas, então a lista cede o espaço que a identificação ocupar.
+    observacoes: (() => {
+      const id = linhasObservacaoBoleto(titular.razaoSocial, competencia);
+      return [...id, ...montarObservacoesGrupo(membros, Math.max(1, 5 - id.length))];
+    })(),
     pagadorEndereco: temEnd
       ? {
           cep: (e.cep ?? "").replace(/\D/g, ""),
@@ -126,6 +133,7 @@ export async function emitirBoletoGrupoNucleo(
     grupo.nome as string,
     numero,
     vencimento,
+    competencia,
   );
 
   let emitido;
