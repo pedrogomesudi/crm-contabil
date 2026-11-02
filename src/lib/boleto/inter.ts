@@ -80,8 +80,13 @@ export function parsearConsultaInter(codigoSolicitacao: string, consulta: Record
   };
 }
 
+// A cobrança do Inter registra de forma assíncrona, e os campos não ficam prontos juntos: o
+// PIX costuma vir antes da linha digitável. Enquanto faltar o que torna o boleto utilizável
+// — linha digitável e nosso número —, vale reconsultar. O PIX fica de fora da condição de
+// propósito: conta sem PIX habilitado nunca o devolve, e exigi-lo faria toda emissão esperar
+// as tentativas extras sem motivo.
 export function precisaReconsultarInter(b: BoletoEmitido): boolean {
-  return b.linhaDigitavel === null && b.pixCopiaCola === null;
+  return !b.linhaDigitavel || !b.nossoNumero;
 }
 
 // A exportação de PDF do Inter devolve o arquivo em base64 no campo `pdf`.
@@ -231,10 +236,11 @@ export function criarAdaptadorInter(
       const criada = await req("POST", "/cobrancas", tk, corpoCobrancaInter(dados));
       const cod = String(criada.codigoSolicitacao ?? "");
       let emitido = parsearConsultaInter(cod, await req("GET", `/cobrancas/${cod}`, tk));
-      // A cobrança do Inter processa async: no GET imediato a linha/PIX podem vir nulos.
-      // Reconsulta uma vez após uma pausa curta antes de gravar um boleto "vazio".
-      if (precisaReconsultarInter(emitido)) {
-        await esperar(1500);
+      // A cobrança do Inter processa async: no GET imediato os campos podem vir incompletos.
+      // Reconsulta com pausa crescente antes de gravar um boleto inutilizável. Uma tentativa
+      // só não bastou em produção — gravou três boletos sem linha digitável.
+      for (let tent = 1; tent <= 3 && precisaReconsultarInter(emitido); tent += 1) {
+        await esperar(1500 * tent);
         emitido = parsearConsultaInter(cod, await req("GET", `/cobrancas/${cod}`, tk));
       }
       return emitido;
@@ -250,6 +256,10 @@ export function criarAdaptadorInter(
     async registrarWebhook(url: string): Promise<void> {
       const tk = await obterToken();
       await req("PUT", "/cobrancas/webhook", tk, { webhookUrl: url });
+    },
+    async reconsultar(codigoSolicitacao: string): Promise<BoletoEmitido | null> {
+      const tk = await obterToken();
+      return parsearConsultaInter(codigoSolicitacao, await req("GET", `/cobrancas/${codigoSolicitacao}`, tk));
     },
     async consultarWebhook(): Promise<string | null> {
       const tk = await obterToken();

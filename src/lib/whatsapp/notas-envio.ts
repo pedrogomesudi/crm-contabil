@@ -91,12 +91,14 @@ export function montarMensagemNota(template: string, vars: VarsNota): string {
   });
 }
 
-// Vencimento a partir do dia_vencimento do cadastro + o mês/ano da competência → "DD/MM/YYYY".
-export function vencimentoBR(competencia: string, dia: number | null): string {
-  if (!dia) return "";
-  const m = /^(\d{4})-(\d{2})/.exec(competencia);
-  if (!m) return "";
-  return `${String(dia).padStart(2, "0")}/${m[2]}/${m[1]}`;
+// Data do banco (YYYY-MM-DD, com ou sem hora) em DD/MM/AAAA.
+//
+// O vencimento vem do título, não é recalculado: ele cai no mês SEGUINTE ao da competência
+// (`gerar_mensalidades` soma um mês) e pode ter sido alterado depois, na tela de contas a
+// receber. Montar a data a partir da competência imprimia o mês errado na mensagem do cliente.
+export function dataBR(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : "";
 }
 
 // Valor em reais SEM o "R$" (ex.: 300 → "300,00", 1234.5 → "1.234,50").

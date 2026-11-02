@@ -101,7 +101,11 @@ export function ContasReceber({
   const sincronizar = () =>
     start(async () => {
       const r = await sincronizarBoletosInter();
-      setMsg(r.erro ?? `${r.baixados ?? 0} boleto(s) baixado(s).`);
+      setMsg(
+        r.erro ??
+          `${r.baixados ?? 0} boleto(s) baixado(s).` +
+            (r.completados ? ` ${r.completados} boleto(s) tiveram a linha digitável completada.` : ""),
+      );
       if (!r.erro && competencia) {
         setTitulos(await listarTitulos(competencia));
         setBoletos(await listarBoletosDaCompetencia(competencia));

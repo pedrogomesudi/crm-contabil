@@ -214,12 +214,12 @@ export async function listarBoletosDaCompetencia(competencia: string): Promise<R
   return mapa;
 }
 
-export async function sincronizarBoletosInter(): Promise<{ baixados?: number; erro?: string }> {
+export async function sincronizarBoletosInter(): Promise<{ baixados?: number; completados?: number; erro?: string }> {
   if (!(await gate())) return { erro: "Sem permissão." };
   try {
     const r = await sincronizarBoletosCore();
     revalidatePath("/financeiro/contas-a-receber");
-    return { baixados: r.baixados };
+    return { baixados: r.baixados, completados: r.completados };
   } catch (e) {
     return { erro: `Falha na sincronização: ${(e as Error).message}` };
   }

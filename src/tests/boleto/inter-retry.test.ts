@@ -2,19 +2,38 @@ import { describe, it, expect } from "vitest";
 import { precisaReconsultarInter, corpoCobrancaInter, normalizarContaCorrenteInter } from "@/lib/boleto/inter";
 import type { BoletoEmitido } from "@/lib/boleto/tipos";
 
-const bo = (linha: string | null, pix: string | null): BoletoEmitido => ({
+const bo = (linha: string | null, pix: string | null, nosso: string | null = "123"): BoletoEmitido => ({
   provedorBoletoId: "x",
-  nossoNumero: null,
+  nossoNumero: nosso,
   linhaDigitavel: linha,
   pixCopiaCola: pix,
   urlPdf: null,
 });
 
 describe("precisaReconsultarInter", () => {
-  it("true só quando linha e pix são ambos nulos", () => {
-    expect(precisaReconsultarInter(bo(null, null))).toBe(true);
+  it("completo não reconsulta", () => {
+    expect(precisaReconsultarInter(bo("0001", "pix"))).toBe(false);
+  });
+
+  it("nada preenchido reconsulta", () => {
+    expect(precisaReconsultarInter(bo(null, null, null))).toBe(true);
+  });
+
+  // Este é o caso que foi para produção: o Inter devolveu o PIX pronto e a linha digitável
+  // ainda não. Com a condição em `&&`, não havia reconsulta e o boleto era gravado sem linha
+  // — inútil para enviar ao cliente. Três boletos de grupo nasceram assim em 02/11/2026.
+  it("PIX pronto mas linha digitável ausente RECONSULTA", () => {
+    expect(precisaReconsultarInter(bo(null, "pix"))).toBe(true);
+  });
+
+  it("linha pronta mas nosso número ausente reconsulta", () => {
+    expect(precisaReconsultarInter(bo("0001", "pix", null))).toBe(true);
+  });
+
+  // Conta sem PIX habilitado: a linha digitável e o nosso número bastam. Exigir o PIX aqui
+  // faria toda emissão esperar as tentativas extras à toa — custo real num lote de 137.
+  it("sem PIX, mas com linha e nosso número, não reconsulta", () => {
     expect(precisaReconsultarInter(bo("0001", null))).toBe(false);
-    expect(precisaReconsultarInter(bo(null, "pix"))).toBe(false);
   });
 });
 
