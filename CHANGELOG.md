@@ -6,6 +6,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 [Versionamento Semântico](https://semver.org/lang/pt-BR/). Veja as regras em
 [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md) e o plano de evolução em [`ROADMAP.md`](ROADMAP.md).
 
+## [6.99.45] - 2026-11-02
+
+### Corrigido
+
+- **Boleto de grupo cancelado agora pode ser reemitido.** A guarda de idempotência olhava a
+  existência do vínculo `boleto_titulo` sem checar o status do boleto. Como o cancelamento só
+  marca `boleto.status='cancelado'` e preserva os vínculos, qualquer grupo que tivesse um boleto
+  cancelado ficava impossibilitado de receber outro naquela competência — e a emissão devolvia
+  `pulado`, não erro, então a falha passava calada e os clientes ficavam sem cobrança.
+  O próprio comentário do `cancelarBoletoGrupo` já prometia que os títulos "podem ser
+  reemitidos"; agora o código cumpre. Boleto emitido ou pago continua bloqueando, para não
+  cobrar duas vezes; cancelado e com erro não bloqueiam; status desconhecido bloqueia por
+  precaução.
+
 ## [6.99.44] - 2026-11-01
 
 ### Adicionado
