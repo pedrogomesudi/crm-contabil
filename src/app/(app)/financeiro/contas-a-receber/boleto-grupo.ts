@@ -1,8 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { adaptadorAtivo } from "@/lib/boleto/ativo";
-import { linhasObservacaoBoleto } from "@/lib/boleto/emissao";
-import { somarHonorariosGrupo, montarObservacoesGrupo, type MembroGrupo } from "@/lib/financeiro/grupo-cobranca";
+import { empacotarLinhas, rotuloDaOrigem } from "@/lib/boleto/emissao";
+import { abreviarRazoesSociais, somarHonorariosGrupo, type MembroGrupo } from "@/lib/financeiro/grupo-cobranca";
 import type { DadosEmissao } from "@/lib/boleto/tipos";
 
 export type TitularBoleto = {
@@ -32,11 +32,13 @@ export function montarDadosBoletoGrupo(
     pagadorEmail: titular.email,
     descricao: `Honorários — grupo ${nomeGrupo}`,
     seuNumero: String(numero),
-    // Identificação primeiro (titular + competência), lista de empresas depois. O Inter só
-    // imprime 5 linhas, então a lista cede o espaço que a identificação ocupar.
+    // Competência uma vez, no cabeçalho, e as empresas do grupo abreviadas ao primeiro nome.
+    // É o que faz a lista inteira caber nas 5 linhas que o Inter imprime. O titular não entra:
+    // ele já é o pagador do boleto.
     observacoes: (() => {
-      const id = linhasObservacaoBoleto(titular.razaoSocial, competencia);
-      return [...id, ...montarObservacoesGrupo(membros, Math.max(1, 5 - id.length))];
+      const cabecalho = rotuloDaOrigem("MENSALIDADE", competencia);
+      const empresas = empacotarLinhas(abreviarRazoesSociais(membros.map((m) => m.razaoSocial)), cabecalho ? 4 : 5);
+      return cabecalho ? [cabecalho, ...empresas] : empresas;
     })(),
     pagadorEndereco: temEnd
       ? {

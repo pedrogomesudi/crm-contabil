@@ -1,7 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { dadosEmissaoDeTitulo } from "@/lib/boleto/emissao";
 
-const titulo = { valor: 300, vencimento: "2026-08-10", descricao: "Honorário 07/2026", competencia: "2026-07-01" };
+const titulo = {
+  valor: 300,
+  vencimento: "2026-08-10",
+  descricao: "Honorário 07/2026",
+  origem: "MENSALIDADE",
+  competencia: "2026-07-01",
+};
 const cliente = {
   razaoSocial: "ACME LTDA",
   cpfCnpj: "12.345.678/0001-99",

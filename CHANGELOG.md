@@ -10,14 +10,34 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
-- **Cliente e competência impressos no boleto.** Todo boleto emitido passa a trazer, na
-  mensagem ao pagador, a razão social do cliente e o mês de competência — por exemplo
-  `GOMES ADVOCACIA — competência 10/2026`. Razão social que não cabe nos 78 caracteres da
-  linha do Inter vai numa linha e a competência na seguinte, em vez de ser truncada.
-  No boleto consolidado de grupo, a identificação vem antes da lista de empresas, que cede
-  o espaço necessário dentro das cinco linhas que o Inter imprime.
+- **Identificação do cliente e da competência na mensagem do boleto.** Por origem do título:
+  - **Honorário mensal:** `RAZÃO SOCIAL — competência 10/2026`.
+  - **Décimo terceiro:** `RAZÃO SOCIAL — honorário de encerramento anual`, sem competência,
+    porque a cobrança não se refere a um mês.
+  - **Cobrança avulsa:** nenhuma observação — é pontual, e o texto só confundiria.
+
+  Razão social que não cabe nos 78 caracteres da linha do Inter ocupa uma linha e o rótulo vai
+  na seguinte, em vez de ser truncada.
+
+- **Boleto de grupo lista todas as empresas.** A competência aparece uma vez, no cabeçalho, e
+  as razões sociais são abreviadas ao primeiro nome (`BRAVE AGRONEGOCIOS LTDA` → `BRAVE`),
+  várias por linha. Empresas do mesmo grupo que compartilham o primeiro nome ganham o nome
+  seguinte até ficarem distintas (`CONSTROI PARTICIPACOES` e `CONSTROI INCORPORADORA`), para o
+  boleto não ficar ambíguo.
+
+  O Inter imprime no máximo 5 linhas de 78 caracteres. Repetir a competência em cada empresa
+  consumia 308 desses 390 caracteres e deixava 10 das 14 empresas do maior grupo de fora; com o
+  cabeçalho único e a abreviação, os três grupos existentes cabem inteiros, com linha sobrando.
+  Se algum dia um grupo não couber, a última linha declara quantas ficaram de fora em vez de
+  omiti-las em silêncio, e o corte é sempre em empresa inteira.
+
   No Asaas, que não tem campo de mensagem ao pagador, o mesmo texto entra na descrição da
-  cobrança — assim a informação não desaparece em silêncio numa troca de provedor.
+  cobrança — assim a informação não desaparece numa troca de provedor.
+
+### Removido
+
+- `montarObservacoesGrupo`, que imprimia `RAZÃO SOCIAL — CNPJ` por empresa: o formato acima
+  substituiu seu único uso.
 
 ## [6.99.43] - 2026-10-31
 

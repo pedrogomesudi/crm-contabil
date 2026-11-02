@@ -22,24 +22,39 @@ describe("montarDadosBoletoGrupo", () => {
   it("valor = soma dos honorários", () => {
     expect(d.valor).toBe(350);
   });
-  it("observações: titular e competência na frente, empresas depois", () => {
-    expect(d.observacoes).toEqual([
-      "MATRIZ LTDA — competência 08/2026",
-      "MATRIZ LTDA — 12.345.678/0001-90",
-      "FILIAL LTDA — 12.345.678/0002-71",
-    ]);
+  it("competência no cabeçalho e empresas abreviadas ao primeiro nome", () => {
+    expect(d.observacoes).toEqual(["Competência 08/2026", "MATRIZ, FILIAL"]);
   });
-  it("a lista de empresas cede espaço para a linha de identificação", () => {
-    const muitos = Array.from({ length: 6 }, (_, i) => ({
+  it("as 14 empresas do maior grupo real cabem nas 5 linhas do Inter", () => {
+    const reais = [
+      "ADCEGRO ADMINISTRACAO E AGRONEGOCIOS LTD",
+      "SOLUCAO GESTAO DE PARTICIPACOES LTDA",
+      "JANDI GESTAO DE PARTICIPACOES LTDA",
+      "ROPAKE GESTÃO DE PARTICIPAÇÕES LTDA",
+      "TEODORO LAU PARTICIPAÇES E EMPREENDIMENTOS IMOBILIARIOS",
+      "CONSTROI PARTICIPACOES LTDA",
+      "ATOS GESTAO E PARTICIPACOES LTDA",
+      "CONSTROI INCORPORADORA E LOTEADORA LTDA",
+      "DIRETRIZ GESTAO DE NEGOCIOS LTDA",
+      "FAMILY GESTAO DE PARTICIPACOES LTDA.",
+      "GPLA GESTÃO DE PARTICIPAÇÕES LTDA",
+      "MASTER INCORPORADORA E LOTEADORA LTDA",
+      "VEGAS GESTAO E PARTICIPACOES LTDA",
+      "WISDOM GESTAO DE PARTICIPACOES EIRELI",
+    ];
+    const membros14: MembroGrupo[] = reais.map((razaoSocial, i) => ({
       clienteId: String(i),
-      razaoSocial: `E${i}`,
+      razaoSocial,
       cpfCnpj: "12345678000190",
-      honorario: 10,
+      honorario: 100,
     }));
-    const r = montarDadosBoletoGrupo(titular, muitos, "Grupo X", 1, "2026-09-10", "2026-08-01").observacoes!;
-    expect(r).toHaveLength(5);
-    expect(r[0]).toBe("MATRIZ LTDA — competência 08/2026");
-    expect(r[4]).toBe("e mais 3 empresas");
+    const obs = montarDadosBoletoGrupo(titular, membros14, "CONSTROI", 1, "2026-09-10", "2026-08-01").observacoes!;
+    expect(obs.length).toBeLessThanOrEqual(5);
+    for (const l of obs) expect(l.length).toBeLessThanOrEqual(78);
+    // Nenhuma empresa fica de fora, e as duas "CONSTROI" seguem distinguíveis.
+    expect(obs.join(" ")).not.toContain("e mais");
+    expect(obs.join(", ")).toContain("CONSTROI PARTICIPACOES");
+    expect(obs.join(", ")).toContain("CONSTROI INCORPORADORA");
   });
   it("seuNumero e vencimento corretos", () => {
     expect(d.seuNumero).toBe("42");
