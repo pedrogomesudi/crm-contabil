@@ -79,7 +79,14 @@ async function gate() {
 // nem checagem de duplicidade — isso é responsabilidade de quem chama.
 async function emitirBoletoNucleo(
   supabase: Awaited<ReturnType<typeof createServerSupabase>>,
-  titulo: { id: string; valor: number; descricao: string | null; cliente_id: string },
+  titulo: {
+    id: string;
+    valor: number;
+    descricao: string | null;
+    origem: string;
+    competencia: string | null;
+    cliente_id: string;
+  },
   vencimento: string,
 ): Promise<{ ok?: true; erro?: string }> {
   const { data: c } = await supabase
@@ -93,7 +100,13 @@ async function emitirBoletoNucleo(
   const { data: n } = await supabase.rpc("proximo_numero_boleto");
   const numero = Number(n);
   const dados = dadosEmissaoDeTitulo(
-    { valor: Number(titulo.valor), vencimento, descricao: titulo.descricao },
+    {
+      valor: Number(titulo.valor),
+      vencimento,
+      descricao: titulo.descricao,
+      origem: titulo.origem,
+      competencia: titulo.competencia,
+    },
     {
       razaoSocial: c.razao_social as string,
       cpfCnpj: (c.cpf_cnpj as string) ?? "",
@@ -129,7 +142,7 @@ export async function emitirBoleto(tituloId: string): Promise<{ ok?: boolean; er
   const supabase = await createServerSupabase();
   const { data: t } = await supabase
     .from("titulo")
-    .select("id, valor, vencimento, descricao, status, cliente_id")
+    .select("id, valor, vencimento, descricao, origem, competencia, status, cliente_id")
     .eq("id", tituloId)
     .maybeSingle();
   if (!t) return { erro: "Título não encontrado." };
@@ -147,6 +160,8 @@ export async function emitirBoleto(tituloId: string): Promise<{ ok?: boolean; er
       id: t.id as string,
       valor: Number(t.valor),
       descricao: (t.descricao as string | null) ?? null,
+      origem: t.origem as string,
+      competencia: (t.competencia as string | null) ?? null,
       cliente_id: t.cliente_id as string,
     },
     t.vencimento as string,
@@ -309,7 +324,9 @@ export async function alterarVencimentoTitulo(
 
   const { data: t } = await admin
     .from("titulo")
-    .select("id, valor, descricao, status, cliente_id, vencimento, baixa(valor_recebido, estornada)")
+    .select(
+      "id, valor, descricao, origem, competencia, status, cliente_id, vencimento, baixa(valor_recebido, estornada)",
+    )
     .eq("id", tituloId)
     .maybeSingle();
   if (!t) return { erro: "Título não encontrado." };
@@ -357,6 +374,8 @@ export async function alterarVencimentoTitulo(
         id: t.id as string,
         valor: Number(t.valor),
         descricao: (t.descricao as string | null) ?? null,
+        origem: t.origem as string,
+        competencia: (t.competencia as string | null) ?? null,
         cliente_id: t.cliente_id as string,
       },
       novaData,

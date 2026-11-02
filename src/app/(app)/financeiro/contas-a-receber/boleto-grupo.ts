@@ -1,10 +1,12 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { adaptadorAtivo } from "@/lib/boleto/ativo";
-import { somarHonorariosGrupo, montarObservacoesGrupo, type MembroGrupo } from "@/lib/financeiro/grupo-cobranca";
+import { empacotarLinhas, rotuloDaOrigem } from "@/lib/boleto/emissao";
+import { abreviarRazoesSociais, somarHonorariosGrupo, type MembroGrupo } from "@/lib/financeiro/grupo-cobranca";
 import type { DadosEmissao } from "@/lib/boleto/tipos";
 
 export type TitularBoleto = {
+  clienteId: string;
   razaoSocial: string;
   cpfCnpj: string;
   email: string | null;
@@ -12,13 +14,30 @@ export type TitularBoleto = {
 };
 
 // Monta os dados de emissão do boleto consolidado (pagador = titular, valor = soma dos
-// honorários do grupo, observações = razão social + CNPJ de cada empresa). Puro/testável.
+// honorários do grupo, observações = competência + empresas do grupo). Puro/testável.
+// As empresas que vão impressas no boleto, na ordem.
+//
+// O titular só entra se for um dos membros cobrados neste boleto. Quando é titular de um grupo
+// mas é faturado em outro, o nome dele aqui anunciaria uma cobrança que não está na soma.
+//
+// Entrando, abre a lista com a razão social INTEIRA: ele é o pagador, e o primeiro nome sozinho
+// pode não bastar para ele se reconhecer ("UNA" serve igual para duas empresas do mesmo dono).
+// A abreviação dos demais é calculada com o titular dentro da lista para que um membro que
+// compartilhe o primeiro nome dele também seja estendido.
+export function razoesParaOBoleto(titular: TitularBoleto, membros: MembroGrupo[]): string[] {
+  const outros = membros.filter((m) => m.clienteId !== titular.clienteId).map((m) => m.razaoSocial);
+  if (outros.length === membros.length) return abreviarRazoesSociais(outros);
+  const nome = titular.razaoSocial.trim();
+  return [nome, ...abreviarRazoesSociais([nome, ...outros]).slice(1)];
+}
+
 export function montarDadosBoletoGrupo(
   titular: TitularBoleto,
   membros: MembroGrupo[],
   nomeGrupo: string,
   numero: number,
   vencimento: string,
+  competencia: string | null,
 ): DadosEmissao {
   const e = titular.endereco ?? {};
   const temEnd = !!(e.cep || e.logradouro || e.cidade);
@@ -30,7 +49,13 @@ export function montarDadosBoletoGrupo(
     pagadorEmail: titular.email,
     descricao: `Honorários — grupo ${nomeGrupo}`,
     seuNumero: String(numero),
-    observacoes: montarObservacoesGrupo(membros),
+    // Competência uma vez, no cabeçalho, e as empresas do grupo abreviadas ao primeiro nome.
+    // É o que faz a lista inteira caber nas 5 linhas que o Inter imprime.
+    observacoes: (() => {
+      const cabecalho = rotuloDaOrigem("MENSALIDADE", competencia);
+      const empresas = empacotarLinhas(razoesParaOBoleto(titular, membros), cabecalho ? 4 : 5);
+      return cabecalho ? [cabecalho, ...empresas] : empresas;
+    })(),
     pagadorEndereco: temEnd
       ? {
           cep: (e.cep ?? "").replace(/\D/g, ""),
@@ -117,6 +142,7 @@ export async function emitirBoletoGrupoNucleo(
   const numero = Number(n);
   const dados = montarDadosBoletoGrupo(
     {
+      clienteId: titular.id as string,
       razaoSocial: titular.razao_social as string,
       cpfCnpj: (titular.cpf_cnpj as string) ?? "",
       email: (titular.email as string | null) ?? null,
@@ -126,6 +152,7 @@ export async function emitirBoletoGrupoNucleo(
     grupo.nome as string,
     numero,
     vencimento,
+    competencia,
   );
 
   let emitido;
