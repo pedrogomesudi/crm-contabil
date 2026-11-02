@@ -43,5 +43,8 @@ export interface ProvedorBoleto {
   registrarWebhook?(url: string): Promise<void>;
   consultarWebhook?(): Promise<string | null>;
   consultarPagamento?(provedorBoletoId: string): Promise<EventoPagamento | null>;
+  // Relê os dados do boleto no provedor. Serve para completar boleto gravado sem linha
+  // digitável, que o registro assíncrono do provedor pode produzir.
+  reconsultar?(provedorBoletoId: string): Promise<BoletoEmitido | null>;
   cancelar?(provedorBoletoId: string, motivo: string): Promise<void>;
 }

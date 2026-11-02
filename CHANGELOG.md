@@ -6,6 +6,28 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 [Versionamento Semântico](https://semver.org/lang/pt-BR/). Veja as regras em
 [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md) e o plano de evolução em [`ROADMAP.md`](ROADMAP.md).
 
+## [6.99.46] - 2026-11-02
+
+### Corrigido
+
+- **Boleto não é mais gravado sem linha digitável.** O Inter registra a cobrança de forma
+  assíncrona e os campos não ficam prontos juntos — o PIX costuma vir antes da linha digitável.
+  A condição de reconsulta era `linhaDigitavel === null && pixCopiaCola === null`: com o PIX
+  já preenchido ela dava `false`, nenhuma reconsulta acontecia e o boleto era gravado sem linha
+  digitável nem nosso número. Boleto assim não pode ser pago pelo cliente, e a cobrança por
+  WhatsApp simplesmente omitia a linha (`whatsapp.ts` só a inclui `if (bol.linha_digitavel)`).
+
+  Agora reconsulta enquanto faltar linha digitável **ou** nosso número, em até 3 tentativas com
+  pausa crescente — uma só não bastou em produção. O PIX ficou fora da condição de propósito:
+  conta sem PIX habilitado nunca o devolve, e exigi-lo faria toda emissão esperar à toa.
+
+- **Boleto incompleto deixou de ficar preso.** Não havia como completar um boleto já gravado: o
+  adaptador não expunha releitura. Agora `ProvedorBoleto.reconsultar()` existe, e a
+  sincronização de boletos completa o que estiver faltando, informando quantos corrigiu. Só
+  preenche campo vazio — nunca sobrescreve dado já gravado, que é o que foi enviado ao cliente.
+
+  Na correção desta versão, **37 boletos emitidos** em produção foram completados.
+
 ## [6.99.45] - 2026-11-02
 
 ### Corrigido
