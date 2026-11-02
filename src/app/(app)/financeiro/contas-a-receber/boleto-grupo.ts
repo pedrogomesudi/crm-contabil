@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { adaptadorAtivo } from "@/lib/boleto/ativo";
+import { boletoBloqueiaReemissao } from "@/lib/boleto/cancelamento";
 import { empacotarLinhas, rotuloDaOrigem } from "@/lib/boleto/emissao";
 import { abreviarRazoesSociais, somarHonorariosGrupo, type MembroGrupo } from "@/lib/financeiro/grupo-cobranca";
 import type { DadosEmissao } from "@/lib/boleto/tipos";
@@ -112,15 +113,22 @@ export async function emitirBoletoGrupoNucleo(
     );
   if (!titulos?.length) return { pulado: "Nenhum honorário em aberto no grupo nesta competência." };
 
-  // Idempotência: se algum título do grupo já está num boleto de grupo, não emite outro.
+  // Idempotência: se algum título do grupo já está num boleto de grupo DE PÉ, não emite outro.
+  // O status do boleto é obrigatório na checagem: o cancelamento não apaga os vínculos
+  // `boleto_titulo`, então olhar só a existência do vínculo tornaria todo boleto de grupo
+  // cancelado impossível de reemitir — o oposto do que o cancelamento promete.
   const { data: jaLig } = await supabase
     .from("boleto_titulo")
-    .select("titulo_id")
+    .select("titulo_id, boleto:boleto_id(status)")
     .in(
       "titulo_id",
       titulos.map((t) => t.id),
     );
-  if (jaLig?.length) return { pulado: "Boleto do grupo já emitido nesta competência." };
+  const vivo = (jaLig ?? []).some((r) => {
+    const b = (Array.isArray(r.boleto) ? r.boleto[0] : r.boleto) as { status?: string } | null;
+    return !!b?.status && boletoBloqueiaReemissao(b.status);
+  });
+  if (vivo) return { pulado: "Boleto do grupo já emitido nesta competência." };
 
   const porCliente = new Map((membros ?? []).map((m) => [m.id, m]));
   const membrosComTitulo: MembroGrupo[] = titulos.map((t) => {
