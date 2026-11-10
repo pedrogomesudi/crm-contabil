@@ -20,8 +20,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
   O novo estado entra na precedência entre `assinado` e `enviado`: contrato finalizado ou
   anexado em papel continua vencendo, e basta um envelope `parcial` para o cliente sair de
-  "Enviado". A cor segue sendo a de pendência — os dois estados estão em aberto, e quem separa
-  é o rótulo.
+  "Enviado".
+
+  O destaque é próprio: variante `acao` do Badge, amarelo **preenchido** (`atencao-solido`)
+  contra o amarelo tingido de "Enviado". Mesma família — os dois são pendência —, peso maior
+  para o que depende de nós. O texto é escuro, não branco: sobre o `#b87d03` o branco dá 3,5:1
+  e reprova no AA, enquanto o token `texto` dá 5,2:1.
 
 ## [6.99.48] - 2026-11-02
 

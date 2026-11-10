@@ -292,9 +292,16 @@ export default async function ClientesPage({
 // vermelho = recusado, cinza = não começou.
 function BadgeContrato({ estado }: { estado: EstadoContrato }) {
   if (estado === "nenhum") return <span className="text-cinza-claro">{LABEL_CONTRATO.nenhum}</span>;
-  // "Assinado pelo cliente" e "Enviado" dividem o amarelo de pendência: os dois estão em aberto.
-  // Quem separa é o rótulo. Não inventei cor nova porque a única livre no tema é a violeta, que
-  // neste produto significa IA — um contrato roxo leria como recurso de IA, não como pendência.
-  const variante = estado === "assinado" ? "positivo" : estado === "recusado" ? "negativo" : "atencao";
+  // "Assinado pelo cliente" é pendência NOSSA: ganha o amarelo preenchido, não o tingido de
+  // "Enviado" (que espera o cliente). Mesma família, peso maior — a lista mostra de relance
+  // o que está na nossa fila. Violeta ficou fora de propósito: neste produto significa IA.
+  const variante =
+    estado === "assinado"
+      ? "positivo"
+      : estado === "assinado_cliente"
+        ? "acao"
+        : estado === "recusado"
+          ? "negativo"
+          : "atencao";
   return <Badge variante={variante}>{LABEL_CONTRATO[estado]}</Badge>;
 }
