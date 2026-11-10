@@ -292,6 +292,16 @@ export default async function ClientesPage({
 // vermelho = recusado, cinza = não começou.
 function BadgeContrato({ estado }: { estado: EstadoContrato }) {
   if (estado === "nenhum") return <span className="text-cinza-claro">{LABEL_CONTRATO.nenhum}</span>;
-  const variante = estado === "assinado" ? "positivo" : estado === "enviado" ? "atencao" : "negativo";
+  // "Assinado pelo cliente" é pendência NOSSA: ganha o amarelo preenchido, não o tingido de
+  // "Enviado" (que espera o cliente). Mesma família, peso maior — a lista mostra de relance
+  // o que está na nossa fila. Violeta ficou fora de propósito: neste produto significa IA.
+  const variante =
+    estado === "assinado"
+      ? "positivo"
+      : estado === "assinado_cliente"
+        ? "acao"
+        : estado === "recusado"
+          ? "negativo"
+          : "atencao";
   return <Badge variante={variante}>{LABEL_CONTRATO[estado]}</Badge>;
 }

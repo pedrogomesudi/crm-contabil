@@ -12,9 +12,26 @@ describe("estadoContratoCliente", () => {
     expect(estadoContratoCliente([env("finalizado")], false)).toBe("assinado");
   });
 
-  it("envelope só enviado ou parcial: enviado", () => {
+  it("envelope só enviado: enviado", () => {
     expect(estadoContratoCliente([env("enviado")], false)).toBe("enviado");
-    expect(estadoContratoCliente([env("parcial")], false)).toBe("enviado");
+  });
+
+  // `parcial` é o cliente já tendo assinado e a Elevare não. Colapsar isso em "Enviado"
+  // escondia 18 contratos prontos para a contratada assinar — ninguém via que estavam na fila.
+  it("envelope parcial: assinado pelo cliente, não apenas enviado", () => {
+    expect(estadoContratoCliente([env("parcial")], false)).toBe("assinado_cliente");
+  });
+
+  it("parcial vence enviado: basta um envelope em que o cliente já assinou", () => {
+    expect(estadoContratoCliente([env("enviado"), env("parcial")], false)).toBe("assinado_cliente");
+  });
+
+  it("finalizado vence parcial", () => {
+    expect(estadoContratoCliente([env("parcial"), env("finalizado")], false)).toBe("assinado");
+  });
+
+  it("documento em papel vence parcial", () => {
+    expect(estadoContratoCliente([env("parcial")], true)).toBe("assinado");
   });
 
   it("documento de contrato assinado anexado vale como assinado, mesmo sem ClickSign", () => {

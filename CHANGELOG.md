@@ -6,6 +6,27 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 [Versionamento Semântico](https://semver.org/lang/pt-BR/). Veja as regras em
 [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md) e o plano de evolução em [`ROADMAP.md`](ROADMAP.md).
 
+## [6.99.49] - 2026-11-09
+
+### Corrigido
+
+- **"Assinado pelo cliente" deixou de se esconder atrás de "Enviado".** A coluna Contrato da
+  lista de clientes colapsava o envelope `parcial` — cliente já assinou, contratada não — no
+  mesmo rótulo de um contrato recém-enviado. O dado sempre existiu (o webhook do ClickSign
+  registra cada signatário e a data); o que faltava era a tela distinguir os dois.
+
+  Em produção eram **18 contratos** nessa situação, o mais antigo assinado pelo cliente em
+  21/10/2026, todos parados sem ninguém saber que esperavam apenas a assinatura da Elevare.
+
+  O novo estado entra na precedência entre `assinado` e `enviado`: contrato finalizado ou
+  anexado em papel continua vencendo, e basta um envelope `parcial` para o cliente sair de
+  "Enviado".
+
+  O destaque é próprio: variante `acao` do Badge, amarelo **preenchido** (`atencao-solido`)
+  contra o amarelo tingido de "Enviado". Mesma família — os dois são pendência —, peso maior
+  para o que depende de nós. O texto é escuro, não branco: sobre o `#b87d03` o branco dá 3,5:1
+  e reprova no AA, enquanto o token `texto` dá 5,2:1.
+
 ## [6.99.48] - 2026-11-02
 
 ### Adicionado
