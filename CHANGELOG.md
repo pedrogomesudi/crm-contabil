@@ -6,6 +6,54 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 [Versionamento Semântico](https://semver.org/lang/pt-BR/). Veja as regras em
 [`docs/VERSIONAMENTO.md`](docs/VERSIONAMENTO.md) e o plano de evolução em [`ROADMAP.md`](ROADMAP.md).
 
+## [6.99.50] - 2026-11-13
+
+### Segurança
+
+- **Next.js 16.2.9 → 16.4.6.** O `npm audit` apontava 1 vulnerabilidade crítica e 13 altas; a
+  crítica era o `next`, com 20 avisos cobrindo a 16.2.9. Auditados um a um contra o que o
+  projeto de fato usa:
+
+  Afetavam — **Server Actions** (DoS em dois avisos, payload não autenticado e disclosure de
+  endpoints de Server Function), e o `bodySizeLimit: "12mb"` do `next.config.ts` amplia a
+  janela; **cache confusion** de corpos de requisição, e toda Server Action é POST com corpo;
+  o **otimizador de imagens**, que está ligado e, pelo matcher do `src/proxy.ts`, é alcançável
+  sem sessão — o risco era menor que o aviso sugere (sem `remotePatterns`, sem
+  `dangerouslyAllowSVG`, sem AVIF em `formats`), mas mitigado por configuração não é imune;
+  e **cache poisoning de SSG/ISR** em self-hosted, com superfície pequena porque quase toda
+  rota é dinâmica.
+
+  Não afetavam — o RCE em `use cache` (o projeto não usa `use cache` em lugar nenhum), o RCE
+  no `next/og` (não usamos `ImageResponse`), o **RCE não autenticado em Windows**, que era a
+  mais grave da lista com CVSS 9.0 (o deploy é contêiner Linux), o SSRF em custom server
+  (`output: "standalone"` roda o servidor do próprio Next), o SSRF em `rewrites` (não há
+  nenhum), o payload de Server Action no Edge (nenhuma rota usa `runtime = "edge"`) e o bypass
+  de proxy com Turbopack, que exige i18n de locale único — o build é Turbopack, mas não há
+  configuração de i18n.
+
+  Junto vieram o `postcss` (8.5.23) e o `sharp` (0.35.5) que o `next` carrega.
+
+- **nodemailer 9.0.3 → 10.5.0, node-forge 1.4.0 → 1.4.3, zod 4.4.3 → 4.6.7.** As três
+  dependências de produção que ainda restavam como "alta". O `nodemailer` é o caminho real dos
+  e-mails (o provedor em produção é SMTP, relay do Brevo) e acumulava 14 avisos, vários de
+  *recipient-domain bypass* — entregar mensagem a um domínio que o cabeçalho não nomeia. O
+  `node-forge` é quem lida com o certificado da NFS-e e trazia forja de assinatura RSA
+  PKCS#1 v1.5 e bypass de `basicConstraints` em X.509.
+
+  Os breaking changes do nodemailer 10 foram conferidos contra o código e nenhum encosta:
+  exige Node ≥ 20 (o projeto é 22 em todo lugar), valida TLS ao buscar anexo por `href`/`path`
+  (os anexos vão por buffer), renomeou o código de erro `NoAuth` (não referenciado) e trocou o
+  SDK do SES (não usamos SES).
+
+### Adicionado
+
+- **Teste do envio por SMTP.** O `enviar.test.ts` cobria só os payloads de Resend e SendGrid —
+  provedores que não estão em uso. O caminho que roda em produção não tinha nenhum teste, e um
+  bump de major nele passaria pelo CI inteiro sem ninguém notar uma quebra na composição da
+  mensagem. Os sete casos cobrem remetente, anexo por buffer, a regra de `secure` nas portas
+  587 e 465, e as três da cópia oculta: entra como `bcc`, não entra quando é o próprio
+  destinatário, não entra quando não há configuração.
+
 ## [6.99.49] - 2026-11-09
 
 ### Corrigido
